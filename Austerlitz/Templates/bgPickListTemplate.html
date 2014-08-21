@@ -1,0 +1,16 @@
+﻿    <div class="modal-header">
+        <h3 class="modal-title">Pick from List</h3>
+    </div>
+    <div class="modal-body">
+        <ul>
+            <li ng-repeat="item in items">
+                <a ng-click="selected.item = item">{{ item.itemNo }}</a>
+                <a popover="{{item.description}}" popover-placement="right" popover-trigger="mouseenter" ng-click="selected.item = item">{{ item.name }}</a>
+            </li>
+        </ul>
+        Selected: <b>{{ selected.item.itemNo }} : {{ selected.item.name }}</b>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="ok()">OK</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>

@@ -1,0 +1,591 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="AusterlitzModelStoreContainer" CdmEntityContainer="AusterlitzDbContext">
+    <EntitySetMapping Name="REF_ArmyList">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_ArmyList">
+        <MappingFragment StoreEntitySet="REF_ArmyList">
+          <ScalarProperty Name="IsCavalry" ColumnName="IsCavalry" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+          <ScalarProperty Name="Cost" ColumnName="Cost" />
+          <ScalarProperty Name="EcPtsPer25" ColumnName="EcPtsPer25" />
+          <ScalarProperty Name="EF" ColumnName="EF" />
+          <ScalarProperty Name="HC" ColumnName="HC" />
+          <ScalarProperty Name="LR" ColumnName="LR" />
+          <ScalarProperty Name="RG" ColumnName="RG" />
+          <ScalarProperty Name="SimMP" ColumnName="SimMP" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Formation" ColumnName="Formation" />
+          <ScalarProperty Name="Allow_Co" ColumnName="Allow_Co" />
+          <ScalarProperty Name="Allow_Li" ColumnName="Allow_Li" />
+          <ScalarProperty Name="Allow_Sk" ColumnName="Allow_Sk" />
+          <ScalarProperty Name="Allow_Sq" ColumnName="Allow_Sq" />
+          <ScalarProperty Name="IsColonial" ColumnName="IsColonial" />
+          <ScalarProperty Name="TroopSpecification" ColumnName="TroopSpecification" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_Population">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_Population">
+        <MappingFragment StoreEntitySet="REF_Population">
+          <ScalarProperty Name="Density" ColumnName="Density" />
+          <ScalarProperty Name="TotalCitizens" ColumnName="TotalCitizens" />
+          <ScalarProperty Name="ExtraCitizensRequired" ColumnName="ExtraCitizensRequired" />
+          <ScalarProperty Name="StoneOrWood" ColumnName="StoneOrWood" />
+          <ScalarProperty Name="GoodAmount" ColumnName="GoodAmount" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_ProductionSites">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_ProductionSites">
+        <MappingFragment StoreEntitySet="REF_ProductionSites">
+          <ScalarProperty Name="SiteTypeNo" ColumnName="SiteTypeNo" />
+          <ScalarProperty Name="Terrain" ColumnName="Terrain" />
+          <ScalarProperty Name="SiteType" ColumnName="SiteType" />
+          <ScalarProperty Name="Symbol" ColumnName="Symbol" />
+          <ScalarProperty Name="SecondarySymbol" ColumnName="SecondarySymbol" />
+          <ScalarProperty Name="Cost" ColumnName="Cost" />
+          <ScalarProperty Name="Maintenance" ColumnName="Maintenance" />
+          <ScalarProperty Name="MinPopulation" ColumnName="MinPopulation" />
+          <ScalarProperty Name="MaxPopulation" ColumnName="MaxPopulation" />
+          <ScalarProperty Name="ProductionType" ColumnName="ProductionType" />
+          <ScalarProperty Name="MinProduction" ColumnName="MinProduction" />
+          <ScalarProperty Name="MaxProduction" ColumnName="MaxProduction" />
+          <ScalarProperty Name="MinProductionColonial" ColumnName="MinProductionColonial" />
+          <ScalarProperty Name="MaxProductionColonial" ColumnName="MaxProductionColonial" />
+          <ScalarProperty Name="BonusSymbol" ColumnName="BonusSymbol" />
+          <ScalarProperty Name="BonusPercentage" ColumnName="BonusPercentage" />
+          <ScalarProperty Name="CitizensRequired" ColumnName="CitizensRequired" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_Ships">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_Ships">
+        <MappingFragment StoreEntitySet="REF_Ships">
+          <ScalarProperty Name="Type" ColumnName="Type" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="EcPts" ColumnName="EcPts" />
+          <ScalarProperty Name="Textiles" ColumnName="Textiles" />
+          <ScalarProperty Name="Citizens" ColumnName="Citizens" />
+          <ScalarProperty Name="Cost" ColumnName="Cost" />
+          <ScalarProperty Name="Maintenance" ColumnName="Maintenance" />
+          <ScalarProperty Name="LoadCapacity" ColumnName="LoadCapacity" />
+          <ScalarProperty Name="MovementFactor" ColumnName="MovementFactor" />
+          <ScalarProperty Name="ShipClass" ColumnName="ShipClass" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_States">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_States">
+        <MappingFragment StoreEntitySet="REF_States">
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="StateName" ColumnName="StateName" />
+          <ScalarProperty Name="TaxRate" ColumnName="TaxRate" />
+          <ScalarProperty Name="FleetMorale" ColumnName="FleetMorale" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_Terrain">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_Terrain">
+        <MappingFragment StoreEntitySet="REF_Terrain">
+          <ScalarProperty Name="TerrainId" ColumnName="TerrainId" />
+          <ScalarProperty Name="MaxPopulation" ColumnName="MaxPopulation" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Attrition" ColumnName="Attrition" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_UnitWeightsRates">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_UnitWeightsRates">
+        <MappingFragment StoreEntitySet="REF_UnitWeightsRates">
+          <ScalarProperty Name="WeightOfItem" ColumnName="WeightOfItem" />
+          <ScalarProperty Name="ItemType" ColumnName="ItemType" />
+          <ScalarProperty Name="GoodsFactors" ColumnName="GoodsFactors" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_BaggageTrains">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_BaggageTrains">
+        <MappingFragment StoreEntitySet="TR_BaggageTrains">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="FederationNo" ColumnName="FederationNo" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Condition" ColumnName="Condition" />
+          <ScalarProperty Name="Goods1" ColumnName="Goods1" />
+          <ScalarProperty Name="Quantity1" ColumnName="Quantity1" />
+          <ScalarProperty Name="Goods2" ColumnName="Goods2" />
+          <ScalarProperty Name="Quantity2" ColumnName="Quantity2" />
+          <ScalarProperty Name="Money" ColumnName="Money" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Barracks">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Barracks">
+        <MappingFragment StoreEntitySet="TR_Barracks">
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="Type" ColumnName="Type" />
+          <ScalarProperty Name="Money" ColumnName="Money" />
+          <ScalarProperty Name="Citizens" ColumnName="Citizens" />
+          <ScalarProperty Name="EcPts" ColumnName="EcPts" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="Horses" ColumnName="Horses" />
+          <ScalarProperty Name="Text" ColumnName="Text" />
+          <ScalarProperty Name="FortressSize" ColumnName="FortressSize" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Brigades">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Brigades">
+        <MappingFragment StoreEntitySet="TR_Brigades">
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="CoordinateX_OrState" ColumnName="CoordinateX_OrState" />
+          <ScalarProperty Name="CoordinateY_OrFleet" ColumnName="CoordinateY_OrFleet" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Federation" ColumnName="Federation" />
+          <ScalarProperty Name="Batt1Type" ColumnName="Batt1Type" />
+          <ScalarProperty Name="Batt1EF" ColumnName="Batt1EF" />
+          <ScalarProperty Name="Batt1Size" ColumnName="Batt1Size" />
+          <ScalarProperty Name="Batt2Type" ColumnName="Batt2Type" />
+          <ScalarProperty Name="Batt2EF" ColumnName="Batt2EF" />
+          <ScalarProperty Name="Batt2Size" ColumnName="Batt2Size" />
+          <ScalarProperty Name="Batt3Type" ColumnName="Batt3Type" />
+          <ScalarProperty Name="Batt3EF" ColumnName="Batt3EF" />
+          <ScalarProperty Name="Batt3Size" ColumnName="Batt3Size" />
+          <ScalarProperty Name="Batt4Type" ColumnName="Batt4Type" />
+          <ScalarProperty Name="Batt4EF" ColumnName="Batt4EF" />
+          <ScalarProperty Name="Batt4Size" ColumnName="Batt4Size" />
+          <ScalarProperty Name="Batt5Type" ColumnName="Batt5Type" />
+          <ScalarProperty Name="Batt5EF" ColumnName="Batt5EF" />
+          <ScalarProperty Name="Batt5Size" ColumnName="Batt5Size" />
+          <ScalarProperty Name="Batt6Type" ColumnName="Batt6Type" />
+          <ScalarProperty Name="Batt6EF" ColumnName="Batt6EF" />
+          <ScalarProperty Name="Batt6Size" ColumnName="Batt6Size" />
+          <ScalarProperty Name="Batt7Type" ColumnName="Batt7Type" />
+          <ScalarProperty Name="Batt7EF" ColumnName="Batt7EF" />
+          <ScalarProperty Name="Batt7Size" ColumnName="Batt7Size" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Commanders">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Commanders">
+        <MappingFragment StoreEntitySet="TR_Commanders">
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="Rank" ColumnName="Rank" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="CoordinateX" ColumnName="CoordinateX" />
+          <ScalarProperty Name="CoordinateY" ColumnName="CoordinateY" />
+          <ScalarProperty Name="Boarded" ColumnName="Boarded" />
+          <ScalarProperty Name="Federation" ColumnName="Federation" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="CommandCapacity" ColumnName="CommandCapacity" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_MerchantShips">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_MerchantShips">
+        <MappingFragment StoreEntitySet="TR_MerchantShips">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Type" ColumnName="Type" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="FleetNo" ColumnName="FleetNo" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Condition" ColumnName="Condition" />
+          <ScalarProperty Name="Age" ColumnName="Age" />
+          <ScalarProperty Name="Goods1" ColumnName="Goods1" />
+          <ScalarProperty Name="Quantity1" ColumnName="Quantity1" />
+          <ScalarProperty Name="Goods2" ColumnName="Goods2" />
+          <ScalarProperty Name="Quantity2" ColumnName="Quantity2" />
+          <ScalarProperty Name="Money" ColumnName="Money" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Spies">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Spies">
+        <MappingFragment StoreEntitySet="TR_Spies">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="FederationNo" ColumnName="FederationNo" />
+          <ScalarProperty Name="Reports" ColumnName="Reports" />
+          <ScalarProperty Name="FortressSize" ColumnName="FortressSize" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_StateRelationships">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_StateRelationships">
+        <MappingFragment StoreEntitySet="TR_StateRelationships">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="Relationship" ColumnName="Relationship" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_TradingPortsAndCities">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_TradingPortsAndCities">
+        <MappingFragment StoreEntitySet="TR_TradingPortsAndCities">
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnID" ColumnName="TurnID" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="Rate" ColumnName="Rate" />
+          <ScalarProperty Name="EctPts" ColumnName="EctPts" />
+          <ScalarProperty Name="Food" ColumnName="Food" />
+          <ScalarProperty Name="Stone" ColumnName="Stone" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="Ore" ColumnName="Ore" />
+          <ScalarProperty Name="Zinc" ColumnName="Zinc" />
+          <ScalarProperty Name="Horses" ColumnName="Horses" />
+          <ScalarProperty Name="Text" ColumnName="Text" />
+          <ScalarProperty Name="Wool" ColumnName="Wool" />
+          <ScalarProperty Name="Gold" ColumnName="Gold" />
+          <ScalarProperty Name="Wine" ColumnName="Wine" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Warehouses">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Warehouses">
+        <MappingFragment StoreEntitySet="TR_Warehouses">
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="WarehouseName" ColumnName="WarehouseName" />
+          <ScalarProperty Name="Inhabitants" ColumnName="Inhabitants" />
+          <ScalarProperty Name="Foreign" ColumnName="Foreign" />
+          <ScalarProperty Name="Money" ColumnName="Money" />
+          <ScalarProperty Name="Citizens" ColumnName="Citizens" />
+          <ScalarProperty Name="EcPts" ColumnName="EcPts" />
+          <ScalarProperty Name="Food" ColumnName="Food" />
+          <ScalarProperty Name="Stone" ColumnName="Stone" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="Ore" ColumnName="Ore" />
+          <ScalarProperty Name="Zinc" ColumnName="Zinc" />
+          <ScalarProperty Name="Horses" ColumnName="Horses" />
+          <ScalarProperty Name="Text" ColumnName="Text" />
+          <ScalarProperty Name="Wool" ColumnName="Wool" />
+          <ScalarProperty Name="Gold" ColumnName="Gold" />
+          <ScalarProperty Name="Wine" ColumnName="Wine" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_Warships">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_Warships">
+        <MappingFragment StoreEntitySet="TR_Warships">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Type" ColumnName="Type" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="FleetNo" ColumnName="FleetNo" />
+          <ScalarProperty Name="MP" ColumnName="MP" />
+          <ScalarProperty Name="Condition" ColumnName="Condition" />
+          <ScalarProperty Name="Age" ColumnName="Age" />
+          <ScalarProperty Name="Marines" ColumnName="Marines" />
+          <ScalarProperty Name="Brigade1" ColumnName="Brigade1" />
+          <ScalarProperty Name="Brigade2" ColumnName="Brigade2" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_00TurnDetails">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_00TurnDetails">
+        <MappingFragment StoreEntitySet="TS_00TurnDetails">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="GameNo" ColumnName="GameNo" />
+          <ScalarProperty Name="Month" ColumnName="Month" />
+          <ScalarProperty Name="Year" ColumnName="Year" />
+          <ScalarProperty Name="PlayerName" ColumnName="PlayerName" />
+          <ScalarProperty Name="AccountNo" ColumnName="AccountNo" />
+          <ScalarProperty Name="ProcessDate" ColumnName="ProcessDate" />
+          <ScalarProperty Name="FundsSentCash" ColumnName="FundsSentCash" />
+          <ScalarProperty Name="FundsSentCheque" ColumnName="FundsSentCheque" />
+          <ScalarProperty Name="FundsSentPO" ColumnName="FundsSentPO" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_01TransferGoods">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_01TransferGoods">
+        <MappingFragment StoreEntitySet="TS_01TransferGoods">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="From" ColumnName="From" />
+          <ScalarProperty Name="To" ColumnName="To" />
+          <ScalarProperty Name="Louisdore" ColumnName="Louisdore" />
+          <ScalarProperty Name="Citizens" ColumnName="Citizens" />
+          <ScalarProperty Name="EcPts" ColumnName="EcPts" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="Horses" ColumnName="Horses" />
+          <ScalarProperty Name="Textiles" ColumnName="Textiles" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_02DemolishItems">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_02DemolishItems">
+        <MappingFragment StoreEntitySet="TS_02DemolishItems">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_03SetUpBrigades">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_03SetUpBrigades">
+        <MappingFragment StoreEntitySet="TS_03SetUpBrigades">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Depot" ColumnName="Depot" />
+          <ScalarProperty Name="Batt1" ColumnName="Batt1" />
+          <ScalarProperty Name="Batt2" ColumnName="Batt2" />
+          <ScalarProperty Name="Batt3" ColumnName="Batt3" />
+          <ScalarProperty Name="Batt4" ColumnName="Batt4" />
+          <ScalarProperty Name="Batt5" ColumnName="Batt5" />
+          <ScalarProperty Name="Batt6" ColumnName="Batt6" />
+          <ScalarProperty Name="Batt7" ColumnName="Batt7" />
+          <ScalarProperty Name="BrigadeName" ColumnName="BrigadeName" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_04SetUpAdditionalBrigades">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_04SetUpAdditionalBrigades">
+        <MappingFragment StoreEntitySet="TS_04SetUpAdditionalBrigades">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="BrigadeNo" ColumnName="BrigadeNo" />
+          <ScalarProperty Name="BattType" ColumnName="BattType" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_05IncreaseHeadcount">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_05IncreaseHeadcount">
+        <MappingFragment StoreEntitySet="TS_05IncreaseHeadcount">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="BrigadeOrFederation" ColumnName="BrigadeOrFederation" />
+          <ScalarProperty Name="IncreaseAmount" ColumnName="IncreaseAmount" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_06IncreaseBrigadeXP">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_06IncreaseBrigadeXP">
+        <MappingFragment StoreEntitySet="TS_06IncreaseBrigadeXP">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="BrigadeOrFederation" ColumnName="BrigadeOrFederation" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_07ExchangeBattalions">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_07ExchangeBattalions">
+        <MappingFragment StoreEntitySet="TS_07ExchangeBattalions">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="BrigadeA" ColumnName="BrigadeA" />
+          <ScalarProperty Name="BattA" ColumnName="BattA" />
+          <ScalarProperty Name="BrigadeB" ColumnName="BrigadeB" />
+          <ScalarProperty Name="BattB" ColumnName="BattB" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_08MergeBattalions">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_08MergeBattalions">
+        <MappingFragment StoreEntitySet="TS_08MergeBattalions">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="BridageA" ColumnName="BridageA" />
+          <ScalarProperty Name="BattA" ColumnName="BattA" />
+          <ScalarProperty Name="BrigadeB" ColumnName="BrigadeB" />
+          <ScalarProperty Name="BattB" ColumnName="BattB" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_09RepairShips_BaggageTrains">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_09RepairShips_BaggageTrains">
+        <MappingFragment StoreEntitySet="TS_09RepairShips_BaggageTrains">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_10BuildShips">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_10BuildShips">
+        <MappingFragment StoreEntitySet="TS_10BuildShips">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Shipyard" ColumnName="Shipyard" />
+          <ScalarProperty Name="ShipType" ColumnName="ShipType" />
+          <ScalarProperty Name="Name_WarshipOnly" ColumnName="Name_WarshipOnly" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_11BuildBaggageTrain">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_11BuildBaggageTrain">
+        <MappingFragment StoreEntitySet="TS_11BuildBaggageTrain">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Barracks" ColumnName="Barracks" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_12IncreasePopulationDensity">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_12IncreasePopulationDensity">
+        <MappingFragment StoreEntitySet="TS_12IncreasePopulationDensity">
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_13BuildProductionSites">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_13BuildProductionSites">
+        <MappingFragment StoreEntitySet="TS_13BuildProductionSites">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ProdSiteType" ColumnName="ProdSiteType" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_14FormFederations">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_14FormFederations">
+        <MappingFragment StoreEntitySet="TS_14FormFederations">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Federation_Fleet" ColumnName="Federation_Fleet" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_15CoastalDefence">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_15CoastalDefence">
+        <MappingFragment StoreEntitySet="TS_15CoastalDefence">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="FleetNo" ColumnName="FleetNo" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_16SeaBlockade">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_16SeaBlockade">
+        <MappingFragment StoreEntitySet="TS_16SeaBlockade">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="FleetNo" ColumnName="FleetNo" />
+          <ScalarProperty Name="StateA_Or_Fleet0" ColumnName="StateA_Or_Fleet0" />
+          <ScalarProperty Name="StateB" ColumnName="StateB" />
+          <ScalarProperty Name="StateC" ColumnName="StateC" />
+          <ScalarProperty Name="StateD" ColumnName="StateD" />
+          <ScalarProperty Name="StateE" ColumnName="StateE" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_17TradeAndLoading1">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_17TradeAndLoading1">
+        <MappingFragment StoreEntitySet="TS_17TradeAndLoading1">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Goods" ColumnName="Goods" />
+          <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+          <ScalarProperty Name="From" ColumnName="From" />
+          <ScalarProperty Name="To" ColumnName="To" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_18Movement">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_18Movement">
+        <MappingFragment StoreEntitySet="TS_18Movement">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Direction1" ColumnName="Direction1" />
+          <ScalarProperty Name="Distance1" ColumnName="Distance1" />
+          <ScalarProperty Name="Direction2" ColumnName="Direction2" />
+          <ScalarProperty Name="Distance2" ColumnName="Distance2" />
+          <ScalarProperty Name="Direction3" ColumnName="Direction3" />
+          <ScalarProperty Name="Distance3" ColumnName="Distance3" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_19TradeAndLoading2">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_19TradeAndLoading2">
+        <MappingFragment StoreEntitySet="TS_19TradeAndLoading2">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Goods" ColumnName="Goods" />
+          <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+          <ScalarProperty Name="Source" ColumnName="Source" />
+          <ScalarProperty Name="Destination" ColumnName="Destination" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_20Boarding">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_20Boarding">
+        <MappingFragment StoreEntitySet="TS_20Boarding">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="Command" ColumnName="Command" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="FleetNo" ColumnName="FleetNo" />
+          <ScalarProperty Name="FleetOwner" ColumnName="FleetOwner" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_21HandOverTerritory">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_21HandOverTerritory">
+        <MappingFragment StoreEntitySet="TS_21HandOverTerritory">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="ShipNumber" ColumnName="ShipNumber" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_22ChangeNames">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_22ChangeNames">
+        <MappingFragment StoreEntitySet="TS_22ChangeNames">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TS_23ChangeStateRelationships">
+      <EntityTypeMapping TypeName="AusterlitzModel.TS_23ChangeStateRelationships">
+        <MappingFragment StoreEntitySet="TS_23ChangeStateRelationships">
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="Relationship" ColumnName="Relationship" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_MapCoordinates">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_MapCoordinates">
+        <MappingFragment StoreEntitySet="TR_MapCoordinates">
+          <ScalarProperty Name="Other" ColumnName="Other" />
+          <ScalarProperty Name="ProductionSite" ColumnName="ProductionSite" />
+          <ScalarProperty Name="State" ColumnName="State" />
+          <ScalarProperty Name="Y" ColumnName="Y" />
+          <ScalarProperty Name="X" ColumnName="X" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>

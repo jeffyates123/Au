@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5E022FBE-FD8F-4903-BEAA-8201E7891ECE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Austerlitz.DAL</RootNamespace>
+    <AssemblyName>Austerlitz.DAL</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AusterlitzDB1.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AusterlitzDB1.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AusterlitzDB1.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="AusterlitzDB1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AusterlitzDB1.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="AusterlitzDbContext.cs" />
+    <Compile Include="Management\GenericRepository.cs" />
+    <Compile Include="Management\TurnSheetManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Management\TurnSheetRepository.cs" />
+    <Compile Include="Management\ITurnSheetEntities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="REF_ArmyList.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_Population.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_ProductionSites.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_Ships.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_States.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_Terrain.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_UnitWeightsRates.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_BaggageTrains.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Barracks.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Brigades.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Commanders.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_MapCoordinates.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_MerchantShips.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Spies.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_StateRelationships.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_TradingPortsAndCities.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Warehouses.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_Warships.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_00TurnDetails.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_01TransferGoods.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_02DemolishItems.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_03SetUpBrigades.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_04SetUpAdditionalBrigades.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_05IncreaseHeadcount.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_06IncreaseBrigadeXP.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_07ExchangeBattalions.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_08MergeBattalions.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_09RepairShips_BaggageTrains.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_10BuildShips.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_11BuildBaggageTrain.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_12IncreasePopulationDensity.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_13BuildProductionSites.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_14FormFederations.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_15CoastalDefence.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_16SeaBlockade.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_17TradeAndLoading1.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_18Movement.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_19TradeAndLoading2.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_20Boarding.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_21HandOverTerritory.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_22ChangeNames.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TS_23ChangeStateRelationships.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <EntityDeploy Include="AusterlitzDB1.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>AusterlitzDB1.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="AusterlitzDB1.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>AusterlitzDB1.edmx</DependentUpon>
+      <LastGenOutput>AusterlitzDB1.Context.cs</LastGenOutput>
+    </None>
+    <None Include="AusterlitzDB1.edmx.diagram">
+      <DependentUpon>AusterlitzDB1.edmx</DependentUpon>
+    </None>
+    <None Include="AusterlitzDB1.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>AusterlitzDB1.edmx</DependentUpon>
+      <LastGenOutput>AusterlitzDB1.cs</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

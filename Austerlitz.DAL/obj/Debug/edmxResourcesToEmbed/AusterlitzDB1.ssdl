@@ -1,0 +1,652 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="AusterlitzModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="REF_ArmyList">
+    <Key>
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="State" />
+    </Key>
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="300" Nullable="false" />
+    <Property Name="ShortName" Type="varchar" MaxLength="2" Nullable="false" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="EcPtsPer25" Type="int" Nullable="false" />
+    <Property Name="EF" Type="int" Nullable="false" />
+    <Property Name="HC" Type="int" Nullable="false" />
+    <Property Name="LR" Type="int" Nullable="false" />
+    <Property Name="RG" Type="int" Nullable="false" />
+    <Property Name="SimMP" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Formation" Type="varchar" MaxLength="30" />
+    <Property Name="Allow_Co" Type="bit" Nullable="false" />
+    <Property Name="Allow_Li" Type="bit" Nullable="false" />
+    <Property Name="Allow_Sk" Type="bit" Nullable="false" />
+    <Property Name="Allow_Sq" Type="bit" Nullable="false" />
+    <Property Name="IsColonial" Type="bit" Nullable="false" />
+    <Property Name="IsCavalry" Type="bit" Nullable="false" />
+    <Property Name="TroopSpecification" Type="varchar" MaxLength="15" />
+  </EntityType>
+  <EntityType Name="REF_Population">
+    <Key>
+      <PropertyRef Name="Density" />
+    </Key>
+    <Property Name="Density" Type="int" Nullable="false" />
+    <Property Name="TotalCitizens" Type="int" Nullable="false" />
+    <Property Name="ExtraCitizensRequired" Type="int" Nullable="false" />
+    <Property Name="StoneOrWood" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="GoodAmount" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_ProductionSites">
+    <Key>
+      <PropertyRef Name="SiteTypeNo" />
+      <PropertyRef Name="Terrain" />
+      <PropertyRef Name="SiteType" />
+      <PropertyRef Name="Symbol" />
+    </Key>
+    <Property Name="SiteTypeNo" Type="int" Nullable="false" />
+    <Property Name="Terrain" Type="varchar" MaxLength="10" Nullable="false" />
+    <Property Name="SiteType" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Symbol" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="SecondarySymbol" Type="varchar" MaxLength="1" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="Maintenance" Type="int" Nullable="false" />
+    <Property Name="MinPopulation" Type="int" Nullable="false" />
+    <Property Name="MaxPopulation" Type="int" Nullable="false" />
+    <Property Name="ProductionType" Type="varchar" MaxLength="15" />
+    <Property Name="MinProduction" Type="int" Nullable="false" />
+    <Property Name="MaxProduction" Type="int" Nullable="false" />
+    <Property Name="MinProductionColonial" Type="int" />
+    <Property Name="MaxProductionColonial" Type="nchar" MaxLength="10" />
+    <Property Name="BonusSymbol" Type="varchar" MaxLength="1" />
+    <Property Name="BonusPercentage" Type="int" />
+    <Property Name="CitizensRequired" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="REF_Ships">
+    <Key>
+      <PropertyRef Name="Type" />
+    </Key>
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Textiles" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="Maintenance" Type="int" Nullable="false" />
+    <Property Name="LoadCapacity" Type="int" Nullable="false" />
+    <Property Name="MovementFactor" Type="int" Nullable="false" />
+    <Property Name="ShipClass" Type="int" />
+  </EntityType>
+  <EntityType Name="REF_States">
+    <Key>
+      <PropertyRef Name="State" />
+    </Key>
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="StateName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="TaxRate" Type="int" Nullable="false" />
+    <Property Name="FleetMorale" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="REF_Terrain">
+    <Key>
+      <PropertyRef Name="TerrainId" />
+    </Key>
+    <Property Name="TerrainId" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="MaxPopulation" Type="int" />
+    <Property Name="MP" Type="int" />
+    <Property Name="Attrition" Type="decimal" Precision="3" Scale="2" />
+  </EntityType>
+  <EntityType Name="REF_UnitWeightsRates">
+    <Key>
+      <PropertyRef Name="ItemType" />
+    </Key>
+    <Property Name="ItemType" Type="varchar" MaxLength="20" Nullable="false" />
+    <Property Name="WeightOfItem" Type="int" Nullable="false" />
+    <Property Name="GoodsFactors" Type="int" />
+  </EntityType>
+  <EntityType Name="TR_BaggageTrains">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FederationNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Goods1" Type="int" Nullable="false" />
+    <Property Name="Quantity1" Type="int" Nullable="false" />
+    <Property Name="Goods2" Type="int" Nullable="false" />
+    <Property Name="Quantity2" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_Barracks">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="FortressSize" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_Brigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="16" Nullable="false" />
+    <Property Name="CoordinateX_OrState" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="CoordinateY_OrFleet" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Federation" Type="int" Nullable="false" />
+    <Property Name="Batt1Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt1EF" Type="int" />
+    <Property Name="Batt1Size" Type="int" />
+    <Property Name="Batt2Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt2EF" Type="int" />
+    <Property Name="Batt2Size" Type="int" />
+    <Property Name="Batt3Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt3EF" Type="int" />
+    <Property Name="Batt3Size" Type="int" />
+    <Property Name="Batt4Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt4EF" Type="int" />
+    <Property Name="Batt4Size" Type="int" />
+    <Property Name="Batt5Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt5EF" Type="int" />
+    <Property Name="Batt5Size" Type="int" />
+    <Property Name="Batt6Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt6EF" Type="int" />
+    <Property Name="Batt6Size" Type="int" />
+    <Property Name="Batt7Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt7EF" Type="int" />
+    <Property Name="Batt7Size" Type="int" />
+  </EntityType>
+  <EntityType Name="TR_Commanders">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Rank" Type="varchar" MaxLength="15" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="CoordinateX" Type="int" Nullable="false" />
+    <Property Name="CoordinateY" Type="int" Nullable="false" />
+    <Property Name="Boarded" Type="int" Nullable="false" />
+    <Property Name="Federation" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="CommandCapacity" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_MapCoordinates">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="X" />
+      <PropertyRef Name="Y" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="X" Type="int" Nullable="false" />
+    <Property Name="Y" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="ProductionSite" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Other" Type="varchar" MaxLength="1" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_MerchantShips">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Age" Type="int" Nullable="false" />
+    <Property Name="Goods1" Type="int" Nullable="false" />
+    <Property Name="Quantity1" Type="int" Nullable="false" />
+    <Property Name="Goods2" Type="int" Nullable="false" />
+    <Property Name="Quantity2" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_Spies">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FederationNo" Type="int" Nullable="false" />
+    <Property Name="Reports" Type="varchar" MaxLength="100" Nullable="false" />
+    <Property Name="FortressSize" Type="varchar" MaxLength="15" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_StateRelationships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="State" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Relationship" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_TradingPortsAndCities">
+    <Key>
+      <PropertyRef Name="TurnID" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnID" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="Rate" Type="int" Nullable="false" />
+    <Property Name="EctPts" Type="int" Nullable="false" />
+    <Property Name="Food" Type="int" Nullable="false" />
+    <Property Name="Stone" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Ore" Type="int" Nullable="false" />
+    <Property Name="Zinc" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="Wool" Type="int" Nullable="false" />
+    <Property Name="Gold" Type="int" Nullable="false" />
+    <Property Name="Wine" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_Warehouses">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="WarehouseName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Inhabitants" Type="int" Nullable="false" />
+    <Property Name="Foreign" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Food" Type="int" Nullable="false" />
+    <Property Name="Stone" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Ore" Type="int" Nullable="false" />
+    <Property Name="Zinc" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="Wool" Type="int" Nullable="false" />
+    <Property Name="Gold" Type="int" Nullable="false" />
+    <Property Name="Wine" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TR_Warships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Age" Type="int" Nullable="false" />
+    <Property Name="Marines" Type="int" Nullable="false" />
+    <Property Name="Brigade1" Type="int" Nullable="false" />
+    <Property Name="Brigade2" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_00TurnDetails">
+    <Key>
+      <PropertyRef Name="TurnId" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="GameNo" Type="nchar" MaxLength="10" Nullable="false" />
+    <Property Name="Month" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="Year" Type="int" Nullable="false" />
+    <Property Name="PlayerName" Type="varchar" MaxLength="50" Nullable="false" />
+    <Property Name="AccountNo" Type="varchar" MaxLength="20" Nullable="false" />
+    <Property Name="ProcessDate" Type="date" Nullable="false" />
+    <Property Name="FundsSentCash" Type="int" />
+    <Property Name="FundsSentCheque" Type="int" />
+    <Property Name="FundsSentPO" Type="int" />
+  </EntityType>
+  <EntityType Name="TS_01TransferGoods">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="From" Type="int" Nullable="false" />
+    <Property Name="To" Type="int" Nullable="false" />
+    <Property Name="Louisdore" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Textiles" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_02DemolishItems">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_03SetUpBrigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Depot" Type="int" Nullable="false" />
+    <Property Name="Batt1" Type="int" Nullable="false" />
+    <Property Name="Batt2" Type="int" Nullable="false" />
+    <Property Name="Batt3" Type="int" Nullable="false" />
+    <Property Name="Batt4" Type="int" Nullable="false" />
+    <Property Name="Batt5" Type="int" Nullable="false" />
+    <Property Name="Batt6" Type="int" />
+    <Property Name="Batt7" Type="int" />
+    <Property Name="BrigadeName" Type="varchar" MaxLength="16" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_04SetUpAdditionalBrigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeNo" Type="int" Nullable="false" />
+    <Property Name="BattType" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_05IncreaseHeadcount">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
+    <Property Name="IncreaseAmount" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_06IncreaseBrigadeXP">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_07ExchangeBattalions">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeA" Type="int" Nullable="false" />
+    <Property Name="BattA" Type="int" Nullable="false" />
+    <Property Name="BrigadeB" Type="int" Nullable="false" />
+    <Property Name="BattB" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_08MergeBattalions">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BridageA" Type="int" Nullable="false" />
+    <Property Name="BattA" Type="int" Nullable="false" />
+    <Property Name="BrigadeB" Type="int" Nullable="false" />
+    <Property Name="BattB" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_09RepairShips_BaggageTrains">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_10BuildShips">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Shipyard" Type="int" Nullable="false" />
+    <Property Name="ShipType" Type="int" Nullable="false" />
+    <Property Name="Name_WarshipOnly" Type="nchar" MaxLength="10" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_11BuildBaggageTrain">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Barracks" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_12IncreasePopulationDensity">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_13BuildProductionSites">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ProdSiteType" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_14FormFederations">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Federation_Fleet" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_15CoastalDefence">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_16SeaBlockade">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="StateA_Or_Fleet0" Type="varchar" MaxLength="2" Nullable="false" />
+    <Property Name="StateB" Type="varchar" MaxLength="1" />
+    <Property Name="StateC" Type="varchar" MaxLength="1" />
+    <Property Name="StateD" Type="varchar" MaxLength="1" />
+    <Property Name="StateE" Type="varchar" MaxLength="1" />
+  </EntityType>
+  <EntityType Name="TS_17TradeAndLoading1">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="int" Nullable="false" />
+    <Property Name="From" Type="int" Nullable="false" />
+    <Property Name="To" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_18Movement">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Direction1" Type="int" Nullable="false" />
+    <Property Name="Distance1" Type="int" Nullable="false" />
+    <Property Name="Direction2" Type="int" Nullable="false" />
+    <Property Name="Distance2" Type="int" Nullable="false" />
+    <Property Name="Direction3" Type="int" Nullable="false" />
+    <Property Name="Distance3" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_19TradeAndLoading2">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="int" Nullable="false" />
+    <Property Name="Source" Type="int" Nullable="false" />
+    <Property Name="Destination" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_20Boarding">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Command" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="FleetOwner" Type="int" />
+  </EntityType>
+  <EntityType Name="TS_21HandOverTerritory">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="ShipNumber" Type="int" />
+    <Property Name="XCoordinate" Type="int" />
+    <Property Name="YCoordinate" Type="int" />
+  </EntityType>
+  <EntityType Name="TS_22ChangeNames">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+  </EntityType>
+  <EntityType Name="TS_23ChangeStateRelationships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Relationship" Type="int" Nullable="false" />
+  </EntityType>
+  <EntityContainer Name="AusterlitzModelStoreContainer">
+    <EntitySet Name="REF_ArmyList" EntityType="Self.REF_ArmyList" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_Population" EntityType="Self.REF_Population" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_Ships" EntityType="Self.REF_Ships" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_States" EntityType="Self.REF_States" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_Terrain" EntityType="Self.REF_Terrain" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_UnitWeightsRates" EntityType="Self.REF_UnitWeightsRates" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_BaggageTrains" EntityType="Self.TR_BaggageTrains" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Barracks" EntityType="Self.TR_Barracks" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Brigades" EntityType="Self.TR_Brigades" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Commanders" EntityType="Self.TR_Commanders" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_MapCoordinates" EntityType="Self.TR_MapCoordinates" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_MerchantShips" EntityType="Self.TR_MerchantShips" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Spies" EntityType="Self.TR_Spies" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_StateRelationships" EntityType="Self.TR_StateRelationships" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_TradingPortsAndCities" EntityType="Self.TR_TradingPortsAndCities" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Warehouses" EntityType="Self.TR_Warehouses" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TR_Warships" EntityType="Self.TR_Warships" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_00TurnDetails" EntityType="Self.TS_00TurnDetails" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_01TransferGoods" EntityType="Self.TS_01TransferGoods" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_02DemolishItems" EntityType="Self.TS_02DemolishItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_03SetUpBrigades" EntityType="Self.TS_03SetUpBrigades" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_04SetUpAdditionalBrigades" EntityType="Self.TS_04SetUpAdditionalBrigades" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_05IncreaseHeadcount" EntityType="Self.TS_05IncreaseHeadcount" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_06IncreaseBrigadeXP" EntityType="Self.TS_06IncreaseBrigadeXP" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_07ExchangeBattalions" EntityType="Self.TS_07ExchangeBattalions" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_08MergeBattalions" EntityType="Self.TS_08MergeBattalions" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_09RepairShips_BaggageTrains" EntityType="Self.TS_09RepairShips_BaggageTrains" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_10BuildShips" EntityType="Self.TS_10BuildShips" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_11BuildBaggageTrain" EntityType="Self.TS_11BuildBaggageTrain" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_12IncreasePopulationDensity" EntityType="Self.TS_12IncreasePopulationDensity" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_13BuildProductionSites" EntityType="Self.TS_13BuildProductionSites" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_14FormFederations" EntityType="Self.TS_14FormFederations" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_15CoastalDefence" EntityType="Self.TS_15CoastalDefence" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_16SeaBlockade" EntityType="Self.TS_16SeaBlockade" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_17TradeAndLoading1" EntityType="Self.TS_17TradeAndLoading1" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_18Movement" EntityType="Self.TS_18Movement" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_19TradeAndLoading2" EntityType="Self.TS_19TradeAndLoading2" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_20Boarding" EntityType="Self.TS_20Boarding" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_21HandOverTerritory" EntityType="Self.TS_21HandOverTerritory" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_22ChangeNames" EntityType="Self.TS_22ChangeNames" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="TS_23ChangeStateRelationships" EntityType="Self.TS_23ChangeStateRelationships" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_ProductionSites" EntityType="Self.REF_ProductionSites" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+    [REF_ProductionSites].[SiteTypeNo] AS [SiteTypeNo], 
+    [REF_ProductionSites].[Terrain] AS [Terrain], 
+    [REF_ProductionSites].[SiteType] AS [SiteType], 
+    [REF_ProductionSites].[Symbol] AS [Symbol], 
+    [REF_ProductionSites].[SecondarySymbol] AS [SecondarySymbol], 
+    [REF_ProductionSites].[Cost] AS [Cost], 
+    [REF_ProductionSites].[Maintenance] AS [Maintenance], 
+    [REF_ProductionSites].[MinPopulation] AS [MinPopulation], 
+    [REF_ProductionSites].[MaxPopulation] AS [MaxPopulation], 
+    [REF_ProductionSites].[ProductionType] AS [ProductionType], 
+    [REF_ProductionSites].[MinProduction] AS [MinProduction], 
+    [REF_ProductionSites].[MaxProduction] AS [MaxProduction], 
+    [REF_ProductionSites].[MinProductionColonial] AS [MinProductionColonial], 
+    [REF_ProductionSites].[MaxProductionColonial] AS [MaxProductionColonial], 
+    [REF_ProductionSites].[BonusSymbol] AS [BonusSymbol], 
+    [REF_ProductionSites].[BonusPercentage] AS [BonusPercentage], 
+    [REF_ProductionSites].[CitizensRequired] AS [CitizensRequired]
+    FROM [dbo].[REF_ProductionSites] AS [REF_ProductionSites]</DefiningQuery>
+    </EntitySet>
+  </EntityContainer>
+</Schema>

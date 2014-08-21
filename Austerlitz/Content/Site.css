@@ -1,0 +1,149 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.ngHeaderText {
+    white-space: normal;
+}
+
+.ngCellHeader 
+{
+    word-wrap:break-word;
+    word-break: break-all;
+    color: red;
+    white-space: normal;
+}
+
+/* table { border: 1px solid black;float:left;width:148px;}*/
+
+#table_container{width:300px;margin:0 auto;}
+
+.FixedHeightContainer
+{
+  float:right;
+  height: 250px;
+  width:250px; 
+  padding:3px; 
+    background:#f00;
+}
+
+.Content
+{
+  height:224px;
+   overflow:auto;
+    background:#fff;
+}
+
+.gridStyle {
+    border: 1px solid rgb(212,212,212);
+    width: auto; 
+    height: 800px;
+}
+
+.grid-right-align {
+    text-align: right;
+}
+
+.grid-center-align {
+    text-align: center;
+}
+
+.grid-center-align-altcondition {
+    text-align: center;
+    /*background-color: #f3f3f3;*/
+        background-color: #eaeaea;
+}
+
+.mapTable {
+    border: 1px solid rgb(212,212,212);
+    width: 600px; 
+    height: 400px;
+    color: black;
+    font-family:'Courier New';
+}
+
+.mapCoordinate {
+    border: 1px solid rgb(212,212,212);
+    width:19px;
+    height:19px;
+    font-family:'Arial';
+    padding: 0px;
+    font-size:10px;
+}
+
+.mapFortress {
+    border: 2px solid black;
+    padding: 0px;
+}
+.mapBuilding {
+    border: 1px solid black;
+    padding: 0px;
+}
+
+.mapSetUpLeftLine {
+    border-left: 2px dashed black;
+}
+.mapSetUpRightLine {
+    border-right: 2px dashed black;
+}
+.mapSetUpTopLine {
+    border-top: 2px dashed black;
+}
+.mapSetUpBottomLine {
+    border-bottom: 2px dashed black;
+}
+
+.mapHeight1 {
+    background-color:rgb(204,255,204);
+    padding: 0px;
+}
+.mapHeight2 {
+    background-color:rgb(153,204,0);
+    padding: 0px;
+}
+.mapHeight3 {
+    background-color:rgb(51,153,102);
+    padding: 0px;
+}
+.mapHeight4 {
+    background-color:rgb(0,128,0);
+    padding: 0px;
+}
+.mapHeight5 {
+    background-color:rgb(128,128,0);
+    padding: 0px;
+}
+.mapHeight6 {
+    background-color:rgb(153,51,0);
+    padding: 0px;
+}
+.mapHeight7 {
+    background-color:rgb(128,0,0);
+    padding: 0px;
+}
+
+.mapBorder {
+    font-family:Arial;
+    font-size:9px;
+    align-content:center;
+}
+
+.selectedItems{
+    float: left; 
+}
+
+

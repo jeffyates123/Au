@@ -1,0 +1,1304 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="AusterlitzModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="REF_ArmyList">
+    <Key>
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="State" />
+    </Key>
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="300" Nullable="false" />
+    <Property Name="ShortName" Type="varchar" MaxLength="2" Nullable="false" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="EcPtsPer25" Type="int" Nullable="false" />
+    <Property Name="EF" Type="int" Nullable="false" />
+    <Property Name="HC" Type="int" Nullable="false" />
+    <Property Name="LR" Type="int" Nullable="false" />
+    <Property Name="RG" Type="int" Nullable="false" />
+    <Property Name="SimMP" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Formation" Type="varchar" MaxLength="30" />
+    <Property Name="Allow_Co" Type="bit" Nullable="false" />
+    <Property Name="Allow_Li" Type="bit" Nullable="false" />
+    <Property Name="Allow_Sk" Type="bit" Nullable="false" />
+    <Property Name="Allow_Sq" Type="bit" Nullable="false" />
+    <Property Name="IsColonial" Type="bit" Nullable="false" />
+    <Property Name="TroopSpecification" Type="varchar" MaxLength="15" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_Population' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_Population">
+    <Key>
+      <PropertyRef Name="Density" />
+      <PropertyRef Name="TotalCitizens" />
+      <PropertyRef Name="ExtraCitizensRequired" />
+      <PropertyRef Name="StoneOrWood" />
+      <PropertyRef Name="GoodAmount" />
+    </Key>
+    <Property Name="Density" Type="int" Nullable="false" />
+    <Property Name="TotalCitizens" Type="int" Nullable="false" />
+    <Property Name="ExtraCitizensRequired" Type="int" Nullable="false" />
+    <Property Name="StoneOrWood" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="GoodAmount" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_ProductionSites">
+    <Key>
+      <PropertyRef Name="SiteTypeNo" />
+      <PropertyRef Name="Terrain" />
+      <PropertyRef Name="SiteType" />
+      <PropertyRef Name="Symbol" />
+      <PropertyRef Name="Cost" />
+      <PropertyRef Name="Maintenance" />
+      <PropertyRef Name="MinPopulation" />
+      <PropertyRef Name="MaxPopulation" />
+      <PropertyRef Name="MinProduction" />
+      <PropertyRef Name="MaxProduction" />
+      <PropertyRef Name="CitizensRequired" />
+    </Key>
+    <Property Name="SiteTypeNo" Type="int" Nullable="false" />
+    <Property Name="Terrain" Type="varchar" MaxLength="10" Nullable="false" />
+    <Property Name="SiteType" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Symbol" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="SecondarySymbol" Type="varchar" MaxLength="1" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="Maintenance" Type="int" Nullable="false" />
+    <Property Name="MinPopulation" Type="int" Nullable="false" />
+    <Property Name="MaxPopulation" Type="int" Nullable="false" />
+    <Property Name="ProductionType" Type="varchar" MaxLength="15" />
+    <Property Name="MinProduction" Type="int" Nullable="false" />
+    <Property Name="MaxProduction" Type="int" Nullable="false" />
+    <Property Name="MinProductionColonial" Type="int" />
+    <Property Name="MaxProductionColonial" Type="nchar" MaxLength="10" />
+    <Property Name="BonusSymbol" Type="varchar" MaxLength="1" />
+    <Property Name="BonusPercentage" Type="int" />
+    <Property Name="CitizensRequired" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_Ships' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_Ships">
+    <Key>
+      <PropertyRef Name="Type" />
+      <PropertyRef Name="Name" />
+      <PropertyRef Name="Wood" />
+      <PropertyRef Name="EcPts" />
+      <PropertyRef Name="Textiles" />
+      <PropertyRef Name="Citizens" />
+      <PropertyRef Name="Cost" />
+      <PropertyRef Name="Maintenance" />
+      <PropertyRef Name="LoadCapacity" />
+      <PropertyRef Name="MovementFactor" />
+    </Key>
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Textiles" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="Cost" Type="int" Nullable="false" />
+    <Property Name="Maintenance" Type="int" Nullable="false" />
+    <Property Name="LoadCapacity" Type="int" Nullable="false" />
+    <Property Name="MovementFactor" Type="int" Nullable="false" />
+    <Property Name="ShipClass" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_States' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_States">
+    <Key>
+      <PropertyRef Name="State" />
+      <PropertyRef Name="StateName" />
+      <PropertyRef Name="TaxRate" />
+      <PropertyRef Name="FleetMorale" />
+    </Key>
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="StateName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="TaxRate" Type="int" Nullable="false" />
+    <Property Name="FleetMorale" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_Terrain' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_Terrain">
+    <Key>
+      <PropertyRef Name="TerrainId" />
+    </Key>
+    <Property Name="TerrainId" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="MaxPopulation" Type="int" />
+    <Property Name="MP" Type="int" />
+    <Property Name="Attrition" Type="decimal" Precision="3" Scale="2" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_UnitWeightsRates' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="REF_UnitWeightsRates">
+    <Key>
+      <PropertyRef Name="WeightOfItem" />
+      <PropertyRef Name="ItemType" />
+    </Key>
+    <Property Name="WeightOfItem" Type="int" Nullable="false" />
+    <Property Name="ItemType" Type="varchar" MaxLength="20" Nullable="false" />
+    <Property Name="GoodsFactors" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_BaggageTrains' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_BaggageTrains">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+      <PropertyRef Name="FederationNo" />
+      <PropertyRef Name="MP" />
+      <PropertyRef Name="Condition" />
+      <PropertyRef Name="Goods1" />
+      <PropertyRef Name="Quantity1" />
+      <PropertyRef Name="Goods2" />
+      <PropertyRef Name="Quantity2" />
+      <PropertyRef Name="Money" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FederationNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Goods1" Type="int" Nullable="false" />
+    <Property Name="Quantity1" Type="int" Nullable="false" />
+    <Property Name="Goods2" Type="int" Nullable="false" />
+    <Property Name="Quantity2" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Barracks' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Barracks">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="BarracksNo" />
+      <PropertyRef Name="Type" />
+      <PropertyRef Name="Money" />
+      <PropertyRef Name="Citizens" />
+      <PropertyRef Name="EcPts" />
+      <PropertyRef Name="Wood" />
+      <PropertyRef Name="Horses" />
+      <PropertyRef Name="Text" />
+      <PropertyRef Name="FortressSize" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="BarracksNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="FortressSize" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Brigades' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Brigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="BrigadeNo" />
+      <PropertyRef Name="Name" />
+      <PropertyRef Name="CoordinateX_OrState" />
+      <PropertyRef Name="CoordinateY_OrFleet" />
+      <PropertyRef Name="MP" />
+      <PropertyRef Name="Federation" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="BrigadeNo" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="15" Nullable="false" />
+    <Property Name="CoordinateX_OrState" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="CoordinateY_OrFleet" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Federation" Type="int" Nullable="false" />
+    <Property Name="Batt1Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt1EF" Type="int" />
+    <Property Name="Batt1Size" Type="int" />
+    <Property Name="Batt2Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt2EF" Type="int" />
+    <Property Name="Batt2Size" Type="int" />
+    <Property Name="Batt3Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt3EF" Type="int" />
+    <Property Name="Batt3Size" Type="int" />
+    <Property Name="Batt4Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt4EF" Type="int" />
+    <Property Name="Batt4Size" Type="int" />
+    <Property Name="Batt5Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt5EF" Type="int" />
+    <Property Name="Batt5Size" Type="int" />
+    <Property Name="Batt6Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt6EF" Type="int" />
+    <Property Name="Batt6Size" Type="int" />
+    <Property Name="Batt7Type" Type="varchar" MaxLength="2" />
+    <Property Name="Batt7EF" Type="int" />
+    <Property Name="Batt7Size" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Commanders' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Commanders">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="CommanderNo" />
+      <PropertyRef Name="Rank" />
+      <PropertyRef Name="Name" />
+      <PropertyRef Name="CoordinateX" />
+      <PropertyRef Name="CoordinateY" />
+      <PropertyRef Name="Boarded" />
+      <PropertyRef Name="Federation" />
+      <PropertyRef Name="MP" />
+      <PropertyRef Name="CommandCapacity" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="CommanderNo" Type="int" Nullable="false" />
+    <Property Name="Rank" Type="varchar" MaxLength="15" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="CoordinateX" Type="int" Nullable="false" />
+    <Property Name="CoordinateY" Type="int" Nullable="false" />
+    <Property Name="Boarded" Type="int" Nullable="false" />
+    <Property Name="Federation" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="CommandCapacity" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_MerchantShips' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_MerchantShips">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="Type" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+      <PropertyRef Name="FleetNo" />
+      <PropertyRef Name="MP" />
+      <PropertyRef Name="Condition" />
+      <PropertyRef Name="Age" />
+      <PropertyRef Name="Goods1" />
+      <PropertyRef Name="Quantity1" />
+      <PropertyRef Name="Goods2" />
+      <PropertyRef Name="Quantity2" />
+      <PropertyRef Name="Money" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Age" Type="int" Nullable="false" />
+    <Property Name="Goods1" Type="int" Nullable="false" />
+    <Property Name="Quantity1" Type="int" Nullable="false" />
+    <Property Name="Goods2" Type="int" Nullable="false" />
+    <Property Name="Quantity2" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Spies' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Spies">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+      <PropertyRef Name="FederationNo" />
+      <PropertyRef Name="Reports" />
+      <PropertyRef Name="FortressSize" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FederationNo" Type="int" Nullable="false" />
+    <Property Name="Reports" Type="varchar" MaxLength="100" Nullable="false" />
+    <Property Name="FortressSize" Type="varchar" MaxLength="15" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_StateRelationships' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_StateRelationships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="State" />
+      <PropertyRef Name="Relationship" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Relationship" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_TradingPortsAndCities' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_TradingPortsAndCities">
+    <Key>
+      <PropertyRef Name="TurnID" />
+      <PropertyRef Name="TradeCityNo" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+      <PropertyRef Name="Rate" />
+      <PropertyRef Name="EctPts" />
+      <PropertyRef Name="Food" />
+      <PropertyRef Name="Stone" />
+      <PropertyRef Name="Wood" />
+      <PropertyRef Name="Ore" />
+      <PropertyRef Name="Zinc" />
+      <PropertyRef Name="Horses" />
+      <PropertyRef Name="Text" />
+      <PropertyRef Name="Wool" />
+      <PropertyRef Name="Gold" />
+      <PropertyRef Name="Wine" />
+    </Key>
+    <Property Name="TurnID" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="TradeCityNo" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="Rate" Type="int" Nullable="false" />
+    <Property Name="EctPts" Type="int" Nullable="false" />
+    <Property Name="Food" Type="int" Nullable="false" />
+    <Property Name="Stone" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Ore" Type="int" Nullable="false" />
+    <Property Name="Zinc" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="Wool" Type="int" Nullable="false" />
+    <Property Name="Gold" Type="int" Nullable="false" />
+    <Property Name="Wine" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Warehouses' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Warehouses">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="WarehouseNo" />
+      <PropertyRef Name="WarehouseName" />
+      <PropertyRef Name="Inhabitants" />
+      <PropertyRef Name="Foreign" />
+      <PropertyRef Name="Money" />
+      <PropertyRef Name="Citizens" />
+      <PropertyRef Name="EcPts" />
+      <PropertyRef Name="Food" />
+      <PropertyRef Name="Stone" />
+      <PropertyRef Name="Wood" />
+      <PropertyRef Name="Ore" />
+      <PropertyRef Name="Zinc" />
+      <PropertyRef Name="Horses" />
+      <PropertyRef Name="Text" />
+      <PropertyRef Name="Wool" />
+      <PropertyRef Name="Gold" />
+      <PropertyRef Name="Wine" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="WarehouseNo" Type="int" Nullable="false" />
+    <Property Name="WarehouseName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Inhabitants" Type="int" Nullable="false" />
+    <Property Name="Foreign" Type="int" Nullable="false" />
+    <Property Name="Money" Type="int" Nullable="false" />
+    <Property Name="Citizens" Type="int" Nullable="false" />
+    <Property Name="EcPts" Type="int" Nullable="false" />
+    <Property Name="Food" Type="int" Nullable="false" />
+    <Property Name="Stone" Type="int" Nullable="false" />
+    <Property Name="Wood" Type="int" Nullable="false" />
+    <Property Name="Ore" Type="int" Nullable="false" />
+    <Property Name="Zinc" Type="int" Nullable="false" />
+    <Property Name="Horses" Type="int" Nullable="false" />
+    <Property Name="Text" Type="int" Nullable="false" />
+    <Property Name="Wool" Type="int" Nullable="false" />
+    <Property Name="Gold" Type="int" Nullable="false" />
+    <Property Name="Wine" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_Warships' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TR_Warships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="Type" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+      <PropertyRef Name="FleetNo" />
+      <PropertyRef Name="MP" />
+      <PropertyRef Name="Condition" />
+      <PropertyRef Name="Age" />
+      <PropertyRef Name="Marines" />
+      <PropertyRef Name="Brigade1" />
+      <PropertyRef Name="Brigade2" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Type" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="MP" Type="int" Nullable="false" />
+    <Property Name="Condition" Type="int" Nullable="false" />
+    <Property Name="Age" Type="int" Nullable="false" />
+    <Property Name="Marines" Type="int" Nullable="false" />
+    <Property Name="Brigade1" Type="int" Nullable="false" />
+    <Property Name="Brigade2" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_00TurnDetails' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_00TurnDetails">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="State" />
+      <PropertyRef Name="GameNo" />
+      <PropertyRef Name="Month" />
+      <PropertyRef Name="Year" />
+      <PropertyRef Name="PlayerName" />
+      <PropertyRef Name="AccountNo" />
+      <PropertyRef Name="ProcessDate" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="GameNo" Type="nchar" MaxLength="10" Nullable="false" />
+    <Property Name="Month" Type="varchar" MaxLength="3" Nullable="false" />
+    <Property Name="Year" Type="int" Nullable="false" />
+    <Property Name="PlayerName" Type="varchar" MaxLength="50" Nullable="false" />
+    <Property Name="AccountNo" Type="varchar" MaxLength="20" Nullable="false" />
+    <Property Name="ProcessDate" Type="date" Nullable="false" />
+    <Property Name="FundsSentCash" Type="int" />
+    <Property Name="FundsSentCheque" Type="int" />
+    <Property Name="FundsSentPO" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_02DemolishItems' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_02DemolishItems">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_03SetUpBrigades' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_03SetUpBrigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Depot" />
+      <PropertyRef Name="Batt1" />
+      <PropertyRef Name="Batt2" />
+      <PropertyRef Name="Batt3" />
+      <PropertyRef Name="Batt4" />
+      <PropertyRef Name="Batt5" />
+      <PropertyRef Name="BrigadeName" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Depot" Type="int" Nullable="false" />
+    <Property Name="Batt1" Type="int" Nullable="false" />
+    <Property Name="Batt2" Type="int" Nullable="false" />
+    <Property Name="Batt3" Type="int" Nullable="false" />
+    <Property Name="Batt4" Type="int" Nullable="false" />
+    <Property Name="Batt5" Type="int" Nullable="false" />
+    <Property Name="Batt6" Type="int" />
+    <Property Name="Batt7" Type="int" />
+    <Property Name="BrigadeName" Type="varchar" MaxLength="30" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_04SetUpAdditionalBrigades' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_04SetUpAdditionalBrigades">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="BrigadeNo" />
+      <PropertyRef Name="BattType" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeNo" Type="int" Nullable="false" />
+    <Property Name="BattType" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_05IncreaseHeadcount' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_05IncreaseHeadcount">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="BrigadeOrFederation" />
+      <PropertyRef Name="IncreaseAmount" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
+    <Property Name="IncreaseAmount" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_06IncreaseBrigadeXP' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_06IncreaseBrigadeXP">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="BrigadeOrFederation" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_07ExchangeBattalions' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_07ExchangeBattalions">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="BrigadeA" />
+      <PropertyRef Name="BattA" />
+      <PropertyRef Name="BrigadeB" />
+      <PropertyRef Name="BattB" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BrigadeA" Type="int" Nullable="false" />
+    <Property Name="BattA" Type="int" Nullable="false" />
+    <Property Name="BrigadeB" Type="int" Nullable="false" />
+    <Property Name="BattB" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_08MergeBattalions' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_08MergeBattalions">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="BridageA" />
+      <PropertyRef Name="BattA" />
+      <PropertyRef Name="BrigadeB" />
+      <PropertyRef Name="BattB" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="BridageA" Type="int" Nullable="false" />
+    <Property Name="BattA" Type="int" Nullable="false" />
+    <Property Name="BrigadeB" Type="int" Nullable="false" />
+    <Property Name="BattB" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_09RepairShips_BaggageTrains' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_09RepairShips_BaggageTrains">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ItemNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_10BuildShips' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_10BuildShips">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Shipyard" />
+      <PropertyRef Name="ShipType" />
+      <PropertyRef Name="Name_WarshipOnly" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Shipyard" Type="int" Nullable="false" />
+    <Property Name="ShipType" Type="int" Nullable="false" />
+    <Property Name="Name_WarshipOnly" Type="nchar" MaxLength="10" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_11BuildBaggageTrain' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_11BuildBaggageTrain">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Barracks" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Barracks" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_12IncreasePopulationDensity' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_12IncreasePopulationDensity">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="XCoodinate" />
+      <PropertyRef Name="YCoordinate" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="XCoodinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_13BuildProductionSites' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_13BuildProductionSites">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ProdSiteType" />
+      <PropertyRef Name="XCoordinate" />
+      <PropertyRef Name="YCoordinate" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ProdSiteType" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" Nullable="false" />
+    <Property Name="YCoordinate" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_14FormFederations' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_14FormFederations">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="Federation_Fleet" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Federation_Fleet" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_15CoastalDefence' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_15CoastalDefence">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="FleetNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_16SeaBlockade' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_16SeaBlockade">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="FleetNo" />
+      <PropertyRef Name="StateA_Or_Fleet0" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="StateA_Or_Fleet0" Type="varchar" MaxLength="2" Nullable="false" />
+    <Property Name="StateB" Type="varchar" MaxLength="1" />
+    <Property Name="StateC" Type="varchar" MaxLength="1" />
+    <Property Name="StateD" Type="varchar" MaxLength="1" />
+    <Property Name="StateE" Type="varchar" MaxLength="1" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_17TradeAndLoading1' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_17TradeAndLoading1">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Goods" />
+      <PropertyRef Name="Quantity" />
+      <PropertyRef Name="From" />
+      <PropertyRef Name="To" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="int" Nullable="false" />
+    <Property Name="From" Type="int" Nullable="false" />
+    <Property Name="To" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_18Movement' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_18Movement">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="Direction1" />
+      <PropertyRef Name="Distance1" />
+      <PropertyRef Name="Direction2" />
+      <PropertyRef Name="Distance2" />
+      <PropertyRef Name="Direction3" />
+      <PropertyRef Name="Distance3" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Direction1" Type="int" Nullable="false" />
+    <Property Name="Distance1" Type="int" Nullable="false" />
+    <Property Name="Direction2" Type="int" Nullable="false" />
+    <Property Name="Distance2" Type="int" Nullable="false" />
+    <Property Name="Direction3" Type="int" Nullable="false" />
+    <Property Name="Distance3" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_19TradeAndLoading2' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_19TradeAndLoading2">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Goods" />
+      <PropertyRef Name="Quantity" />
+      <PropertyRef Name="Source" />
+      <PropertyRef Name="Destination" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="int" Nullable="false" />
+    <Property Name="Source" Type="int" Nullable="false" />
+    <Property Name="Destination" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_20Boarding' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_20Boarding">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="Command" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="FleetNo" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="Command" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="FleetOwner" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_21HandOverTerritory' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_21HandOverTerritory">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="State" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="ShipNumber" Type="int" />
+    <Property Name="XCoordinate" Type="int" />
+    <Property Name="YCoordinate" Type="int" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_22ChangeNames' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_22ChangeNames">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="ItemNo" />
+      <PropertyRef Name="Name" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS_23ChangeStateRelationships' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS_23ChangeStateRelationships">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="State" />
+      <PropertyRef Name="Relationship" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="Relationship" Type="int" Nullable="false" />
+  </EntityType>
+  <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TS01_TransferGoods' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+  <EntityType Name="TS01_TransferGoods">
+    <Key>
+      <PropertyRef Name="TurnId" />
+      <PropertyRef Name="OrderNo" />
+      <PropertyRef Name="From" />
+      <PropertyRef Name="To" />
+    </Key>
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="OrderNo" Type="int" Nullable="false" />
+    <Property Name="From" Type="int" Nullable="false" />
+    <Property Name="To" Type="int" Nullable="false" />
+    <Property Name="Louisdore" Type="int" />
+    <Property Name="Citizens" Type="int" />
+    <Property Name="EcPts" Type="int" />
+    <Property Name="Wood" Type="int" />
+    <Property Name="Horses" Type="int" />
+    <Property Name="Textiles" Type="int" />
+  </EntityType>
+  <EntityContainer Name="AusterlitzModelStoreContainer">
+    <EntitySet Name="REF_ArmyList" EntityType="Self.REF_ArmyList" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="REF_Population" EntityType="Self.REF_Population" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_Population].[Density] AS [Density], 
+[REF_Population].[TotalCitizens] AS [TotalCitizens], 
+[REF_Population].[ExtraCitizensRequired] AS [ExtraCitizensRequired], 
+[REF_Population].[StoneOrWood] AS [StoneOrWood], 
+[REF_Population].[GoodAmount] AS [GoodAmount]
+FROM [dbo].[REF_Population] AS [REF_Population]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="REF_ProductionSites" EntityType="Self.REF_ProductionSites" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_ProductionSites].[SiteTypeNo] AS [SiteTypeNo], 
+[REF_ProductionSites].[Terrain] AS [Terrain], 
+[REF_ProductionSites].[SiteType] AS [SiteType], 
+[REF_ProductionSites].[Symbol] AS [Symbol], 
+[REF_ProductionSites].[SecondarySymbol] AS [SecondarySymbol], 
+[REF_ProductionSites].[Cost] AS [Cost], 
+[REF_ProductionSites].[Maintenance] AS [Maintenance], 
+[REF_ProductionSites].[MinPopulation] AS [MinPopulation], 
+[REF_ProductionSites].[MaxPopulation] AS [MaxPopulation], 
+[REF_ProductionSites].[ProductionType] AS [ProductionType], 
+[REF_ProductionSites].[MinProduction] AS [MinProduction], 
+[REF_ProductionSites].[MaxProduction] AS [MaxProduction], 
+[REF_ProductionSites].[MinProductionColonial] AS [MinProductionColonial], 
+[REF_ProductionSites].[MaxProductionColonial] AS [MaxProductionColonial], 
+[REF_ProductionSites].[BonusSymbol] AS [BonusSymbol], 
+[REF_ProductionSites].[BonusPercentage] AS [BonusPercentage], 
+[REF_ProductionSites].[CitizensRequired] AS [CitizensRequired]
+FROM [dbo].[REF_ProductionSites] AS [REF_ProductionSites]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="REF_Ships" EntityType="Self.REF_Ships" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_Ships].[Type] AS [Type], 
+[REF_Ships].[Name] AS [Name], 
+[REF_Ships].[Wood] AS [Wood], 
+[REF_Ships].[EcPts] AS [EcPts], 
+[REF_Ships].[Textiles] AS [Textiles], 
+[REF_Ships].[Citizens] AS [Citizens], 
+[REF_Ships].[Cost] AS [Cost], 
+[REF_Ships].[Maintenance] AS [Maintenance], 
+[REF_Ships].[LoadCapacity] AS [LoadCapacity], 
+[REF_Ships].[MovementFactor] AS [MovementFactor], 
+[REF_Ships].[ShipClass] AS [ShipClass]
+FROM [dbo].[REF_Ships] AS [REF_Ships]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="REF_States" EntityType="Self.REF_States" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_States].[State] AS [State], 
+[REF_States].[StateName] AS [StateName], 
+[REF_States].[TaxRate] AS [TaxRate], 
+[REF_States].[FleetMorale] AS [FleetMorale]
+FROM [dbo].[REF_States] AS [REF_States]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="REF_Terrain" EntityType="Self.REF_Terrain" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_Terrain].[TerrainId] AS [TerrainId], 
+[REF_Terrain].[MaxPopulation] AS [MaxPopulation], 
+[REF_Terrain].[MP] AS [MP], 
+[REF_Terrain].[Attrition] AS [Attrition]
+FROM [dbo].[REF_Terrain] AS [REF_Terrain]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="REF_UnitWeightsRates" EntityType="Self.REF_UnitWeightsRates" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[REF_UnitWeightsRates].[WeightOfItem] AS [WeightOfItem], 
+[REF_UnitWeightsRates].[ItemType] AS [ItemType], 
+[REF_UnitWeightsRates].[GoodsFactors] AS [GoodsFactors]
+FROM [dbo].[REF_UnitWeightsRates] AS [REF_UnitWeightsRates]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_BaggageTrains" EntityType="Self.TR_BaggageTrains" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_BaggageTrains].[TurnId] AS [TurnId], 
+[TR_BaggageTrains].[ItemNo] AS [ItemNo], 
+[TR_BaggageTrains].[XCoordinate] AS [XCoordinate], 
+[TR_BaggageTrains].[YCoordinate] AS [YCoordinate], 
+[TR_BaggageTrains].[FederationNo] AS [FederationNo], 
+[TR_BaggageTrains].[MP] AS [MP], 
+[TR_BaggageTrains].[Condition] AS [Condition], 
+[TR_BaggageTrains].[Goods1] AS [Goods1], 
+[TR_BaggageTrains].[Quantity1] AS [Quantity1], 
+[TR_BaggageTrains].[Goods2] AS [Goods2], 
+[TR_BaggageTrains].[Quantity2] AS [Quantity2], 
+[TR_BaggageTrains].[Money] AS [Money]
+FROM [dbo].[TR_BaggageTrains] AS [TR_BaggageTrains]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Barracks" EntityType="Self.TR_Barracks" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Barracks].[TurnId] AS [TurnId], 
+[TR_Barracks].[BarracksNo] AS [BarracksNo], 
+[TR_Barracks].[Type] AS [Type], 
+[TR_Barracks].[Money] AS [Money], 
+[TR_Barracks].[Citizens] AS [Citizens], 
+[TR_Barracks].[EcPts] AS [EcPts], 
+[TR_Barracks].[Wood] AS [Wood], 
+[TR_Barracks].[Horses] AS [Horses], 
+[TR_Barracks].[Text] AS [Text], 
+[TR_Barracks].[FortressSize] AS [FortressSize]
+FROM [dbo].[TR_Barracks] AS [TR_Barracks]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Brigades" EntityType="Self.TR_Brigades" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Brigades].[TurnId] AS [TurnId], 
+[TR_Brigades].[BrigadeNo] AS [BrigadeNo], 
+[TR_Brigades].[Name] AS [Name], 
+[TR_Brigades].[CoordinateX_OrState] AS [CoordinateX_OrState], 
+[TR_Brigades].[CoordinateY_OrFleet] AS [CoordinateY_OrFleet], 
+[TR_Brigades].[MP] AS [MP], 
+[TR_Brigades].[Federation] AS [Federation], 
+[TR_Brigades].[Batt1Type] AS [Batt1Type], 
+[TR_Brigades].[Batt1EF] AS [Batt1EF], 
+[TR_Brigades].[Batt1Size] AS [Batt1Size], 
+[TR_Brigades].[Batt2Type] AS [Batt2Type], 
+[TR_Brigades].[Batt2EF] AS [Batt2EF], 
+[TR_Brigades].[Batt2Size] AS [Batt2Size], 
+[TR_Brigades].[Batt3Type] AS [Batt3Type], 
+[TR_Brigades].[Batt3EF] AS [Batt3EF], 
+[TR_Brigades].[Batt3Size] AS [Batt3Size], 
+[TR_Brigades].[Batt4Type] AS [Batt4Type], 
+[TR_Brigades].[Batt4EF] AS [Batt4EF], 
+[TR_Brigades].[Batt4Size] AS [Batt4Size], 
+[TR_Brigades].[Batt5Type] AS [Batt5Type], 
+[TR_Brigades].[Batt5EF] AS [Batt5EF], 
+[TR_Brigades].[Batt5Size] AS [Batt5Size], 
+[TR_Brigades].[Batt6Type] AS [Batt6Type], 
+[TR_Brigades].[Batt6EF] AS [Batt6EF], 
+[TR_Brigades].[Batt6Size] AS [Batt6Size], 
+[TR_Brigades].[Batt7Type] AS [Batt7Type], 
+[TR_Brigades].[Batt7EF] AS [Batt7EF], 
+[TR_Brigades].[Batt7Size] AS [Batt7Size]
+FROM [dbo].[TR_Brigades] AS [TR_Brigades]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Commanders" EntityType="Self.TR_Commanders" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Commanders].[TurnId] AS [TurnId], 
+[TR_Commanders].[CommanderNo] AS [CommanderNo], 
+[TR_Commanders].[Rank] AS [Rank], 
+[TR_Commanders].[Name] AS [Name], 
+[TR_Commanders].[CoordinateX] AS [CoordinateX], 
+[TR_Commanders].[CoordinateY] AS [CoordinateY], 
+[TR_Commanders].[Boarded] AS [Boarded], 
+[TR_Commanders].[Federation] AS [Federation], 
+[TR_Commanders].[MP] AS [MP], 
+[TR_Commanders].[CommandCapacity] AS [CommandCapacity]
+FROM [dbo].[TR_Commanders] AS [TR_Commanders]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_MerchantShips" EntityType="Self.TR_MerchantShips" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_MerchantShips].[TurnId] AS [TurnId], 
+[TR_MerchantShips].[ItemNo] AS [ItemNo], 
+[TR_MerchantShips].[Type] AS [Type], 
+[TR_MerchantShips].[XCoordinate] AS [XCoordinate], 
+[TR_MerchantShips].[YCoordinate] AS [YCoordinate], 
+[TR_MerchantShips].[FleetNo] AS [FleetNo], 
+[TR_MerchantShips].[MP] AS [MP], 
+[TR_MerchantShips].[Condition] AS [Condition], 
+[TR_MerchantShips].[Age] AS [Age], 
+[TR_MerchantShips].[Goods1] AS [Goods1], 
+[TR_MerchantShips].[Quantity1] AS [Quantity1], 
+[TR_MerchantShips].[Goods2] AS [Goods2], 
+[TR_MerchantShips].[Quantity2] AS [Quantity2], 
+[TR_MerchantShips].[Money] AS [Money]
+FROM [dbo].[TR_MerchantShips] AS [TR_MerchantShips]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Spies" EntityType="Self.TR_Spies" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Spies].[TurnId] AS [TurnId], 
+[TR_Spies].[ItemNo] AS [ItemNo], 
+[TR_Spies].[XCoordinate] AS [XCoordinate], 
+[TR_Spies].[YCoordinate] AS [YCoordinate], 
+[TR_Spies].[FederationNo] AS [FederationNo], 
+[TR_Spies].[Reports] AS [Reports], 
+[TR_Spies].[FortressSize] AS [FortressSize]
+FROM [dbo].[TR_Spies] AS [TR_Spies]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_StateRelationships" EntityType="Self.TR_StateRelationships" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_StateRelationships].[TurnId] AS [TurnId], 
+[TR_StateRelationships].[State] AS [State], 
+[TR_StateRelationships].[Relationship] AS [Relationship]
+FROM [dbo].[TR_StateRelationships] AS [TR_StateRelationships]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_TradingPortsAndCities" EntityType="Self.TR_TradingPortsAndCities" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_TradingPortsAndCities].[TurnID] AS [TurnID], 
+[TR_TradingPortsAndCities].[TradeCityNo] AS [TradeCityNo], 
+[TR_TradingPortsAndCities].[XCoordinate] AS [XCoordinate], 
+[TR_TradingPortsAndCities].[YCoordinate] AS [YCoordinate], 
+[TR_TradingPortsAndCities].[Rate] AS [Rate], 
+[TR_TradingPortsAndCities].[EctPts] AS [EctPts], 
+[TR_TradingPortsAndCities].[Food] AS [Food], 
+[TR_TradingPortsAndCities].[Stone] AS [Stone], 
+[TR_TradingPortsAndCities].[Wood] AS [Wood], 
+[TR_TradingPortsAndCities].[Ore] AS [Ore], 
+[TR_TradingPortsAndCities].[Zinc] AS [Zinc], 
+[TR_TradingPortsAndCities].[Horses] AS [Horses], 
+[TR_TradingPortsAndCities].[Text] AS [Text], 
+[TR_TradingPortsAndCities].[Wool] AS [Wool], 
+[TR_TradingPortsAndCities].[Gold] AS [Gold], 
+[TR_TradingPortsAndCities].[Wine] AS [Wine]
+FROM [dbo].[TR_TradingPortsAndCities] AS [TR_TradingPortsAndCities]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Warehouses" EntityType="Self.TR_Warehouses" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Warehouses].[TurnId] AS [TurnId], 
+[TR_Warehouses].[WarehouseNo] AS [WarehouseNo], 
+[TR_Warehouses].[WarehouseName] AS [WarehouseName], 
+[TR_Warehouses].[Inhabitants] AS [Inhabitants], 
+[TR_Warehouses].[Foreign] AS [Foreign], 
+[TR_Warehouses].[Money] AS [Money], 
+[TR_Warehouses].[Citizens] AS [Citizens], 
+[TR_Warehouses].[EcPts] AS [EcPts], 
+[TR_Warehouses].[Food] AS [Food], 
+[TR_Warehouses].[Stone] AS [Stone], 
+[TR_Warehouses].[Wood] AS [Wood], 
+[TR_Warehouses].[Ore] AS [Ore], 
+[TR_Warehouses].[Zinc] AS [Zinc], 
+[TR_Warehouses].[Horses] AS [Horses], 
+[TR_Warehouses].[Text] AS [Text], 
+[TR_Warehouses].[Wool] AS [Wool], 
+[TR_Warehouses].[Gold] AS [Gold], 
+[TR_Warehouses].[Wine] AS [Wine]
+FROM [dbo].[TR_Warehouses] AS [TR_Warehouses]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TR_Warships" EntityType="Self.TR_Warships" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TR_Warships].[TurnId] AS [TurnId], 
+[TR_Warships].[ItemNo] AS [ItemNo], 
+[TR_Warships].[Type] AS [Type], 
+[TR_Warships].[XCoordinate] AS [XCoordinate], 
+[TR_Warships].[YCoordinate] AS [YCoordinate], 
+[TR_Warships].[FleetNo] AS [FleetNo], 
+[TR_Warships].[MP] AS [MP], 
+[TR_Warships].[Condition] AS [Condition], 
+[TR_Warships].[Age] AS [Age], 
+[TR_Warships].[Marines] AS [Marines], 
+[TR_Warships].[Brigade1] AS [Brigade1], 
+[TR_Warships].[Brigade2] AS [Brigade2]
+FROM [dbo].[TR_Warships] AS [TR_Warships]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_00TurnDetails" EntityType="Self.TS_00TurnDetails" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_00TurnDetails].[TurnId] AS [TurnId], 
+[TS_00TurnDetails].[State] AS [State], 
+[TS_00TurnDetails].[GameNo] AS [GameNo], 
+[TS_00TurnDetails].[Month] AS [Month], 
+[TS_00TurnDetails].[Year] AS [Year], 
+[TS_00TurnDetails].[PlayerName] AS [PlayerName], 
+[TS_00TurnDetails].[AccountNo] AS [AccountNo], 
+[TS_00TurnDetails].[ProcessDate] AS [ProcessDate], 
+[TS_00TurnDetails].[FundsSentCash] AS [FundsSentCash], 
+[TS_00TurnDetails].[FundsSentCheque] AS [FundsSentCheque], 
+[TS_00TurnDetails].[FundsSentPO] AS [FundsSentPO]
+FROM [dbo].[TS_00TurnDetails] AS [TS_00TurnDetails]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_02DemolishItems" EntityType="Self.TS_02DemolishItems" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_02DemolishItems].[TurnId] AS [TurnId], 
+[TS_02DemolishItems].[OrderNo] AS [OrderNo], 
+[TS_02DemolishItems].[ItemNo] AS [ItemNo]
+FROM [dbo].[TS_02DemolishItems] AS [TS_02DemolishItems]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_03SetUpBrigades" EntityType="Self.TS_03SetUpBrigades" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_03SetUpBrigades].[TurnId] AS [TurnId], 
+[TS_03SetUpBrigades].[OrderNo] AS [OrderNo], 
+[TS_03SetUpBrigades].[Depot] AS [Depot], 
+[TS_03SetUpBrigades].[Batt1] AS [Batt1], 
+[TS_03SetUpBrigades].[Batt2] AS [Batt2], 
+[TS_03SetUpBrigades].[Batt3] AS [Batt3], 
+[TS_03SetUpBrigades].[Batt4] AS [Batt4], 
+[TS_03SetUpBrigades].[Batt5] AS [Batt5], 
+[TS_03SetUpBrigades].[Batt6] AS [Batt6], 
+[TS_03SetUpBrigades].[Batt7] AS [Batt7], 
+[TS_03SetUpBrigades].[BrigadeName] AS [BrigadeName]
+FROM [dbo].[TS_03SetUpBrigades] AS [TS_03SetUpBrigades]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_04SetUpAdditionalBrigades" EntityType="Self.TS_04SetUpAdditionalBrigades" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_04SetUpAdditionalBrigades].[TurnId] AS [TurnId], 
+[TS_04SetUpAdditionalBrigades].[OrderNo] AS [OrderNo], 
+[TS_04SetUpAdditionalBrigades].[BrigadeNo] AS [BrigadeNo], 
+[TS_04SetUpAdditionalBrigades].[BattType] AS [BattType]
+FROM [dbo].[TS_04SetUpAdditionalBrigades] AS [TS_04SetUpAdditionalBrigades]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_05IncreaseHeadcount" EntityType="Self.TS_05IncreaseHeadcount" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_05IncreaseHeadcount].[TurnId] AS [TurnId], 
+[TS_05IncreaseHeadcount].[OrderNo] AS [OrderNo], 
+[TS_05IncreaseHeadcount].[BrigadeOrFederation] AS [BrigadeOrFederation], 
+[TS_05IncreaseHeadcount].[IncreaseAmount] AS [IncreaseAmount]
+FROM [dbo].[TS_05IncreaseHeadcount] AS [TS_05IncreaseHeadcount]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_06IncreaseBrigadeXP" EntityType="Self.TS_06IncreaseBrigadeXP" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_06IncreaseBrigadeXP].[TurnId] AS [TurnId], 
+[TS_06IncreaseBrigadeXP].[OrderNo] AS [OrderNo], 
+[TS_06IncreaseBrigadeXP].[BrigadeOrFederation] AS [BrigadeOrFederation]
+FROM [dbo].[TS_06IncreaseBrigadeXP] AS [TS_06IncreaseBrigadeXP]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_07ExchangeBattalions" EntityType="Self.TS_07ExchangeBattalions" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_07ExchangeBattalions].[TurnId] AS [TurnId], 
+[TS_07ExchangeBattalions].[OrderNo] AS [OrderNo], 
+[TS_07ExchangeBattalions].[BrigadeA] AS [BrigadeA], 
+[TS_07ExchangeBattalions].[BattA] AS [BattA], 
+[TS_07ExchangeBattalions].[BrigadeB] AS [BrigadeB], 
+[TS_07ExchangeBattalions].[BattB] AS [BattB]
+FROM [dbo].[TS_07ExchangeBattalions] AS [TS_07ExchangeBattalions]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_08MergeBattalions" EntityType="Self.TS_08MergeBattalions" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_08MergeBattalions].[TurnId] AS [TurnId], 
+[TS_08MergeBattalions].[OrderNo] AS [OrderNo], 
+[TS_08MergeBattalions].[BridageA] AS [BridageA], 
+[TS_08MergeBattalions].[BattA] AS [BattA], 
+[TS_08MergeBattalions].[BrigadeB] AS [BrigadeB], 
+[TS_08MergeBattalions].[BattB] AS [BattB]
+FROM [dbo].[TS_08MergeBattalions] AS [TS_08MergeBattalions]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_09RepairShips_BaggageTrains" EntityType="Self.TS_09RepairShips_BaggageTrains" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_09RepairShips_BaggageTrains].[TurnId] AS [TurnId], 
+[TS_09RepairShips_BaggageTrains].[OrderNo] AS [OrderNo], 
+[TS_09RepairShips_BaggageTrains].[ItemNo] AS [ItemNo]
+FROM [dbo].[TS_09RepairShips_BaggageTrains] AS [TS_09RepairShips_BaggageTrains]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_10BuildShips" EntityType="Self.TS_10BuildShips" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_10BuildShips].[TurnId] AS [TurnId], 
+[TS_10BuildShips].[OrderNo] AS [OrderNo], 
+[TS_10BuildShips].[Shipyard] AS [Shipyard], 
+[TS_10BuildShips].[ShipType] AS [ShipType], 
+[TS_10BuildShips].[Name_WarshipOnly] AS [Name_WarshipOnly]
+FROM [dbo].[TS_10BuildShips] AS [TS_10BuildShips]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_11BuildBaggageTrain" EntityType="Self.TS_11BuildBaggageTrain" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_11BuildBaggageTrain].[TurnId] AS [TurnId], 
+[TS_11BuildBaggageTrain].[OrderNo] AS [OrderNo], 
+[TS_11BuildBaggageTrain].[Barracks] AS [Barracks]
+FROM [dbo].[TS_11BuildBaggageTrain] AS [TS_11BuildBaggageTrain]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_12IncreasePopulationDensity" EntityType="Self.TS_12IncreasePopulationDensity" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_12IncreasePopulationDensity].[TurnId] AS [TurnId], 
+[TS_12IncreasePopulationDensity].[OrderNo] AS [OrderNo], 
+[TS_12IncreasePopulationDensity].[XCoodinate] AS [XCoodinate], 
+[TS_12IncreasePopulationDensity].[YCoordinate] AS [YCoordinate]
+FROM [dbo].[TS_12IncreasePopulationDensity] AS [TS_12IncreasePopulationDensity]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_13BuildProductionSites" EntityType="Self.TS_13BuildProductionSites" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_13BuildProductionSites].[TurnId] AS [TurnId], 
+[TS_13BuildProductionSites].[OrderNo] AS [OrderNo], 
+[TS_13BuildProductionSites].[ProdSiteType] AS [ProdSiteType], 
+[TS_13BuildProductionSites].[XCoordinate] AS [XCoordinate], 
+[TS_13BuildProductionSites].[YCoordinate] AS [YCoordinate]
+FROM [dbo].[TS_13BuildProductionSites] AS [TS_13BuildProductionSites]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_14FormFederations" EntityType="Self.TS_14FormFederations" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_14FormFederations].[TurnId] AS [TurnId], 
+[TS_14FormFederations].[OrderNo] AS [OrderNo], 
+[TS_14FormFederations].[ItemNo] AS [ItemNo], 
+[TS_14FormFederations].[Federation_Fleet] AS [Federation_Fleet]
+FROM [dbo].[TS_14FormFederations] AS [TS_14FormFederations]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_15CoastalDefence" EntityType="Self.TS_15CoastalDefence" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_15CoastalDefence].[TurnId] AS [TurnId], 
+[TS_15CoastalDefence].[OrderNo] AS [OrderNo], 
+[TS_15CoastalDefence].[FleetNo] AS [FleetNo]
+FROM [dbo].[TS_15CoastalDefence] AS [TS_15CoastalDefence]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_16SeaBlockade" EntityType="Self.TS_16SeaBlockade" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_16SeaBlockade].[TurnId] AS [TurnId], 
+[TS_16SeaBlockade].[OrderNo] AS [OrderNo], 
+[TS_16SeaBlockade].[FleetNo] AS [FleetNo], 
+[TS_16SeaBlockade].[StateA_Or_Fleet0] AS [StateA_Or_Fleet0], 
+[TS_16SeaBlockade].[StateB] AS [StateB], 
+[TS_16SeaBlockade].[StateC] AS [StateC], 
+[TS_16SeaBlockade].[StateD] AS [StateD], 
+[TS_16SeaBlockade].[StateE] AS [StateE]
+FROM [dbo].[TS_16SeaBlockade] AS [TS_16SeaBlockade]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_17TradeAndLoading1" EntityType="Self.TS_17TradeAndLoading1" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_17TradeAndLoading1].[TurnId] AS [TurnId], 
+[TS_17TradeAndLoading1].[OrderNo] AS [OrderNo], 
+[TS_17TradeAndLoading1].[Goods] AS [Goods], 
+[TS_17TradeAndLoading1].[Quantity] AS [Quantity], 
+[TS_17TradeAndLoading1].[From] AS [From], 
+[TS_17TradeAndLoading1].[To] AS [To]
+FROM [dbo].[TS_17TradeAndLoading1] AS [TS_17TradeAndLoading1]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_18Movement" EntityType="Self.TS_18Movement" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_18Movement].[TurnId] AS [TurnId], 
+[TS_18Movement].[OrderNo] AS [OrderNo], 
+[TS_18Movement].[ItemNo] AS [ItemNo], 
+[TS_18Movement].[Direction1] AS [Direction1], 
+[TS_18Movement].[Distance1] AS [Distance1], 
+[TS_18Movement].[Direction2] AS [Direction2], 
+[TS_18Movement].[Distance2] AS [Distance2], 
+[TS_18Movement].[Direction3] AS [Direction3], 
+[TS_18Movement].[Distance3] AS [Distance3]
+FROM [dbo].[TS_18Movement] AS [TS_18Movement]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_19TradeAndLoading2" EntityType="Self.TS_19TradeAndLoading2" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_19TradeAndLoading2].[TurnId] AS [TurnId], 
+[TS_19TradeAndLoading2].[OrderNo] AS [OrderNo], 
+[TS_19TradeAndLoading2].[Goods] AS [Goods], 
+[TS_19TradeAndLoading2].[Quantity] AS [Quantity], 
+[TS_19TradeAndLoading2].[Source] AS [Source], 
+[TS_19TradeAndLoading2].[Destination] AS [Destination]
+FROM [dbo].[TS_19TradeAndLoading2] AS [TS_19TradeAndLoading2]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_20Boarding" EntityType="Self.TS_20Boarding" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_20Boarding].[TurnId] AS [TurnId], 
+[TS_20Boarding].[OrderNo] AS [OrderNo], 
+[TS_20Boarding].[Command] AS [Command], 
+[TS_20Boarding].[ItemNo] AS [ItemNo], 
+[TS_20Boarding].[FleetNo] AS [FleetNo], 
+[TS_20Boarding].[FleetOwner] AS [FleetOwner]
+FROM [dbo].[TS_20Boarding] AS [TS_20Boarding]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_21HandOverTerritory" EntityType="Self.TS_21HandOverTerritory" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_21HandOverTerritory].[TurnId] AS [TurnId], 
+[TS_21HandOverTerritory].[OrderNo] AS [OrderNo], 
+[TS_21HandOverTerritory].[State] AS [State], 
+[TS_21HandOverTerritory].[ShipNumber] AS [ShipNumber], 
+[TS_21HandOverTerritory].[XCoordinate] AS [XCoordinate], 
+[TS_21HandOverTerritory].[YCoordinate] AS [YCoordinate]
+FROM [dbo].[TS_21HandOverTerritory] AS [TS_21HandOverTerritory]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_22ChangeNames" EntityType="Self.TS_22ChangeNames" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_22ChangeNames].[TurnId] AS [TurnId], 
+[TS_22ChangeNames].[OrderNo] AS [OrderNo], 
+[TS_22ChangeNames].[ItemNo] AS [ItemNo], 
+[TS_22ChangeNames].[Name] AS [Name]
+FROM [dbo].[TS_22ChangeNames] AS [TS_22ChangeNames]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS_23ChangeStateRelationships" EntityType="Self.TS_23ChangeStateRelationships" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS_23ChangeStateRelationships].[TurnId] AS [TurnId], 
+[TS_23ChangeStateRelationships].[OrderNo] AS [OrderNo], 
+[TS_23ChangeStateRelationships].[State] AS [State], 
+[TS_23ChangeStateRelationships].[Relationship] AS [Relationship]
+FROM [dbo].[TS_23ChangeStateRelationships] AS [TS_23ChangeStateRelationships]</DefiningQuery>
+    </EntitySet>
+    <EntitySet Name="TS01_TransferGoods" EntityType="Self.TS01_TransferGoods" store:Type="Tables" store:Schema="dbo">
+      <DefiningQuery>SELECT 
+[TS01_TransferGoods].[TurnId] AS [TurnId], 
+[TS01_TransferGoods].[OrderNo] AS [OrderNo], 
+[TS01_TransferGoods].[From] AS [From], 
+[TS01_TransferGoods].[To] AS [To], 
+[TS01_TransferGoods].[Louisdore] AS [Louisdore], 
+[TS01_TransferGoods].[Citizens] AS [Citizens], 
+[TS01_TransferGoods].[EcPts] AS [EcPts], 
+[TS01_TransferGoods].[Wood] AS [Wood], 
+[TS01_TransferGoods].[Horses] AS [Horses], 
+[TS01_TransferGoods].[Textiles] AS [Textiles]
+FROM [dbo].[TS01_TransferGoods] AS [TS01_TransferGoods]</DefiningQuery>
+    </EntitySet>
+  </EntityContainer>
+</Schema>
