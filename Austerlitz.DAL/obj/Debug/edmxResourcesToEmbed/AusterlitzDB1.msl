@@ -233,28 +233,6 @@
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
-    <EntitySetMapping Name="TR_TradingPortsAndCities">
-      <EntityTypeMapping TypeName="AusterlitzModel.TR_TradingPortsAndCities">
-        <MappingFragment StoreEntitySet="TR_TradingPortsAndCities">
-          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
-          <ScalarProperty Name="TurnId" ColumnName="TurnID" />
-          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
-          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
-          <ScalarProperty Name="Rate" ColumnName="Rate" />
-          <ScalarProperty Name="EctPts" ColumnName="EctPts" />
-          <ScalarProperty Name="Food" ColumnName="Food" />
-          <ScalarProperty Name="Stone" ColumnName="Stone" />
-          <ScalarProperty Name="Wood" ColumnName="Wood" />
-          <ScalarProperty Name="Ore" ColumnName="Ore" />
-          <ScalarProperty Name="Zinc" ColumnName="Zinc" />
-          <ScalarProperty Name="Horses" ColumnName="Horses" />
-          <ScalarProperty Name="Text" ColumnName="Text" />
-          <ScalarProperty Name="Wool" ColumnName="Wool" />
-          <ScalarProperty Name="Gold" ColumnName="Gold" />
-          <ScalarProperty Name="Wine" ColumnName="Wine" />
-        </MappingFragment>
-      </EntityTypeMapping>
-    </EntitySetMapping>
     <EntitySetMapping Name="TR_Warehouses">
       <EntityTypeMapping TypeName="AusterlitzModel.TR_Warehouses">
         <MappingFragment StoreEntitySet="TR_Warehouses">
@@ -595,6 +573,28 @@
           <ScalarProperty Name="Owner" ColumnName="Owner" />
           <ScalarProperty Name="Y" ColumnName="Y" />
           <ScalarProperty Name="X" ColumnName="X" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="TR_TradingPortsAndCities">
+      <EntityTypeMapping TypeName="AusterlitzModel.TR_TradingPortsAndCities">
+        <MappingFragment StoreEntitySet="TR_TradingPortsAndCities">
+          <ScalarProperty Name="Wine" ColumnName="Wine" />
+          <ScalarProperty Name="Gold" ColumnName="Gold" />
+          <ScalarProperty Name="Wool" ColumnName="Wool" />
+          <ScalarProperty Name="Text" ColumnName="Text" />
+          <ScalarProperty Name="Horses" ColumnName="Horses" />
+          <ScalarProperty Name="Zinc" ColumnName="Zinc" />
+          <ScalarProperty Name="Ore" ColumnName="Ore" />
+          <ScalarProperty Name="Wood" ColumnName="Wood" />
+          <ScalarProperty Name="Stone" ColumnName="Stone" />
+          <ScalarProperty Name="Food" ColumnName="Food" />
+          <ScalarProperty Name="EctPts" ColumnName="EctPts" />
+          <ScalarProperty Name="Rate" ColumnName="Rate" />
+          <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
+          <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
+          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>

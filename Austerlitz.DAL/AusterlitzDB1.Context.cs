@@ -39,7 +39,6 @@ namespace Austerlitz.DAL
         public virtual DbSet<TR_MerchantShips> TR_MerchantShips { get; set; }
         public virtual DbSet<TR_Spies> TR_Spies { get; set; }
         public virtual DbSet<TR_StateRelationships> TR_StateRelationships { get; set; }
-        public virtual DbSet<TR_TradingPortsAndCities> TR_TradingPortsAndCities { get; set; }
         public virtual DbSet<TR_Warehouses> TR_Warehouses { get; set; }
         public virtual DbSet<TR_Warships> TR_Warships { get; set; }
         public virtual DbSet<TS_00TurnDetails> TS_00TurnDetails { get; set; }
@@ -68,5 +67,6 @@ namespace Austerlitz.DAL
         public virtual DbSet<TS_23ChangeStateRelationships> TS_23ChangeStateRelationships { get; set; }
         public virtual DbSet<TR_MapCoordinates> TR_MapCoordinates { get; set; }
         public virtual DbSet<REF_PoliticalMapCoordinates> REF_PoliticalMapCoordinates { get; set; }
+        public virtual DbSet<TR_TradingPortsAndCities> TR_TradingPortsAndCities { get; set; }
     }
 }

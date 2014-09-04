@@ -12,7 +12,7 @@ namespace Austerlitz.Controllers
 {
     public class TurnReportApiController : ApiController
     {
-        public TurnReport GetTRAllItems(string turnId = "test")
+        public TurnReport getTRFullTurnDetails(string turnId = "test")
         {
             using (var dataContext = new AusterlitzDbContext())
             {
@@ -51,15 +51,16 @@ namespace Austerlitz.Controllers
                 List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander })
                     .Union(turnReport.Brigades.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Brigade })).ToList();
 
-                // can add more union stuff here if necessary
+                // can add more union stuff here if necessary, not sure it makes much difference
 
                 movementItems.AddRange(turnReport.Brigades.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Brigade }).ToList());
                 movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship }).ToList());
                 movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip }).ToList());
                 movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain }).ToList());
-                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy }).ToList());                                    
+                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy }).ToList());
 
-                //add federations
+                turnReport.MovementItemList = movementItems.ToArray();
+                turnReport.MapCoordinates = GetMapCoordinates();
 
                 return turnReport;
             }

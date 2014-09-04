@@ -1,126 +1,35 @@
-﻿<div class="container" style="width:1400px;padding-left:0px; padding-right:0px;" ng-init="init();">
-    <div ng-class="lhsColWidth" style="padding-left:0px; padding-right:0px;">
-
+﻿<div class="container" ng-init="init();">
+    <div>
         <div>
-            <div ng-show="!results">
-                <h3>Load Turn File</h3>
-                <input type="file" id="fileInput" onchange="sendFile(this.files[0]);" />
-            </div>
-
-            <div id="armyPanel" ng-show="results">
-                <h3>Battalion Groups</h3>
-                <div ng-show="army.battalionGroups" ng-controller="bgModalController">
-
-                    <div ng-show="!displayMap">
-                        <div class="btn-group" ng-click="pickFromList('order')">
-                            <label class="btn btn-primary" tooltip="Choose an Order, then select federations you wish to have this.">Order {{selectedOrder}}</label>
-                        </div>
-                        <div class="btn-group" ng-click="pickFromList('additionalOrder')">
-                            <label class="btn btn-primary" tooltip="Choose an Additional Order, then select federations you wish to have this. Must have order valid for this Add. Order">Add. Order {{selectedAdditionalOrder}}</label>
-                        </div>
-                        <div class="btn-group" ng-click="pickFromList('formation')">
-                            <label class="btn btn-primary" tooltip="Choose a Formation, then select federations you wish to have this.">Formation {{selectedFormation}}</label>
-                        </div>
-
-                        <div class="btn-group" ng-click="pickFromList('altOrder')">
-                            <label class="btn btn-warning" tooltip="Choose an Order, then select federations you wish to have this.">Alt Order {{selectedAltOrder}}</label>
-                        </div>
-                        <div class="btn-group" ng-click="pickFromList('altAdditionalOrder')">
-                            <label class="btn btn-warning" tooltip="Choose an Additional Order, then select federations you wish to have this. Must have order valid for this Add. Order">Alt Add. Order {{selectedAltAdditionalOrder}}</label>
-                        </div>
-                        <div class="btn-group" ng-click="pickFromList('altFormation')">
-                            <label class="btn btn-warning" tooltip="Choose a Formation, then select federations you wish to have this.">Alt Formation {{selectedAltFormation}}</label>
-                        </div>
-
-                        <div class="btn-group" ng-click="pickFromList('armyList')">
-                            <label class="btn btn-warning" tooltip="BLAH BLAH BLAH">Army List {{selectedAltFormation}}</label>
-                        </div>
-
-                        <div style="float:right">
-                            <div class="btn-group" ng-click="toggleSimSheet_Map()">
-                                <label class="btn btn-danger">Show Sim Map</label>
-                            </div>
-                            <div class="btn-group" ng-click="saveNewSimBattle()">
-                                <label class="btn btn-danger"><a target="_self" href="Austerlitz/newSimBattle.txt" download="newSimBattle.txt">Save To File</a></label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div ng-show="displayMap">
-                        <div class="btn-group" ng-click="changeFedDestNo(fedDestNo)">
-                            //messed up here a bit!
-                            <label class="btn btn-success" ng-model="$parent.fedDestNo" btn-radio="0">Dest 0</label>
-                            <label class="btn btn-success" ng-model="$parent.fedDestNo" btn-radio="1">Dest 1</label>
-                            <label class="btn btn-success" ng-model="$parent.fedDestNo" btn-radio="2">Dest 2</label>
-                        </div>
-                    </div>
-
-
-                </div>
-                <div id="Panel" class="gridStyle" ng-grid="gridOptions"></div>
-            </div>
-
+            <h3>Load New Turn From File</h3>
+            <input type="file" id="fileInput" onchange="sendFile(this.files[0]);" />
+        </div>
+        <div>
+            <h3>Load Turn From Database</h3>
+            get a select list here
         </div>
 
-    </div>
-
-    <div ng-class="rhsColWidth" style="padding-left:0px; padding-right:0px;">
-
+        <div>
+            <h3>Load Regional Map File</h3>
+            <input type="file" id="fileInput" onchange="sendRegionalMapFile(this.files[0]);" />
+        </div>
 
         <div>
+            <div><label>Turn Sheet Loaded?</label><span ng-class="turnSheet ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
+            <div><label>Turn Report Loaded?</label><span ng-class="turnReport ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
             <div>
-                <div style="display:inline-block">
-                    <h3 ng-show="results.state">State: {{results.state}}</h3>
-                </div>
-                <div>
-                    <h4 style="width:300px;float: right; text-align:right;" ng-show="selectedCoordinate">Selected Dest: {{selectedCoordinate}} </h4>
-                </div>
-            </div>
-            <div ng-show="army.battalionGroups && displayMap">
-                <div style="float:right">
-                    <div class="btn-group" ng-click="toggleArmy()">
-                        <label class="btn btn-danger">Army A/B</label>
-                    </div>
-                    <div class="btn-group" ng-click="toggleSimSheet_Map()">
-                        <label class="btn btn-warning">Show TurnSheet</label>
-                    </div>
-                    <div class="btn-group" ng-click="saveNewSimBattle()">
-                        <label class="btn btn-danger"><a target="_self" href="Austerlitz/newSimBattle.txt" download="newSimBattle.txt">Save To File</a></label>
-                    </div>
-                </div>
-                <div style="float:right">
-                    <table class="mapTable" id="mapPanel">
-                        <tbody>
-                            <tr ng-repeat="cols in results.map">
-                                <td class="mapcoordinate" ng-repeat="col in cols">
-
-                                    <div style="width:18px; height:18px" ng-class="['mapHeight' + col.height
-                      ,col.terrain=='$' ? 'mapFortress' : ''
-                      ,col.terrain=='#' ? 'mapBuilding' : ''
-                      ,col.x==11 && (col.y<=10 || col.y>=31) ? 'mapSetUpLeftLine' : ''
-                      ,col.x==35 && (col.y<=10 || col.y>=31) ? 'mapSetUpRightLine' : ''
-                      ,col.y==31 && (col.x>=11 && col.x<=35) ? 'mapSetUpTopLine' : ''
-                      ,col.y==10 &&  (col.x>=11 && col.x<=35) ? 'mapSetUpBottomLine' : ''
-                     ]" ng-click="coordinateClick(col.x, col.y)"
-                                         ng-switch on="col.terrain">
-
-                                        <label ng-switch-when="W" ng-show="col.federation==0" ng->W</label>
-                                        <label ng-switch-when="*" ng-show="col.federation==0">o</label>
-                                        <label ng-switch-when="." ng-show="col.federation==0"></label>
-                                        <label ng-switch-when="$" ng-show="col.federation==0"></label>
-                                        <label ng-switch-when="#" ng-show="col.federation==0"></label>
-                                        <label ng-switch-default ng-show="col.federation==0">{{col.terrain}}</label>
-                                        <label ng-show="col.federation>0 && col.x>0 && col.y>0">{{col.federation}}</label>
-                                        <label class="mapBorder" ng-show="col.y==0 && col.x>0">{{col.x}}</label>
-                                        <label class="mapBorder" ng-show="col.x==0 && col.y>0">{{col.y}}</label>
-
-
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <ul>
+                <li>{{turnReport.baggageTrains.length}} Baggage Trains</li>
+                <li>{{turnReport.barracks.length}} Barracks</li>
+                <li>{{turnReport.brigades.length}} Brigades</li>
+                <li>{{turnReport.commanders.length}} Commanders</li>
+                <li>{{turnReport.merchantShips.length}} Merchant Ships</li>
+                <li>{{turnReport.spies.length}} Spies</li>
+                <li>{{turnReport.stateRelationships.length}} State Relationships</li>
+                <li>{{turnReport.tradingPortsAndCities.length}} Trading Ports And Cities</li>
+                <li>{{turnReport.warehouses.length}} Warehouses</li>
+                <li>{{turnReport.warships.length}} Warships</li>
+            </ul>
             </div>
         </div>
     </div>

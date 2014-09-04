@@ -16,7 +16,7 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int ItemNo { get; set; }
-        public int Federation_Fleet { get; set; }
+        public Nullable<int> ItemNo { get; set; }
+        public Nullable<int> Federation_Fleet { get; set; }
     }
 }

@@ -14,8 +14,8 @@ namespace Austerlitz.DAL
     
     public partial class TR_TradingPortsAndCities
     {
-        public int ItemNo { get; set; }
         public string TurnId { get; set; }
+        public int ItemNo { get; set; }
         public int XCoordinate { get; set; }
         public int YCoordinate { get; set; }
         public int Rate { get; set; }

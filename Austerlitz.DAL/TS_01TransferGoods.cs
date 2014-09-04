@@ -28,13 +28,13 @@ namespace Austerlitz.DAL
     
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int From { get; set; }
-        public int To { get; set; }
-        public int Louisdore { get; set; }
-        public int Citizens { get; set; }
-        public int EcPts { get; set; }
-        public int Wood { get; set; }
-        public int Horses { get; set; }
-        public int Textiles { get; set; }
+        public Nullable<int> From { get; set; }
+        public Nullable<int> To { get; set; }
+        public Nullable<int> Louisdore { get; set; }
+        public Nullable<int> Citizens { get; set; }
+        public Nullable<int> EcPts { get; set; }
+        public Nullable<int> Wood { get; set; }
+        public Nullable<int> Horses { get; set; }
+        public Nullable<int> Textiles { get; set; }
     }
 }

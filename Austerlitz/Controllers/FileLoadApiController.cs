@@ -20,7 +20,7 @@ namespace Austerlitz.Controllers
         //////http://stackoverflow.com/questions/10320232/how-to-accept-a-file-post-asp-net-mvc-4-webapi?lq=1
 
         [HttpPost]
-        public SimBattleVm FilePost()  
+        public void FilePost()  
         {
             HttpResponseMessage result = null;
             var httpRequest = HttpContext.Current.Request;
@@ -41,12 +41,10 @@ namespace Austerlitz.Controllers
                 result = Request.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            var simBattleVm = loadTurnReport(filePath); // return the map array to use at the front end :)... change to save to the database
-
-            return simBattleVm;
+            loadTurnReport(filePath);
         }
 
-        private SimBattleVm loadTurnReport(string filePath, string turnId = "test")
+        private void loadTurnReport(string filePath, string turnId = "test")
         {
             AusterlitzDbContext _auDB = new AusterlitzDbContext();
 
@@ -70,12 +68,12 @@ namespace Austerlitz.Controllers
             //lineLocation = loadStateRelationships();
             //lineLocation = loadTradingPortsAndCities();
 
-            //lineLocation = loadSimBattleMap(lineList, simBattleVm, lineLocation);
-            //lineLocation = loadSimArmies(lineList, simBattleVm, lineLocation);
+            // SAVE THIS TO THE DATABASE!!!
+            lineLocation = loadSimBattleMap(lineList, simBattleVm, lineLocation);
+            lineLocation = loadSimArmies(lineList, simBattleVm, lineLocation);
+            // SAVE THIS TO THE DATABASE!!!
 
             lineLocation = loadTRMap(lineList, lineLocation, _auDB, turnId);
-
-            return simBattleVm;
         }
 
         private void cleanUpTurnReport(ArrayList lineList)
@@ -468,6 +466,8 @@ namespace Austerlitz.Controllers
 
         private int loadSimBattleMap(ArrayList lineList, SimBattleVm simBattleVm, int lineLocation)
         {
+
+            // SAVE THIS TO THE DATABASE!!!
             var simBattleMap = new VmMapCoordinate[41][];
             bool bSimMapFound = false;
 
@@ -475,7 +475,7 @@ namespace Austerlitz.Controllers
 
             int x, y = 0;
 
-            for (lineLocation = 0; lineLocation < lineList.Count; lineLocation++)
+            for (; lineLocation < lineList.Count; lineLocation++)
             {
                 if (!bSimMapFound && lineList[lineLocation].ToString().IndexOf("The Battle field") != -1)
                 {

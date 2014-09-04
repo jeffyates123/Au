@@ -1,3 +1,4 @@
+C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.csprojResolveAssemblyReference.cache
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.dll.config
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.dll
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.pdb
@@ -44,6 +45,5 @@ C:\Code\Austerlitz\Austerlitz\bin\System.Web.Razor.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Deployment.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Razor.xml
-C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.csprojResolveAssemblyReference.cache
 C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.dll
 C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.pdb

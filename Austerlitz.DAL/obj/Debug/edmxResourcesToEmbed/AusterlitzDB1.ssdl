@@ -257,10 +257,10 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
   </EntityType>
   <EntityType Name="TR_TradingPortsAndCities">
     <Key>
-      <PropertyRef Name="TurnID" />
+      <PropertyRef Name="TurnId" />
       <PropertyRef Name="ItemNo" />
     </Key>
-    <Property Name="TurnID" Type="varchar" MaxLength="13" Nullable="false" />
+    <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="ItemNo" Type="int" Nullable="false" />
     <Property Name="XCoordinate" Type="int" Nullable="false" />
     <Property Name="YCoordinate" Type="int" Nullable="false" />
@@ -324,13 +324,13 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
       <PropertyRef Name="TurnId" />
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
-    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
-    <Property Name="GameNo" Type="nchar" MaxLength="10" Nullable="false" />
-    <Property Name="Month" Type="varchar" MaxLength="3" Nullable="false" />
-    <Property Name="Year" Type="int" Nullable="false" />
-    <Property Name="PlayerName" Type="varchar" MaxLength="50" Nullable="false" />
-    <Property Name="AccountNo" Type="varchar" MaxLength="20" Nullable="false" />
-    <Property Name="ProcessDate" Type="date" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" />
+    <Property Name="GameNo" Type="nchar" MaxLength="10" />
+    <Property Name="Month" Type="varchar" MaxLength="3" />
+    <Property Name="Year" Type="int" />
+    <Property Name="PlayerName" Type="varchar" MaxLength="50" />
+    <Property Name="AccountNo" Type="varchar" MaxLength="20" />
+    <Property Name="ProcessDate" Type="date" />
     <Property Name="FundsSentCash" Type="int" />
     <Property Name="FundsSentCheque" Type="int" />
     <Property Name="FundsSentPO" Type="int" />
@@ -342,14 +342,14 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="From" Type="int" Nullable="false" />
-    <Property Name="To" Type="int" Nullable="false" />
-    <Property Name="Louisdore" Type="int" Nullable="false" />
-    <Property Name="Citizens" Type="int" Nullable="false" />
-    <Property Name="EcPts" Type="int" Nullable="false" />
-    <Property Name="Wood" Type="int" Nullable="false" />
-    <Property Name="Horses" Type="int" Nullable="false" />
-    <Property Name="Textiles" Type="int" Nullable="false" />
+    <Property Name="From" Type="int" />
+    <Property Name="To" Type="int" />
+    <Property Name="Louisdore" Type="int" />
+    <Property Name="Citizens" Type="int" />
+    <Property Name="EcPts" Type="int" />
+    <Property Name="Wood" Type="int" />
+    <Property Name="Horses" Type="int" />
+    <Property Name="Textiles" Type="int" />
   </EntityType>
   <EntityType Name="TS_02DemolishItems">
     <Key>
@@ -358,7 +358,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" />
   </EntityType>
   <EntityType Name="TS_03SetUpBrigades">
     <Key>
@@ -367,12 +367,12 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Depot" Type="int" Nullable="false" />
-    <Property Name="Batt1" Type="int" Nullable="false" />
-    <Property Name="Batt2" Type="int" Nullable="false" />
-    <Property Name="Batt3" Type="int" Nullable="false" />
-    <Property Name="Batt4" Type="int" Nullable="false" />
-    <Property Name="Batt5" Type="int" Nullable="false" />
+    <Property Name="Depot" Type="int" />
+    <Property Name="Batt1" Type="int" />
+    <Property Name="Batt2" Type="int" />
+    <Property Name="Batt3" Type="int" />
+    <Property Name="Batt4" Type="int" />
+    <Property Name="Batt5" Type="int" />
     <Property Name="Batt6" Type="int" />
     <Property Name="Batt7" Type="int" />
     <Property Name="BrigadeName" Type="varchar" MaxLength="16" Nullable="false" />
@@ -384,8 +384,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="BrigadeNo" Type="int" Nullable="false" />
-    <Property Name="BattType" Type="int" Nullable="false" />
+    <Property Name="BrigadeNo" Type="int" />
+    <Property Name="BattType" Type="int" />
   </EntityType>
   <EntityType Name="TS_05IncreaseHeadcount">
     <Key>
@@ -394,8 +394,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
-    <Property Name="IncreaseAmount" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" />
+    <Property Name="IncreaseAmount" Type="int" />
   </EntityType>
   <EntityType Name="TS_06IncreaseBrigadeXP">
     <Key>
@@ -404,7 +404,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="BrigadeOrFederation" Type="int" Nullable="false" />
+    <Property Name="BrigadeOrFederation" Type="int" />
   </EntityType>
   <EntityType Name="TS_07ExchangeBattalions">
     <Key>
@@ -413,10 +413,10 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="BrigadeA" Type="int" Nullable="false" />
-    <Property Name="BattA" Type="int" Nullable="false" />
-    <Property Name="BrigadeB" Type="int" Nullable="false" />
-    <Property Name="BattB" Type="int" Nullable="false" />
+    <Property Name="BrigadeA" Type="int" />
+    <Property Name="BattA" Type="int" />
+    <Property Name="BrigadeB" Type="int" />
+    <Property Name="BattB" Type="int" />
   </EntityType>
   <EntityType Name="TS_08MergeBattalions">
     <Key>
@@ -425,10 +425,10 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="BridageA" Type="int" Nullable="false" />
-    <Property Name="BattA" Type="int" Nullable="false" />
-    <Property Name="BrigadeB" Type="int" Nullable="false" />
-    <Property Name="BattB" Type="int" Nullable="false" />
+    <Property Name="BridageA" Type="int" />
+    <Property Name="BattA" Type="int" />
+    <Property Name="BrigadeB" Type="int" />
+    <Property Name="BattB" Type="int" />
   </EntityType>
   <EntityType Name="TS_09RepairShips_BaggageTrains">
     <Key>
@@ -437,7 +437,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="ItemNo" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" />
   </EntityType>
   <EntityType Name="TS_10BuildShips">
     <Key>
@@ -446,9 +446,9 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Shipyard" Type="int" Nullable="false" />
-    <Property Name="ShipType" Type="int" Nullable="false" />
-    <Property Name="Name_WarshipOnly" Type="nchar" MaxLength="10" Nullable="false" />
+    <Property Name="Shipyard" Type="int" />
+    <Property Name="ShipType" Type="int" />
+    <Property Name="Name_WarshipOnly" Type="nchar" MaxLength="10" />
   </EntityType>
   <EntityType Name="TS_11BuildBaggageTrain">
     <Key>
@@ -457,7 +457,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Barracks" Type="int" Nullable="false" />
+    <Property Name="Barracks" Type="int" />
   </EntityType>
   <EntityType Name="TS_12IncreasePopulationDensity">
     <Key>
@@ -466,8 +466,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="XCoordinate" Type="int" Nullable="false" />
-    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="XCoordinate" Type="int" />
+    <Property Name="YCoordinate" Type="int" />
   </EntityType>
   <EntityType Name="TS_13BuildProductionSites">
     <Key>
@@ -476,9 +476,9 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="ProdSiteType" Type="int" Nullable="false" />
-    <Property Name="XCoordinate" Type="int" Nullable="false" />
-    <Property Name="YCoordinate" Type="int" Nullable="false" />
+    <Property Name="ProdSiteType" Type="int" />
+    <Property Name="XCoordinate" Type="int" />
+    <Property Name="YCoordinate" Type="int" />
   </EntityType>
   <EntityType Name="TS_14FormFederations">
     <Key>
@@ -487,8 +487,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="ItemNo" Type="int" Nullable="false" />
-    <Property Name="Federation_Fleet" Type="int" Nullable="false" />
+    <Property Name="ItemNo" Type="int" />
+    <Property Name="Federation_Fleet" Type="int" />
   </EntityType>
   <EntityType Name="TS_15CoastalDefence">
     <Key>
@@ -497,7 +497,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="FleetNo" Type="int" />
   </EntityType>
   <EntityType Name="TS_16SeaBlockade">
     <Key>
@@ -506,8 +506,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="FleetNo" Type="int" Nullable="false" />
-    <Property Name="StateA_Or_Fleet0" Type="varchar" MaxLength="2" Nullable="false" />
+    <Property Name="FleetNo" Type="int" />
+    <Property Name="StateA_Or_Fleet0" Type="varchar" MaxLength="2" />
     <Property Name="StateB" Type="varchar" MaxLength="1" />
     <Property Name="StateC" Type="varchar" MaxLength="1" />
     <Property Name="StateD" Type="varchar" MaxLength="1" />
@@ -520,10 +520,10 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Goods" Type="int" Nullable="false" />
-    <Property Name="Quantity" Type="int" Nullable="false" />
-    <Property Name="From" Type="int" Nullable="false" />
-    <Property Name="To" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" />
+    <Property Name="Quantity" Type="int" />
+    <Property Name="From" Type="int" />
+    <Property Name="To" Type="int" />
   </EntityType>
   <EntityType Name="TS_18Movement">
     <Key>
@@ -547,10 +547,10 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Goods" Type="int" Nullable="false" />
-    <Property Name="Quantity" Type="int" Nullable="false" />
-    <Property Name="Source" Type="int" Nullable="false" />
-    <Property Name="Destination" Type="int" Nullable="false" />
+    <Property Name="Goods" Type="int" />
+    <Property Name="Quantity" Type="int" />
+    <Property Name="Source" Type="int" />
+    <Property Name="Destination" Type="int" />
   </EntityType>
   <EntityType Name="TS_20Boarding">
     <Key>
@@ -559,9 +559,9 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Command" Type="int" Nullable="false" />
-    <Property Name="ItemNo" Type="int" Nullable="false" />
-    <Property Name="FleetNo" Type="int" Nullable="false" />
+    <Property Name="Command" Type="int" />
+    <Property Name="ItemNo" Type="int" />
+    <Property Name="FleetNo" Type="int" />
     <Property Name="FleetOwner" Type="int" />
   </EntityType>
   <EntityType Name="TS_21HandOverTerritory">
@@ -571,7 +571,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" />
     <Property Name="ShipNumber" Type="int" />
     <Property Name="XCoordinate" Type="int" />
     <Property Name="YCoordinate" Type="int" />
@@ -583,8 +583,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="ItemNo" Type="int" Nullable="false" />
-    <Property Name="Name" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="ItemNo" Type="int" />
+    <Property Name="Name" Type="varchar" MaxLength="30" />
   </EntityType>
   <EntityType Name="TS_23ChangeStateRelationships">
     <Key>
@@ -593,8 +593,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
-    <Property Name="Relationship" Type="int" Nullable="false" />
+    <Property Name="State" Type="varchar" MaxLength="1" />
+    <Property Name="Relationship" Type="int" />
   </EntityType>
   <EntityContainer Name="AusterlitzModelStoreContainer">
     <EntitySet Name="REF_ArmyList" EntityType="Self.REF_ArmyList" Schema="dbo" store:Type="Tables" />

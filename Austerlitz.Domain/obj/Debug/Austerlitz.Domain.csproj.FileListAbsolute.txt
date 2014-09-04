@@ -1,8 +1,8 @@
+C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\EntityFramework.dll
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\Austerlitz.Domain.dll.config
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\Austerlitz.Domain.dll
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\Austerlitz.Domain.pdb
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\Austerlitz.DAL.dll
-C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\EntityFramework.dll
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\EntityFramework.SqlServer.dll
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\Austerlitz.DAL.pdb
 C:\Code\Austerlitz\Austerlitz.Domain\bin\Debug\EntityFramework.xml

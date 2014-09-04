@@ -33,7 +33,7 @@ namespace Austerlitz.Models.TurnReport
         public TR_BaggageTrains[] BaggageTrains;
         public TR_Spies[] Spies;
         public TR_TradingPortsAndCities[] TradingPortsAndCities;
-        public TR_MapCoordinates[] MapCoordinates;
-        public MovementItems[] ItemList;
+        public DisplayCoordinate[][] MapCoordinates;
+        public MovementItems[] MovementItemList;
     }
 }

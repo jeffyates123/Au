@@ -206,7 +206,9 @@
     <Content Include="Scripts\App\brigadeCalculatorController.js" />
     <Content Include="Scripts\App\homeController.js" />
     <Content Include="Scripts\App\bgModalController.js" />
+    <Content Include="Scripts\App\simBattleFactory.js" />
     <Content Include="Scripts\App\rulesCatalogFactory.js" />
+    <Content Include="Scripts\App\simBattleController.js" />
     <Content Include="Scripts\App\turnMapsController.js" />
     <Content Include="Scripts\App\turnReportFactory.js" />
     <Content Include="Scripts\App\turnSheetFactory.js" />
@@ -524,6 +526,8 @@
     <Content Include="Templates\bgPickListTemplate.html" />
     <Content Include="Templates\headerTemplate.html" />
     <Content Include="Templates\home.html" />
+    <Content Include="Templates\itemSelectTemplate.html" />
+    <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

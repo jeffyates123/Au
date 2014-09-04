@@ -18,10 +18,10 @@ namespace Austerlitz.DAL
         public string State { get; set; }
         public string GameNo { get; set; }
         public string Month { get; set; }
-        public int Year { get; set; }
+        public Nullable<int> Year { get; set; }
         public string PlayerName { get; set; }
         public string AccountNo { get; set; }
-        public System.DateTime ProcessDate { get; set; }
+        public Nullable<System.DateTime> ProcessDate { get; set; }
         public Nullable<int> FundsSentCash { get; set; }
         public Nullable<int> FundsSentCheque { get; set; }
         public Nullable<int> FundsSentPO { get; set; }

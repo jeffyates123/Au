@@ -16,8 +16,8 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int Shipyard { get; set; }
-        public int ShipType { get; set; }
+        public Nullable<int> Shipyard { get; set; }
+        public Nullable<int> ShipType { get; set; }
         public string Name_WarshipOnly { get; set; }
     }
 }

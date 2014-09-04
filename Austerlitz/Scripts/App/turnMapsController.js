@@ -62,7 +62,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                         { mapName: 'Europe East', mapId: 'EE', rangeMinX: 41, rangeMaxX: 80, minX: 41, maxX: 80, rangeMinY: 1, rangeMaxY: 65, minY: 1, maxY: 65 },
                         { mapName: 'Caribbean', mapId: 'C', rangeMinX: 1, rangeMaxX: 40, minX: 1, maxX: 40, rangeMinY: 70, rangeMaxY: 99, minY: 70, maxY: 99 },
                         { mapName: 'India', mapId: 'I', rangeMinX: 51, rangeMaxX: 90, minX: 51, maxX: 90, rangeMinY: 70, rangeMaxY: 99, minY: 70, maxY: 99 }
-                        ];
+    ];
     $scope.selectedMapChoice = $scope.mapChoice[1];
 
     $scope.mapOptions = ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'];
@@ -93,7 +93,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         // is currently selected
         if (idx > -1) 
             $scope.selectedMapOptions.splice(idx, 1);
-         else 
+        else 
             $scope.selectedMapOptions.push(mapOption);
     };
 
@@ -163,9 +163,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.clearDisplayField = function() {
         angular.forEach($scope.mapCoordinates, function (mapcol, index) {
-                angular.forEach(mapcol, function (coordinate, index) {
-                    coordinate.displayField = '';
-                });
+            angular.forEach(mapcol, function (coordinate, index) {
+                coordinate.displayField = '';
+            });
         });
     }
 
@@ -307,21 +307,38 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         rowTemplate: '<div ng-click="movementClickRow(row)" ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>',
     };
 
-
-
     $scope.movementColumnDefsMap = [
-    { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
-    { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
-    { field: 'direction1', displayName: 'Dir1', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'distance1', displayName: 'Dist1', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'direction2', displayName: 'Dir2', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'distance2', displayName: 'Dist2', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'direction3', displayName: 'Dir3', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'distance3', displayName: 'Dist3', width: '40px', cellClass: 'grid-center-align' },
-    { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
-    { field: 'mpUsed', displayName: 'Used', width: '55px', cellClass: 'grid-center-align' },
-    { field: 'xy', displayName: 'X/Y', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
 
+        { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align',
+            enableFocusedCellEdit: true, editableCellTemplate: '/Austerlitz/Templates/itemSelectTemplate.html'//, cellFilter: 'filterBrigade'
+        },
+
+        { field: 'direction1', displayName: 'Dir1', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'distance1', displayName: 'Dist1', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'direction2', displayName: 'Dir2', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'distance2', displayName: 'Dist2', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'direction3', displayName: 'Dir3', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'distance3', displayName: 'Dist3', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'mpUsed', displayName: 'Used', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'xy', displayName: 'X/Y', width: '40px', cellClass: 'grid-center-align' },
     ];
 
+})
+
+.filter('filterBrigade', function () {
+    return function (input) {
+        
+        var itemsMatched = brigades.filter(function (brigade) {
+            return brigade.itemNo == input;
+        });
+
+        if (itemsMatched.length == 1)
+            return itemsMatched[0].itemNo;
+        else
+            return '*unknown language*'
+
+        return text;
+    }
 });

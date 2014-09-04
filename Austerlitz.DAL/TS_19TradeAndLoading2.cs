@@ -16,9 +16,9 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int Goods { get; set; }
-        public int Quantity { get; set; }
-        public int Source { get; set; }
-        public int Destination { get; set; }
+        public Nullable<int> Goods { get; set; }
+        public Nullable<int> Quantity { get; set; }
+        public Nullable<int> Source { get; set; }
+        public Nullable<int> Destination { get; set; }
     }
 }

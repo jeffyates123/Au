@@ -24,12 +24,13 @@ namespace Austerlitz.Controllers
 
     public partial class TurnSheetApiController : ApiController
     {
-        public Austerlitz.Models.TurnSheet GetTSFullTurnDetails(string turnId = "test")
+        public Austerlitz.Models.TurnSheet GetTSFullTurnDetails(string turnId = "test", string state = "E")
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             var turnSheet = new Austerlitz.Models.TurnSheet();
 
-            turnSheet.TSTurnDetails = turnReportManager.GetTSTurnDetails(turnId);
+            turnSheet.TSTurnDetails = turnReportManager.GetTSTurnDetails(turnId, state); 
+
             turnSheet.TSTransferGoods = turnReportManager.GetTSTransferGoods(turnId);
             turnSheet.TSDemolishItems = turnReportManager.GetTSDemolishItems(turnId);
             turnSheet.TSSetUpBrigades = turnReportManager.GetTSSetUpBrigades(turnId);

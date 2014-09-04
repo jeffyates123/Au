@@ -23,12 +23,12 @@ namespace Austerlitz.DAL
     
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int Depot { get; set; }
-        public int Batt1 { get; set; }
-        public int Batt2 { get; set; }
-        public int Batt3 { get; set; }
-        public int Batt4 { get; set; }
-        public int Batt5 { get; set; }
+        public Nullable<int> Depot { get; set; }
+        public Nullable<int> Batt1 { get; set; }
+        public Nullable<int> Batt2 { get; set; }
+        public Nullable<int> Batt3 { get; set; }
+        public Nullable<int> Batt4 { get; set; }
+        public Nullable<int> Batt5 { get; set; }
         public Nullable<int> Batt6 { get; set; }
         public Nullable<int> Batt7 { get; set; }
         public string BrigadeName { get; set; }
