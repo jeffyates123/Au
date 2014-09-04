@@ -1,8 +1,12 @@
 ﻿using Austerlitz.DAL;
 using Austerlitz.DAL.Management;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Web;
 using System.Web.Http;
 
@@ -21,9 +25,9 @@ namespace Austerlitz.Controllers
         {
             using (var dataContext = new AusterlitzDbContext())
             {
-                var armyListRepository = new GenericRepository<REF_ArmyList>(dataContext);
+                var listRepository = new GenericRepository<REF_ArmyList>(dataContext);
 
-                IEnumerable<REF_ArmyList> armyList = armyListRepository
+                IEnumerable<REF_ArmyList> armyList = listRepository
                     .GetItems(x => x.State == state)
                     .OrderBy(y => y.ItemNo);
 
@@ -31,22 +35,194 @@ namespace Austerlitz.Controllers
             }
         }
 
+        public REF_ProductionSites[] GetRefProductionSites()
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var listRepository = new GenericRepository<REF_ProductionSites>(dataContext);
 
-        //public REF_ArmyList[] GetArmyList()
-        //{
-        //    var refManager = new Austerlitz.DAL.Management.RefManager();
+                IEnumerable<REF_ProductionSites> rtnList = listRepository
+                    .Get()
+                    .OrderBy(y => y.SiteTypeNo);
 
-        //    return refManager.GetArmyList("E").ToArray();
-        //}
+                return rtnList.ToArray();
+            }
+        }
 
-        //public REF_ArmyList[] GetArmyList()
-        //{
-        //    var refManager = new Austerlitz.DAL.Management.RefManager();
+        public REF_Terrain[] GetRefTerrain()
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var listRepository = new GenericRepository<REF_Terrain>(dataContext);
 
-        //    return refManager.GetArmyList().ToArray();
-        //}
+                IEnumerable<REF_Terrain> rtnList = listRepository
+                    .Get();
+
+                return rtnList.ToArray();
+            }
+        }
+
+        public REF_States[] GetRefStates()
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var listRepository = new GenericRepository<REF_States>(dataContext);
+
+                IEnumerable<REF_States> rtnList = listRepository
+                    .Get()
+                    .OrderBy(y => y.State);
+
+                return rtnList.ToArray();
+            }
+        }
+
+        [HttpPost]
+        public void RegionalMapFilePost()
+        {
+            HttpResponseMessage result = null;
+            var httpRequest = HttpContext.Current.Request;
+            string filePath = "";
+
+            if (httpRequest.Files.Count > 0)
+            {
+                foreach (string file in httpRequest.Files)
+                {
+                    var postedFile = httpRequest.Files[file];
+                    filePath = HttpContext.Current.Server.MapPath("~/" + postedFile.FileName);
+                    postedFile.SaveAs(filePath);
+                }
+                result = Request.CreateResponse(HttpStatusCode.Created);
+            }
+            else
+            {
+                result = Request.CreateResponse(HttpStatusCode.BadRequest);
+            }
+
+            loadTurnReport(filePath); // return the map array to use at the front end :)... change to save to the database
+        }
+
+        private void loadTurnReport(string filePath)
+        {
+            AusterlitzDbContext _auDB = new AusterlitzDbContext();
+
+            var lineList = loadTurnFile(filePath);
+            var lineLocation = 0;
+
+            lineLocation = loadPoliticalMap(lineList, lineLocation, _auDB);
+        }
 
 
+        private int loadPoliticalMap(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB)
+        {
+            bool locationFound = false;
+            int xStart = 0;
+            var coordinatesOnALine = new REF_PoliticalMapCoordinates[40];
+            var y = 0;
+
+            var mapBoundaryEurope1 = "    1  2  3  4  5  6  7  8  9";
+            var mapBoundaryEurope2 = "   41 42 43 44 45 46 47 48 49 50";
+            var mapBoundaryCarribean = "    1  2  3  4  5  6";
+            var mapBoundaryIndies = "   51 52 53 54 55";
+            var mapBoundaryText = mapBoundaryEurope1;
+
+            // delete all the existing coordinate ... in future, dont do this as should only load once...
+            var existingCoordinates = auDB.REF_PoliticalMapCoordinates;
+            auDB.REF_PoliticalMapCoordinates.RemoveRange(existingCoordinates);
+
+            for (; lineLocation < lineList.Count; lineLocation++)
+            {
+                var lineToProcess = lineList[lineLocation].ToString();
+
+                if (lineToProcess.IndexOf(mapBoundaryText) != -1)
+                {
+                    if (locationFound)
+                    {
+                        locationFound = false;
+                        if (mapBoundaryText == mapBoundaryEurope1)
+                            mapBoundaryText = mapBoundaryEurope2;
+                        else if (mapBoundaryText == mapBoundaryEurope2)
+                            mapBoundaryText = mapBoundaryCarribean;
+                        else if (mapBoundaryText == mapBoundaryCarribean)
+                            mapBoundaryText = mapBoundaryIndies;
+                        else if (mapBoundaryText == mapBoundaryIndies)
+                            break; // finished!
+                    }
+                    else
+                    {
+                        locationFound = true;
+                        lineLocation = lineLocation + 1; //skip two lines and switch on brigadeCapture
+                        lineToProcess = lineList[lineLocation].ToString();
+
+                        if (mapBoundaryText == mapBoundaryEurope1)
+                        {
+                            xStart = 1;
+                            y = 1;
+                        }
+                        else if (mapBoundaryText == mapBoundaryEurope2)
+                        {
+                            xStart = 41;
+                            y = 1;
+                        }
+                        else if (mapBoundaryText == mapBoundaryCarribean)
+                        {
+                            xStart = 1;
+                            y = 70;
+                        }
+                        else if (mapBoundaryText == mapBoundaryIndies)
+                        {
+                            xStart = 51;
+                            y = 70;
+                        }
+                    }
+                }
+
+                if (locationFound)
+                {
+                    if (lineToProcess.IndexOf(mapBoundaryText) != -1)
+                        break;
+
+                    for (var x = xStart; x < xStart + 40; x++)
+                    {
+                        var newCoordinate = new REF_PoliticalMapCoordinates();
+                        string coordinate = lineToProcess.Substring(3 + (x - xStart) * 3, 3);
+
+                        newCoordinate.X = x;
+                        newCoordinate.Y = y;
+                        newCoordinate.Owner = coordinate.Substring(0, 1);
+                        newCoordinate.Terrain = coordinate.Substring(1, 1);
+                        newCoordinate.Bonus = coordinate.Substring(2, 1);
+                        coordinatesOnALine[x - xStart] = newCoordinate;
+                    }
+
+                    auDB.REF_PoliticalMapCoordinates.AddRange(coordinatesOnALine);
+                    auDB.SaveChanges();
+                    y++;
+                }
+            }
+
+            return lineLocation;
+        }
+
+
+        private ArrayList loadTurnFile(string filePath)
+        {
+            StreamReader objReader = new StreamReader(filePath);
+            string sLine = "";
+            ArrayList arrText = new ArrayList();
+
+            arrText.Add(""); // add a blank line for Y = 0 axis
+            while (sLine != null)
+            {
+                sLine = objReader.ReadLine();
+                if (sLine != null)
+                    arrText.Add(sLine);
+            }
+            objReader.Close();
+
+            return arrText;
+        }
+        
+        
         [System.Web.Http.HttpGet]
         public RuleCatalogItem[] GetAdditionalOrderList()
         {

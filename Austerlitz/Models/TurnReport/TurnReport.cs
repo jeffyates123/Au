@@ -6,17 +6,34 @@ using System.Web;
 
 namespace Austerlitz.Models.TurnReport
 {
+    public enum ItemType
+    {
+        Commander,
+        Brigade,
+        Warship,
+        MerchantShip,
+        BaggageTrain,
+        Spy
+    }
+
+    public class MovementItems
+    {
+        public int ItemNo { get; set; }
+        public ItemType ItemType { get; set; }
+    }
     public class TurnReport
     {
-        TR_StateRelationships[] StateRelationships;
-        TR_Warehouses[] Warehouses;
-        TR_Barracks[] Barracks;
-        TR_Commanders[] Commanders;
-        TR_Brigades[] Brigades;
-        TR_Warships[] Warships;
-        TR_MerchantShips[] MerchantShips;
-        TR_BaggageTrains[] BaggageTrains;
-        TR_Spies[] Spies;
-        TR_TradingPortsAndCities[] TradingPortAndCities;
+        public TR_StateRelationships[] StateRelationships;
+        public TR_Warehouses[] Warehouses;
+        public TR_Barracks[] Barracks;
+        public TR_Commanders[] Commanders;
+        public TR_Brigades[] Brigades;
+        public TR_Warships[] Warships;
+        public TR_MerchantShips[] MerchantShips;
+        public TR_BaggageTrains[] BaggageTrains;
+        public TR_Spies[] Spies;
+        public TR_TradingPortsAndCities[] TradingPortsAndCities;
+        public TR_MapCoordinates[] MapCoordinates;
+        public MovementItems[] ItemList;
     }
 }

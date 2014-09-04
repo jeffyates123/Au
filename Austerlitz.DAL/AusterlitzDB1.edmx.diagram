@@ -47,6 +47,7 @@
         <EntityTypeShape EntityType="AusterlitzModel.TS_22ChangeNames" Width="1.5" PointX="0.75" PointY="17.75" IsExpanded="true" />
         <EntityTypeShape EntityType="AusterlitzModel.TS_23ChangeStateRelationships" Width="1.5" PointX="2.75" PointY="17.75" IsExpanded="true" />
         <EntityTypeShape EntityType="AusterlitzModel.TR_MapCoordinates" Width="1.5" PointX="13.375" PointY="18.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" Width="1.5" PointX="19.375" PointY="0.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

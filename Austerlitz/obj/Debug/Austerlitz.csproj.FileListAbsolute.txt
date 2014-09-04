@@ -1,7 +1,10 @@
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.dll.config
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.dll
 C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.pdb
+C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.DAL.dll
+C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.Domain.dll
 C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.dll
+C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.SqlServer.dll
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.Configuration.dll
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.dll
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.RegistrationByConvention.dll
@@ -21,7 +24,10 @@ C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Deployment.dll
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.dll
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Razor.dll
 C:\Code\Austerlitz\Austerlitz\bin\WebGrease.dll
+C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.DAL.pdb
+C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.Domain.pdb
 C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.xml
+C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.SqlServer.xml
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.xml
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.Configuration.xml
 C:\Code\Austerlitz\Austerlitz\bin\Microsoft.Practices.Unity.RegistrationByConvention.xml
@@ -38,12 +44,6 @@ C:\Code\Austerlitz\Austerlitz\bin\System.Web.Razor.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Deployment.xml
 C:\Code\Austerlitz\Austerlitz\bin\System.Web.WebPages.Razor.xml
+C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.csprojResolveAssemblyReference.cache
 C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.dll
 C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.pdb
-C:\Code\Austerlitz\Austerlitz\obj\Debug\Austerlitz.csprojResolveAssemblyReference.cache
-C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.DAL.dll
-C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.DAL.pdb
-C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.SqlServer.dll
-C:\Code\Austerlitz\Austerlitz\bin\EntityFramework.SqlServer.xml
-C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.Domain.dll
-C:\Code\Austerlitz\Austerlitz\bin\Austerlitz.Domain.pdb

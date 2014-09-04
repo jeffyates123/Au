@@ -9,11 +9,13 @@
     <link href="~/Content/cerulean-theme-bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/ng-grid.css" rel="stylesheet" />
     <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/angular.rangeSlider.css" rel="stylesheet" />
 
     <script src="~/Scripts/jquery-2.1.1.min.js"></script>
     <script src="~/Scripts/angular.js"></script>
     <script src="~/Scripts/angular-route.js"></script>
     <script src="~/Scripts/angular-sanitize.js"></script>
+    <script src="~/Scripts/angular.rangeSlider.js"></script>
 
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.0.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
@@ -22,9 +24,11 @@
     <script src="~/Scripts/App/App.js"></script>
     <script src="~/Scripts/App/rulesCatalogFactory.js"></script>
     <script src="~/Scripts/App/turnSheetFactory.js"></script>
+    <script src="~/Scripts/App/turnReportFactory.js"></script>
     <script src="~/Scripts/App/bgModalController.js"></script>
     <script src="~/Scripts/App/homeController.js"></script>
     <script src="~/Scripts/App/brigadeCalculatorController.js"></script>
+    <script src="~/Scripts/App/turnMapsController.js"></script>
 </head>
 
           <body style="padding-top:60px" >
@@ -37,7 +41,7 @@
                           <div class="navbar-collapse collapse ">
                               <ul class="nav navbar-nav">
                                   <li><a href="/Austerlitz/BrigadeCalculator">BrigadeCalculator</a></li>
-                                  <li><a href="/Austerlitz/Questions/1">Questions</a></li>
+                                  <li><a href="/Austerlitz/TurnMaps">TurnMaps</a></li>
                                   <li><a href="/Austerlitz/Answers">Answers</a></li>
                                   <li><a href="/Austerlitz/Bootstrap">Mini-Apps</a></li>
                                   <li class="nav nav-divider"></li>
@@ -63,7 +67,7 @@
                   @RenderBody()
               </main>
 
-              <footer class="container">
+              <footer class="container" style="padding:60px">
                   <div class="navbar navbar-fixed-bottom"></div>
               </footer>
           </body>

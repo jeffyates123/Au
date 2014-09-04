@@ -237,7 +237,7 @@
       <EntityTypeMapping TypeName="AusterlitzModel.TR_TradingPortsAndCities">
         <MappingFragment StoreEntitySet="TR_TradingPortsAndCities">
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
-          <ScalarProperty Name="TurnID" ColumnName="TurnID" />
+          <ScalarProperty Name="TurnId" ColumnName="TurnID" />
           <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
           <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
           <ScalarProperty Name="Rate" ColumnName="Rate" />
@@ -578,12 +578,23 @@
     <EntitySetMapping Name="TR_MapCoordinates">
       <EntityTypeMapping TypeName="AusterlitzModel.TR_MapCoordinates">
         <MappingFragment StoreEntitySet="TR_MapCoordinates">
-          <ScalarProperty Name="Other" ColumnName="Other" />
+          <ScalarProperty Name="Population" ColumnName="Population" />
           <ScalarProperty Name="ProductionSite" ColumnName="ProductionSite" />
           <ScalarProperty Name="State" ColumnName="State" />
           <ScalarProperty Name="Y" ColumnName="Y" />
           <ScalarProperty Name="X" ColumnName="X" />
           <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="REF_PoliticalMapCoordinates">
+      <EntityTypeMapping TypeName="AusterlitzModel.REF_PoliticalMapCoordinates">
+        <MappingFragment StoreEntitySet="REF_PoliticalMapCoordinates">
+          <ScalarProperty Name="Bonus" ColumnName="Bonus" />
+          <ScalarProperty Name="Terrain" ColumnName="Terrain" />
+          <ScalarProperty Name="Owner" ColumnName="Owner" />
+          <ScalarProperty Name="Y" ColumnName="Y" />
+          <ScalarProperty Name="X" ColumnName="X" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>

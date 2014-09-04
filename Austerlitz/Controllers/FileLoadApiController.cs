@@ -55,7 +55,7 @@ namespace Austerlitz.Controllers
             var lineLocation = 0;
 
 
-            lineLocation = loadHostStateDetails(lineList, simBattleVm, lineLocation);
+            //lineLocation = loadHostStateDetails(lineList, simBattleVm, lineLocation);
 
             cleanUpTurnReport(lineList);
 
@@ -69,10 +69,11 @@ namespace Austerlitz.Controllers
             //lineLocation = loadSpies();
             //lineLocation = loadStateRelationships();
             //lineLocation = loadTradingPortsAndCities();
-            lineLocation = loadTRMap(lineList, lineLocation, _auDB, turnId);
 
-            lineLocation = loadSimBattleMap(lineList, simBattleVm, lineLocation);
-            lineLocation = loadSimArmies(lineList, simBattleVm, lineLocation);
+            //lineLocation = loadSimBattleMap(lineList, simBattleVm, lineLocation);
+            //lineLocation = loadSimArmies(lineList, simBattleVm, lineLocation);
+
+            lineLocation = loadTRMap(lineList, lineLocation, _auDB, turnId);
 
             return simBattleVm;
         }
@@ -161,7 +162,7 @@ namespace Austerlitz.Controllers
         {
             bool locationFound = false;
             int xStart = 0;
-            int yStart = 0;
+        
             var coordinatesOnALine = new TR_MapCoordinates[40];
             var y = 0;
 
@@ -191,32 +192,32 @@ namespace Austerlitz.Controllers
                         else if (mapBoundaryText == mapBoundaryCarribean)
                             mapBoundaryText = mapBoundaryIndies;
                         else if (mapBoundaryText == mapBoundaryIndies)
-                            break; // finished!
+                            break; 
                     }
                     else
                     {
                         locationFound = true;
-                        lineLocation = lineLocation + 1; //skip two lines and switch on brigadeCapture
+                        lineLocation = lineLocation + 1; //skip 1 lines 
                         lineToProcess = lineList[lineLocation].ToString();
 
                         if (mapBoundaryText == mapBoundaryEurope1)
                         {
                             xStart = 1;
-                            y = yStart = 1;
+                            y = 1;
                         } 
                         else if (mapBoundaryText == mapBoundaryEurope2) {
                             xStart = 41;
-                            y = yStart = 1;
+                            y = 1;
                         }
                         else if (mapBoundaryText == mapBoundaryCarribean)
                         {
                             xStart = 1;
-                            y = yStart = 70;
+                            y = 70;
                         }
                         else if (mapBoundaryText == mapBoundaryIndies)
                         {
                             xStart = 51;
-                            y = yStart = 70;
+                            y = 70;
                         }
                     }
                 }
@@ -229,14 +230,14 @@ namespace Austerlitz.Controllers
                     for (var x = xStart; x < xStart + 40; x++)
                     {
                         var newCoordinate = new TR_MapCoordinates();
-                        string coordinate = lineToProcess.Substring(2 + (x - xStart) * 3, 3);
+                        string coordinate = lineToProcess.Substring(3 + (x - xStart) * 3, 3);
 
                         newCoordinate.X = x;
                         newCoordinate.Y = y;
                         newCoordinate.TurnId = "Test";
                         newCoordinate.State = coordinate.Substring(0, 1);
-                        newCoordinate.ProductionSite = coordinate.Substring(1, 1);
-                        newCoordinate.Other = coordinate.Substring(2, 1);
+                        newCoordinate.Population = coordinate.Substring(1, 1);
+                        newCoordinate.ProductionSite = coordinate.Substring(2, 1);
                         coordinatesOnALine[x - xStart] = newCoordinate;
                     }
 

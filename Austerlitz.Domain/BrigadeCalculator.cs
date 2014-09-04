@@ -14,7 +14,7 @@ namespace Austerlitz.Domain
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             var referenceManager = new ReferenceManager();
 
-            TS_03SetUpBrigades[] transferGoods = turnReportManager.GetTurnSheetSetUpBrigades(setupBrigades[0].TurnId).ToArray();
+            TS_03SetUpBrigades[] transferGoods = turnReportManager.GetTSSetUpBrigades(setupBrigades[0].TurnId).ToArray();
 
             var armyList = referenceManager.GetArmyList(state);
 

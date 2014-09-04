@@ -76,6 +76,9 @@
     <Compile Include="REF_ArmyList.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="REF_PoliticalMapCoordinates.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="REF_Population.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>

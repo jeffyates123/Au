@@ -67,5 +67,6 @@ namespace Austerlitz.DAL
         public virtual DbSet<TS_22ChangeNames> TS_22ChangeNames { get; set; }
         public virtual DbSet<TS_23ChangeStateRelationships> TS_23ChangeStateRelationships { get; set; }
         public virtual DbSet<TR_MapCoordinates> TR_MapCoordinates { get; set; }
+        public virtual DbSet<REF_PoliticalMapCoordinates> REF_PoliticalMapCoordinates { get; set; }
     }
 }

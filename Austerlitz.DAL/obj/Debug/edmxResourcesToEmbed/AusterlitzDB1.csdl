@@ -231,11 +231,11 @@
   </EntityType>
   <EntityType Name="TR_TradingPortsAndCities">
     <Key>
-      <PropertyRef Name="TurnID" />
+      <PropertyRef Name="TurnId" />
       <PropertyRef Name="ItemNo" />
     </Key>
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
-    <Property Name="TurnID" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="XCoordinate" Type="Int32" Nullable="false" />
     <Property Name="YCoordinate" Type="Int32" Nullable="false" />
     <Property Name="Rate" Type="Int32" Nullable="false" />
@@ -506,13 +506,13 @@
     </Key>
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="OrderNo" Type="Int32" Nullable="false" />
-    <Property Name="ItemNo" Type="Int32" Nullable="false" />
-    <Property Name="Direction1" Type="Int32" Nullable="false" />
-    <Property Name="Distance1" Type="Int32" Nullable="false" />
-    <Property Name="Direction2" Type="Int32" Nullable="false" />
-    <Property Name="Distance2" Type="Int32" Nullable="false" />
-    <Property Name="Direction3" Type="Int32" Nullable="false" />
-    <Property Name="Distance3" Type="Int32" Nullable="false" />
+    <Property Name="ItemNo" Type="Int32" />
+    <Property Name="Direction1" Type="Int32" />
+    <Property Name="Distance1" Type="Int32" />
+    <Property Name="Direction2" Type="Int32" />
+    <Property Name="Distance2" Type="Int32" />
+    <Property Name="Direction3" Type="Int32" />
+    <Property Name="Distance3" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_19TradeAndLoading2">
     <Key>
@@ -613,6 +613,7 @@
     <EntitySet Name="TS_22ChangeNames" EntityType="Self.TS_22ChangeNames" />
     <EntitySet Name="TS_23ChangeStateRelationships" EntityType="Self.TS_23ChangeStateRelationships" />
     <EntitySet Name="TR_MapCoordinates" EntityType="AusterlitzModel.TR_MapCoordinates" />
+    <EntitySet Name="REF_PoliticalMapCoordinates" EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" />
   </EntityContainer>
   <EntityType Name="TR_MapCoordinates">
     <Key>
@@ -625,6 +626,17 @@
     <Property Name="Y" Type="Int32" Nullable="false" />
     <Property Name="State" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
     <Property Name="ProductionSite" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
-    <Property Name="Other" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+    <Property Name="Population" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+  </EntityType>
+  <EntityType Name="REF_PoliticalMapCoordinates">
+    <Key>
+      <PropertyRef Name="X" />
+      <PropertyRef Name="Y" />
+    </Key>
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
+    <Property Name="Owner" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+    <Property Name="Terrain" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+    <Property Name="Bonus" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
   </EntityType>
 </Schema>

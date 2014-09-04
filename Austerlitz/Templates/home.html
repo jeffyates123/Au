@@ -7,7 +7,7 @@
                 <input type="file" id="fileInput" onchange="sendFile(this.files[0]);" />
             </div>
 
-            <div id="armyPanel" ng-show="results.state">
+            <div id="armyPanel" ng-show="results">
                 <h3>Battalion Groups</h3>
                 <div ng-show="army.battalionGroups" ng-controller="bgModalController">
 

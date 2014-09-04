@@ -1,4 +1,8 @@
-﻿body {
+﻿/*http://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
+/*http://stackoverflow.com/questions/23379575/pretty-auto-layout-of-2-ng-grids-master-detail-whose-width-changes-based-on-co */
+
+
+body {
     padding-top: 50px;
     padding-bottom: 20px;
 }
@@ -77,12 +81,19 @@ textarea {
 }
 
 .mapCoordinate {
-    border: 1px solid rgb(212,212,212);
-    width:19px;
-    height:19px;
+    border: 1px solid rgb(192, 192, 192);
+    width:18px;
+    height:18px;
     font-family:'Arial';
     padding: 0px;
     font-size:10px;
+    margin:0px;
+}
+
+.mapBorder {
+    font-family:Arial;
+    font-size:9px;
+    align-content:center;
 }
 
 .mapFortress {
@@ -107,43 +118,162 @@ textarea {
     border-bottom: 2px dashed black;
 }
 
-.mapHeight1 {
-    background-color:rgb(204,255,204);
+.mapHeight {
     padding: 0px;
+}
+.mapHeight1 {
+    background-color: rgb(204,255,204);
 }
 .mapHeight2 {
     background-color:rgb(153,204,0);
-    padding: 0px;
 }
 .mapHeight3 {
     background-color:rgb(51,153,102);
-    padding: 0px;
 }
 .mapHeight4 {
     background-color:rgb(0,128,0);
-    padding: 0px;
 }
 .mapHeight5 {
     background-color:rgb(128,128,0);
-    padding: 0px;
 }
 .mapHeight6 {
     background-color:rgb(153,51,0);
-    padding: 0px;
 }
 .mapHeight7 {
     background-color:rgb(128,0,0);
-    padding: 0px;
 }
 
-.mapBorder {
-    font-family:Arial;
+
+.turnMapTable {
+    border: 1px solid rgb(212,212,212);
+    color: black;
     font-size:9px;
+    font-family:'Courier New';
+}
+
+.turnMapBorder {
+    font-size:10px;
+    font-family: Arial;
     align-content:center;
 }
+
+.turnMapCoord {
+    border: 1px rgb(192, 192, 192) solid;
+    font-size:11px;
+    font-family: 'Courier New';
+    text-align:left;
+    background-color:white;
+}
+
+.terrain_B {
+    background-color:rgb(135, 219, 106);
+}
+.terrain_D {
+    background-color:rgb(255, 255, 153);
+}
+.terrain_G {
+    background-color:rgb(128, 128, 128);
+}
+.terrain_H {
+    background-color:rgb(0, 255, 0);
+}
+.terrain_K {
+    background-color:rgb(192, 192, 192);
+}
+.terrain_Q {
+    background-color:rgb(51, 153, 102);
+}
+.terrain_S {
+    background-color:rgb(128, 128, 0);
+}
+.terrain_T {
+    background-color:rgb(255, 204, 153);
+}
+
+.terrain_sea {
+    background-color:rgb(204, 255, 255);
+}
+
+.terrain_W {
+    background-color:rgb(0, 128, 0);
+}
+
+
+
+.state_A {border:none; background-color:rgb(198, 23, 23);}
+.state_B {border:none; background-color:rgb(51,153,102)}
+.state_D {border:none; background-color:rgb(255, 204, 153);}
+.state_E {border:none; background-color:rgb(234, 230, 21);}
+.state_F {border:none; background-color:rgb(0, 148, 255)}
+.state_G {border:none; background-color:rgb(135, 219, 106);}
+.state_H {border:none; background-color:rgb(255, 106, 0)}
+.state_I {border:none; background-color:rgb(0, 255, 0);}
+.state_K {border:none; background-color:rgb(181, 36, 165)}
+.state_M {border:none; background-color:rgb(206, 203, 83)}
+.state_N {border:none; background-color:rgb(128, 128, 0);}
+.state_P {border:none; background-color:rgb(128, 128, 128);}
+.state_R {border:none; background-color:rgb(192, 192, 192);}
+.state_S {border:none; background-color:rgb(255, 255, 153);}
+.state_T {border:none; background-color:black; color: rgb(192, 192, 192)}
+.state_W {border:none; background-color:rgb(0, 128, 0);}
+.state_ {border: 1px rgb(192, 192, 192) solid; background-color:rgb(204, 255, 255);}
+
+.prodSite_Yes {background-color: rgb(135, 219, 106);}
+.prodSite_TooFew {background-color:rgb(255, 106, 0)}
+.prodSite_TooMany {background-color:red;}
+.prodSite_Existing {background-color:black; color: rgb(192, 192, 192)}
+
+.moveStart {background-color: black; color: rgb(192, 192, 192);}
+.moveDir1 {background-color: darkblue; color: rgb(192, 192, 192);}
+.moveDir2 {background-color: blue; color: rgb(192, 192, 192);}
+.moveDir3 {background-color: rgb(0, 148, 255);}
+.moveInvalid {background-color: red;}
+
+.moveAllowed {background-color: rgb(135, 219, 106);}
+
 
 .selectedItems{
     float: left; 
 }
 
 
+/* Layout */
+.window {
+  display: flex;
+  padding: 20px;
+}
+.master {
+  width: 25%;
+  height: 100%;
+}
+.detail {
+  width:75%;
+  height: auto;
+  margin-left: 20px;
+}
+
+/* Highlighting */
+.window, .master, .detail {
+  outline: 1px dashed #aaaaaa;
+}
+.master, .detail {
+  background: #eeeeee;
+}
+
+/* Grid Styles */
+.master, .detail {
+  /* Nested flex box so the containing ngGrid are 100% */
+  display: flex;
+}
+
+.movementGridStyle {
+    border: 1px solid rgb(212,212,212);
+    width: 100%; 
+    height: 84%;
+    font-size:12px;
+    font-family: Arial;
+}
+
+.saveButton {
+    text-align: center;
+}

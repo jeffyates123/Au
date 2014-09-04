@@ -14,9 +14,13 @@ function sendFile(file) {
 
             var scope = angular.element($("#mapPanel")).scope();
             scope.$apply(function () {
-                console.log(JSON.stringify(results, null, 2));
-                scope.results = results;
-                scope.toggleHostArmy();
+                //                console.log(JSON.stringify(results, null, 2));
+                if (!results.armyA.state) {
+                    results = "";
+                } else {
+                    scope.results = results;
+                    scope.toggleHostArmy();
+                }
             });
         },
         error: function () {
@@ -246,57 +250,6 @@ austerlitzModule.controller("homeController", function ($scope, $routeParams, ho
         });
     }
 
-    //$scope.coordinateClick = function (x, y, selectedFederationNo) {
-
-    //    if (x > 0 && y > 0) {
-    //        $scope.selectedCoordinate = "(X " + x + ", Y " + y + ")";
-
-    //        if ($scope.bgSelections.length == 0) { // remove from map, reselect BG on ng-grid
-    //            var newCoordinate = $scope.getCoordinateByXY(x, y);
-    //            newCoordinate.federation = 0;
-
-    //            selectedBG = $scope.getBattalionGroupByFederation(selectedFederationNo);
-    //            selectBgGridByBg(selectedBG);
-    //        } else {
-    //            if ($scope.bgSelections.length > 0) {
-    //                var selectedBG = $scope.bgSelections.shift();
-
-    //                $scope.gridOptions.selectItem($scope.army.battalionGroups.indexOf(selectedBG));
-
-    //                angular.forEach($scope.army.battalionGroups, function (bg, index) { // update the battalion group list
-    //                    if (bg.federation == selectedBG.federation) {
-
-    //                        angular.forEach($scope.results.map, function (mapcol, index) { // update the federation on the selected coordinate
-    //                            angular.forEach(mapcol, function (coordinate, index) {
-
-    //                                if (coordinate.x == x && coordinate.y == y) {
-    //                                    if (coordinate.federation != 0) { // coordinate already has a federation on it
-    //                                        angular.forEach($scope.army.battalionGroups, function (bg, index) {  // so clear that battalion group coordinate by setting to 0
-    //                                            if (bg.federation == coordinate.federation) {
-    //                                                $scope.setBattalionGroupXY(0, 0, bg);
-
-    //                                                var indexOfBG = $scope.army.battalionGroups.indexOf(bg); // re-select the battalion group in the list
-    //                                                $scope.gridOptions.selectItem(indexOfBG, true);
-    //                                            }
-    //                                        });
-    //                                    }
-
-    //                                    coordinate.federation = selectedBG.federation;
-    //                                } else if ($scope.HaveBGAndMapXYMatch(coordinate, bg)) { // if the selected federation already in another coordinate
-    //                                    coordinate.federation = 0;
-    //                                };
-
-    //                            });
-    //                        });
-
-    //                        $scope.setBattalionGroupXY(x, y, bg);
-    //                    }
-    //                });
-    //            };
-    //        }
-    //    }
-    //};
-
     $scope.coordinateClick = function (x, y) {
         $scope.selectedCoordinate = "(X " + x + ", Y " + y + ")";
 
@@ -404,6 +357,59 @@ austerlitzModule.controller("homeController", function ($scope, $routeParams, ho
         }
     };
     
+
+
+    //$scope.coordinateClick = function (x, y, selectedFederationNo) {
+
+    //    if (x > 0 && y > 0) {
+    //        $scope.selectedCoordinate = "(X " + x + ", Y " + y + ")";
+
+    //        if ($scope.bgSelections.length == 0) { // remove from map, reselect BG on ng-grid
+    //            var newCoordinate = $scope.getCoordinateByXY(x, y);
+    //            newCoordinate.federation = 0;
+
+    //            selectedBG = $scope.getBattalionGroupByFederation(selectedFederationNo);
+    //            selectBgGridByBg(selectedBG);
+    //        } else {
+    //            if ($scope.bgSelections.length > 0) {
+    //                var selectedBG = $scope.bgSelections.shift();
+
+    //                $scope.gridOptions.selectItem($scope.army.battalionGroups.indexOf(selectedBG));
+
+    //                angular.forEach($scope.army.battalionGroups, function (bg, index) { // update the battalion group list
+    //                    if (bg.federation == selectedBG.federation) {
+
+    //                        angular.forEach($scope.results.map, function (mapcol, index) { // update the federation on the selected coordinate
+    //                            angular.forEach(mapcol, function (coordinate, index) {
+
+    //                                if (coordinate.x == x && coordinate.y == y) {
+    //                                    if (coordinate.federation != 0) { // coordinate already has a federation on it
+    //                                        angular.forEach($scope.army.battalionGroups, function (bg, index) {  // so clear that battalion group coordinate by setting to 0
+    //                                            if (bg.federation == coordinate.federation) {
+    //                                                $scope.setBattalionGroupXY(0, 0, bg);
+
+    //                                                var indexOfBG = $scope.army.battalionGroups.indexOf(bg); // re-select the battalion group in the list
+    //                                                $scope.gridOptions.selectItem(indexOfBG, true);
+    //                                            }
+    //                                        });
+    //                                    }
+
+    //                                    coordinate.federation = selectedBG.federation;
+    //                                } else if ($scope.HaveBGAndMapXYMatch(coordinate, bg)) { // if the selected federation already in another coordinate
+    //                                    coordinate.federation = 0;
+    //                                };
+
+    //                            });
+    //                        });
+
+    //                        $scope.setBattalionGroupXY(x, y, bg);
+    //                    }
+    //                });
+    //            };
+    //        }
+    //    }
+    //};
+
     
     $scope.results2 = {
         "map": [

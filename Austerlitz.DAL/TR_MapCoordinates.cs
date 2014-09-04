@@ -19,6 +19,6 @@ namespace Austerlitz.DAL
         public int Y { get; set; }
         public string State { get; set; }
         public string ProductionSite { get; set; }
-        public string Other { get; set; }
+        public string Population { get; set; }
     }
 }

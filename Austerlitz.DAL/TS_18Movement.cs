@@ -16,12 +16,12 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public int ItemNo { get; set; }
-        public int Direction1 { get; set; }
-        public int Distance1 { get; set; }
-        public int Direction2 { get; set; }
-        public int Distance2 { get; set; }
-        public int Direction3 { get; set; }
-        public int Distance3 { get; set; }
+        public Nullable<int> ItemNo { get; set; }
+        public Nullable<int> Direction1 { get; set; }
+        public Nullable<int> Distance1 { get; set; }
+        public Nullable<int> Direction2 { get; set; }
+        public Nullable<int> Distance2 { get; set; }
+        public Nullable<int> Direction3 { get; set; }
+        public Nullable<int> Distance3 { get; set; }
     }
 }

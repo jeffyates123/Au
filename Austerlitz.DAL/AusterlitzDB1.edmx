@@ -31,6 +31,17 @@
           <Property Name="IsCavalry" Type="bit" Nullable="false" />
           <Property Name="TroopSpecification" Type="varchar" MaxLength="15" />
         </EntityType>
+        <EntityType Name="REF_PoliticalMapCoordinates">
+          <Key>
+            <PropertyRef Name="X" />
+            <PropertyRef Name="Y" />
+          </Key>
+          <Property Name="X" Type="int" Nullable="false" />
+          <Property Name="Y" Type="int" Nullable="false" />
+          <Property Name="Owner" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Terrain" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Bonus" Type="varchar" MaxLength="1" Nullable="false" />
+        </EntityType>
         <EntityType Name="REF_Population">
           <Key>
             <PropertyRef Name="Density" />
@@ -211,8 +222,8 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           <Property Name="X" Type="int" Nullable="false" />
           <Property Name="Y" Type="int" Nullable="false" />
           <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Population" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="ProductionSite" Type="varchar" MaxLength="1" Nullable="false" />
-          <Property Name="Other" Type="varchar" MaxLength="1" Nullable="false" />
         </EntityType>
         <EntityType Name="TR_MerchantShips">
           <Key>
@@ -533,13 +544,13 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           </Key>
           <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
           <Property Name="OrderNo" Type="int" Nullable="false" />
-          <Property Name="ItemNo" Type="int" Nullable="false" />
-          <Property Name="Direction1" Type="int" Nullable="false" />
-          <Property Name="Distance1" Type="int" Nullable="false" />
-          <Property Name="Direction2" Type="int" Nullable="false" />
-          <Property Name="Distance2" Type="int" Nullable="false" />
-          <Property Name="Direction3" Type="int" Nullable="false" />
-          <Property Name="Distance3" Type="int" Nullable="false" />
+          <Property Name="ItemNo" Type="int" />
+          <Property Name="Direction1" Type="int" />
+          <Property Name="Distance1" Type="int" />
+          <Property Name="Direction2" Type="int" />
+          <Property Name="Distance2" Type="int" />
+          <Property Name="Direction3" Type="int" />
+          <Property Name="Distance3" Type="int" />
         </EntityType>
         <EntityType Name="TS_19TradeAndLoading2">
           <Key>
@@ -599,6 +610,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
         </EntityType>
         <EntityContainer Name="AusterlitzModelStoreContainer">
           <EntitySet Name="REF_ArmyList" EntityType="Self.REF_ArmyList" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="REF_PoliticalMapCoordinates" EntityType="Self.REF_PoliticalMapCoordinates" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_Population" EntityType="Self.REF_Population" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_Ships" EntityType="Self.REF_Ships" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_States" EntityType="Self.REF_States" Schema="dbo" store:Type="Tables" />
@@ -896,11 +908,11 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
         </EntityType>
         <EntityType Name="TR_TradingPortsAndCities">
           <Key>
-            <PropertyRef Name="TurnID" />
+            <PropertyRef Name="TurnId" />
             <PropertyRef Name="ItemNo" />
           </Key>
           <Property Name="ItemNo" Type="Int32" Nullable="false" />
-          <Property Name="TurnID" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="XCoordinate" Type="Int32" Nullable="false" />
           <Property Name="YCoordinate" Type="Int32" Nullable="false" />
           <Property Name="Rate" Type="Int32" Nullable="false" />
@@ -1171,13 +1183,13 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           </Key>
           <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="OrderNo" Type="Int32" Nullable="false" />
-          <Property Name="ItemNo" Type="Int32" Nullable="false" />
-          <Property Name="Direction1" Type="Int32" Nullable="false" />
-          <Property Name="Distance1" Type="Int32" Nullable="false" />
-          <Property Name="Direction2" Type="Int32" Nullable="false" />
-          <Property Name="Distance2" Type="Int32" Nullable="false" />
-          <Property Name="Direction3" Type="Int32" Nullable="false" />
-          <Property Name="Distance3" Type="Int32" Nullable="false" />
+          <Property Name="ItemNo" Type="Int32" />
+          <Property Name="Direction1" Type="Int32" />
+          <Property Name="Distance1" Type="Int32" />
+          <Property Name="Direction2" Type="Int32" />
+          <Property Name="Distance2" Type="Int32" />
+          <Property Name="Direction3" Type="Int32" />
+          <Property Name="Distance3" Type="Int32" />
         </EntityType>
         <EntityType Name="TS_19TradeAndLoading2">
           <Key>
@@ -1278,6 +1290,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           <EntitySet Name="TS_22ChangeNames" EntityType="Self.TS_22ChangeNames" />
           <EntitySet Name="TS_23ChangeStateRelationships" EntityType="Self.TS_23ChangeStateRelationships" />
           <EntitySet Name="TR_MapCoordinates" EntityType="AusterlitzModel.TR_MapCoordinates" />
+          <EntitySet Name="REF_PoliticalMapCoordinates" EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" />
         </EntityContainer>
         <EntityType Name="TR_MapCoordinates">
           <Key>
@@ -1290,7 +1303,18 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           <Property Name="Y" Type="Int32" Nullable="false" />
           <Property Name="State" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
           <Property Name="ProductionSite" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
-          <Property Name="Other" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Population" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="REF_PoliticalMapCoordinates">
+          <Key>
+            <PropertyRef Name="X" />
+            <PropertyRef Name="Y" />
+          </Key>
+          <Property Name="X" Type="Int32" Nullable="false" />
+          <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="Owner" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Terrain" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Bonus" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
         </EntityType>
       </Schema>
     </edmx:ConceptualModels>
@@ -1534,7 +1558,7 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
             <EntityTypeMapping TypeName="AusterlitzModel.TR_TradingPortsAndCities">
               <MappingFragment StoreEntitySet="TR_TradingPortsAndCities">
                 <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
-                <ScalarProperty Name="TurnID" ColumnName="TurnID" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnID" />
                 <ScalarProperty Name="XCoordinate" ColumnName="XCoordinate" />
                 <ScalarProperty Name="YCoordinate" ColumnName="YCoordinate" />
                 <ScalarProperty Name="Rate" ColumnName="Rate" />
@@ -1875,12 +1899,23 @@ warning 6002: The table/view 'Austerlitz.dbo.REF_ProductionSites' does not have 
           <EntitySetMapping Name="TR_MapCoordinates">
             <EntityTypeMapping TypeName="AusterlitzModel.TR_MapCoordinates">
               <MappingFragment StoreEntitySet="TR_MapCoordinates">
-                <ScalarProperty Name="Other" ColumnName="Other" />
+                <ScalarProperty Name="Population" ColumnName="Population" />
                 <ScalarProperty Name="ProductionSite" ColumnName="ProductionSite" />
                 <ScalarProperty Name="State" ColumnName="State" />
                 <ScalarProperty Name="Y" ColumnName="Y" />
                 <ScalarProperty Name="X" ColumnName="X" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="REF_PoliticalMapCoordinates">
+            <EntityTypeMapping TypeName="AusterlitzModel.REF_PoliticalMapCoordinates">
+              <MappingFragment StoreEntitySet="REF_PoliticalMapCoordinates">
+                <ScalarProperty Name="Bonus" ColumnName="Bonus" />
+                <ScalarProperty Name="Terrain" ColumnName="Terrain" />
+                <ScalarProperty Name="Owner" ColumnName="Owner" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
+                <ScalarProperty Name="X" ColumnName="X" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
