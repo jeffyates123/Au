@@ -20,6 +20,9 @@ namespace Austerlitz.Models.TurnReport
     {
         public int ItemNo { get; set; }
         public ItemType ItemType { get; set; }
+        public int MP { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
     public class TurnReport
     {

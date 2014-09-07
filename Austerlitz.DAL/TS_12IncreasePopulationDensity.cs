@@ -16,7 +16,7 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
-        public Nullable<int> YCoordinate { get; set; }
-        public Nullable<int> XCoordinate { get; set; }
+        public Nullable<int> X { get; set; }
+        public Nullable<int> Y { get; set; }
     }
 }

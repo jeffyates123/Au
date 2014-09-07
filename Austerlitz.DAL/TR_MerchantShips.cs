@@ -17,8 +17,6 @@ namespace Austerlitz.DAL
         public string TurnId { get; set; }
         public int ItemNo { get; set; }
         public int Type { get; set; }
-        public int XCoordinate { get; set; }
-        public int YCoordinate { get; set; }
         public int FleetNo { get; set; }
         public int MP { get; set; }
         public int Condition { get; set; }
@@ -28,5 +26,7 @@ namespace Austerlitz.DAL
         public int Goods2 { get; set; }
         public int Quantity2 { get; set; }
         public int Money { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

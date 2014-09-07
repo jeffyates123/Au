@@ -16,10 +16,9 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int ItemNo { get; set; }
-        public int XCoordinate { get; set; }
-        public int YCoordinate { get; set; }
-        public int FederationNo { get; set; }
-        public string Reports { get; set; }
-        public string FortressSize { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public Nullable<int> Boarded { get; set; }
+        public string Report { get; set; }
     }
 }

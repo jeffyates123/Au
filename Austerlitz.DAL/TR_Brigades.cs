@@ -17,8 +17,6 @@ namespace Austerlitz.DAL
         public int ItemNo { get; set; }
         public string TurnId { get; set; }
         public string Name { get; set; }
-        public string CoordinateX_OrState { get; set; }
-        public string CoordinateY_OrFleet { get; set; }
         public int MP { get; set; }
         public int Federation { get; set; }
         public string Batt1Type { get; set; }
@@ -42,5 +40,7 @@ namespace Austerlitz.DAL
         public string Batt7Type { get; set; }
         public Nullable<int> Batt7EF { get; set; }
         public Nullable<int> Batt7Size { get; set; }
+        public string X_OrState { get; set; }
+        public string Y_OrFleet { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace Austerlitz.Controllers
 {
     public class TurnReportApiController : ApiController
     {
-        public TurnReport getTRFullTurnDetails(string turnId = "test")
+        public TurnReport getTRFullTurnDetails(string turnId)
         {
             using (var dataContext = new AusterlitzDbContext())
             {
@@ -48,25 +48,31 @@ namespace Austerlitz.Controllers
                 var turnTradingPortsAndCities = new GenericRepository<TR_TradingPortsAndCities>(dataContext);
                 turnReport.TradingPortsAndCities = turnTradingPortsAndCities.GetItems(x => x.TurnId == turnId).ToArray();
 
-                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander })
-                    .Union(turnReport.Brigades.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Brigade })).ToList();
+                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander, MP = x.MP, X = x.X, Y = x.Y }).ToList();
+                var dummy = 0;
+
+                movementItems.AddRange(turnReport.Brigades.Select(x => 
+                    new MovementItems() 
+                { ItemNo = x.ItemNo, ItemType = ItemType.Brigade, MP = x.MP
+                    , X = Int32.TryParse(x.X_OrState, out dummy) ? int.Parse(x.X_OrState) : 0
+                    , Y = Int32.TryParse(x.Y_OrFleet, out dummy) ? int.Parse(x.Y_OrFleet) : 0
+                }).ToList());
 
                 // can add more union stuff here if necessary, not sure it makes much difference
 
-                movementItems.AddRange(turnReport.Brigades.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Brigade }).ToList());
-                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship }).ToList());
-                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip }).ToList());
-                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain }).ToList());
-                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy }).ToList());
+                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship, MP = x.MP, X = x.X, Y = x.Y }).ToList());
+                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip, MP = x.MP, X = x.X, Y = x.Y }).ToList());
+                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain, MP = x.MP, X = x.X, Y = x.Y }).ToList());
+                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy, MP = 75, X = x.X, Y = x.Y }).ToList());
 
                 turnReport.MovementItemList = movementItems.ToArray();
-                turnReport.MapCoordinates = GetMapCoordinates();
+                turnReport.MapCoordinates = GetMapCoordinates(turnId);
 
                 return turnReport;
             }
         }
 
-        public DisplayCoordinate[][] GetMapCoordinates(string turnId = "Test", string state = "E")
+        public DisplayCoordinate[][] GetMapCoordinates(string turnId)
         {
             var displayMapArray = new DisplayCoordinate[100][];
 

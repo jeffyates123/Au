@@ -23,7 +23,18 @@ namespace Austerlitz.Domain
 
     public partial class TurnSheetManager
     {
-        public TS_00TurnDetails[] GetTSTurnDetails(string turnId, string state="E")
+        public TS_00TurnDetails[] GetAllTSTurnDetails()
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var listRepository = new GenericRepository<TS_00TurnDetails>(dataContext);
+                var tsItems = listRepository.Get().ToArray();
+
+                return tsItems;
+            }
+        }
+
+        public TS_00TurnDetails[] GetTSTurnDetails(string turnId)
         {
             using (var dataContext = new AusterlitzDbContext())
             {
@@ -36,7 +47,7 @@ namespace Austerlitz.Domain
 
                     for (var itemCount = 1; itemCount <= newItems.Count(); itemCount++)
                     {
-                        TS_00TurnDetails item = new TS_00TurnDetails() { TurnId = turnId, State = state};
+                        TS_00TurnDetails item = new TS_00TurnDetails() { TurnId = turnId};
                         newItems[itemCount - 1] = item;
                     }
 

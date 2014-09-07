@@ -24,12 +24,12 @@ namespace Austerlitz.Controllers
 
     public partial class TurnSheetApiController : ApiController
     {
-        public Austerlitz.Models.TurnSheet GetTSFullTurnDetails(string turnId = "test", string state = "E")
+        public Austerlitz.Models.TurnSheet GetTSFullTurnDetails(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             var turnSheet = new Austerlitz.Models.TurnSheet();
 
-            turnSheet.TSTurnDetails = turnReportManager.GetTSTurnDetails(turnId, state); 
+            turnSheet.TSTurnDetails = turnReportManager.GetTSTurnDetails(turnId); 
 
             turnSheet.TSTransferGoods = turnReportManager.GetTSTransferGoods(turnId);
             turnSheet.TSDemolishItems = turnReportManager.GetTSDemolishItems(turnId);
@@ -58,146 +58,151 @@ namespace Austerlitz.Controllers
             return turnSheet;
         }
 
+        public TS_00TurnDetails[] GetAllTSTurnDetails()
+        {
+            var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
+            return turnReportManager.GetAllTSTurnDetails();
+        }
 
-        public TS_00TurnDetails[] GetTSTurnDetails(string turnId = "test")
+        public TS_00TurnDetails[] GetTSTurnDetails(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSTurnDetails(turnId);
         }
 
-        public TS_01TransferGoods[] GetTSTransferGoods(string turnId = "test")
+        public TS_01TransferGoods[] GetTSTransferGoods(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSTransferGoods(turnId);
         }
 
-        public TS_02DemolishItems[] GetTSDemolishItems(string turnId = "test")
+        public TS_02DemolishItems[] GetTSDemolishItems(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSDemolishItems(turnId);
         }
 
-        public TS_03SetUpBrigades[] GetTSSetUpBrigades(string turnId = "test")
+        public TS_03SetUpBrigades[] GetTSSetUpBrigades(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSSetUpBrigades(turnId);
         }
 
-        public TS_04SetUpAdditionalBrigades[] GetTSSetUpAdditionalBrigades(string turnId = "test")
+        public TS_04SetUpAdditionalBrigades[] GetTSSetUpAdditionalBrigades(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSSetUpAdditionalBrigades(turnId);
         }
 
-        public TS_05IncreaseHeadcount[] GetTSIncreaseHeadcount(string turnId = "test")
+        public TS_05IncreaseHeadcount[] GetTSIncreaseHeadcount(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSIncreaseHeadcount(turnId);
         }
 
-        public TS_06IncreaseBrigadeXP[] GetTSIncreaseBrigadeXP(string turnId = "test")
+        public TS_06IncreaseBrigadeXP[] GetTSIncreaseBrigadeXP(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSIncreaseBrigadeXP(turnId);
         }
 
-        public TS_07ExchangeBattalions[] GetTSExchangeBattalions(string turnId = "test")
+        public TS_07ExchangeBattalions[] GetTSExchangeBattalions(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSExchangeBattalions(turnId);
         }
 
-        public TS_08MergeBattalions[] GetTSMergeBattalions(string turnId = "test")
+        public TS_08MergeBattalions[] GetTSMergeBattalions(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSMergeBattalions(turnId);
         }
 
-        public TS_09RepairShips_BaggageTrains[] GetTSRepairShips_BaggageTrains(string turnId = "test")
+        public TS_09RepairShips_BaggageTrains[] GetTSRepairShips_BaggageTrains(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSRepairShips_BaggageTrains(turnId);
         }
 
-        public TS_10BuildShips[] GetTSBuildShips(string turnId = "test")
+        public TS_10BuildShips[] GetTSBuildShips(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSBuildShips(turnId);
         }
 
-        public TS_11BuildBaggageTrain[] GetTSBuildBaggageTrain(string turnId = "test")
+        public TS_11BuildBaggageTrain[] GetTSBuildBaggageTrain(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSBuildBaggageTrain(turnId);
         }
 
-        public TS_12IncreasePopulationDensity[] GetTSIncreasePopulationDensity(string turnId = "test")
+        public TS_12IncreasePopulationDensity[] GetTSIncreasePopulationDensity(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSIncreasePopulationDensity(turnId);
         }
 
-        public TS_13BuildProductionSites[] GetTSBuildProductionSites(string turnId = "test")
+        public TS_13BuildProductionSites[] GetTSBuildProductionSites(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSBuildProductionSites(turnId);
         }
 
-        public TS_14FormFederations[] GetTSFormFederations(string turnId = "test")
+        public TS_14FormFederations[] GetTSFormFederations(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSFormFederations(turnId);
         }
 
-        public TS_15CoastalDefence[] GetTSCoastalDefence(string turnId = "test")
+        public TS_15CoastalDefence[] GetTSCoastalDefence(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSCoastalDefence(turnId);
         }
 
-        public TS_16SeaBlockade[] GetTSSeaBlockade(string turnId = "test")
+        public TS_16SeaBlockade[] GetTSSeaBlockade(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSSeaBlockade(turnId);
         }
 
-        public TS_17TradeAndLoading1[] GetTSTradeAndLoading1(string turnId = "test")
+        public TS_17TradeAndLoading1[] GetTSTradeAndLoading1(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSTradeAndLoading1(turnId);
         }
 
-        public TS_18Movement[] GetTSMovement(string turnId = "test")
+        public TS_18Movement[] GetTSMovement(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSMovement(turnId);
         }
 
-        public TS_19TradeAndLoading2[] GetTSTradeAndLoading2(string turnId = "test")
+        public TS_19TradeAndLoading2[] GetTSTradeAndLoading2(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSTradeAndLoading2(turnId);
         }
 
-        public TS_20Boarding[] GetTSBoarding(string turnId = "test")
+        public TS_20Boarding[] GetTSBoarding(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSBoarding(turnId);
         }
 
-        public TS_21HandOverTerritory[] GetTSHandOverTerritory(string turnId = "test")
+        public TS_21HandOverTerritory[] GetTSHandOverTerritory(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSHandOverTerritory(turnId);
         }
 
-        public TS_22ChangeNames[] GetTSChangeNames(string turnId = "test")
+        public TS_22ChangeNames[] GetTSChangeNames(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSChangeNames(turnId);
         }
 
-        public TS_23ChangeStateRelationships[] GetTSChangeStateRelationships(string turnId = "test")
+        public TS_23ChangeStateRelationships[] GetTSChangeStateRelationships(string turnId)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
             return turnReportManager.GetTSChangeStateRelationships(turnId);

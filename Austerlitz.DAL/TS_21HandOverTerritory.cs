@@ -18,7 +18,7 @@ namespace Austerlitz.DAL
         public int OrderNo { get; set; }
         public string State { get; set; }
         public Nullable<int> ShipNumber { get; set; }
-        public Nullable<int> XCoordinate { get; set; }
-        public Nullable<int> YCoordinate { get; set; }
+        public Nullable<int> X { get; set; }
+        public Nullable<int> Y { get; set; }
     }
 }

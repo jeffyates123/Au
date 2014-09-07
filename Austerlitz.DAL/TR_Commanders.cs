@@ -18,11 +18,11 @@ namespace Austerlitz.DAL
         public string TurnId { get; set; }
         public string Rank { get; set; }
         public string Name { get; set; }
-        public int CoordinateX { get; set; }
-        public int CoordinateY { get; set; }
-        public int Boarded { get; set; }
+        public Nullable<int> Boarded { get; set; }
         public int Federation { get; set; }
         public int MP { get; set; }
         public int CommandCapacity { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

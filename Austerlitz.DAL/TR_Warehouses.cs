@@ -28,9 +28,9 @@ namespace Austerlitz.DAL
         public int Ore { get; set; }
         public int Zinc { get; set; }
         public int Horses { get; set; }
-        public int Text { get; set; }
         public int Wool { get; set; }
         public int Gold { get; set; }
         public int Wine { get; set; }
+        public int Textiles { get; set; }
     }
 }

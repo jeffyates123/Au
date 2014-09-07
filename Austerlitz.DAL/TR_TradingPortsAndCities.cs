@@ -16,8 +16,6 @@ namespace Austerlitz.DAL
     {
         public string TurnId { get; set; }
         public int ItemNo { get; set; }
-        public int XCoordinate { get; set; }
-        public int YCoordinate { get; set; }
         public int Rate { get; set; }
         public int EctPts { get; set; }
         public int Food { get; set; }
@@ -26,9 +24,12 @@ namespace Austerlitz.DAL
         public int Ore { get; set; }
         public int Zinc { get; set; }
         public int Horses { get; set; }
-        public int Text { get; set; }
         public int Wool { get; set; }
         public int Gold { get; set; }
         public int Wine { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string Name { get; set; }
+        public int Textiles { get; set; }
     }
 }

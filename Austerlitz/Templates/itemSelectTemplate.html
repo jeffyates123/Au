@@ -1,4 +1,3 @@
 ﻿<select ng-cell-input
-        ng-options='bg.itemNo as bg.itemNo for bg in turnReport.brigades'
-        ng-class="'colt' + $index" ng-model="COL_FIELD" ng-input='COL_FIELD' data-placeholder="-- Select One --">
-</select>
+        ng-options='mi.itemNo as mi.itemNo for mi in turnReport.movementItemList'
+        ng-model="COL_FIELD" ng-input='COL_FIELD' data-placeholder="-- Select One --"></select>

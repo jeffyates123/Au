@@ -1,6 +1,6 @@
 ﻿austerlitzModule.controller("turnSheetController", function ($scope, $routeParams, turnSheetFactory) {
 
-    turnSheetFactory.getTSFullTurnDetails().then(function (turnsheet) {
+    turnSheetFactory.getTSFullTurnDetails('306EFeb1808').then(function (turnsheet) {
         $scope.turnsheet = turnsheet;
 
         //$scope.listTurnDetails = turnsheet.TSTurnDetails;

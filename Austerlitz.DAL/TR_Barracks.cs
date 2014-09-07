@@ -24,5 +24,7 @@ namespace Austerlitz.DAL
         public int Horses { get; set; }
         public int Text { get; set; }
         public int FortressSize { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

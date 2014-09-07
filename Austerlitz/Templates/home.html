@@ -1,12 +1,17 @@
-﻿<div class="container" ng-init="init();">
+﻿<div class="container" id="homePanel">
     <div>
         <div>
             <h3>Load New Turn From File</h3>
             <input type="file" id="fileInput" onchange="sendFile(this.files[0]);" />
+            <span ng-class="fileLoading ? 'glyphicon glyphicon-remove':'glyphicon glyphicon-ok'">
         </div>
         <div>
-            <h3>Load Turn From Database</h3>
-            get a select list here
+            <h3>Load Turn From Database</h3> 
+
+            <select id="selectedTurn" ng-options="tsTurn.turnId for tsTurn in tsTurnList" ng-model="selectedTurnDetails" ng-change="loadTurnFromDataBase()">
+                <option>"--select an option--"</option>
+            </select>
+            <h4>Selected: {{selectedTurnDetails.turnId}}</h4>
         </div>
 
         <div>
@@ -14,23 +19,25 @@
             <input type="file" id="fileInput" onchange="sendRegionalMapFile(this.files[0]);" />
         </div>
 
-        <div>
+        <div ng-show="turnDetailsBeingLoaded">
             <div><label>Turn Sheet Loaded?</label><span ng-class="turnSheet ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
+
             <div><label>Turn Report Loaded?</label><span ng-class="turnReport ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
             <div>
-            <ul>
-                <li>{{turnReport.baggageTrains.length}} Baggage Trains</li>
-                <li>{{turnReport.barracks.length}} Barracks</li>
-                <li>{{turnReport.brigades.length}} Brigades</li>
-                <li>{{turnReport.commanders.length}} Commanders</li>
-                <li>{{turnReport.merchantShips.length}} Merchant Ships</li>
-                <li>{{turnReport.spies.length}} Spies</li>
-                <li>{{turnReport.stateRelationships.length}} State Relationships</li>
-                <li>{{turnReport.tradingPortsAndCities.length}} Trading Ports And Cities</li>
-                <li>{{turnReport.warehouses.length}} Warehouses</li>
-                <li>{{turnReport.warships.length}} Warships</li>
-            </ul>
+                <ul>
+                    <li>{{turnReport.stateRelationships.length}} State Relationships</li>
+                    <li>{{turnReport.warehouses.length}} Warehouses</li>
+                    <li>{{turnReport.barracks.length}} Barracks</li>
+                    <li>{{turnReport.commanders.length}} Commanders</li>
+                    <li>{{turnReport.brigades.length}} Brigades</li>
+                    <li>{{turnReport.warships.length}} Warships</li>
+                    <li>{{turnReport.merchantShips.length}} Merchant Ships</li>
+                    <li>{{turnReport.baggageTrains.length}} Baggage Trains</li>
+                    <li>{{turnReport.spies.length}} Spies</li>
+                    <li>{{turnReport.tradingPortsAndCities.length}} Trading Ports And Cities</li>
+                    <li>{{turnReport.mapCoordinates.length}} Map Coordinates</li>
+                </ul>
             </div>
-        </div>
+</div>
     </div>
 </div>

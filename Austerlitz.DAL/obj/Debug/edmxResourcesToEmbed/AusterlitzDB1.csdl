@@ -110,8 +110,6 @@
     </Key>
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
-    <Property Name="XCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" Nullable="false" />
     <Property Name="FederationNo" Type="Int32" Nullable="false" />
     <Property Name="MP" Type="Int32" Nullable="false" />
     <Property Name="Condition" Type="Int32" Nullable="false" />
@@ -120,6 +118,8 @@
     <Property Name="Goods2" Type="Int32" Nullable="false" />
     <Property Name="Quantity2" Type="Int32" Nullable="false" />
     <Property Name="Money" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
   </EntityType>
   <EntityType Name="TR_Barracks">
     <Key>
@@ -136,6 +136,8 @@
     <Property Name="Horses" Type="Int32" Nullable="false" />
     <Property Name="Text" Type="Int32" Nullable="false" />
     <Property Name="FortressSize" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
   </EntityType>
   <EntityType Name="TR_Brigades">
     <Key>
@@ -145,8 +147,6 @@
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="Name" Type="String" MaxLength="16" FixedLength="false" Unicode="false" Nullable="false" />
-    <Property Name="CoordinateX_OrState" Type="String" MaxLength="3" FixedLength="false" Unicode="false" Nullable="false" />
-    <Property Name="CoordinateY_OrFleet" Type="String" MaxLength="3" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="MP" Type="Int32" Nullable="false" />
     <Property Name="Federation" Type="Int32" Nullable="false" />
     <Property Name="Batt1Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
@@ -170,6 +170,8 @@
     <Property Name="Batt7Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
     <Property Name="Batt7EF" Type="Int32" />
     <Property Name="Batt7Size" Type="Int32" />
+    <Property Name="X_OrState" Type="String" Nullable="false" MaxLength="3" FixedLength="false" Unicode="false" />
+    <Property Name="Y_OrFleet" Type="String" Nullable="false" MaxLength="3" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="TR_Commanders">
     <Key>
@@ -180,12 +182,12 @@
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="Rank" Type="String" MaxLength="15" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="Name" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
-    <Property Name="CoordinateX" Type="Int32" Nullable="false" />
-    <Property Name="CoordinateY" Type="Int32" Nullable="false" />
-    <Property Name="Boarded" Type="Int32" Nullable="false" />
+    <Property Name="Boarded" Type="Int32" />
     <Property Name="Federation" Type="Int32" Nullable="false" />
     <Property Name="MP" Type="Int32" Nullable="false" />
     <Property Name="CommandCapacity" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
   </EntityType>
   <EntityType Name="TR_MerchantShips">
     <Key>
@@ -195,8 +197,6 @@
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
     <Property Name="Type" Type="Int32" Nullable="false" />
-    <Property Name="XCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" Nullable="false" />
     <Property Name="FleetNo" Type="Int32" Nullable="false" />
     <Property Name="MP" Type="Int32" Nullable="false" />
     <Property Name="Condition" Type="Int32" Nullable="false" />
@@ -206,6 +206,8 @@
     <Property Name="Goods2" Type="Int32" Nullable="false" />
     <Property Name="Quantity2" Type="Int32" Nullable="false" />
     <Property Name="Money" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
   </EntityType>
   <EntityType Name="TR_Spies">
     <Key>
@@ -214,11 +216,10 @@
     </Key>
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
-    <Property Name="XCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="FederationNo" Type="Int32" Nullable="false" />
-    <Property Name="Reports" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
-    <Property Name="FortressSize" Type="String" MaxLength="15" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
+    <Property Name="Boarded" Type="Int32" />
+    <Property Name="Report" Type="String" Nullable="false" MaxLength="120" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="TR_StateRelationships">
     <Key>
@@ -248,10 +249,10 @@
     <Property Name="Ore" Type="Int32" Nullable="false" />
     <Property Name="Zinc" Type="Int32" Nullable="false" />
     <Property Name="Horses" Type="Int32" Nullable="false" />
-    <Property Name="Text" Type="Int32" Nullable="false" />
     <Property Name="Wool" Type="Int32" Nullable="false" />
     <Property Name="Gold" Type="Int32" Nullable="false" />
     <Property Name="Wine" Type="Int32" Nullable="false" />
+    <Property Name="Textiles" Type="Int32" Nullable="false" />
   </EntityType>
   <EntityType Name="TR_Warships">
     <Key>
@@ -261,8 +262,6 @@
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
     <Property Name="Type" Type="Int32" Nullable="false" />
-    <Property Name="XCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" Nullable="false" />
     <Property Name="FleetNo" Type="Int32" Nullable="false" />
     <Property Name="MP" Type="Int32" Nullable="false" />
     <Property Name="Condition" Type="Int32" Nullable="false" />
@@ -270,6 +269,9 @@
     <Property Name="Marines" Type="Int32" Nullable="false" />
     <Property Name="Brigade1" Type="Int32" Nullable="false" />
     <Property Name="Brigade2" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
+    <Property Name="Name" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="TS_00TurnDetails">
     <Key>
@@ -282,7 +284,7 @@
     <Property Name="Year" Type="Int32" />
     <Property Name="PlayerName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
     <Property Name="AccountNo" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
-    <Property Name="ProcessDate" Type="DateTime" Precision="0" />
+    <Property Name="ProcessDate" Type="DateTime" Precision="3" />
     <Property Name="FundsSentCash" Type="Int32" />
     <Property Name="FundsSentCheque" Type="Int32" />
     <Property Name="FundsSentPO" Type="Int32" />
@@ -418,8 +420,8 @@
     </Key>
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="OrderNo" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" />
-    <Property Name="XCoordinate" Type="Int32" />
+    <Property Name="X" Type="Int32" />
+    <Property Name="Y" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_13BuildProductionSites">
     <Key>
@@ -429,8 +431,8 @@
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="OrderNo" Type="Int32" Nullable="false" />
     <Property Name="ProdSiteType" Type="Int32" />
-    <Property Name="XCoordinate" Type="Int32" />
-    <Property Name="YCoordinate" Type="Int32" />
+    <Property Name="X" Type="Int32" />
+    <Property Name="Y" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_14FormFederations">
     <Key>
@@ -525,8 +527,8 @@
     <Property Name="OrderNo" Type="Int32" Nullable="false" />
     <Property Name="State" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
     <Property Name="ShipNumber" Type="Int32" />
-    <Property Name="XCoordinate" Type="Int32" />
-    <Property Name="YCoordinate" Type="Int32" />
+    <Property Name="X" Type="Int32" />
+    <Property Name="Y" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_22ChangeNames">
     <Key>
@@ -624,8 +626,6 @@
     </Key>
     <Property Name="TurnId" Type="String" Nullable="false" MaxLength="13" FixedLength="false" Unicode="false" />
     <Property Name="ItemNo" Type="Int32" Nullable="false" />
-    <Property Name="XCoordinate" Type="Int32" Nullable="false" />
-    <Property Name="YCoordinate" Type="Int32" Nullable="false" />
     <Property Name="Rate" Type="Int32" Nullable="false" />
     <Property Name="EctPts" Type="Int32" Nullable="false" />
     <Property Name="Food" Type="Int32" Nullable="false" />
@@ -634,9 +634,12 @@
     <Property Name="Ore" Type="Int32" Nullable="false" />
     <Property Name="Zinc" Type="Int32" Nullable="false" />
     <Property Name="Horses" Type="Int32" Nullable="false" />
-    <Property Name="Text" Type="Int32" Nullable="false" />
     <Property Name="Wool" Type="Int32" Nullable="false" />
     <Property Name="Gold" Type="Int32" Nullable="false" />
     <Property Name="Wine" Type="Int32" Nullable="false" />
+    <Property Name="X" Type="Int32" Nullable="false" />
+    <Property Name="Y" Type="Int32" Nullable="false" />
+    <Property Name="Name" Type="String" Nullable="false" MaxLength="25" FixedLength="false" Unicode="false" />
+    <Property Name="Textiles" Type="Int32" Nullable="false" />
   </EntityType>
 </Schema>
