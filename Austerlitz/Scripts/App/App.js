@@ -14,7 +14,7 @@
             templateUrl: '/Austerlitz/Templates/turnMapsTemplate.html'
         })
         .otherwise({
-            redirectTo: '/Austerlitz/brigadeCalculator'
+            redirectTo: '/Austerlitz/'
         });
         //        // use the HTML5 History API
         $locationProvider.html5Mode(true);

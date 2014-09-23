@@ -29,18 +29,20 @@
 
     <script src="~/Scripts/App/bgModalController.js"></script>
 
+    <script src="~/Scripts/App/menuController.js"></script>
+
     <script src="~/Scripts/App/homeController.js"></script>
     <script src="~/Scripts/App/brigadeCalculatorController.js"></script>
     <script src="~/Scripts/App/simBattleController.js"></script>
     <script src="~/Scripts/App/turnMapsController.js"></script>
 </head>
 
-          <body style="padding-top:60px" ng-controller="homeController" >
+          <body style="padding-top:60px" ng-controller="menuController" >
               <header>
                   <div class="nav navbar-default navbar-fixed-top ">
                       <div class="container">
                           <div class="navbar-header">
-                              <a href="/Austerlitz/home" class="navbar-brand">Home: {{selectedTurnId}}</a>
+                              <a href="/Austerlitz/home" class="navbar-brand">Home <label ng-model="selectedTurnId">x</label></a>
                           </div>
                           <div class="navbar-collapse collapse ">
                               <ul class="nav navbar-nav">

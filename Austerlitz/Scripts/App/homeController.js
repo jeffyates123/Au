@@ -41,31 +41,16 @@ austerlitzModule.controller("homeController", function ($scope, $routeParams, tu
     //    $scope.init();
     //});
     $scope.fileLoading = false;
-    $scope.selectedTurnId = "";
+    $scope.selectedTurnDetails = {};
 
-    turnSheetFactory.getAllTSTurnDetails().then(function (tsTurnList) {
-        $scope.tsTurnList = tsTurnList;
-    });
     $scope.turnDetailsBeingLoaded = false;
 
-    turnSheetFactory.getTSFullTurnDetails($scope.selectedTurnId).then(function (turnSheet) {
-        $scope.turnSheet = turnSheet;
-    });
-
-    turnReportFactory.getTRFullTurnDetails($scope.selectedTurnId).then(function (turnReport) {
-        $scope.turnReport = turnReport;
-    });
 
     $scope.loadTurnFromDataBase = function () {
         $scope.turnDetailsBeingLoaded = true;
-        $scope.selectedTurnId = $scope.selectedTurnDetails.turnId;
+        $scope.NEWturnID = $scope.selectedTurnDetails.turnId;
 
-        turnSheetFactory.getTSFullTurnDetails($scope.selectedTurnId).then(function (turnSheet) {
-            $scope.turnSheet = turnSheet;
-        });
-
-        turnReportFactory.getTRFullTurnDetails($scope.selectedTurnId).then(function (turnReport) {
-            $scope.turnReport = turnReport;
-        });
+        $scope.getTSFullTurnDetails($scope.NEWturnID);
+        $scope.getTRFullTurnDetails($scope.NEWturnID);
     }
 });

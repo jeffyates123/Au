@@ -206,6 +206,7 @@
     <Content Include="Scripts\App\brigadeCalculatorController.js" />
     <Content Include="Scripts\App\homeController.js" />
     <Content Include="Scripts\App\bgModalController.js" />
+    <Content Include="Scripts\App\menuController.js" />
     <Content Include="Scripts\App\simBattleFactory.js" />
     <Content Include="Scripts\App\rulesCatalogFactory.js" />
     <Content Include="Scripts\App\simBattleController.js" />

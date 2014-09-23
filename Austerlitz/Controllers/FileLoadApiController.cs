@@ -135,7 +135,7 @@ namespace Austerlitz.Controllers
 
         private int loadStateRelationships(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)
         {
-            bool locationFound = false;
+//            bool locationFound = false;
 
             //for (; lineLocation < lineList.Count; lineLocation++)
             //{

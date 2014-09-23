@@ -36,5 +36,6 @@ namespace Austerlitz.DAL
         public Nullable<int> Wood { get; set; }
         public Nullable<int> Horses { get; set; }
         public Nullable<int> Textiles { get; set; }
+        public Nullable<int> TurnSheetSectionNo { get; set; }
     }
 }

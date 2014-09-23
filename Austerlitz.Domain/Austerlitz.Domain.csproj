@@ -52,6 +52,7 @@
     <Compile Include="ReferenceManager.cs" />
     <Compile Include="TurnReportManager.cs" />
     <Compile Include="TurnSheetManager.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Austerlitz.DAL\Austerlitz.DAL.csproj">

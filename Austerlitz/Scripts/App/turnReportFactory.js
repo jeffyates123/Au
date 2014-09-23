@@ -1,13 +1,13 @@
 ﻿austerlitzModule.factory('turnReportFactory', function ($http, $q) {
     return {
-        getTRFullTurnDetails: function () {
+        getTRFullTurnDetails: function (turnId) {
             var deferred = $q.defer();
-            $http.get('/Austerlitz/api/TurnReportApi/getTRFullTurnDetails?turnId=' + '306EFeb1808').success(deferred.resolve).error(deferred.reject);
+            $http.get('/Austerlitz/api/TurnReportApi/getTRFullTurnDetails?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
-        getMapCoordinates: function () {
+        getMapCoordinates: function (turnId) {
             var deferred = $q.defer();
-            $http.get('/Austerlitz/api/TurnReportApi/getMapCoordinates?turnId=' + '306EFeb1808').success(deferred.resolve).error(deferred.reject);
+            $http.get('/Austerlitz/api/TurnReportApi/getMapCoordinates?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
         //getMapProdSiteCoordinates: function () {

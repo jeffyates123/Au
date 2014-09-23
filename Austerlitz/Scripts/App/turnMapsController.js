@@ -25,11 +25,11 @@ function sendRegionalMapFile(file) {
 
 austerlitzModule.controller("turnMapsController", function ($scope, $routeParams, turnReportFactory, rulesCatalogFactory, turnSheetFactory) {
 
-    turnReportFactory.getMapCoordinates().then(function (mapCoordinates) {
+    turnReportFactory.getMapCoordinates($scope.NEWturnID).then(function (mapCoordinates) {
         $scope.mapCoordinates = mapCoordinates;
     });
 
-    turnSheetFactory.getTSMovement().then(function (tsMovementList) {
+    turnSheetFactory.getTSMovement($scope.NEWturnID).then(function (tsMovementList) {
         $scope.tsMovementList = tsMovementList;
     });
 

@@ -115,8 +115,8 @@
           <Key>
             <PropertyRef Name="ItemType" />
           </Key>
-          <Property Name="WeightOfItem" Type="int" Nullable="false" />
           <Property Name="ItemType" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="WeightOfItem" Type="int" Nullable="false" />
           <Property Name="GoodsFactors" Type="int" />
         </EntityType>
         <EntityType Name="TR_BaggageTrains">
@@ -356,6 +356,7 @@
           <Property Name="Wood" Type="int" />
           <Property Name="Horses" Type="int" />
           <Property Name="Textiles" Type="int" />
+          <Property Name="TurnSheetSectionNo" Type="int" />
         </EntityType>
         <EntityType Name="TS_02DemolishItems">
           <Key>
@@ -955,6 +956,7 @@
           <Property Name="Wood" Type="Int32" DefaultValue="0" />
           <Property Name="Horses" Type="Int32" DefaultValue="0" />
           <Property Name="Textiles" Type="Int32" DefaultValue="0" />
+          <Property Name="TurnSheetSectionNo" Type="Int32" />
         </EntityType>
         <EntityType Name="TS_02DemolishItems">
           <Key>
@@ -1535,7 +1537,7 @@
     <EntitySetMapping Name="TR_Warehouses">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_Warehouses)">
         <MappingFragment StoreEntitySet="TR_Warehouses">
-          <ScalarProperty Name="Textiles" ColumnName="Textiles" />
+                <ScalarProperty Name="Textiles" ColumnName="Textiles" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
           <ScalarProperty Name="WarehouseName" ColumnName="WarehouseName" />
@@ -1595,7 +1597,8 @@
     <EntitySetMapping Name="TS_01TransferGoods">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TS_01TransferGoods)">
         <MappingFragment StoreEntitySet="TS_01TransferGoods">
-          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+                <ScalarProperty Name="TurnSheetSectionNo" ColumnName="TurnSheetSectionNo" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
           <ScalarProperty Name="From" ColumnName="From" />
           <ScalarProperty Name="To" ColumnName="To" />

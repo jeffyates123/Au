@@ -297,6 +297,7 @@
     <EntitySetMapping Name="TS_01TransferGoods">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TS_01TransferGoods)">
         <MappingFragment StoreEntitySet="TS_01TransferGoods">
+          <ScalarProperty Name="TurnSheetSectionNo" ColumnName="TurnSheetSectionNo" />
           <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
           <ScalarProperty Name="From" ColumnName="From" />

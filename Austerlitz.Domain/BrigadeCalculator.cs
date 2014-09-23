@@ -9,28 +9,33 @@ namespace Austerlitz.Domain
 {
     public class BrigadeCalculator
     {
-        public TS_03SetUpBrigades[] GetTurnSheetSetUpBrigadesCosts(TS_03SetUpBrigades[] setupBrigades, string state)
-        {
-            var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            var referenceManager = new ReferenceManager();
+        //public TS_03SetUpBrigades[] CalculateCostTSSetUpBrigades(string turnId)
+        //{
+        //    AusterlitzDbContext _auDB = new AusterlitzDbContext();
 
-            TS_03SetUpBrigades[] transferGoods = turnReportManager.GetTSSetUpBrigades(setupBrigades[0].TurnId).ToArray();
+        //    //var referenceManager = new ReferenceManager();
+        //    //var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
 
-            var armyList = referenceManager.GetArmyList(state);
+        //    //var armyList = referenceManager.GetArmyList();
 
-            //foreach (TS_03SetUpBrigades setupBrigade in setupBrigades)
-            //{
+        //    //var existingRecords = turnSheetManager.GetTSTransferGoods(turnId).Where(x=>x.TurnSheetSectionNo==(int)TurnSheetSection.SetUpBrigades);
+        //    //_auDB.TS_01TransferGoods.RemoveRange(existingRecords);
 
-            //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt1, armyList);
-            //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt2, armyList);
-            //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt3, armyList);
-            //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt4, armyList);
-            //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt5, armyList);
-            //    //addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt6, armyList);
-            //    //addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt7, armyList);
-            //};
-            return transferGoods;
-        }
+        //    //TS_03SetUpBrigades[] transferGoods = turnSheetManager.GetTSSetUpBrigades(setupBrigades[0].TurnId).ToArray();
+
+        //    ////foreach (TS_03SetUpBrigades setupBrigade in setupBrigades)
+        //    ////{
+
+        //    //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt1, armyList);
+        //    //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt2, armyList);
+        //    //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt3, armyList);
+        //    //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt4, armyList);
+        //    //    addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt5, armyList);
+        //    //    //addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt6, armyList);
+        //    //    //addTurnSheetSetUpBattalionCosts(transferGoods[0], setupBrigade.Batt7, armyList);
+        //    //};
+        //    //return transferGoods;
+        //}
 
 
         private TS_01TransferGoods addTurnSheetSetUpBattalionCosts(TS_01TransferGoods transferGood, int setupBattalionItemNo, IQueryable<REF_ArmyList> armyList)

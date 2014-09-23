@@ -110,8 +110,8 @@
     <Key>
       <PropertyRef Name="ItemType" />
     </Key>
-    <Property Name="WeightOfItem" Type="int" Nullable="false" />
     <Property Name="ItemType" Type="varchar" MaxLength="20" Nullable="false" />
+    <Property Name="WeightOfItem" Type="int" Nullable="false" />
     <Property Name="GoodsFactors" Type="int" />
   </EntityType>
   <EntityType Name="TR_BaggageTrains">
@@ -351,6 +351,7 @@
     <Property Name="Wood" Type="int" />
     <Property Name="Horses" Type="int" />
     <Property Name="Textiles" Type="int" />
+    <Property Name="TurnSheetSectionNo" Type="int" />
   </EntityType>
   <EntityType Name="TS_02DemolishItems">
     <Key>

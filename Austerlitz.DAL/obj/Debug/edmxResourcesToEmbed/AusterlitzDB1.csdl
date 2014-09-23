@@ -304,6 +304,7 @@
     <Property Name="Wood" Type="Int32" DefaultValue="0" />
     <Property Name="Horses" Type="Int32" DefaultValue="0" />
     <Property Name="Textiles" Type="Int32" DefaultValue="0" />
+    <Property Name="TurnSheetSectionNo" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_02DemolishItems">
     <Key>

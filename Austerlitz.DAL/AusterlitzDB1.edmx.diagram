@@ -7,47 +7,47 @@
       <Diagram DiagramId="16e94d3162ea4949babf538a85d3123d" Name="Diagram1" ZoomLevel="58">
         <EntityTypeShape EntityType="AusterlitzModel.REF_ArmyList" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="AusterlitzModel.REF_Population" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.REF_ProductionSites" Width="1.5" PointX="6.875" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_ProductionSites" Width="1.5" PointX="8.5" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="AusterlitzModel.REF_Ships" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.REF_States" Width="1.5" PointX="10.375" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.REF_Terrain" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.REF_UnitWeightsRates" Width="1.5" PointX="8.625" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_BaggageTrains" Width="1.5" PointX="17.875" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Barracks" Width="1.5" PointX="8.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Brigades" Width="1.5" PointX="16.25" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Commanders" Width="1.5" PointX="0.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_MerchantShips" Width="1.5" PointX="2.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Spies" Width="1.5" PointX="10.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_StateRelationships" Width="1.5" PointX="14.5" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Warehouses" Width="1.5" PointX="4.375" PointY="8.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_Warships" Width="1.5" PointX="12.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_00TurnDetails" Width="1.5" PointX="0.875" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_01TransferGoods" Width="1.5" PointX="2.75" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_02DemolishItems" Width="1.5" PointX="4.5" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_03SetUpBrigades" Width="1.5" PointX="6.125" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_04SetUpAdditionalBrigades" Width="1.5" PointX="7.75" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_05IncreaseHeadcount" Width="1.5" PointX="9.375" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_06IncreaseBrigadeXP" Width="1.5" PointX="11" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_07ExchangeBattalions" Width="1.5" PointX="12.625" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_08MergeBattalions" Width="1.5" PointX="14.25" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_09RepairShips_BaggageTrains" Width="1.5" PointX="15.875" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_10BuildShips" Width="1.5" PointX="17.5" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_11BuildBaggageTrain" Width="1.5" PointX="19.125" PointY="13.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_12IncreasePopulationDensity" Width="1.5" PointX="0.875" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_13BuildProductionSites" Width="1.5" PointX="2.75" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_14FormFederations" Width="1.5" PointX="4.375" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_15CoastalDefence" Width="1.5" PointX="6.125" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_16SeaBlockade" Width="1.5" PointX="7.75" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_17TradeAndLoading1" Width="1.5" PointX="9.375" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_18Movement" Width="1.5" PointX="11.125" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_19TradeAndLoading2" Width="1.5" PointX="12.75" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_20Boarding" Width="1.5" PointX="14.375" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_21HandOverTerritory" Width="1.5" PointX="16" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_22ChangeNames" Width="1.5" PointX="17.625" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TS_23ChangeStateRelationships" Width="1.5" PointX="19.25" PointY="17.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_MapCoordinates" Width="1.5" PointX="20.75" PointY="15.25" />
-        <EntityTypeShape EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" Width="1.5" PointX="12.25" PointY="5.75" />
-        <EntityTypeShape EntityType="AusterlitzModel.TR_TradingPortsAndCities" Width="1.5" PointX="14.5" PointY="2.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_States" Width="1.5" PointX="2.75" PointY="3" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_Terrain" Width="1.5" PointX="4.75" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_UnitWeightsRates" Width="1.5" PointX="6.5" PointY="2.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_BaggageTrains" Width="1.5" PointX="22.875" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Barracks" Width="1.5" PointX="16" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Brigades" Width="1.5" PointX="21.25" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Commanders" Width="1.5" PointX="10.375" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_MerchantShips" Width="1.5" PointX="12.25" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Spies" Width="1.5" PointX="10.375" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_StateRelationships" Width="1.5" PointX="19.5" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Warehouses" Width="1.5" PointX="14.125" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_Warships" Width="1.5" PointX="17.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_00TurnDetails" Width="1.5" PointX="0.75" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_01TransferGoods" Width="1.5" PointX="2.625" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_02DemolishItems" Width="1.5" PointX="4.375" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_03SetUpBrigades" Width="1.5" PointX="6" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_04SetUpAdditionalBrigades" Width="1.5" PointX="7.625" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_05IncreaseHeadcount" Width="1.5" PointX="9.25" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_06IncreaseBrigadeXP" Width="1.5" PointX="10.875" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_07ExchangeBattalions" Width="1.5" PointX="12.5" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_08MergeBattalions" Width="1.5" PointX="14.125" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_09RepairShips_BaggageTrains" Width="1.5" PointX="15.75" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_10BuildShips" Width="1.5" PointX="17.375" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_11BuildBaggageTrain" Width="1.5" PointX="19" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_12IncreasePopulationDensity" Width="1.5" PointX="0.75" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_13BuildProductionSites" Width="1.5" PointX="2.625" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_14FormFederations" Width="1.5" PointX="4.25" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_15CoastalDefence" Width="1.5" PointX="6" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_16SeaBlockade" Width="1.5" PointX="7.625" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_17TradeAndLoading1" Width="1.5" PointX="9.25" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_18Movement" Width="1.5" PointX="11" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_19TradeAndLoading2" Width="1.5" PointX="12.625" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_20Boarding" Width="1.5" PointX="14.25" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_21HandOverTerritory" Width="1.5" PointX="15.875" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_22ChangeNames" Width="1.5" PointX="17.5" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TS_23ChangeStateRelationships" Width="1.5" PointX="19.125" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_MapCoordinates" Width="1.5" PointX="20.625" PointY="8.875" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" Width="1.5" PointX="6.5" PointY="0.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_TradingPortsAndCities" Width="1.5" PointX="19.5" PointY="2.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
