@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -13,13 +13,16 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Austerlitz</RootNamespace>
     <AssemblyName>Austerlitz</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
-    <UseIISExpress>false</UseIISExpress>
+    <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <TargetFrameworkProfile />
+    <Use64BitIISExpress />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -64,6 +67,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http.Extensions">
       <HintPath>..\packages\Microsoft.Net.Http.2.2.22\lib\net45\System.Net.Http.Extensions.dll</HintPath>
@@ -79,8 +83,7 @@
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Http, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.0\lib\net45\System.Web.Http.dll</HintPath>
@@ -89,9 +92,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.0\lib\net45\System.Web.Http.WebHost.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
@@ -133,6 +134,7 @@
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.1.2\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WebGrease">
       <Private>True</Private>
       <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
@@ -150,6 +152,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\UnityResolver.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\BoardingController.cs" />
     <Compile Include="Controllers\BrigadeCalculatorController.cs" />
     <Compile Include="Controllers\FileLoadApiController.cs" />
     <Compile Include="Controllers\FileSaveApiController.cs" />
@@ -161,12 +164,6 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\SimBattle\BattalionGroup.cs" />
-    <Compile Include="Models\SimBattle\SimBattleVm.cs" />
-    <Compile Include="Models\SimBattle\VmCoordinate.cs" />
-    <Compile Include="Models\TurnReport\DisplayCoordinate.cs" />
-    <Compile Include="Models\TurnReport\TurnReport.cs" />
-    <Compile Include="Models\TurnSheet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -202,18 +199,22 @@
     <Content Include="Scripts\angular.js" />
     <Content Include="Scripts\angular.min.js" />
     <Content Include="Scripts\angular.rangeSlider.js" />
-    <Content Include="Scripts\App\App.js" />
-    <Content Include="Scripts\App\brigadeCalculatorController.js" />
-    <Content Include="Scripts\App\homeController.js" />
-    <Content Include="Scripts\App\bgModalController.js" />
-    <Content Include="Scripts\App\menuController.js" />
-    <Content Include="Scripts\App\simBattleFactory.js" />
-    <Content Include="Scripts\App\rulesCatalogFactory.js" />
-    <Content Include="Scripts\App\simBattleController.js" />
-    <Content Include="Scripts\App\turnMapsController.js" />
-    <Content Include="Scripts\App\turnReportFactory.js" />
-    <Content Include="Scripts\App\turnSheetFactory.js" />
-    <Content Include="Scripts\App\turnSheetController.js" />
+    <Content Include="App\App.js" />
+    <Content Include="App\boardingController.js" />
+    <Content Include="App\brigadeCalculatorController.js" />
+    <Content Include="App\editableCellDirective.js" />
+    <Content Include="App\homeController.js" />
+    <Content Include="App\bgModalController.js" />
+    <Content Include="App\masterDataFactory.js" />
+    <Content Include="App\menuController.js" />
+    <Content Include="App\simBattleFactory.js" />
+    <Content Include="App\rulesCatalogFactory.js" />
+    <Content Include="App\simBattleController.js" />
+    <Content Include="App\turnDataLoaderService.js" />
+    <Content Include="App\turnMapsController.js" />
+    <Content Include="App\turnReportFactory.js" />
+    <Content Include="App\turnSheetFactory.js" />
+    <Content Include="App\turnSheetController.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\errors.json" />
@@ -518,6 +519,17 @@
     <Content Include="Scripts\jquery.validate.min.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\libs\smart-table.debug.js" />
+    <Content Include="Scripts\libs\smart-table\bottom.txt" />
+    <Content Include="Scripts\libs\smart-table\smart-table.min.js" />
+    <Content Include="Scripts\libs\smart-table\smart-table.module.js" />
+    <Content Include="Scripts\libs\smart-table\stPagination.js" />
+    <Content Include="Scripts\libs\smart-table\stPipe.js" />
+    <Content Include="Scripts\libs\smart-table\stSearch.js" />
+    <Content Include="Scripts\libs\smart-table\stSelectRow.js" />
+    <Content Include="Scripts\libs\smart-table\stSort.js" />
+    <Content Include="Scripts\libs\smart-table\stTable.js" />
+    <Content Include="Scripts\libs\smart-table\top.txt" />
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\ng-grid.js" />
     <Content Include="Scripts\ng-grid.min.js" />
@@ -525,8 +537,9 @@
     <Content Include="Scripts\respond.min.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Templates\bgPickListTemplate.html" />
+    <Content Include="Templates\boardingTemplate.html" />
     <Content Include="Templates\headerTemplate.html" />
-    <Content Include="Templates\home.html" />
+    <Content Include="Templates\homeTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />
@@ -546,8 +559,9 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Scripts\version.json" />
     <Content Include="Views\BrigadeCalculator\Index.cshtml" />
-    <Content Include="Templates\brigadeCalculator.html" />
+    <Content Include="Templates\brigadeCalculatorTemplate.html" />
     <Content Include="Views\TurnMaps\Index.cshtml" />
+    <Content Include="Views\Boarding\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -583,9 +597,9 @@
         <WebProjectProperties>
           <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>53987</DevelopmentServerPort>
+          <DevelopmentServerPort>53988</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/Austerlitz</IISUrl>
+          <IISUrl>http://localhost:53988/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
@@ -602,3 +616,4 @@
   <Target Name="AfterBuild">
   </Target> -->
 </Project>
+

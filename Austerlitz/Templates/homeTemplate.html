@@ -1,0 +1,43 @@
+﻿<div class="container" id="homePanel">
+    <div>
+        <div>
+            <h3>Load New Turn From File</h3>
+            <input type="file" id="fileInput" onchange="sendFile(this.files[0]);" />
+            <span ng-class="fileLoading ? 'glyphicon glyphicon-remove':'glyphicon glyphicon-ok'">
+        </div>
+        <div>
+            <h3>Load Turn From Database</h3> 
+
+            <select id="selectedTurn" ng-options="tsTurn.turnId for tsTurn in masterData.turnsList " ng-model="selectedTurnDetails" ng-change="loadTurnFromDataBase()">
+                <option>"--select an option--"</option>
+            </select>
+            <h4>Selected: {{selectedTurnDetails.turnId}}</h4>
+        </div>
+
+        <div>
+            <h3>Load Regional Map File</h3>
+            <input type="file" id="fileInput" onchange="sendRegionalMapFile(this.files[0]);" />
+        </div>
+
+        <div >
+            <div><label>Turn Sheet Loaded?</label><span ng-class="masterData.turnSheet ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
+
+            <div><label>Turn Report Loaded?</label><span ng-class="masterData.turnReport ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
+            <div ng-show="masterData.turnReport != null">
+                <ul>
+                    <li>{{masterData.turnReport.stateRelationships.length}} State Relationships</li>
+                    <li>{{masterData.turnReport.warehouses.length}} Warehouses</li>
+                    <li>{{masterData.turnReport.barracks.length}} Barracks</li>
+                    <li>{{masterData.turnReport.commanders.length}} Commanders</li>
+                    <li>{{masterData.turnReport.brigades.length}} Brigades</li>
+                    <li>{{masterData.turnReport.warships.length}} Warships</li>
+                    <li>{{masterData.turnReport.merchantShips.length}} Merchant Ships</li>
+                    <li>{{masterData.turnReport.baggageTrains.length}} Baggage Trains</li>
+                    <li>{{masterData.turnReport.spies.length}} Spies</li>
+                    <li>{{masterData.turnReport.tradingPortsAndCities.length}} Trading Ports And Cities</li>
+                    <li>{{masterData.turnReport.mapCoordinates.length}} Lines of Map Coordinates</li>
+                </ul>
+            </div>
+</div>
+    </div>
+</div>

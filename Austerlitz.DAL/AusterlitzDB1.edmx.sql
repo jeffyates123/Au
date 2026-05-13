@@ -693,8 +693,9 @@ GO
 CREATE TABLE [dbo].[TR_TradingPortsAndCities] (
     [TurnId] varchar(13)  NOT NULL,
     [ItemNo] int  NOT NULL,
-    [XCoordinate] int  NOT NULL,
-    [YCoordinate] int  NOT NULL,
+    [X] int  NOT NULL,
+    [Y] int  NOT NULL,
+    [Name] varchar(25)  NOT NULL,
     [Rate] int  NOT NULL,
     [EctPts] int  NOT NULL,
     [Food] int  NOT NULL,
@@ -703,7 +704,7 @@ CREATE TABLE [dbo].[TR_TradingPortsAndCities] (
     [Ore] int  NOT NULL,
     [Zinc] int  NOT NULL,
     [Horses] int  NOT NULL,
-    [Text] int  NOT NULL,
+    [Textiles] int  NOT NULL,
     [Wool] int  NOT NULL,
     [Gold] int  NOT NULL,
     [Wine] int  NOT NULL

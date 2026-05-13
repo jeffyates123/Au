@@ -1,0 +1,29 @@
+﻿austerlitzModule.factory('rulesCatalogFactory', function ($http, $q) {
+    return {
+        getArmyList: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getArmyList').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        getRefProductionSites: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getRefProductionSites').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        getRefStates: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getRefStates').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        getRefTerrain: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getRefTerrain').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        getRulesCatalog: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getRulesCatalog').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+    }
+});

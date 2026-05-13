@@ -22,6 +22,13 @@ namespace Austerlitz.App_Start
 
             config.DependencyResolver = new Austerlitz.App_Start.UnityResolver(container); // resolve the web api dependencies via the unity container
 
+#if DEBUG
+            // Surface exception Message/ExceptionMessage in JSON so failing DB/API calls are diagnosable (e.g. SQL connection errors).
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+#else
+            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.LocalOnly;
+#endif
+
             // http://stackoverflow.com/questions/9499794/single-controller-with-multiple-get-methods-in-asp-net-web-api
             //
             config.Routes.MapHttpRoute("DefaultApiWithId", "Api/{controller}/{id}", new { id = RouteParameter.Optional }, new { id = @"\d+" });

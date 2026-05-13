@@ -1,0 +1,57 @@
+﻿<h1>Boarding</h1>
+
+<div class="col-xs-6">
+    <table st-table="displayedCollection" st-safe-src="masterData.turnReport.merchantShips" class="table table-striped">
+        <thead>
+            <tr>
+                <th></th>
+                <th st-sort="itemNo">No</th>
+                <th st-sort="type" ">Type</th>
+                <th st-sort="">X/Y</th>
+                <th st-sort="fleetNo">Fleet</th>
+                <th st-sort="mP">MP</th>
+                <th st-sort="condition">Cond</th>
+                <th st-sort="age">Age</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody ng-hide="isLoading" class="ng-cloak">
+            <tr st-select-row="row" st-select-mode="multiple" ng-repeat="movementItem in displayedCollection">
+                <td cs-select="row">
+                    <input id="editFlag" ng-model="editFlag" type="checkbox" />
+                </td>
+                <td>{{movementItem.itemNo}}</td>
+                <td>{{movementItem.type}}</td>
+                <td>{{movementItem.x}}/{{movementItem.y}}</td>
+                <td>{{movementItem.fleetNo}}</td>
+                <td>{{movementItem.mP}}</td>
+                <td>{{movementItem.condition}}</td>
+                <td>{{movementItem.age}}</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="col-xs-6">
+        <table st-table="masterData.rulesCatalog.ships" class="table table-striped">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th st-sort="type" st-skip-natural="true">Ty</th>
+                    <th st-sort="name" st-skip-natural="true">name</th>
+                    <th st-sort="loadCapacity" st-skip-natural="true">LC</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody ng-hide="isLoading" class="ng-cloak">
+                <tr st-select-row="row" st-select-mode="multiple" ng-repeat="ship in masterData.rulesCatalog.ships">
+                    <td cs-select="row">
+                        <input id="editFlag" ng-model="editFlag" type="checkbox" />
+                    </td>
+                    <td>{{ship.type}}</td>
+                    <td>{{ship.name}}</td>
+                    <td>{{ship.loadCapacity}}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>

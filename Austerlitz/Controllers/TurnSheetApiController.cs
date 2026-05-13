@@ -58,10 +58,10 @@ namespace Austerlitz.Controllers
             return turnSheet;
         }
 
-        public TS_00TurnDetails[] GetAllTSTurnDetails()
+        public TS_00TurnDetails[] GetAllTurnsList()
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            return turnReportManager.GetAllTSTurnDetails();
+            return turnReportManager.GetAllTurnsList();
         }
 
         public TS_00TurnDetails[] GetTSTurnDetails(string turnId)

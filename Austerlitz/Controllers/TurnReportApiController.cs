@@ -12,6 +12,8 @@ namespace Austerlitz.Controllers
 {
     public class TurnReportApiController : ApiController
     {
+        private int dummy;
+
         public TurnReport getTRFullTurnDetails(string turnId)
         {
             using (var dataContext = new AusterlitzDbContext())
@@ -48,31 +50,54 @@ namespace Austerlitz.Controllers
                 var turnTradingPortsAndCities = new GenericRepository<TR_TradingPortsAndCities>(dataContext);
                 turnReport.TradingPortsAndCities = turnTradingPortsAndCities.GetItems(x => x.TurnId == turnId).ToArray();
 
-                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander, MP = x.MP, X = x.X, Y = x.Y }).ToList();
+                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander, Description = "Commander (" + x.CommandCapacity + "): " + x.Name, MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
                 var dummy = 0;
 
-                movementItems.AddRange(turnReport.Brigades.Select(x => 
-                    new MovementItems() 
-                { ItemNo = x.ItemNo, ItemType = ItemType.Brigade, MP = x.MP
-                    , X = Int32.TryParse(x.X_OrState, out dummy) ? int.Parse(x.X_OrState) : 0
-                    , Y = Int32.TryParse(x.Y_OrFleet, out dummy) ? int.Parse(x.Y_OrFleet) : 0
+                movementItems.AddRange(turnReport.Brigades.Select(x => new MovementItems() 
+                { ItemNo = x.ItemNo, ItemType = ItemType.Brigade, 
+                    Description = x.Batt1Type + x.Batt1EF + " " + x.Batt2Type + x.Batt2EF + " " + x.Batt3Type + x.Batt3EF + " " + x.Batt4Type + x.Batt4EF + " " + x.Batt5Type + x.Batt5EF + " " + x.Batt6Type + x.Batt6EF + " " + x.Batt7Type + x.Batt7EF,
+                    MP = x.MP
+                    , X = AxisValue(x.X_OrState)
+                    , Y = AxisValue(x.Y_OrFleet)
+                    , Sphere = CalcSphere(AxisValue(x.X_OrState), AxisValue(x.Y_OrFleet))
                 }).ToList());
 
                 // can add more union stuff here if necessary, not sure it makes much difference
-
-                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship, MP = x.MP, X = x.X, Y = x.Y }).ToList());
-                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip, MP = x.MP, X = x.X, Y = x.Y }).ToList());
-                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain, MP = x.MP, X = x.X, Y = x.Y }).ToList());
-                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy, MP = 75, X = x.X, Y = x.Y }).ToList());
+                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship, Description="Warship: " + x.Name, MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip, Description = ItemType.MerchantShip.ToString(), MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain, Description = ItemType.BaggageTrain.ToString(), MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy, Description = ItemType.Spy.ToString(), MP = 75, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X,x.Y)}).ToList());
 
                 turnReport.MovementItemList = movementItems.ToArray();
-                turnReport.MapCoordinates = GetMapCoordinates(turnId);
+                turnReport.MapCoordinates = GetMapCoordinates(turnId, movementItems);
 
                 return turnReport;
             }
         }
 
-        public DisplayCoordinate[][] GetMapCoordinates(string turnId)
+        public int AxisValue(string axisValue)
+        {
+            return Int32.TryParse(axisValue, out dummy) ? int.Parse(axisValue) : 0;
+        }
+
+        public Sphere CalcSphere(int x, int y)
+        {
+            if (x <= 80 && y <= 65)
+            {
+                return Sphere.Europe;
+            }
+            if (x <= 40 && y <= 99)
+            {
+                return Sphere.Carribbean;
+            }
+            if (x <= 90 && y <= 99)
+            {
+                return Sphere.India;
+            }
+            return Sphere.Unknown;
+        }
+
+        public DisplayCoordinate[][] GetMapCoordinates(string turnId, List<MovementItems> movementItems)
         {
             var displayMapArray = new DisplayCoordinate[100][];
 
@@ -104,11 +129,12 @@ namespace Austerlitz.Controllers
                                 Y = y,
                                 TurnId = turnId,
                                 Population = turnCoord.Population,
-                                ProductionSite = turnCoord.ProductionSite.Replace(".",""),
+                                ProductionSite = turnCoord.ProductionSite.Replace(".", ""),
                                 State = turnCoord.State,
                                 Bonus = regionalCoord.Bonus,
                                 Owner = regionalCoord.Owner,
                                 Terrain = regionalCoord.Terrain,
+                                Units = movementItems!=null && movementItems.Any(m => m.X == x && m.Y == y)? movementItems.Where(m => m.X == x && m.Y == y)?.Select(m => m.ItemNo).ToList() : new List<int>()
                             };
 
                             //displayMapArray[turnCoord.Y][turnCoord.X].allowableProdSites = calcAllowableProdSites(displayMapArray[turnCoord.Y][turnCoord.X], refProductionSites, state);
@@ -126,7 +152,8 @@ namespace Austerlitz.Controllers
                                 State = " ",
                                 Bonus = " ",
                                 Owner = " ",
-                                Terrain = " "
+                                Terrain = " ",
+                                Units = new List<int>()
                             };
                         }
 

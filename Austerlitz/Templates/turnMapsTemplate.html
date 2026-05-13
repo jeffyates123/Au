@@ -1,4 +1,4 @@
-﻿<div style="padding-left:0px; padding-right:0px;">
+﻿﻿<div style="padding-left:0px; padding-right:0px;">
     <div class="window">
         <div class="master" style="flex-direction:column;">
             <div class="movementGridStyle" ng-grid="movementGridOptions">
@@ -34,7 +34,7 @@
                             <option value="">-- select a state --</option>
                         </select>
 
-                        <select ng-options="(ps.siteTypeNo + ' : ' + ps.siteType + ' (' + ps.terrain + ', Pop: ' + pop.minPopulation + '-' + pop.maxPopulation) group by ps.siteTypeNo for ps in productionSiteList" ng-model="selectedProductionSite"></select>
+                        <select ng-options="(ps.sitezTypeNo + ' : ' + ps.siteType + ' (' + ps.terrain + ', Pop: ' + pop.minPopulation + '-' + pop.maxPopulation) group by ps.siteTypeNo for ps in productionSiteList" ng-model="selectedProductionSite"></select>
                     </div>
                 </div>
 
@@ -47,7 +47,7 @@
                          min="selectedMapChoice.rangeMinX" max="selectedMapChoice.rangeMaxX"
                          model-min="selectedMapChoice.minX" model-max="selectedMapChoice.maxX"
                          step="1"
-                         style="width:400px" >
+                         style="width:400px">
                     </div>
 
                     <div style="float:right; margin-left:50px;">
@@ -56,12 +56,14 @@
                                 <tr></tr>
 
                                 <tr ng-repeat="cols in mapCoordinates">
-                                    <td class="turnMapCoord" style="width:24px;height:12px;" ng-repeat="col in cols | filter: filterMapFn" ng-dblclick="coordinateDblClick(col.x, col.y)" ng-click="coordinateClick(col.x, col.y)" ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField)">
+                                    <td class="turnMapCoord" style="width:24px;height:12px;" ng-repeat="col in cols | filter: filterMapFn" ng-dblclick="coordinateDblClick(col.x, col.y)" ng-click="coordinateClick(col.x, col.y)" 
+                                        ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField, col.units)">
+                                        
                                         <div ng-show="col.y>0 && col.x>0">
                                             {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? col.productionSite : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
                                         </div>
-                                            <label class="turnMapBorder" ng-show="col.y==0 && col.x>0">{{col.x}}</label>
-                                            <label class="turnMapBorder" ng-show="col.x==0 && col.y>0">{{col.y}}</label>
+                                        <label class="turnMapBorder" ng-show="col.y==0 && col.x>0">{{col.x}}</label>
+                                        <label class="turnMapBorder" ng-show="col.x==0 && col.y>0">{{col.y}}</label>
                                     </td>
                                 </tr>
                             </tbody>
@@ -69,10 +71,10 @@
                     </div>
 
                     <div range-slider
-                            min="selectedMapChoice.rangeMinY" max="selectedMapChoice.rangeMaxY"
-                            model-min="selectedMapChoice.minY" model-max="selectedMapChoice.maxY"
-                            step="1"
-                            orientation="vertical left" height="300px; width:25px">
+                         min="selectedMapChoice.rangeMinY" max="selectedMapChoice.rangeMaxY"
+                         model-min="selectedMapChoice.minY" model-max="selectedMapChoice.maxY"
+                         step="1"
+                         orientation="vertical left" height="300px; width:25px">
                     </div>
 
 
@@ -81,5 +83,4 @@
         </div>
     </div>
 
- </div>
-
+</div>

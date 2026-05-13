@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 using System.Web.Http;
+using Austerlitz.Domain.Models;
 
 namespace Austerlitz.Controllers
 {
@@ -19,6 +20,12 @@ namespace Austerlitz.Controllers
             public int ItemNo { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
+        }
+
+        public RulesCatalog GetRulesCatalog()
+        {
+            var refManager = new Austerlitz.Domain.ReferenceManager();
+            return refManager.GetRulesCatalog();
         }
 
         public REF_ArmyList[] GetArmyList(string state = "E")

@@ -23,14 +23,41 @@ namespace Austerlitz.Domain
 
     public partial class TurnSheetManager
     {
-        public TS_00TurnDetails[] GetAllTSTurnDetails()
+        public TS_00TurnDetails[] GetAllTurnsList()
         {
             using (var dataContext = new AusterlitzDbContext())
             {
                 var listRepository = new GenericRepository<TS_00TurnDetails>(dataContext);
-                var tsItems = listRepository.Get().ToArray();
+                var tsItems = listRepository.Get();
 
-                return tsItems;
+                var orderedItems = tsItems
+                    .OrderBy(x => x.TurnId.Substring(0, 3))
+                    .ThenBy(x => x.TurnId.Substring(3, 1))
+                    .ThenBy(x => x.TurnId.Substring(x.TurnId.Length - 4))
+                    .ThenBy(x => GetMonthNumber(x.TurnId.Substring(4, x.TurnId.Length - 8)))
+                    .ToArray();
+
+                return orderedItems;
+            }
+        }
+
+        private int GetMonthNumber(string month)
+        {
+            switch (month.Trim().ToUpper())
+            {
+                case "JAN": return 1;
+                case "FEB": return 2;
+                case "MAR": return 3;
+                case "APR": return 4;
+                case "MAY": return 5;
+                case "JUN": return 6;
+                case "JUL": return 7;
+                case "AUG": return 8;
+                case "SEP": return 9;
+                case "OCT": return 10;
+                case "NOV": return 11;
+                case "DEC": return 12;
+                default: return 0;
             }
         }
 

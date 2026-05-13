@@ -121,26 +121,37 @@ textarea {
 .mapHeight {
     padding: 0px;
 }
+.mapHeight0 {
+    background-color: #ffffff;
+    border: 1px solid rgb(220,220,220);
+}
 .mapHeight1 {
-    background-color: rgb(204,255,204);
+    background-color: rgb(226,245,226);
+    border: 2px solid rgb(180,220,180);
 }
 .mapHeight2 {
-    background-color:rgb(153,204,0);
+    background-color: rgb(195,230,195);
+    border: 2px solid rgb(140,200,140);
 }
 .mapHeight3 {
-    background-color:rgb(51,153,102);
+    background-color: rgb(160,215,160);
+    border: 2px solid rgb(100,175,100);
 }
 .mapHeight4 {
-    background-color:rgb(0,128,0);
+    background-color: rgb(120,195,120);
+    border: 2px solid rgb(60,150,60);
 }
 .mapHeight5 {
-    background-color:rgb(128,128,0);
+    background-color: rgb(80,170,80);
+    border: 2px solid rgb(30,130,30);
 }
 .mapHeight6 {
-    background-color:rgb(153,51,0);
+    background-color: rgb(50,145,50);
+    border: 3px solid rgb(10,110,10);
 }
 .mapHeight7 {
-    background-color:rgb(128,0,0);
+    background-color: rgb(30,120,30);
+    border: 3px solid rgb(0,80,0);
 }
 
 
@@ -231,6 +242,7 @@ textarea {
 
 .moveAllowed {background-color: rgb(135, 219, 106);}
 
+.unit_Exists { border: 2px solid black}
 
 .selectedItems{
     float: left; 

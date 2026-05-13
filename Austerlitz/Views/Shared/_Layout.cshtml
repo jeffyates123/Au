@@ -1,4 +1,4 @@
-﻿<!DOCTYPE><html ng-app="austerlitzModule">
+<!DOCTYPE><html ng-app="austerlitzModule">
 <head>
     <meta charset="utf-8" />
 
@@ -20,21 +20,25 @@
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.0.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script src="~/Scripts/ng-grid.js"></script>
+    <script src="~/Scripts/libs/smart-table.debug.js"></script>
 
-    <script src="~/Scripts/App/App.js"></script>
-    <script src="~/Scripts/App/rulesCatalogFactory.js"></script>
-    <script src="~/Scripts/App/simBattleFactory.js"></script>
-    <script src="~/Scripts/App/turnSheetFactory.js"></script>
-    <script src="~/Scripts/App/turnReportFactory.js"></script>
+    <script src="~/App/App.js"></script>
+    <script src="~/App/rulesCatalogFactory.js"></script>
+    <script src="~/App/simBattleFactory.js"></script>
+    <script src="~/App/turnSheetFactory.js"></script>
+    <script src="~/App/turnReportFactory.js"></script>
+    <script src="~/App/turnDataLoaderService.js"></script>
+    <script src="~/App/masterDataFactory.js"></script>
+    <script src="~/App/bgModalController.js"></script>
 
-    <script src="~/Scripts/App/bgModalController.js"></script>
+    <script src="~/App/menuController.js"></script>
 
-    <script src="~/Scripts/App/menuController.js"></script>
-
-    <script src="~/Scripts/App/homeController.js"></script>
-    <script src="~/Scripts/App/brigadeCalculatorController.js"></script>
-    <script src="~/Scripts/App/simBattleController.js"></script>
-    <script src="~/Scripts/App/turnMapsController.js"></script>
+    <script src="~/App/homeController.js"></script>
+    <script src="~/App/brigadeCalculatorController.js"></script>
+    <script src="~/App/simBattleController.js"></script>
+    <script src="~/App/turnMapsController.js"></script>
+    <script src="~/App/boardingController.js"></script>
+    <script src="~/App/turnSheetController.js"></script>
 </head>
 
           <body style="padding-top:60px" ng-controller="menuController" >
@@ -42,17 +46,17 @@
                   <div class="nav navbar-default navbar-fixed-top ">
                       <div class="container">
                           <div class="navbar-header">
-                              <a href="/Austerlitz/home" class="navbar-brand">Home <label ng-model="selectedTurnId">x</label></a>
+                              <a href="/home" class="navbar-brand">Home {{masterData.turnId}}</a>
                           </div>
                           <div class="navbar-collapse collapse ">
                               <ul class="nav navbar-nav">
-                                  <li><a href="/Austerlitz/BrigadeCalculator">BrigadeCalculator</a></li>
-                                  <li><a href="/Austerlitz/TurnMaps">TurnMaps</a></li>
-                                  <li><a href="/Austerlitz/Answers">Answers</a></li>
-                                  <li><a href="/Austerlitz/Bootstrap">Mini-Apps</a></li>
+                                  <li><a href="/BrigadeCalculator">BrigadeCalculator</a></li>
+                                  <li><a href="/Boarding">Boarding</a></li>
+                                  <li><a href="/TurnMaps">TurnMaps</a></li>
+                                  <li><a href="/Bootstrap">Mini-Apps</a></li>
                                   <li class="nav nav-divider"></li>
                                   <li class=" navbar-right dropdown">
-                                      <a href="/Austerlitz/home3" class="dropdown-toggle">menu<b class="caret"></b></a>
+                                      <a href="/home3" class="dropdown-toggle">menu<b class="caret"></b></a>
 
                                       <ul class="dropdown-menu">
                                           <li>
