@@ -250,6 +250,8 @@ textarea {
 
 .movementItemSelected { border: 2px solid red !important; }
 
+.routeCandidate { border: 2px solid orange !important; }
+
 .selectedItems{
     float: left; 
 }

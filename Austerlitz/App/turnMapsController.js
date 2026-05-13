@@ -117,6 +117,18 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     };
 
     $scope.coordinateClick = function (x, y) {
+        if ($scope.pendingRouteSelection) {
+            var routeKey = x + '_' + y;
+            var selectedRoute = $scope.pendingRouteSelection.routesByCoord[routeKey];
+
+            if (selectedRoute) {
+                $scope.applyRouteToMovementRow($scope.pendingRouteSelection.row, selectedRoute.segments);
+            }
+
+            $scope.pendingRouteSelection = null;
+            $scope.clearRouteCandidates();
+        }
+
         var coord = $scope.getCoordinateByXY(x, y);
         $scope.selectedCoordinateDetails = "(X:" + x + ",Y: " + y + ") " + coord.state + coord.population + coord.productionSite + " - " + coord.owner + coord.terrain + coord.bonus;
         $scope.selectedItemGridCoordinate = { x: x, y: y };
@@ -139,6 +151,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.movementClickRow = function (row) {
         $scope.clearDisplayField();
+        $scope.clearRouteCandidates();
+        $scope.pendingRouteSelection = null;
         $scope.selectedMovementItemCoordinate = null;
 
         if (row.entity.itemNo != null) {
@@ -165,7 +179,19 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                         }
                     }
                 } else {
-                    $scope.drawMaximumMovementByTerrain(initialCoord, selectedItem, row.entity);
+                    if (!item.x || !item.y || item.x <= 0 || item.y <= 0) {
+                        $scope.selectedCoordinateDetails = 'Selected unit has no valid map coordinate (possibly boarded).';
+                        return;
+                    }
+
+                    var routesByCoord = $scope.calculateReachableRoutes(initialCoord, selectedItem);
+                    if (Object.keys(routesByCoord).length === 0) {
+                        $scope.selectedCoordinateDetails = 'No reachable coordinates found for this unit with current movement allowance.';
+                        return;
+                    }
+
+                    $scope.markRouteCandidates(routesByCoord);
+                    $scope.pendingRouteSelection = { row: row.entity, routesByCoord: routesByCoord };
                 }
 
                 row.entity.mpUsed = item.mpUsed;
@@ -175,34 +201,103 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
     }
 
-    $scope.drawMaximumMovementByTerrain = function (startCoord, selectedItem, movementRow) {
-        if (!startCoord || !selectedItem || !selectedItem.mp) {
-            return;
+    $scope.applyRouteToMovementRow = function (movementRow, segments) {
+        movementRow.direction1 = null;
+        movementRow.distance1 = null;
+        movementRow.direction2 = null;
+        movementRow.distance2 = null;
+        movementRow.direction3 = null;
+        movementRow.distance3 = null;
+
+        if (segments && segments.length > 0) {
+            movementRow.direction1 = segments[0].dir;
+            movementRow.distance1 = segments[0].dist;
         }
+        if (segments && segments.length > 1) {
+            movementRow.direction2 = segments[1].dir;
+            movementRow.distance2 = segments[1].dist;
+        }
+        if (segments && segments.length > 2) {
+            movementRow.direction3 = segments[2].dir;
+            movementRow.distance3 = segments[2].dist;
+        }
+    };
 
-        for (var dir = 1; dir <= 8; dir++) {
-            var currentCoord = startCoord;
-            var remainingMp = selectedItem.mp;
-            var className = (dir % 3 == 1) ? 'moveDir1' : ((dir % 3 == 2) ? 'moveDir2' : 'moveDir3');
+    $scope.clearRouteCandidates = function () {
+        if (!$scope.mapCoordinates) return;
 
-            while (remainingMp > 0) {
-                var nextCoord = $scope.getNextCoordinate(dir, currentCoord);
-                if (!nextCoord || !$scope.isCoordInSelectedMap(nextCoord)) {
-                    break;
-                }
+        angular.forEach($scope.mapCoordinates, function (mapRow) {
+            angular.forEach(mapRow, function (coordinate) {
+                coordinate.routeCandidate = false;
+            });
+        });
+    };
 
-                var moveCost = $scope.getTerrainMPForItem(nextCoord, selectedItem);
-                if (moveCost <= 0 || moveCost > remainingMp) {
-                    break;
-                }
+    $scope.markRouteCandidates = function (routesByCoord) {
+        $scope.clearRouteCandidates();
 
-                nextCoord.displayField = className;
-                remainingMp = remainingMp - moveCost;
-                currentCoord = nextCoord;
+        angular.forEach(routesByCoord, function (route) {
+            if ($scope.mapCoordinates[route.y] && $scope.mapCoordinates[route.y][route.x]) {
+                $scope.mapCoordinates[route.y][route.x].routeCandidate = true;
             }
-        }
+        });
+    };
 
-        movementRow.mpUsed = 0;
+    $scope.calculateReachableRoutes = function (startCoord, selectedItem) {
+        var routesByCoord = {};
+
+        var recordRoute = function (coord, segments, usedMp) {
+            if (!coord || segments.length === 0 || segments.length > 3) return;
+
+            var key = coord.x + '_' + coord.y;
+            var existing = routesByCoord[key];
+
+            if (!existing || usedMp < existing.usedMp || (usedMp === existing.usedMp && segments.length < existing.segments.length)) {
+                routesByCoord[key] = {
+                    x: coord.x,
+                    y: coord.y,
+                    usedMp: usedMp,
+                    segments: segments.map(function (s) { return { dir: s.dir, dist: s.dist }; })
+                };
+            }
+        };
+
+        var explore = function (fromCoord, remainingMp, usedMp, segments) {
+            if (segments.length >= 3 || remainingMp <= 0) {
+                return;
+            }
+
+            for (var dir = 1; dir <= 8; dir++) {
+                var currentCoord = fromCoord;
+                var segmentDistance = 0;
+                var segmentCost = 0;
+
+                while (true) {
+                    var nextCoord = $scope.getNextCoordinate(dir, currentCoord);
+                    if (!nextCoord || !$scope.isCoordInSelectedMap(nextCoord)) {
+                        break;
+                    }
+
+                    var moveCost = $scope.getTerrainMPForItem(nextCoord, selectedItem);
+                    if (moveCost <= 0 || segmentCost + moveCost > remainingMp) {
+                        break;
+                    }
+
+                    segmentDistance++;
+                    segmentCost += moveCost;
+                    currentCoord = nextCoord;
+
+                    var nextSegments = segments.concat([{ dir: dir, dist: segmentDistance }]);
+                    var nextUsedMp = usedMp + segmentCost;
+
+                    recordRoute(currentCoord, nextSegments, nextUsedMp);
+                    explore(currentCoord, remainingMp - segmentCost, nextUsedMp, nextSegments);
+                }
+            }
+        };
+
+        explore(startCoord, selectedItem.mp || 0, 0, []);
+        return routesByCoord;
     };
 
     $scope.isCoordInSelectedMap = function (coord) {
@@ -471,7 +566,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return rtnCoordinate;
     };
 
-    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y) {
+    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y, routeCandidate) {
         var baseClass = '';
 
         switch ($scope.selectedDisplayOption.name) {
@@ -528,6 +623,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             && $scope.selectedMovementItemCoordinate.x == x
             && $scope.selectedMovementItemCoordinate.y == y) {
             baseClass = (baseClass ? baseClass + ' ' : '') + 'movementItemSelected';
+        }
+
+        if (routeCandidate) {
+            baseClass = (baseClass ? baseClass + ' ' : '') + 'routeCandidate';
         }
 
         return baseClass;
