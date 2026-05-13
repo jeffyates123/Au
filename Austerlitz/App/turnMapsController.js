@@ -164,6 +164,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                             beginCoordinate = $scope.getCoordinatesInADirection(row.entity.direction3, row.entity.distance3, beginCoordinate, item, 'moveDir3');
                         }
                     }
+                } else {
+                    $scope.drawMaximumMovementByTerrain(initialCoord, selectedItem, row.entity);
                 }
 
                 row.entity.mpUsed = item.mpUsed;
@@ -172,6 +174,77 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             }
         }
     }
+
+    $scope.drawMaximumMovementByTerrain = function (startCoord, selectedItem, movementRow) {
+        if (!startCoord || !selectedItem || !selectedItem.mp) {
+            return;
+        }
+
+        for (var dir = 1; dir <= 8; dir++) {
+            var currentCoord = startCoord;
+            var remainingMp = selectedItem.mp;
+            var className = (dir % 3 == 1) ? 'moveDir1' : ((dir % 3 == 2) ? 'moveDir2' : 'moveDir3');
+
+            while (remainingMp > 0) {
+                var nextCoord = $scope.getNextCoordinate(dir, currentCoord);
+                if (!nextCoord || !$scope.isCoordInSelectedMap(nextCoord)) {
+                    break;
+                }
+
+                var moveCost = $scope.getTerrainMPForItem(nextCoord, selectedItem);
+                if (moveCost <= 0 || moveCost > remainingMp) {
+                    break;
+                }
+
+                nextCoord.displayField = className;
+                remainingMp = remainingMp - moveCost;
+                currentCoord = nextCoord;
+            }
+        }
+
+        movementRow.mpUsed = 0;
+    };
+
+    $scope.isCoordInSelectedMap = function (coord) {
+        if (!coord || !$scope.selectedMapChoice) return false;
+
+        return coord.x >= $scope.selectedMapChoice.rangeMinX
+            && coord.x <= $scope.selectedMapChoice.rangeMaxX
+            && coord.y >= $scope.selectedMapChoice.rangeMinY
+            && coord.y <= $scope.selectedMapChoice.rangeMaxY;
+    };
+
+    $scope.isShipItem = function (item) {
+        if (!item) return false;
+
+        var itemTypeName = item.itemTypeName || $scope.getItemTypeName(item.itemType);
+        return itemTypeName === 'Warship' || itemTypeName === 'MerchantShip';
+    };
+
+    $scope.isShipyardCoordinate = function (coord) {
+        if (!coord || !coord.productionSite) return false;
+
+        return coord.productionSite.toString().toUpperCase() === 'S';
+    };
+
+    $scope.getTerrainMPForItem = function (coord, item) {
+        var terrain = coord.terrain;
+        var isSea = '*+.'.indexOf(terrain) > -1;
+        var isShip = $scope.isShipItem(item);
+
+        if (isShip) {
+            if (isSea || $scope.isShipyardCoordinate(coord)) {
+                return 1;
+            }
+            return 999;
+        }
+
+        if (isSea) {
+            return 999;
+        }
+
+        return $scope.getTerrainMP(terrain);
+    };
 
     $scope.getItemFromItemNo = function (itemNo) {
         var rtnItem = {};
