@@ -1,5 +1,5 @@
 ﻿<select ng-cell-input
-        ng-options='mi.itemNo as (mi.itemNo + " " + mi.description) for mi in masterData.turnReport.movementItemList | filter:filterMovementItemBySelectedMap'
+        ng-options='mi.itemNo as (mi.itemNo + " " + mi.description) for mi in filteredMovementItemsForMap'
         ng-model="COL_FIELD" ng-input='COL_FIELD' 
         style="font-family: Courier New, Courier, monospace"
         data-placeholder="-- Select One --"></select>

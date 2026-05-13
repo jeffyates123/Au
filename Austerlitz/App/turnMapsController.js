@@ -85,12 +85,12 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.selectedMapChoice = $scope.mapChoice[1];
 
     $scope.mapOptions = ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'];
-    $scope.selectedMapOptions = ['State', 'Terrain'];
+    $scope.selectedMapOptions = ['State', 'Population', 'ProductionSite'];
 
     $scope.displayOptions = [{ name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
                              { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
-                             { name: 'Movement', state: true, population: false, productionSite: false, owner: false, terrain: true, bonus: false }];
+                             { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: true, bonus: false }];
     $scope.selectedDisplayOption = $scope.displayOptions[3];
 
     $scope.changeDisplayOption = function () {
@@ -119,11 +119,15 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.coordinateClick = function (x, y) {
         var coord = $scope.getCoordinateByXY(x, y);
         $scope.selectedCoordinateDetails = "(X:" + x + ",Y: " + y + ") " + coord.state + coord.population + coord.productionSite + " - " + coord.owner + coord.terrain + coord.bonus;
+        $scope.selectedItemGridCoordinate = { x: x, y: y };
+        $scope.refreshItemGridRows();
     }
 
     $scope.coordinateDblClick = function (x, y) {
         var startCoord = $scope.getCoordinateByXY(x, y);
         $scope.selectedCoordinateDetails = "(X:" + x + ",Y: " + y + ") " + startCoord.state + startCoord.population + startCoord.productionSite + " - " + startCoord.owner + startCoord.terrain + startCoord.bonus;
+        $scope.selectedItemGridCoordinate = { x: x, y: y };
+        $scope.refreshItemGridRows();
 
         var maxDistance = 32;
 
@@ -135,6 +139,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.movementClickRow = function (row) {
         $scope.clearDisplayField();
+        $scope.selectedMovementItemCoordinate = null;
 
         if (row.entity.itemNo != null) {
             var selectedItem = $scope.getItemFromItemNo(row.entity.itemNo); // could be any moveable item
@@ -143,6 +148,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             var initialCoord = $scope.getCoordinateByXY(item.x, item.y); // get from the item
 
             if (initialCoord != null) {
+                $scope.selectedMovementItemCoordinate = { x: item.x, y: item.y };
                 row.entity.itemNo = item.itemNo;
                 row.entity.mp = item.mp;
 
@@ -186,6 +192,110 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             && item.y >= $scope.selectedMapChoice.rangeMinY
             && item.y <= $scope.selectedMapChoice.rangeMaxY;
     }
+
+    $scope.refreshFilteredMovementItemsForMap = function () {
+        if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
+            $scope.filteredMovementItemsForMap = [];
+            $scope.itemGridRows = [];
+            return;
+        }
+
+        $scope.filteredMovementItemsForMap = $scope.masterData.turnReport.movementItemList
+            .filter(function (item) {
+                return $scope.filterMovementItemBySelectedMap(item);
+            })
+            .map(function (item) {
+                item.itemTypeName = $scope.getItemTypeName(item.itemType);
+                item.xy = item.x + '/' + item.y;
+                return item;
+            });
+
+        $scope.refreshItemGridRows();
+    };
+
+    $scope.refreshItemGridRows = function () {
+        if (!$scope.filteredMovementItemsForMap) {
+            $scope.itemGridRows = [];
+            return;
+        }
+
+        var sphereList = $scope.filteredMovementItemsForMap;
+
+        if ($scope.selectedItemGridCoordinate) {
+            var selectedCoordItems = sphereList.filter(function (item) {
+                return item.x == $scope.selectedItemGridCoordinate.x && item.y == $scope.selectedItemGridCoordinate.y;
+            });
+
+            $scope.itemGridRows = selectedCoordItems.length > 0 ? selectedCoordItems : sphereList;
+            return;
+        }
+
+        $scope.itemGridRows = sphereList;
+    };
+
+    $scope.itemGridClickRow = function (row) {
+        if (!row || !row.entity || !row.entity.itemNo || !$scope.tsMovementList) {
+            return;
+        }
+
+        var selectedItemNo = row.entity.itemNo;
+        var alreadyExists = $scope.tsMovementList.some(function (movementRow) {
+            return movementRow.itemNo == selectedItemNo;
+        });
+
+        if (alreadyExists) {
+            return;
+        }
+
+        var firstAvailableRow = null;
+        angular.forEach($scope.tsMovementList, function (movementRow) {
+            if (firstAvailableRow == null && (movementRow.itemNo == null || movementRow.itemNo === '')) {
+                firstAvailableRow = movementRow;
+            }
+        });
+
+        if (firstAvailableRow != null) {
+            firstAvailableRow.itemNo = selectedItemNo;
+            firstAvailableRow.type = row.entity.itemTypeName;
+            firstAvailableRow.mp = row.entity.mp;
+            firstAvailableRow.mpUsed = 0;
+            firstAvailableRow.xy = row.entity.xy;
+        }
+    };
+
+    $scope.isItemAlreadyInMovementGrid = function (itemNo) {
+        if (!itemNo || !$scope.tsMovementList) {
+            return false;
+        }
+
+        return $scope.tsMovementList.some(function (movementRow) {
+            return movementRow.itemNo == itemNo;
+        });
+    };
+
+    $scope.getItemTypeName = function (itemType) {
+        if (itemType === null || itemType === undefined) return '';
+
+        if (typeof itemType === 'string') return itemType;
+
+        switch (parseInt(itemType)) {
+            case 0: return 'Commander';
+            case 1: return 'Brigade';
+            case 2: return 'Warship';
+            case 3: return 'MerchantShip';
+            case 4: return 'BaggageTrain';
+            case 5: return 'Spy';
+            default: return '';
+        }
+    };
+
+    $scope.$watch('selectedMapChoice', function () {
+        $scope.refreshFilteredMovementItemsForMap();
+    }, true);
+
+    $scope.$watch('masterData.turnReport.movementItemList', function () {
+        $scope.refreshFilteredMovementItemsForMap();
+    }, true);
 
     $scope.getCoordinatesInADirection = function (requiredDirection, requiredDistance, beginCoordinate, item, className) {
         var nextCoordinate = beginCoordinate;
@@ -288,13 +398,15 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return rtnCoordinate;
     };
 
-    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units) {
+    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y) {
         var baseClass = '';
 
         switch ($scope.selectedDisplayOption.name) {
             case 'Movement':
-                if (units != null && units.length > 0) return "unit_Exists";
-                baseClass = displayField;
+                baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
+                if (displayField) {
+                    baseClass = baseClass + ' ' + displayField;
+                }
                 break;
             case 'Terrain':
                 baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea unitExists' : 'terrain_' + terrain;
@@ -336,7 +448,13 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
 
         if (units && units.length > 0) {
-            return (baseClass ? baseClass + ' ' : '') + 'unit_Exists';
+            baseClass = (baseClass ? baseClass + ' ' : '') + 'unit_Exists';
+        }
+
+        if ($scope.selectedMovementItemCoordinate
+            && $scope.selectedMovementItemCoordinate.x == x
+            && $scope.selectedMovementItemCoordinate.y == y) {
+            baseClass = (baseClass ? baseClass + ' ' : '') + 'movementItemSelected';
         }
 
         return baseClass;
@@ -375,14 +493,26 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         rowTemplate: '<div ng-click="movementClickRow(row)" ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>',
     };
 
+    $scope.itemGridOptions = {
+        data: 'itemGridRows',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'itemColumnDefsMap',
+        enableCellSelection: false,
+        enableRowSelection: true,
+        enableCellEdit: false,
+        multiSelect: false,
+        rowTemplate: '<div ng-click="itemGridClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isItemAlreadyInMovementGrid(row.entity.itemNo) ? \"itemGridRowAlreadyAdded\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
     $scope.movementColumnDefsMap = [
         { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
 
         {
-            field: 'itemNo', displayName: 'Item No', width: '80px', cellClass: 'grid-center-align',
+            field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align',
             enableFocusedCellEdit: true, editableCellTemplate: '/Templates/itemSelectTemplate.html'
         },
-        { field: 'type', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'type', displayName: 'Type', width: '80px', cellClass: 'grid-center-align' },
 
         { field: 'direction1', displayName: 'Dir1', width: '40px', cellClass: 'grid-center-align' },
         { field: 'distance1', displayName: 'Dist1', width: '40px', cellClass: 'grid-center-align' },
@@ -391,9 +521,18 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'direction3', displayName: 'Dir3', width: '40px', cellClass: 'grid-center-align' },
         { field: 'distance3', displayName: 'Dist3', width: '40px', cellClass: 'grid-center-align' },
         { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
-        { field: 'mpUsed', displayName: 'Used', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'mpUsed', displayName: 'Used', width: '40px', cellClass: 'grid-center-align' },
         { field: 'xy', displayName: 'X/Y', width: '50px', cellClass: 'grid-center-align' },
     ];
+
+    $scope.itemColumnDefsMap = [
+        { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'itemTypeName', displayName: 'Type', width: '80px', cellClass: 'grid-center-align' },
+        { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'description', displayName: 'Description', cellClass: 'grid-left-align' }
+    ];
+
+    $scope.refreshFilteredMovementItemsForMap();
 
 })
 
