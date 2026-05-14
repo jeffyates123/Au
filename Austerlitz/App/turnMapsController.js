@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 //https://www.youtube.com/playlist?list=PL5586336C26BDB324 JAVASCRIPT VIDEOS
 
@@ -187,7 +187,16 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         if (row.entity.itemNo != null) {
             var selectedItem = $scope.getItemFromItemNo(row.entity.itemNo); // could be any moveable item
-            var item = { itemNo: selectedItem.itemNo, mpUsed: 0, mp: selectedItem.mp, x: selectedItem.x, y: selectedItem.y };
+            var item = {
+                itemNo: selectedItem.itemNo,
+                mpUsed: 0,
+                mp: selectedItem.mp,
+                x: selectedItem.x,
+                y: selectedItem.y,
+                itemType: selectedItem.itemType,
+                itemTypeName: selectedItem.itemTypeName,
+                shipTypeNo: selectedItem.shipTypeNo
+            };
 
             var initialCoord = $scope.getCoordinateByXY(item.x, item.y); // get from the item
 
@@ -341,6 +350,42 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             && coord.y <= $scope.selectedMapChoice.rangeMaxY;
     };
 
+    $scope.getCurrentTurnState = function () {
+        if (!$scope.masterData) return '';
+
+        var tsTurnDetails = ($scope.masterData.turnSheet && ($scope.masterData.turnSheet.tSTurnDetails || $scope.masterData.turnSheet.TSTurnDetails)) || null;
+        if (tsTurnDetails && tsTurnDetails.length > 0) {
+            return tsTurnDetails[0].state || tsTurnDetails[0].State || '';
+        }
+
+        if ($scope.masterData.turnId && $scope.masterData.turnId.length >= 4) {
+            return $scope.masterData.turnId.substr(3, 1);
+        }
+
+        return '';
+    };
+
+    $scope.getRouteCandidateClass = function (coordState) {
+        var ownState = ($scope.getCurrentTurnState() || '').toString().trim().toUpperCase();
+        var targetState = (coordState || '').toString().trim().toUpperCase();
+
+        if (!targetState || targetState === '?') {
+            return 'routeCandidateNeutral';
+        }
+
+        if (ownState && targetState === ownState) {
+            return 'routeCandidateOwn';
+        }
+
+        return 'routeCandidateEnemy';
+    };
+
+    $scope.isColonialCoordinate = function (coord) {
+        if (!coord || coord.y == null) return false;
+
+        return parseInt(coord.y) >= 70;
+    };
+
     $scope.isShipItem = function (item) {
         if (!item) return false;
 
@@ -351,26 +396,34 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.isShipyardCoordinate = function (coord) {
         if (!coord || !coord.productionSite) return false;
 
-        return coord.productionSite.toString().toUpperCase() === 'S';
+        var site = coord.productionSite.toString().toUpperCase();
+        return site === '&' || site === '$';
     };
-
     $scope.getTerrainMPForItem = function (coord, item) {
         var terrain = coord.terrain;
         var isSea = '*+.'.indexOf(terrain) > -1;
         var isShip = $scope.isShipItem(item);
+        var moveCost = 0;
 
         if (isShip) {
             if (isSea || $scope.isShipyardCoordinate(coord)) {
-                return 1;
+                moveCost = 1;
+            } else {
+                return 999;
             }
-            return 999;
+        } else {
+            if (isSea) {
+                return 999;
+            }
+
+            moveCost = $scope.getTerrainMP(terrain);
         }
 
-        if (isSea) {
-            return 999;
+        if ($scope.isColonialCoordinate(coord) && moveCost > 0 && moveCost < 999) {
+            moveCost = moveCost * 2;
         }
 
-        return $scope.getTerrainMP(terrain);
+        return moveCost;
     };
 
     $scope.getItemFromItemNo = function (itemNo) {
@@ -561,7 +614,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         while (travelledDistance < requiredDistance && nextCoordinate.x >= $scope.selectedMapChoice.rangeMinX && nextCoordinate.x <= $scope.selectedMapChoice.rangeMaxX && nextCoordinate.y >= $scope.selectedMapChoice.rangeMinY && nextCoordinate.y <= $scope.selectedMapChoice.rangeMaxY) {
             var nextCoordinate = $scope.getNextCoordinate(requiredDirection, nextCoordinate);
-            var nextMoveCostMP = $scope.getTerrainMP(nextCoordinate.terrain);
+            var nextMoveCostMP = $scope.getTerrainMPForItem(nextCoordinate, item);
 
             //travelledMP = travelledMP + nextMoveCostMP;
 
@@ -715,7 +768,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
 
         if (routeCandidate) {
-            baseClass = (baseClass ? baseClass + ' ' : '') + 'routeCandidate';
+            baseClass = (baseClass ? baseClass + ' ' : '') + $scope.getRouteCandidateClass(state);
         }
 
         return baseClass;

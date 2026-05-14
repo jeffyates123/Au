@@ -1,4 +1,4 @@
-﻿/*http://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
+/*http://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
 /*http://stackoverflow.com/questions/23379575/pretty-auto-layout-of-2-ng-grids-master-detail-whose-width-changes-based-on-co */
 
 
@@ -251,6 +251,9 @@ textarea {
 .movementItemSelected { border: 2px solid red !important; }
 
 .routeCandidate { border: 2px solid orange !important; }
+.routeCandidateOwn { border: 2px solid darkblue !important; }
+.routeCandidateNeutral { border: 2px solid yellow !important; }
+.routeCandidateEnemy { border: 2px solid red !important; }
 
 .selectedItems{
     float: left; 
