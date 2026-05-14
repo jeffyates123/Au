@@ -45,8 +45,50 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         });
     };
 
+    $scope.getJumpOffPointText = function (coord) {
+        if (!coord) return '';
+
+        var x = parseInt(coord.x);
+        var y = parseInt(coord.y);
+        var terrain = coord.terrain || '';
+        var isSea = '*+.'.indexOf(terrain) > -1;
+
+        if (!isSea) return '';
+
+        if (x === 1 && y >= 11 && y <= 20) return 'Europe -> Caribbean';
+        if (x === 40 && y >= 71 && y <= 80) return 'Caribbean -> Europe';
+
+        if (x === 1 && y >= 41 && y <= 50) return 'Europe -> India';
+        if (x === 51 && y >= 81 && y <= 90) return 'India -> Europe';
+
+        if (x >= 65 && x <= 66 && y === 65) return 'Red Sea -> India';
+        if (x === 51 && y >= 75 && y <= 76) return 'India -> Red Sea';
+
+        if (x === 40 && y >= 86 && y <= 90) return 'Caribbean (E) -> India (SW)';
+        if (x >= 56 && x <= 60 && y === 99) return 'India (SW) -> Caribbean (E)';
+
+        if (x === 1 && y >= 91 && y <= 95) return 'Caribbean (W) -> India (NE)';
+        if (x === 90 && y >= 71 && y <= 75) return 'India (NE) -> Caribbean (W)';
+
+        if (x >= 8 && x <= 12 && y === 99) return 'Caribbean (SW) -> India (SE)';
+        if (x === 90 && y >= 88 && y <= 92) return 'India (SE) -> Caribbean (SW)';
+
+        return '';
+    };
+
+    $scope.markJumpOffPoints = function () {
+        if (!$scope.mapCoordinates) return;
+
+        angular.forEach($scope.mapCoordinates, function (mapRow) {
+            angular.forEach(mapRow, function (coordinate) {
+                coordinate.jumpOffText = $scope.getJumpOffPointText(coordinate);
+            });
+        });
+    };
+
     turnReportFactory.getMapCoordinates($scope.masterData.turnId).then(function (mapCoordinates) {
         $scope.mapCoordinates = mapCoordinates;
+        $scope.markJumpOffPoints();
         $scope.attachUnitsToMapCoordinates();
     });
 
@@ -708,7 +750,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return rtnCoordinate;
     };
 
-    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y, routeCandidate) {
+    $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y, routeCandidate, jumpOffText) {
         var baseClass = '';
 
         switch ($scope.selectedDisplayOption.name) {
@@ -765,6 +807,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             && $scope.selectedMovementItemCoordinate.x == x
             && $scope.selectedMovementItemCoordinate.y == y) {
             baseClass = (baseClass ? baseClass + ' ' : '') + 'movementItemSelected';
+        }
+
+        if (jumpOffText && !displayField) {
+            baseClass = (baseClass ? baseClass + ' ' : '') + 'jumpOffPoint';
         }
 
         if (routeCandidate) {

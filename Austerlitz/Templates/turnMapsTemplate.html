@@ -1,4 +1,4 @@
-﻿﻿<div style="padding-left:0px; padding-right:0px;">
+<div style="padding-left:0px; padding-right:0px;">
     <div class="window">
         <div class="master" style="flex-direction:column;">
             <div class="movementGridStyle" ng-grid="movementGridOptions">
@@ -59,8 +59,8 @@
                                 <tr></tr>
 
                                 <tr ng-repeat="cols in mapCoordinates">
-                                    <td class="turnMapCoord" style="width:24px;height:12px;" ng-repeat="col in cols | filter: filterMapFn" ng-dblclick="coordinateDblClick(col.x, col.y)" ng-click="coordinateClick(col.x, col.y)" 
-                                        ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate)">
+                                    <td class="turnMapCoord" style="width:24px;height:12px;" ng-repeat="col in cols | filter: filterMapFn" ng-dblclick="coordinateDblClick(col.x, col.y)" ng-click="coordinateClick(col.x, col.y)" ng-attr-title="{{col.jumpOffText || undefined}}" 
+                                        ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)">
                                         
                                         <div ng-show="col.y>0 && col.x>0">
                                             {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? col.productionSite : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}

@@ -254,6 +254,7 @@ textarea {
 .routeCandidateOwn { border: 2px solid darkblue !important; }
 .routeCandidateNeutral { border: 2px solid yellow !important; }
 .routeCandidateEnemy { border: 2px solid red !important; }
+.jumpOffPoint { background-color: navy; color: #ffffff; }
 
 .selectedItems{
     float: left; 
