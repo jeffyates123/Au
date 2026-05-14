@@ -839,6 +839,42 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return false; // otherwise it won't be within the results
     };
 
+    $scope.hasMovementItemNo = function (movementRow) {
+        if (!movementRow || movementRow.itemNo == null) {
+            return false;
+        }
+
+        return movementRow.itemNo.toString().trim() !== '';
+    };
+
+    $scope.removeMovementRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        var movementRow = row.entity;
+
+        movementRow.itemNo = null;
+        movementRow.type = null;
+        movementRow.mp = null;
+        movementRow.mpUsed = null;
+        movementRow.xy = null;
+        movementRow.direction1 = null;
+        movementRow.distance1 = null;
+        movementRow.direction2 = null;
+        movementRow.distance2 = null;
+        movementRow.direction3 = null;
+        movementRow.distance3 = null;
+
+        if ($scope.selectedMovementRow === movementRow) {
+            $scope.selectedMovementRow = null;
+            $scope.selectedMovementItemCoordinate = null;
+            $scope.pendingRouteSelection = null;
+            $scope.clearDisplayField();
+            $scope.clearRouteCandidates();
+        }
+    };
+
     $scope.movementGridOptions = {
         data: 'tsMovementList',
         headerRowHeight: 30,
@@ -884,6 +920,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'distance2', displayName: 'Dist2', width: '40px', cellClass: 'grid-center-align' },
         { field: 'direction3', displayName: 'Dir3', width: '40px', cellClass: 'grid-center-align' },
         { field: 'distance3', displayName: 'Dist3', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasMovementItemNo(row.entity)" ng-click="removeMovementRow(row)"></span></div>' },
     ];
 
     $scope.itemColumnDefsMap = [
