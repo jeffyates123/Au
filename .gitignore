@@ -87,3 +87,10 @@
 /Austerlitz.DAL/bin/Debug/Austerlitz.DAL.dll.config
 /Austerlitz.DAL/bin/Debug/Austerlitz.DAL.pdb
 /DomainTypes/Properties/AssemblyInfo.cs
+/Austerlitz/database/Austerlitz.mdf
+/.vs/CopilotSnapshots/EE976137D3488F4D8E8CB6267644AAA9/7B2CDE628C85A343AEF3159C1D7FF6A0/9B2701D084EF882715B8182DB8C8B336
+*.mpack
+/Austerlitz.Domain/bin/Debug/Austerlitz.Domain.dll
+/Austerlitz.Domain/bin/Debug/Austerlitz.Domain.pdb
+/Austerlitz.Domain/obj/Debug/Austerlitz.Domain.dll
+/Austerlitz.Domain/obj/Debug/Austerlitz.Domain.pdb
