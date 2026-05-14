@@ -50,26 +50,59 @@ namespace Austerlitz.Controllers
                 var turnTradingPortsAndCities = new GenericRepository<TR_TradingPortsAndCities>(dataContext);
                 turnReport.TradingPortsAndCities = turnTradingPortsAndCities.GetItems(x => x.TurnId == turnId).ToArray();
 
-                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Commander, Description = "Commander (" + x.CommandCapacity + "): " + x.Name, MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
+                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = x.Federation > 0 ? (int?)x.Federation : null, ItemType = ItemType.Commander, Description = x.Name + " (" + x.CommandCapacity + ")", MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
                 var dummy = 0;
 
                 movementItems.AddRange(turnReport.Brigades.Select(x => new MovementItems() 
-                { ItemNo = x.ItemNo, ItemType = ItemType.Brigade, 
+                { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = x.Federation > 0 ? (int?)x.Federation : null, ItemType = ItemType.Brigade, 
                     Description = x.Batt1Type + x.Batt1EF + " " + x.Batt2Type + x.Batt2EF + " " + x.Batt3Type + x.Batt3EF + " " + x.Batt4Type + x.Batt4EF + " " + x.Batt5Type + x.Batt5EF + " " + x.Batt6Type + x.Batt6EF + " " + x.Batt7Type + x.Batt7EF,
                     MP = x.MP
+                    , OriginalMP = x.MP
                     , X = AxisValue(x.X_OrState)
                     , Y = AxisValue(x.Y_OrFleet)
                     , Sphere = CalcSphere(AxisValue(x.X_OrState), AxisValue(x.Y_OrFleet))
                 }).ToList());
 
                 // can add more union stuff here if necessary, not sure it makes much difference
-                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Warship, Description="Warship: " + x.Name, MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.MerchantShip, Description = ItemType.MerchantShip.ToString(), MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.BaggageTrain, Description = ItemType.BaggageTrain.ToString(), MP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, ItemType = ItemType.Spy, Description = ItemType.Spy.ToString(), MP = 75, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X,x.Y)}).ToList());
+                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.Warship, ShipTypeNo = x.Type, Description = x.Name, MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.MerchantShip, ShipTypeNo = x.Type, Description = ItemType.MerchantShip.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.BaggageTrain, Description = ItemType.BaggageTrain.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.Spy, Description = ItemType.Spy.ToString(), MP = 75, OriginalMP = 75, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X,x.Y)}).ToList());
 
-                turnReport.MovementItemList = movementItems.ToArray();
-                turnReport.MapCoordinates = GetMapCoordinates(turnId, movementItems);
+                var federationMinMp = movementItems
+                    .Where(x => x.FederationNo.HasValue)
+                    .GroupBy(x => x.FederationNo.Value)
+                    .ToDictionary(g => g.Key, g => g.Min(x => x.MP));
+
+                var federationMemberNos = movementItems
+                    .Where(x => x.FederationNo.HasValue)
+                    .GroupBy(x => x.FederationNo.Value)
+                    .ToDictionary(g => g.Key, g => g.SelectMany(x => x.MemberItemNos ?? new[] { x.ItemNo }).Distinct().ToArray());
+
+                var normalizedMovementItems = movementItems
+                    .Select(x =>
+                    {
+                        var isFederation = x.FederationNo.HasValue;
+                        return new MovementItems
+                        {
+                            ItemNo = isFederation ? x.FederationNo.Value : x.ItemNo,
+                            OriginalItemNo = x.OriginalItemNo,
+                            MemberItemNos = isFederation ? federationMemberNos[x.FederationNo.Value] : (x.MemberItemNos ?? new[] { x.ItemNo }),
+                            FederationNo = x.FederationNo,
+                            ItemType = x.ItemType,
+                            ShipTypeNo = x.ShipTypeNo,
+                            OriginalMP = x.OriginalMP,
+                            Description = x.Description,
+                            MP = isFederation ? federationMinMp[x.FederationNo.Value] : x.MP,
+                            X = x.X,
+                            Y = x.Y,
+                            Sphere = x.Sphere
+                        };
+                    })
+                    .ToList();
+
+                turnReport.MovementItemList = normalizedMovementItems.ToArray();
+                turnReport.MapCoordinates = GetMapCoordinates(turnId, normalizedMovementItems);
 
                 return turnReport;
             }

@@ -19,7 +19,12 @@ namespace Austerlitz.Models.TurnReport
     public class MovementItems
     {
         public int ItemNo { get; set; }
+        public int OriginalItemNo { get; set; }
+        public int[] MemberItemNos { get; set; }
+        public int? FederationNo { get; set; }
         public ItemType ItemType { get; set; }
+        public int? ShipTypeNo { get; set; }
+        public int? OriginalMP { get; set; }
         public string Description { get; set; }
         public  Sphere Sphere  { get; set; }
         public int MP { get; set; }
