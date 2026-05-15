@@ -1,4 +1,4 @@
-﻿using Austerlitz.DAL;
+using Austerlitz.DAL;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -334,7 +334,12 @@ namespace Austerlitz.Controllers
         public TS_18Movement[] PostTSMovement(TS_18Movement[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            return turnReportManager.PostTSMovement(saveRecords);
+            var savedRows = turnReportManager.PostTSMovement(saveRecords);
+
+            var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
+            turnsheetExcelService.SaveMovementSection(savedRows.First().TurnId, savedRows);
+
+            return savedRows;
         }
 
         [HttpPost]

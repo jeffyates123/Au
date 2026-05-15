@@ -1,4 +1,4 @@
-﻿using Austerlitz.DAL;
+using Austerlitz.DAL;
 using Austerlitz.DAL.Management;
 using System;
 using System.Collections.Generic;
@@ -846,12 +846,54 @@ namespace Austerlitz.Domain
 
         public TS_18Movement[] PostTSMovement(TS_18Movement[] tsPostedRecords)
         {
+            var normalizedRows = NormalizeMovementRows(tsPostedRecords);
+
             using (var dataContext = new AusterlitzDbContext())
             {
                 var listRepository = new TurnSheetRepository<TS_18Movement>(dataContext);
-                var result = listRepository.SaveRange(tsPostedRecords);
+                var result = listRepository.SaveRange(normalizedRows).OrderBy(x => x.OrderNo);
                 return result.ToArray();
             }
+        }
+
+        private TS_18Movement[] NormalizeMovementRows(TS_18Movement[] tsPostedRecords)
+        {
+            if (tsPostedRecords == null || tsPostedRecords.Length == 0)
+            {
+                throw new ArgumentException("Movement rows are required.", nameof(tsPostedRecords));
+            }
+
+            var turnId = tsPostedRecords
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.TurnId))
+                .Select(x => x.TurnId)
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("TurnId is required for movement save.", nameof(tsPostedRecords));
+            }
+
+            var rowsByOrder = tsPostedRecords
+                .Where(x => x != null && x.OrderNo >= 1 && x.OrderNo <= 30)
+                .GroupBy(x => x.OrderNo)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var normalizedRows = new TS_18Movement[30];
+
+            for (var orderNo = 1; orderNo <= 30; orderNo++)
+            {
+                TS_18Movement movementRow;
+                if (!rowsByOrder.TryGetValue(orderNo, out movementRow) || movementRow == null)
+                {
+                    movementRow = new TS_18Movement();
+                }
+
+                movementRow.TurnId = turnId;
+                movementRow.OrderNo = orderNo;
+                normalizedRows[orderNo - 1] = movementRow;
+            }
+
+            return normalizedRows;
         }
 
         public TS_19TradeAndLoading2[] PostTSTradeAndLoading2(TS_19TradeAndLoading2[] tsPostedRecords)
