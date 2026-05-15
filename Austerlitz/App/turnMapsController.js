@@ -120,6 +120,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.saveTSMovement = function () {
         turnSheetFactory.postTSRecords($scope.tsMovementList, 'Movement').then(function (returnTsMovementList) {
             $scope.tsMovementList = returnTsMovementList;
+            alert('Turnsheet movement saved and Excel movement section updated successfully.');
+        }, function (error) {
+            var detail = (error && error.data) ? error.data : '';
+            alert('Movement save failed.' + (detail ? ' ' + detail : ''));
         });
     }
 

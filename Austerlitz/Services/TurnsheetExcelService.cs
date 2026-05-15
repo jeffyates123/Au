@@ -36,7 +36,7 @@ namespace Austerlitz.Services
                 for (var orderNo = 1; orderNo <= 30; orderNo++)
                 {
                     var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_18Movement { TurnId = turnId, OrderNo = orderNo };
-                    WriteMovementRow(connection, firstDataRow + orderNo - 1, orderNo, row);
+                    WriteMovementRow(connection, firstDataRow + orderNo - 3, orderNo, row);
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace Austerlitz.Services
 
         private static void WriteMovementRow(OleDbConnection connection, int excelRow, int orderNo, TS_18Movement movement)
         {
-            WriteCell(connection, excelRow, "A", orderNo.ToString());
+            //WriteCell(connection, excelRow, "A", orderNo.ToString());
             WriteCell(connection, excelRow, "B", ToExcelValue(movement.ItemNo));
             WriteCell(connection, excelRow, "C", ToExcelValue(movement.Direction1));
             WriteCell(connection, excelRow, "D", ToExcelValue(movement.Distance1));
