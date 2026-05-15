@@ -244,6 +244,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         if ($scope.selectedDisplayOption.bonus) selectedOptions.push('Bonus');
 
         $scope.selectedMapOptions = selectedOptions;
+
+        $scope.selectedItemGridCoordinate = null;
+        $scope.refreshItemGridRows();
     };
 
     $scope.isProductionSiteMode = function () {
@@ -789,8 +792,53 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 rtnItem = item;
         });
 
+        if (!rtnItem || rtnItem.itemNo == null) {
+            rtnItem = $scope.getFederationMovementSummary(itemNo);
+        }
+
         return rtnItem;
     }
+
+    $scope.getFederationMovementSummary = function (federationNo) {
+        if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
+            return {};
+        }
+
+        var parsedFederationNo = parseInt(federationNo, 10);
+        if (isNaN(parsedFederationNo)) {
+            return {};
+        }
+
+        var federationItems = $scope.masterData.turnReport.movementItemList.filter(function (item) {
+            var itemFedNo = item.federationNo != null ? item.federationNo : item.FederationNo;
+            return itemFedNo == parsedFederationNo;
+        });
+
+        if (!federationItems.length) {
+            return {};
+        }
+
+        var slowestItem = federationItems[0];
+        angular.forEach(federationItems, function (item) {
+            var itemMp = item.originalMP != null ? item.originalMP : item.mp;
+            var slowestMp = slowestItem.originalMP != null ? slowestItem.originalMP : slowestItem.mp;
+            if (itemMp < slowestMp) {
+                slowestItem = item;
+            }
+        });
+
+        return {
+            itemNo: parsedFederationNo,
+            itemTypeName: 'Federation',
+            itemType: slowestItem.itemType,
+            shipTypeNo: slowestItem.shipTypeNo,
+            mp: slowestItem.originalMP != null ? slowestItem.originalMP : slowestItem.mp,
+            x: slowestItem.x,
+            y: slowestItem.y,
+            federationNo: parsedFederationNo,
+            isFederation: true
+        };
+    };
 
     $scope.refreshMovementGridTypeValues = function () {
         if (!$scope.tsMovementList || !$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
@@ -830,16 +878,16 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             })
             .map(function (item) {
                 return {
-                    itemNo: item.originalItemNo || item.itemNo,
-                    fed: item.federationNo,
-                    itemType: item.itemType,
-                    shipTypeNo: item.shipTypeNo,
+                    itemNo: item.originalItemNo || item.OriginalItemNo || item.itemNo || item.ItemNo,
+                    fed: item.federationNo != null ? item.federationNo : item.FederationNo,
+                    itemType: item.itemType != null ? item.itemType : item.ItemType,
+                    shipTypeNo: item.shipTypeNo != null ? item.shipTypeNo : item.ShipTypeNo,
                     itemTypeName: $scope.getItemTypeAbbrev(item),
-                    description: item.description,
-                    mp: item.originalMP != null ? item.originalMP : item.mp,
-                    x: item.x,
-                    y: item.y,
-                    xy: item.x + '/' + item.y
+                    description: item.description || item.Description,
+                    mp: item.originalMP != null ? item.originalMP : (item.OriginalMP != null ? item.OriginalMP : item.mp),
+                    x: item.x != null ? item.x : item.X,
+                    y: item.y != null ? item.y : item.Y,
+                    xy: (item.x != null ? item.x : item.X) + '/' + (item.y != null ? item.y : item.Y)
                 };
             })
             .sort(function (a, b) {
@@ -858,9 +906,12 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             var federationCandidates = $scope.getFormFederationCandidateItems();
 
             if ($scope.selectedItemGridCoordinate) {
-                federationCandidates = federationCandidates.filter(function (item) {
+                var selectedCoordItems = federationCandidates.filter(function (item) {
                     return item.x == $scope.selectedItemGridCoordinate.x && item.y == $scope.selectedItemGridCoordinate.y;
                 });
+
+                $scope.itemGridRows = selectedCoordItems.length > 0 ? selectedCoordItems : federationCandidates;
+                return;
             }
 
             $scope.itemGridRows = federationCandidates;
@@ -886,9 +937,20 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         $scope.itemGridRows = sphereList;
     };
 
-    $scope.itemGridClickRow = function (row) {
+    $scope.isFederationColumnClick = function (col) {
+        if (!col) {
+            return false;
+        }
+
+        var fieldName = col.field || (col.colDef && col.colDef.field) || '';
+        return fieldName === 'fed';
+    };
+
+    $scope.itemGridClickRow = function (row, col) {
+        var clickedFederationColumn = $scope.isFederationColumnClick(col);
+
         if ($scope.isFormFederationMode()) {
-            $scope.addItemToFormFederationGrid(row);
+            $scope.addItemToFormFederationGrid(row, clickedFederationColumn);
             return;
         }
 
@@ -896,7 +958,24 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
-        var selectedItemNo = row.entity.fed != null ? row.entity.fed : row.entity.itemNo;
+        var selectedItemNo = row.entity.itemNo;
+        var selectedType = row.entity.itemTypeName;
+        var selectedMp = row.entity.mp;
+        var selectedXy = row.entity.xy;
+
+        if (clickedFederationColumn && row.entity.fed != null && row.entity.fed !== '') {
+            selectedItemNo = row.entity.fed;
+            selectedType = 'Fed';
+
+            var federationSummary = $scope.getFederationMovementSummary(row.entity.fed);
+            if (!federationSummary || federationSummary.itemNo == null) {
+                return;
+            }
+
+            selectedMp = federationSummary.mp;
+            selectedXy = federationSummary.x + '/' + federationSummary.y;
+        }
+
         var alreadyExists = $scope.tsMovementList.some(function (movementRow) {
             return movementRow.itemNo == selectedItemNo;
         });
@@ -914,10 +993,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         if (firstAvailableRow != null) {
             firstAvailableRow.itemNo = selectedItemNo;
-            firstAvailableRow.type = row.entity.itemTypeName;
-            firstAvailableRow.mp = row.entity.mp;
+            firstAvailableRow.type = selectedType;
+            firstAvailableRow.mp = selectedMp;
             firstAvailableRow.mpUsed = 0;
-            firstAvailableRow.xy = row.entity.xy;
+            firstAvailableRow.xy = selectedXy;
         }
     };
 
@@ -933,6 +1012,27 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return $scope.tsMovementList.some(function (movementRow) {
             return movementRow.itemNo == itemNo;
         });
+    };
+
+    $scope.isValueAlreadyUsedInMovementOrFormFederation = function (itemOrFedNo) {
+        if (itemOrFedNo == null || itemOrFedNo === '') {
+            return false;
+        }
+
+        var inMovement = $scope.tsMovementList && $scope.tsMovementList.some(function (movementRow) {
+            return movementRow.itemNo == itemOrFedNo;
+        });
+
+        if (inMovement) {
+            return true;
+        }
+
+        var inFormFederation = $scope.tsFormFederationsList && $scope.tsFormFederationsList.some(function (row) {
+            var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            return rowItemNo == itemOrFedNo;
+        });
+
+        return !!inFormFederation;
     };
 
     $scope.getCurrentStateCode = function () {
@@ -974,10 +1074,6 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         return $scope.filteredMovementItemsForMap.filter(function (item) {
             if (!item || item.itemNo == null) {
-                return false;
-            }
-
-            if (item.fed != null && item.fed !== '') {
                 return false;
             }
 
@@ -1044,28 +1140,64 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return null;
     };
 
-    $scope.addItemToFormFederationGrid = function (row) {
+    $scope.getExistingFederationForCoordinateAndType = function (x, y, isSeaUnit) {
+        if (!$scope.tsFormFederationsList || !$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
+            return null;
+        }
+
+        for (var i = $scope.tsFormFederationsList.length - 1; i >= 0; i--) {
+            var federationRow = $scope.tsFormFederationsList[i];
+            var rowItemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
+            var rowFederationNo = federationRow.federation_Fleet != null ? federationRow.federation_Fleet : federationRow.Federation_Fleet;
+
+            if (rowItemNo == null || rowItemNo === '' || rowFederationNo == null || rowFederationNo === '') {
+                continue;
+            }
+
+            var existingItem = $scope.getItemFromItemNo(rowItemNo);
+            if (!existingItem || existingItem.itemNo == null) {
+                continue;
+            }
+
+            if (existingItem.x == x
+                && existingItem.y == y
+                && $scope.isSeaItemType(existingItem) === isSeaUnit) {
+                var parsedFed = parseInt(rowFederationNo, 10);
+                return isNaN(parsedFed) ? null : parsedFed;
+            }
+        }
+
+        return null;
+    };
+
+    $scope.addItemToFormFederationGrid = function (row, clickedFederationColumn) {
         if (!row || !row.entity || !row.entity.itemNo || !$scope.tsFormFederationsList) {
             return;
         }
 
-        if (row.entity.fed != null && row.entity.fed !== '') {
-            return;
+        var sourceItemNo = row.entity.itemNo;
+        if (clickedFederationColumn && row.entity.fed != null && row.entity.fed !== '') {
+            sourceItemNo = row.entity.fed;
         }
 
         if (!$scope.isFederationEligibleItem(row.entity)) {
             return;
         }
 
-        if ($scope.isItemAlreadyInFormFederationGrid(row.entity.itemNo)) {
+        if ($scope.isValueAlreadyUsedInMovementOrFormFederation(sourceItemNo)) {
+            alert('This unit/federation is already used in Movement or Form Federation grid.');
             return;
         }
 
         var isSeaUnit = $scope.isSeaItemType(row.entity);
-        var nextFederationNo = $scope.getNextAvailableFederationNo(isSeaUnit);
-        if (nextFederationNo == null) {
-            alert(isSeaUnit ? 'No available fleet federation numbers (11-60).' : 'No available land federation numbers (61-90).');
-            return;
+        var federationNo = $scope.getExistingFederationForCoordinateAndType(row.entity.x, row.entity.y, isSeaUnit);
+
+        if (federationNo == null) {
+            federationNo = $scope.getNextAvailableFederationNo(isSeaUnit);
+            if (federationNo == null) {
+                alert(isSeaUnit ? 'No available fleet federation numbers (11-60).' : 'No available land federation numbers (61-90).');
+                return;
+            }
         }
 
         var firstAvailableRow = null;
@@ -1077,13 +1209,14 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         });
 
         if (!firstAvailableRow) {
+            alert('No empty TS_14 row is available.');
             return;
         }
 
-        firstAvailableRow.itemNo = row.entity.itemNo;
-        firstAvailableRow.ItemNo = row.entity.itemNo;
-        firstAvailableRow.federation_Fleet = nextFederationNo;
-        firstAvailableRow.Federation_Fleet = nextFederationNo;
+        firstAvailableRow.itemNo = sourceItemNo;
+        firstAvailableRow.ItemNo = sourceItemNo;
+        firstAvailableRow.federation_Fleet = federationNo;
+        firstAvailableRow.Federation_Fleet = federationNo;
     };
 
     $scope.getItemTypeName = function (itemType) {
@@ -1117,6 +1250,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             case 'Spy': return 'Spy';
             case 'BaggageTrain': return 'BagT';
             case 'MerchantShip': return item.shipTypeNo != null ? item.shipTypeNo.toString() : 'Mer';
+            case 'Federation': return 'Fed';
             default: return typeName;
         }
     };
@@ -1447,7 +1581,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 break;
         }
 
-        if (units && units.length > 0) {
+        if (x > 0 && y > 0 && units && units.length > 0) {
             baseClass = (baseClass ? baseClass + ' ' : '') + 'unit_Exists';
         }
 
@@ -1591,7 +1725,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         enableRowSelection: true,
         enableCellEdit: false,
         multiSelect: false,
-        rowTemplate: '<div ng-click="itemGridClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isItemAlreadyInMovementGrid(row.entity.itemNo) ? \"itemGridRowAlreadyAdded\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+        rowTemplate: '<div ng-click="itemGridClickRow(row, col)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isItemAlreadyInMovementGrid(row.entity.itemNo) ? \"itemGridRowAlreadyAdded\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
     };
 
     $scope.productionSiteGridOptions = {
