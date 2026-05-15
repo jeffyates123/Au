@@ -267,11 +267,11 @@ textarea {
   padding: 20px;
 }
 .master {
-  width: 30%;
+  width: 35%;
   height: 100%;
 }
 .detail {
-  width:75%;
+  width:70%;
   height: auto;
   margin-left: 20px;
 }
@@ -313,4 +313,147 @@ textarea {
 
 .saveButton {
     text-align: center;
+}
+
+.turnSelectorRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.turnSelectorRow label {
+    width: 90px;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.turnSelectorRow select {
+    width: 220px;
+}
+
+.stateMenuBar {
+    border: none;
+}
+
+.stateMenuLinks .navbar-nav > li > a,
+.menuTurnTitle {
+    color: inherit !important;
+}
+
+.stateMenuLinks .navbar-nav {
+    display: flex;
+    align-items: center;
+}
+
+.stateMenuLinks .navbar-nav > li {
+    float: none;
+    display: flex;
+    align-items: center;
+}
+
+.stateMenuLinks .navbar-nav > li > a {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+}
+
+.stateMenuLinks .navbar-nav > li > a:hover,
+.stateMenuLinks .navbar-nav > li > a:focus {
+    background-color: inherit !important;
+    background-image: none !important;
+    color: inherit !important;
+    outline: none;
+    box-shadow: inset 0 -2px 0 currentColor;
+}
+
+.stateMenuLinks .navbar-nav > .active > a,
+.stateMenuLinks .navbar-nav > .active > a:hover,
+.stateMenuLinks .navbar-nav > .active > a:focus,
+.stateMenuLinks .navbar-nav > li > a.active,
+.stateMenuLinks .navbar-nav > li > a.active:hover,
+.stateMenuLinks .navbar-nav > li > a.active:focus {
+    background-color: inherit !important;
+    background-image: none !important;
+    color: inherit !important;
+    border-bottom: none;
+    box-shadow: inset 0 -4px 0 currentColor;
+}
+
+.menuTurnTitle {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    min-height: 60px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.stateMenuBar .navbar-header {
+    display: flex;
+    align-items: center;
+    height: 60px;
+}
+
+.stateMenuBar .container-fluid {
+    padding-left: 8px;
+}
+
+.stateMenuBarBottom {
+    min-height: 34px;
+}
+
+.stateMenuBarBottom .container-fluid {
+    padding-right: 16px;
+}
+
+.stateMenuBarBottomCode {
+    text-align: right;
+    font-weight: bold;
+    line-height: 34px;
+}
+
+.menuCountryTitle {
+    font-weight: bold;
+    display: block;
+    text-align: left;
+    margin-bottom: 0;
+    font-size: 24px;
+    line-height: 60px;
+    height: 60px;
+    transform: translateY(3px);
+}
+
+.menuTurnRow {
+    display: flex;
+    align-items: center;
+}
+
+.menuTurnLabel {
+    display: inline-block;
+    width: 55px;
+    text-align: left;
+}
+
+.menuTurnValue {
+    display: inline-block;
+    text-align: left;
+}
+
+.menuTurnInfoItem > a {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 60px;
+}
+
+.menuTurnInfoItem .menuTurnRow {
+    justify-content: center;
+    line-height: 1.15;
+}
+
+.menuTurnInfoItem .menuTurnValue {
+    font-size: 19px;
+    line-height: 1.1;
 }

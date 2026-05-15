@@ -8,10 +8,31 @@
         <div>
             <h3>Load Turn From Database</h3> 
 
-            <select id="selectedTurn" ng-options="tsTurn.turnId for tsTurn in masterData.turnsList " ng-model="selectedTurnDetails" ng-change="loadTurnFromDataBase()">
-                <option>"--select an option--"</option>
+            <div class="turnSelectorRow">
+                <label>Game No</label>
+                <select id="selectedGameNo" ng-options="gameNo for gameNo in gameNoOptions" ng-model="selectedGameNo" ng-change="onGameNoChanged()">
+                    <option value="">--select game--</option>
+                </select>
+            </div>
+
+            <div class="turnSelectorRow">
+                <label>State</label>
+                <select id="selectedState" ng-options="state for state in stateOptions" ng-model="selectedState" ng-change="onStateChanged()">
+                    <option value="">--select state--</option>
+                </select>
+            </div>
+
+            <div class="turnSelectorRow">
+                <label>Month/Year</label>
+                <select id="selectedMonthYear" ng-options="monthYear for monthYear in monthYearOptions" ng-model="selectedMonthYear" ng-change="onMonthYearChanged()">
+                    <option value="">--select month/year--</option>
+                </select>
+            </div>
+
+            <select id="selectedTurn" ng-options="tsTurn.turnId for tsTurn in masterData.turnsList" ng-model="selectedTurnDetails" ng-change="loadTurnFromDataBase()" style="display:none;">
+                <option value="">--select turn--</option>
             </select>
-            <h4>Selected: {{selectedTurnDetails.turnId}}</h4>
+            <h4>Selected: {{masterData.turnId}}</h4>
         </div>
 
         <div>

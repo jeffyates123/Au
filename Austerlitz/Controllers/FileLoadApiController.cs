@@ -60,12 +60,12 @@ namespace Austerlitz.Controllers
                 if (string.IsNullOrEmpty(savedPath))
                     return Request.CreateResponse(HttpStatusCode.BadRequest, "No file found in upload.");
 
-                loadTurnReport(savedPath);
+                var loadedTurnId = loadTurnReport(savedPath);
 
                 try { File.Delete(savedPath); }
                 catch { /* ignore cleanup failures */ }
 
-                return Request.CreateResponse(HttpStatusCode.Created);
+                return Request.CreateResponse(HttpStatusCode.Created, new { turnId = loadedTurnId });
             }
             catch (Exception ex)
             {
@@ -77,7 +77,7 @@ namespace Austerlitz.Controllers
             }
         }
 
-        private void loadTurnReport(string filePath)
+        private string loadTurnReport(string filePath)
         {
             try
             {
@@ -108,6 +108,8 @@ namespace Austerlitz.Controllers
                 // SAVE THIS TO THE DATABASE!!!
 
                 lineLocation = loadTRMap(lineList, lineLocation, _auDB, turnId);
+
+                return turnId;
             }
             catch (Exception ex)
             {

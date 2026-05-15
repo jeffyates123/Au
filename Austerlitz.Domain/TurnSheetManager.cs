@@ -28,17 +28,90 @@ namespace Austerlitz.Domain
             using (var dataContext = new AusterlitzDbContext())
             {
                 var listRepository = new GenericRepository<TS_00TurnDetails>(dataContext);
-                var tsItems = listRepository.Get();
+                var tsItems = listRepository.Get().Where(x => x != null && !string.IsNullOrWhiteSpace(x.TurnId));
 
                 var orderedItems = tsItems
-                    .OrderBy(x => x.TurnId.Substring(0, 3))
-                    .ThenBy(x => x.TurnId.Substring(3, 1))
-                    .ThenBy(x => x.TurnId.Substring(x.TurnId.Length - 4))
-                    .ThenBy(x => GetMonthNumber(x.TurnId.Substring(4, x.TurnId.Length - 8)))
+                    .OrderByDescending(GetGameSortKey)
+                    .ThenByDescending(GetTurnSortKey)
+                    .ThenBy(x => GetStateCode(x))
                     .ToArray();
 
                 return orderedItems;
             }
+        }
+
+        private string GetGameNo(TS_00TurnDetails turn)
+        {
+            if (turn == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(turn.GameNo))
+            {
+                return turn.GameNo.Trim();
+            }
+
+            return !string.IsNullOrWhiteSpace(turn.TurnId) && turn.TurnId.Length >= 3
+                ? turn.TurnId.Substring(0, 3)
+                : string.Empty;
+        }
+
+        private string GetStateCode(TS_00TurnDetails turn)
+        {
+            if (turn == null)
+            {
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(turn.State))
+            {
+                return turn.State.Trim();
+            }
+
+            return !string.IsNullOrWhiteSpace(turn.TurnId) && turn.TurnId.Length >= 4
+                ? turn.TurnId.Substring(3, 1)
+                : string.Empty;
+        }
+
+        private int GetGameSortKey(TS_00TurnDetails turn)
+        {
+            var gameNo = GetGameNo(turn);
+            int parsed;
+            return int.TryParse(gameNo, out parsed) ? parsed : 0;
+        }
+
+        private int GetTurnSortKey(TS_00TurnDetails turn)
+        {
+            if (turn == null)
+            {
+                return 0;
+            }
+
+            var year = turn.Year ?? GetYearFromTurnId(turn.TurnId);
+            var monthNo = GetMonthNumber(!string.IsNullOrWhiteSpace(turn.Month) ? turn.Month : GetMonthFromTurnId(turn.TurnId));
+            return (year * 100) + monthNo;
+        }
+
+        private int GetYearFromTurnId(string turnId)
+        {
+            if (string.IsNullOrWhiteSpace(turnId) || turnId.Length < 8)
+            {
+                return 0;
+            }
+
+            int year;
+            return int.TryParse(turnId.Substring(turnId.Length - 4), out year) ? year : 0;
+        }
+
+        private string GetMonthFromTurnId(string turnId)
+        {
+            if (string.IsNullOrWhiteSpace(turnId) || turnId.Length < 8)
+            {
+                return string.Empty;
+            }
+
+            return turnId.Substring(4, turnId.Length - 8);
         }
 
         private int GetMonthNumber(string month)

@@ -43,30 +43,21 @@
 
           <body style="padding-top:60px" ng-controller="menuController" >
               <header>
-                  <div class="nav navbar-default navbar-fixed-top ">
-                      <div class="container">
-                          <div class="navbar-header">
-                              <a href="/home" class="navbar-brand">Home {{masterData.turnId}}</a>
-                          </div>
-                          <div class="navbar-collapse collapse ">
-                              <ul class="nav navbar-nav">
-                                  <li><a href="/BrigadeCalculator">BrigadeCalculator</a></li>
-                                  <li><a href="/Boarding">Boarding</a></li>
-                                  <li><a href="/TurnMaps">TurnMaps</a></li>
-                                  <li><a href="/Bootstrap">Mini-Apps</a></li>
-                                  <li class="nav nav-divider"></li>
-                                  <li class=" navbar-right dropdown">
-                                      <a href="/home3" class="dropdown-toggle">menu<b class="caret"></b></a>
+                  <div class="nav navbar-default navbar-fixed-top stateMenuBar" ng-style="getMenuBarStyle()">
+                      <div class="container-fluid">
 
-                                      <ul class="dropdown-menu">
-                                          <li>
-                                              <a href="#/list">Resources</a>
-                                          </li>
-                                          <li>
-                                              <a href="#/list">Political</a>
-                                          </li>
-                                      </ul>
-                                  </li>
+                          <div class="navbar-header">
+                              <a href="/home" class="navbar-brand menuTurnTitle">
+                                  <div class="menuCountryTitle">{{getSelectedStateName()}}</div>
+                              </a>
+                          </div>
+                          <div class="navbar-collapse collapse stateMenuLinks">
+                              <ul class="nav navbar-nav">
+                                  <li ng-class="{ active: isActive('/TurnMaps') }"><a href="/TurnMaps">Turn Maps</a></li>
+                                  <li ng-class="{ active: isActive('/BrigadeCalculator') }"><a href="/BrigadeCalculator">BrigadeCalculator</a></li>
+                                  <li ng-class="{ active: isActive('/Boarding') }"><a href="/Boarding">Boarding</a></li>
+                                  <li ng-class="{ active: isActive('/SimBattle') }"><a href="/SimBattle">Sim Battles</a></li>
+                                  <li class="menuTurnInfoItem" ng-class="{ active: isActive('/home') }"><a href="/home"><div class="menuTurnRow"><span class="menuTurnValue">AU-{{masterData.selectedGameNo}}</span></div><div class="menuTurnRow"><span class="menuTurnValue">{{getSelectedMonthYearText()}}</span></div></a></li>
                               </ul>
                           </div>
                       </div>
@@ -78,7 +69,11 @@
               </main>
 
               <footer class="container" style="padding:60px">
-                  <div class="navbar navbar-fixed-bottom"></div>
+                  <div class="nav navbar-default navbar-fixed-bottom stateMenuBar stateMenuBarBottom" ng-style="getMenuBarStyle()">
+                      <div class="container-fluid">
+                          <div class="stateMenuBarBottomCode">AU-{{masterData.selectedGameNo}}</div>
+                      </div>
+                  </div>
               </footer>
           </body>
 
