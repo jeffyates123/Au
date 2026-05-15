@@ -27,7 +27,7 @@ namespace Austerlitz.Services
                 throw new ArgumentException("turnId is required.", nameof(turnId));
             }
 
-            var rows = buildProductionSiteRows == null ? new TS_13BuildProductionSites[0] : buildProductionSiteRows.OrderBy(x => x.OrderNo).ToArray();
+            var rows = buildProductionSiteRows == null ? new TS_13BuildProductionSites[0] : buildProductionSiteRows.ToArray();
 
             var workbookPath = GetOrCreateTurnsheetPath(turnId);
             using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
@@ -39,7 +39,9 @@ namespace Austerlitz.Services
 
                 for (var orderNo = 1; orderNo <= 10; orderNo++)
                 {
-                    var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_13BuildProductionSites { TurnId = turnId, OrderNo = orderNo };
+                    var row = rows.Length >= orderNo
+                        ? rows[orderNo - 1]
+                        : new TS_13BuildProductionSites { TurnId = turnId, OrderNo = orderNo };
                     WriteBuildProductionSiteRow(connection, firstDataRow + orderNo - 3, orderNo, row);
                 }
             }
@@ -52,7 +54,7 @@ namespace Austerlitz.Services
                 throw new ArgumentException("turnId is required.", nameof(turnId));
             }
 
-            var rows = formFederationRows == null ? new TS_14FormFederations[0] : formFederationRows.OrderBy(x => x.OrderNo).ToArray();
+            var rows = formFederationRows == null ? new TS_14FormFederations[0] : formFederationRows.ToArray();
 
             var workbookPath = GetOrCreateTurnsheetPath(turnId);
             using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
@@ -64,7 +66,9 @@ namespace Austerlitz.Services
 
                 for (var orderNo = 1; orderNo <= 21; orderNo++)
                 {
-                    var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_14FormFederations { TurnId = turnId, OrderNo = orderNo };
+                    var row = rows.Length >= orderNo
+                        ? rows[orderNo - 1]
+                        : new TS_14FormFederations { TurnId = turnId, OrderNo = orderNo };
                     WriteFormFederationRow(connection, firstDataRow + orderNo - 3, row);
                 }
             }
@@ -77,7 +81,7 @@ namespace Austerlitz.Services
                 throw new ArgumentException("turnId is required.", nameof(turnId));
             }
 
-            var rows = movementRows == null ? new TS_18Movement[0] : movementRows.OrderBy(x => x.OrderNo).ToArray();
+            var rows = movementRows == null ? new TS_18Movement[0] : movementRows.ToArray();
 
             var workbookPath = GetOrCreateTurnsheetPath(turnId);
             using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
@@ -89,7 +93,9 @@ namespace Austerlitz.Services
 
                 for (var orderNo = 1; orderNo <= 30; orderNo++)
                 {
-                    var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_18Movement { TurnId = turnId, OrderNo = orderNo };
+                    var row = rows.Length >= orderNo
+                        ? rows[orderNo - 1]
+                        : new TS_18Movement { TurnId = turnId, OrderNo = orderNo };
                     WriteMovementRow(connection, firstDataRow + orderNo - 3, orderNo, row);
                 }
             }
@@ -186,9 +192,9 @@ namespace Austerlitz.Services
                 return;
             }
 
-            if (excelRow > 1)
+            if (excelRow > 0)
             {
-                var twoRowRange = string.Format("[{0}{1}{2}:{1}{3}]", WorksheetName, column, excelRow - 1, excelRow);
+                var twoRowRange = string.Format("[{0}{1}{2}:{1}{3}]", WorksheetName, column, excelRow, excelRow + 1);
                 if (TryUpsertRangeCell(connection, twoRowRange, value))
                 {
                     return;

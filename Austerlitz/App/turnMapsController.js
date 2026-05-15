@@ -229,8 +229,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.displayOptions = [{ name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
                              { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
-                             { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: true, bonus: false },
-                             { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: true, bonus: false }];
+                             { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
+                             { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }];
     $scope.selectedDisplayOption = $scope.displayOptions[3];
 
     $scope.changeDisplayOption = function () {
