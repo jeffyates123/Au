@@ -299,14 +299,32 @@ namespace Austerlitz.Controllers
         public TS_13BuildProductionSites[] PostTSBuildProductionSites(TS_13BuildProductionSites[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            return turnReportManager.PostTSBuildProductionSites(saveRecords);
+            var savedRows = turnReportManager.PostTSBuildProductionSites(saveRecords);
+
+            var firstRow = savedRows.FirstOrDefault();
+            if (firstRow != null)
+            {
+                var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
+                turnsheetExcelService.SaveBuildProductionSitesSection(firstRow.TurnId, savedRows);
+            }
+
+            return savedRows;
         }
 
         [HttpPost]
         public TS_14FormFederations[] PostTSFormFederations(TS_14FormFederations[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            return turnReportManager.PostTSFormFederations(saveRecords);
+            var savedRows = turnReportManager.PostTSFormFederations(saveRecords);
+
+            var firstRow = savedRows.FirstOrDefault();
+            if (firstRow != null)
+            {
+                var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
+                turnsheetExcelService.SaveFormFederationsSection(firstRow.TurnId, savedRows);
+            }
+
+            return savedRows;
         }
 
         [HttpPost]

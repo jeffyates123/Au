@@ -13,8 +13,62 @@ namespace Austerlitz.Services
     {
         private const string TemplateFileName = "Excel Turnsheet.xlsx";
         private const string WorksheetName = "Sheet1$";
+        private const int BuildProductionSitesSectionHeaderRowFallback = 158;
+        private const int BuildProductionSitesDataRowOffset = 3;
+        private const int FormFederationsSectionHeaderRowFallback = 169;
+        private const int FormFederationsDataRowOffset = 3;
         private const int MovementSectionHeaderRowFallback = 213;
         private const int MovementDataRowOffset = 3;
+
+        public void SaveBuildProductionSitesSection(string turnId, IEnumerable<TS_13BuildProductionSites> buildProductionSiteRows)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("turnId is required.", nameof(turnId));
+            }
+
+            var rows = buildProductionSiteRows == null ? new TS_13BuildProductionSites[0] : buildProductionSiteRows.OrderBy(x => x.OrderNo).ToArray();
+
+            var workbookPath = GetOrCreateTurnsheetPath(turnId);
+            using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
+            {
+                connection.Open();
+
+                var headerRow = FindRowByFirstColumnValue(connection, "(13) Build Production Sites") ?? BuildProductionSitesSectionHeaderRowFallback;
+                var firstDataRow = headerRow + BuildProductionSitesDataRowOffset;
+
+                for (var orderNo = 1; orderNo <= 10; orderNo++)
+                {
+                    var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_13BuildProductionSites { TurnId = turnId, OrderNo = orderNo };
+                    WriteBuildProductionSiteRow(connection, firstDataRow + orderNo - 3, orderNo, row);
+                }
+            }
+        }
+
+        public void SaveFormFederationsSection(string turnId, IEnumerable<TS_14FormFederations> formFederationRows)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("turnId is required.", nameof(turnId));
+            }
+
+            var rows = formFederationRows == null ? new TS_14FormFederations[0] : formFederationRows.OrderBy(x => x.OrderNo).ToArray();
+
+            var workbookPath = GetOrCreateTurnsheetPath(turnId);
+            using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
+            {
+                connection.Open();
+
+                var headerRow = FindRowByFirstColumnValue(connection, "(14) Form Federations") ?? FormFederationsSectionHeaderRowFallback;
+                var firstDataRow = headerRow + FormFederationsDataRowOffset;
+
+                for (var orderNo = 1; orderNo <= 21; orderNo++)
+                {
+                    var row = rows.SingleOrDefault(x => x.OrderNo == orderNo) ?? new TS_14FormFederations { TurnId = turnId, OrderNo = orderNo };
+                    WriteFormFederationRow(connection, firstDataRow + orderNo - 3, row);
+                }
+            }
+        }
 
         public void SaveMovementSection(string turnId, IEnumerable<TS_18Movement> movementRows)
         {
@@ -107,6 +161,21 @@ namespace Austerlitz.Services
             WriteCell(connection, excelRow, "F", ToExcelValue(movement.Distance2));
             WriteCell(connection, excelRow, "G", ToExcelValue(movement.Direction3));
             WriteCell(connection, excelRow, "H", ToExcelValue(movement.Distance3));
+        }
+
+        private static void WriteBuildProductionSiteRow(OleDbConnection connection, int excelRow, int orderNo, TS_13BuildProductionSites row)
+        {
+            //WriteCell(connection, excelRow, "A", orderNo.ToString());
+            WriteCell(connection, excelRow, "B", ToExcelValue(row.ProdSiteType));
+            WriteCell(connection, excelRow, "C", ToExcelValue(row.X));
+            WriteCell(connection, excelRow, "D", ToExcelValue(row.Y));
+        }
+
+        private static void WriteFormFederationRow(OleDbConnection connection, int excelRow, TS_14FormFederations row)
+        {
+            //WriteCell(connection, excelRow, "A", orderNo.ToString());
+            WriteCell(connection, excelRow, "B", ToExcelValue(row.ItemNo));
+            WriteCell(connection, excelRow, "C", ToExcelValue(row.Federation_Fleet));
         }
 
         private static void WriteCell(OleDbConnection connection, int excelRow, string column, string value)

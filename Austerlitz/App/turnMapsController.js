@@ -38,6 +38,20 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             });
         });
 
+    turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (tsFormFederationsList) {
+        $scope.tsFormFederationsList = (tsFormFederationsList || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
+
+            row.OrderNo = row.orderNo;
+            row.ItemNo = row.itemNo;
+            row.Federation_Fleet = row.federation_Fleet;
+
+            return row;
+        });
+    });
+
         angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
             if ($scope.mapCoordinates[item.y] && $scope.mapCoordinates[item.y][item.x]) {
                 $scope.mapCoordinates[item.y][item.x].units.push(item.itemNo);
@@ -103,6 +117,22 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         $scope.tsMovementList = tsMovementList;
     });
 
+    turnSheetFactory.getTSBuildProductionSites($scope.masterData.turnId).then(function (tsBuildProductionSitesList) {
+        $scope.tsBuildProductionSitesList = (tsBuildProductionSitesList || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+            row.x = row.x != null ? row.x : row.X;
+            row.y = row.y != null ? row.y : row.Y;
+
+            row.OrderNo = row.orderNo;
+            row.ProdSiteType = row.prodSiteType;
+            row.X = row.x;
+            row.Y = row.y;
+
+            return row;
+        });
+    });
+
     rulesCatalogFactory.getRefProductionSites().then(function (productionSiteList) {
         $scope.productionSiteList = productionSiteList;
         $scope.selectedProductionSite = productionSiteList[5];
@@ -110,7 +140,41 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     rulesCatalogFactory.getRefStates().then(function (stateList) {
         $scope.stateList = stateList;
-        $scope.selectedState = $scope.stateList[3];
+
+        var selectedStateCode = ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
+        var selectedState = null;
+
+        if (selectedStateCode) {
+            angular.forEach($scope.stateList, function (state) {
+                var stateCode = (state.state || state.State || '').toString().trim().toUpperCase();
+                if (!selectedState && stateCode === selectedStateCode) {
+                    selectedState = state;
+                }
+            });
+        }
+
+    $scope.saveTSFormFederations = function () {
+        turnSheetFactory.postTSRecords($scope.tsFormFederationsList, 'FormFederations').then(function (returnTsFormFederationsList) {
+            $scope.tsFormFederationsList = (returnTsFormFederationsList || []).map(function (row) {
+                row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+                row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+                row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
+
+                row.OrderNo = row.orderNo;
+                row.ItemNo = row.itemNo;
+                row.Federation_Fleet = row.federation_Fleet;
+
+                return row;
+            });
+
+            alert('Turnsheet form federations saved and Excel federation section updated successfully.');
+        }, function (error) {
+            var detail = (error && error.data) ? error.data : '';
+            alert('Form federations save failed.' + (detail ? ' ' + detail : ''));
+        });
+    }
+
+        $scope.selectedState = selectedState || $scope.stateList[3];
     });
 
     rulesCatalogFactory.getRefTerrain().then(function (terrainList) {
@@ -124,6 +188,28 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }, function (error) {
             var detail = (error && error.data) ? error.data : '';
             alert('Movement save failed.' + (detail ? ' ' + detail : ''));
+        });
+    }
+
+    $scope.saveTSBuildProductionSites = function () {
+        turnSheetFactory.postTSRecords($scope.tsBuildProductionSitesList, 'BuildProductionSites').then(function (returnTsBuildProductionSitesList) {
+            $scope.tsBuildProductionSitesList = (returnTsBuildProductionSitesList || []).map(function (row) {
+                row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+                row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+                row.x = row.x != null ? row.x : row.X;
+                row.y = row.y != null ? row.y : row.Y;
+
+                row.OrderNo = row.orderNo;
+                row.ProdSiteType = row.prodSiteType;
+                row.X = row.x;
+                row.Y = row.y;
+
+                return row;
+            });
+            alert('Turnsheet production site records saved and Excel production site section updated successfully.');
+        }, function (error) {
+            var detail = (error && error.data) ? error.data : '';
+            alert('Production site save failed.' + (detail ? ' ' + detail : ''));
         });
     }
 
@@ -143,6 +229,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.displayOptions = [{ name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
                              { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
+                             { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: true, bonus: false },
                              { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: true, bonus: false }];
     $scope.selectedDisplayOption = $scope.displayOptions[3];
 
@@ -157,6 +244,14 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         if ($scope.selectedDisplayOption.bonus) selectedOptions.push('Bonus');
 
         $scope.selectedMapOptions = selectedOptions;
+    };
+
+    $scope.isProductionSiteMode = function () {
+        return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'ProductionSite';
+    };
+
+    $scope.isFormFederationMode = function () {
+        return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'FormFederation';
     };
 
     $scope.toggleSelection = function toggleSelection(mapOption) {
@@ -194,6 +289,37 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     }
 
     $scope.coordinateDblClick = function (x, y) {
+        if ($scope.isProductionSiteMode()) {
+            var prodCoord = $scope.getCoordinateByXY(x, y);
+            if (!prodCoord) {
+                return;
+            }
+
+            $scope.selectedCoordinateDetails = "(X:" + x + ",Y: " + y + ") " + prodCoord.state + prodCoord.population + prodCoord.productionSite + " - " + prodCoord.owner + prodCoord.terrain + prodCoord.bonus;
+
+            var productionSiteClass = $scope.defineCoordClass(
+                prodCoord.terrain,
+                prodCoord.state,
+                prodCoord.population,
+                prodCoord.productionSite,
+                prodCoord.bonus,
+                prodCoord.displayField,
+                prodCoord.units,
+                prodCoord.x,
+                prodCoord.y,
+                prodCoord.routeCandidate,
+                prodCoord.jumpOffText
+            );
+            productionSiteClass = (productionSiteClass || '').split(' ')[0];
+
+            if (!$scope.canAddProductionSiteAtCoordinate(prodCoord, productionSiteClass)) {
+                return;
+            }
+
+            $scope.addOrUpdateProductionSiteRecord(x, y, productionSiteClass);
+            return;
+        }
+
         if ($scope.selectedMovementItemCoordinate
             && $scope.selectedMovementRow
             && $scope.selectedMovementItemCoordinate.x == x
@@ -308,6 +434,188 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             movementRow.direction3 = segments[2].dir;
             movementRow.distance3 = segments[2].dist;
         }
+    };
+
+    $scope.getSelectedProductionSiteTypeNo = function () {
+        if (!$scope.selectedProductionSite) {
+            return null;
+        }
+
+        var selectedTypeNo = $scope.selectedProductionSite.siteTypeNo;
+        if (selectedTypeNo == null) {
+            selectedTypeNo = $scope.selectedProductionSite.sitezTypeNo;
+        }
+
+        var parsed = parseInt(selectedTypeNo, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    $scope.getProductionSiteEligibilityClass = function (coord) {
+        if (!coord || !$scope.selectedProductionSite) {
+            return '';
+        }
+
+        var coordState = (coord.state || '').toString();
+        var coordTerrain = (coord.terrain || '').toString();
+        var coordProdSite = (coord.productionSite || '').toString();
+        var coordBonus = (coord.bonus || '').toString();
+        var coordPopulation = parseInt(coord.population, 10);
+        var minPopulation = parseInt($scope.selectedProductionSite.minPopulation, 10);
+        var maxPopulation = parseInt($scope.selectedProductionSite.maxPopulation, 10);
+        var selectedSiteTypeNo = ($scope.selectedProductionSite.siteTypeNo || $scope.selectedProductionSite.sitezTypeNo || '').toString();
+        var selectedStateCode = $scope.selectedState ? ($scope.selectedState.state || $scope.selectedState.State || '') : '';
+
+        if (isNaN(coordPopulation)) coordPopulation = 0;
+        if (isNaN(minPopulation)) minPopulation = 0;
+        if (isNaN(maxPopulation)) maxPopulation = 0;
+
+        if ($scope.selectedState != null && coordState != selectedStateCode) {
+            return '';
+        }
+
+        if (".+*".indexOf(coordTerrain) > -1) {
+            return 'terrain_sea';
+        }
+
+        if ($scope.selectedProductionSite.bonusSymbol == coordBonus) {
+            if (coordProdSite.trim().length > 0) return 'prodSite_Existing';
+            if (coordPopulation < minPopulation) return 'prodSite_TooFew';
+            if (coordPopulation > maxPopulation) return 'prodSite_TooMany';
+            return 'prodSite_Yes';
+        }
+
+        if (($scope.selectedProductionSite.terrain || '').indexOf(coordTerrain) > -1) {
+            if (coordPopulation < minPopulation) return 'prodSite_TooFew';
+            if (coordPopulation > maxPopulation) return 'prodSite_TooMany';
+
+            if (selectedSiteTypeNo == "1") {
+                if (coordProdSite.trim().length > 0)
+                    return 'prodSite_Yes';
+                return ' ';
+            }
+
+            if (coordProdSite.trim().length > 0) return 'prodSite_Existing';
+            return 'prodSite_Yes';
+        }
+
+        if (selectedSiteTypeNo == "21") {
+            if (coordProdSite.trim().length > 0 && ($scope.selectedProductionSite.terrain || '').indexOf(coordProdSite) > -1)
+                return 'prodSite_Yes';
+            return ' ';
+        }
+
+        return '';
+    };
+
+    $scope.isAllowedProductionSiteClass = function (productionSiteClass) {
+        var className = (productionSiteClass || '').toString().trim();
+        if (!className) {
+            return false;
+        }
+
+        if (className === 'terrain_sea') {
+            return false;
+        }
+
+        return className.indexOf('prodSite_') === 0;
+    };
+
+    $scope.canAddProductionSiteAtCoordinate = function (coord, productionSiteClass) {
+        var coordClass = productionSiteClass || $scope.getProductionSiteEligibilityClass(coord);
+        return $scope.isAllowedProductionSiteClass(coordClass);
+    };
+
+    $scope.getProductionSiteRowTypeNo = function (row) {
+        var rowTypeNo = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+        var parsed = parseInt(rowTypeNo, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    $scope.setProductionSiteRowValues = function (row, prodSiteTypeNo, x, y, productionSiteClass) {
+        row.prodSiteType = prodSiteTypeNo;
+        row.ProdSiteType = prodSiteTypeNo;
+        row.x = x;
+        row.X = x;
+        row.y = y;
+        row.Y = y;
+        row.prodSiteStatusClass = productionSiteClass || '';
+    };
+
+    $scope.addOrUpdateProductionSiteRecord = function (x, y, productionSiteClass) {
+        if (!$scope.tsBuildProductionSitesList) {
+            return;
+        }
+
+        var prodSiteTypeNo = $scope.getSelectedProductionSiteTypeNo();
+        if (prodSiteTypeNo == null) {
+            return;
+        }
+
+        var rowsAtCoord = [];
+        angular.forEach($scope.tsBuildProductionSitesList, function (row) {
+            var rowX = row.x != null ? row.x : row.X;
+            var rowY = row.y != null ? row.y : row.Y;
+
+            if (rowX == x && rowY == y) {
+                rowsAtCoord.push(row);
+            }
+        });
+
+        var selectedTypeRow = null;
+        angular.forEach(rowsAtCoord, function (row) {
+            if (!selectedTypeRow && $scope.getProductionSiteRowTypeNo(row) === prodSiteTypeNo) {
+                selectedTypeRow = row;
+            }
+        });
+
+        if (selectedTypeRow) {
+            $scope.setProductionSiteRowValues(selectedTypeRow, prodSiteTypeNo, x, y, productionSiteClass);
+            return;
+        }
+
+        var hasDemolitionRow = rowsAtCoord.some(function (row) {
+            return $scope.getProductionSiteRowTypeNo(row) === 1;
+        });
+
+        var canAddSecondRow = rowsAtCoord.length < 2 && (prodSiteTypeNo === 1 || hasDemolitionRow);
+
+        if (!canAddSecondRow && rowsAtCoord.length > 0) {
+            var rowToUpdate = rowsAtCoord[0];
+            angular.forEach(rowsAtCoord, function (row) {
+                if ($scope.getProductionSiteRowTypeNo(row) !== 1) {
+                    rowToUpdate = row;
+                }
+            });
+
+            $scope.setProductionSiteRowValues(rowToUpdate, prodSiteTypeNo, x, y, productionSiteClass);
+            return;
+        }
+
+        var firstAvailableRow = null;
+        angular.forEach($scope.tsBuildProductionSitesList, function (row) {
+            if (firstAvailableRow) {
+                return;
+            }
+
+            var rowX = row.x != null ? row.x : row.X;
+            var rowY = row.y != null ? row.y : row.Y;
+            if ((rowX == null || rowX === '') && (rowY == null || rowY === '')) {
+                firstAvailableRow = row;
+            }
+        });
+
+        if (firstAvailableRow) {
+            $scope.setProductionSiteRowValues(firstAvailableRow, prodSiteTypeNo, x, y, productionSiteClass);
+        }
+    };
+
+    $scope.getProductionSiteRowClass = function (row) {
+        if (!row) {
+            return '';
+        }
+
+        var rowClass = row.prodSiteStatusClass || '';
+        return $scope.isAllowedProductionSiteClass(rowClass) ? rowClass : '';
     };
 
     $scope.clearRouteCandidates = function () {
@@ -546,6 +854,19 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     };
 
     $scope.refreshItemGridRows = function () {
+        if ($scope.isFormFederationMode()) {
+            var federationCandidates = $scope.getFormFederationCandidateItems();
+
+            if ($scope.selectedItemGridCoordinate) {
+                federationCandidates = federationCandidates.filter(function (item) {
+                    return item.x == $scope.selectedItemGridCoordinate.x && item.y == $scope.selectedItemGridCoordinate.y;
+                });
+            }
+
+            $scope.itemGridRows = federationCandidates;
+            return;
+        }
+
         if (!$scope.filteredMovementItemsForMap) {
             $scope.itemGridRows = [];
             return;
@@ -566,6 +887,11 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     };
 
     $scope.itemGridClickRow = function (row) {
+        if ($scope.isFormFederationMode()) {
+            $scope.addItemToFormFederationGrid(row);
+            return;
+        }
+
         if (!row || !row.entity || !row.entity.itemNo || !$scope.tsMovementList) {
             return;
         }
@@ -596,6 +922,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     };
 
     $scope.isItemAlreadyInMovementGrid = function (itemNo) {
+        if ($scope.isFormFederationMode()) {
+            return $scope.isItemAlreadyInFormFederationGrid(itemNo);
+        }
+
         if (!itemNo || !$scope.tsMovementList) {
             return false;
         }
@@ -603,6 +933,157 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return $scope.tsMovementList.some(function (movementRow) {
             return movementRow.itemNo == itemNo;
         });
+    };
+
+    $scope.getCurrentStateCode = function () {
+        return ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
+    };
+
+    $scope.isSeaItemType = function (item) {
+        if (!item) return false;
+
+        var typeName = $scope.getItemTypeName(item.itemType);
+        if (!typeName && item.itemTypeName) {
+            typeName = item.itemTypeName;
+        }
+
+        return typeName === 'Warship' || typeName === 'MerchantShip';
+    };
+
+    $scope.isFederationEligibleItem = function (item) {
+        if (!item) return false;
+
+        var typeName = $scope.getItemTypeName(item.itemType);
+        if (!typeName && item.itemTypeName) {
+            typeName = item.itemTypeName;
+        }
+
+        return typeName === 'Commander'
+            || typeName === 'Brigade'
+            || typeName === 'BaggageTrain'
+            || typeName === 'Warship'
+            || typeName === 'MerchantShip';
+    };
+
+    $scope.getFormFederationCandidateItems = function () {
+        if (!$scope.filteredMovementItemsForMap || !$scope.mapCoordinates) {
+            return [];
+        }
+
+        var currentStateCode = $scope.getCurrentStateCode();
+
+        return $scope.filteredMovementItemsForMap.filter(function (item) {
+            if (!item || item.itemNo == null) {
+                return false;
+            }
+
+            if (item.fed != null && item.fed !== '') {
+                return false;
+            }
+
+            if (!$scope.isFederationEligibleItem(item)) {
+                return false;
+            }
+
+            var coord = $scope.getCoordinateByXY(item.x, item.y);
+            if (!coord) {
+                return false;
+            }
+
+            var coordState = (coord.state || '').toString().trim().toUpperCase();
+            return coordState === currentStateCode;
+        });
+    };
+
+    $scope.isItemAlreadyInFormFederationGrid = function (itemNo) {
+        if (!itemNo || !$scope.tsFormFederationsList) {
+            return false;
+        }
+
+        return $scope.tsFormFederationsList.some(function (row) {
+            var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            return rowItemNo == itemNo;
+        });
+    };
+
+    $scope.getUsedFederationNumbers = function () {
+        var used = {};
+
+        if ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.movementItemList) {
+            angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
+                var federationNo = item.federationNo != null ? item.federationNo : item.FederationNo;
+                if (federationNo != null && federationNo !== '') {
+                    used[parseInt(federationNo, 10)] = true;
+                }
+            });
+        }
+
+        if ($scope.tsFormFederationsList) {
+            angular.forEach($scope.tsFormFederationsList, function (row) {
+                var federationNo = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
+                if (federationNo != null && federationNo !== '') {
+                    used[parseInt(federationNo, 10)] = true;
+                }
+            });
+        }
+
+        return used;
+    };
+
+    $scope.getNextAvailableFederationNo = function (isSeaUnit) {
+        var rangeStart = isSeaUnit ? 11 : 61;
+        var rangeEnd = isSeaUnit ? 60 : 90;
+        var used = $scope.getUsedFederationNumbers();
+
+        for (var fedNo = rangeStart; fedNo <= rangeEnd; fedNo++) {
+            if (!used[fedNo]) {
+                return fedNo;
+            }
+        }
+
+        return null;
+    };
+
+    $scope.addItemToFormFederationGrid = function (row) {
+        if (!row || !row.entity || !row.entity.itemNo || !$scope.tsFormFederationsList) {
+            return;
+        }
+
+        if (row.entity.fed != null && row.entity.fed !== '') {
+            return;
+        }
+
+        if (!$scope.isFederationEligibleItem(row.entity)) {
+            return;
+        }
+
+        if ($scope.isItemAlreadyInFormFederationGrid(row.entity.itemNo)) {
+            return;
+        }
+
+        var isSeaUnit = $scope.isSeaItemType(row.entity);
+        var nextFederationNo = $scope.getNextAvailableFederationNo(isSeaUnit);
+        if (nextFederationNo == null) {
+            alert(isSeaUnit ? 'No available fleet federation numbers (11-60).' : 'No available land federation numbers (61-90).');
+            return;
+        }
+
+        var firstAvailableRow = null;
+        angular.forEach($scope.tsFormFederationsList, function (federationRow) {
+            var existingItemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
+            if (firstAvailableRow == null && (existingItemNo == null || existingItemNo === '')) {
+                firstAvailableRow = federationRow;
+            }
+        });
+
+        if (!firstAvailableRow) {
+            return;
+        }
+
+        firstAvailableRow.itemNo = row.entity.itemNo;
+        firstAvailableRow.ItemNo = row.entity.itemNo;
+        firstAvailableRow.federation_Fleet = nextFederationNo;
+        firstAvailableRow.Federation_Fleet = nextFederationNo;
     };
 
     $scope.getItemTypeName = function (itemType) {
@@ -638,6 +1119,188 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             case 'MerchantShip': return item.shipTypeNo != null ? item.shipTypeNo.toString() : 'Mer';
             default: return typeName;
         }
+    };
+
+    $scope.getSelectedProductionSiteTypeNo = function () {
+        if (!$scope.selectedProductionSite) {
+            return null;
+        }
+
+        var selectedTypeNo = $scope.selectedProductionSite.siteTypeNo;
+        if (selectedTypeNo == null) {
+            selectedTypeNo = $scope.selectedProductionSite.sitezTypeNo;
+        }
+
+        var parsed = parseInt(selectedTypeNo, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    $scope.getProductionSiteEligibilityClass = function (coord) {
+        if (!coord || !$scope.selectedProductionSite) {
+            return '';
+        }
+
+        var coordState = (coord.state || '').toString();
+        var coordTerrain = (coord.terrain || '').toString();
+        var coordProdSite = (coord.productionSite || '').toString();
+        var coordBonus = (coord.bonus || '').toString();
+        var coordPopulation = parseInt(coord.population, 10);
+        var minPopulation = parseInt($scope.selectedProductionSite.minPopulation, 10);
+        var maxPopulation = parseInt($scope.selectedProductionSite.maxPopulation, 10);
+        var selectedSiteTypeNo = ($scope.selectedProductionSite.siteTypeNo || $scope.selectedProductionSite.sitezTypeNo || '').toString();
+        var selectedStateCode = $scope.selectedState ? ($scope.selectedState.state || $scope.selectedState.State || '') : '';
+
+        if (isNaN(coordPopulation)) coordPopulation = 0;
+        if (isNaN(minPopulation)) minPopulation = 0;
+        if (isNaN(maxPopulation)) maxPopulation = 0;
+
+        if ($scope.selectedState != null && coordState != selectedStateCode) {
+            return '';
+        }
+
+        if (".+*".indexOf(coordTerrain) > -1) {
+            return 'terrain_sea';
+        }
+
+        if ($scope.selectedProductionSite.bonusSymbol == coordBonus) {
+            if (coordProdSite.trim().length > 0) return 'prodSite_Existing';
+            if (coordPopulation < minPopulation) return 'prodSite_TooFew';
+            if (coordPopulation > maxPopulation) return 'prodSite_TooMany';
+            return 'prodSite_Yes';
+        }
+
+        if (($scope.selectedProductionSite.terrain || '').indexOf(coordTerrain) > -1) {
+            if (coordPopulation < minPopulation) return 'prodSite_TooFew';
+            if (coordPopulation > maxPopulation) return 'prodSite_TooMany';
+
+            if (selectedSiteTypeNo == "1") {
+                if (coordProdSite.trim().length > 0)
+                    return 'prodSite_Yes';
+                return ' ';
+            }
+
+            if (coordProdSite.trim().length > 0) return 'prodSite_Existing';
+            return 'prodSite_Yes';
+        }
+
+        if (selectedSiteTypeNo == "21") {
+            if (coordProdSite.trim().length > 0 && ($scope.selectedProductionSite.terrain || '').indexOf(coordProdSite) > -1)
+                return 'prodSite_Yes';
+            return ' ';
+        }
+
+        return '';
+    };
+
+    $scope.isAllowedProductionSiteClass = function (productionSiteClass) {
+        var className = (productionSiteClass || '').toString().trim();
+        if (!className) {
+            return false;
+        }
+
+        if (className === 'terrain_sea') {
+            return false;
+        }
+
+        return className.indexOf('prodSite_') === 0;
+    };
+
+    $scope.canAddProductionSiteAtCoordinate = function (coord, productionSiteClass) {
+        var coordClass = productionSiteClass || $scope.getProductionSiteEligibilityClass(coord);
+        return $scope.isAllowedProductionSiteClass(coordClass);
+    };
+
+    $scope.getProductionSiteRowTypeNo = function (row) {
+        var rowTypeNo = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+        var parsed = parseInt(rowTypeNo, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    $scope.setProductionSiteRowValues = function (row, prodSiteTypeNo, x, y, productionSiteClass) {
+        row.prodSiteType = prodSiteTypeNo;
+        row.ProdSiteType = prodSiteTypeNo;
+        row.x = x;
+        row.X = x;
+        row.y = y;
+        row.Y = y;
+        row.prodSiteStatusClass = productionSiteClass || '';
+    };
+
+    $scope.addOrUpdateProductionSiteRecord = function (x, y, productionSiteClass) {
+        if (!$scope.tsBuildProductionSitesList) {
+            return;
+        }
+
+        var prodSiteTypeNo = $scope.getSelectedProductionSiteTypeNo();
+        if (prodSiteTypeNo == null) {
+            return;
+        }
+
+        var rowsAtCoord = [];
+        angular.forEach($scope.tsBuildProductionSitesList, function (row) {
+            var rowX = row.x != null ? row.x : row.X;
+            var rowY = row.y != null ? row.y : row.Y;
+
+            if (rowX == x && rowY == y) {
+                rowsAtCoord.push(row);
+            }
+        });
+
+        var selectedTypeRow = null;
+        angular.forEach(rowsAtCoord, function (row) {
+            if (!selectedTypeRow && $scope.getProductionSiteRowTypeNo(row) === prodSiteTypeNo) {
+                selectedTypeRow = row;
+            }
+        });
+
+        if (selectedTypeRow) {
+            $scope.setProductionSiteRowValues(selectedTypeRow, prodSiteTypeNo, x, y, productionSiteClass);
+            return;
+        }
+
+        var hasDemolitionRow = rowsAtCoord.some(function (row) {
+            return $scope.getProductionSiteRowTypeNo(row) === 1;
+        });
+
+        var canAddSecondRow = rowsAtCoord.length < 2 && (prodSiteTypeNo === 1 || hasDemolitionRow);
+
+        if (!canAddSecondRow && rowsAtCoord.length > 0) {
+            var rowToUpdate = rowsAtCoord[0];
+            angular.forEach(rowsAtCoord, function (row) {
+                if ($scope.getProductionSiteRowTypeNo(row) !== 1) {
+                    rowToUpdate = row;
+                }
+            });
+
+            $scope.setProductionSiteRowValues(rowToUpdate, prodSiteTypeNo, x, y, productionSiteClass);
+            return;
+        }
+
+        var firstAvailableRow = null;
+        angular.forEach($scope.tsBuildProductionSitesList, function (row) {
+            if (firstAvailableRow) {
+                return;
+            }
+
+            var rowX = row.x != null ? row.x : row.X;
+            var rowY = row.y != null ? row.y : row.Y;
+            if ((rowX == null || rowX === '') && (rowY == null || rowY === '')) {
+                firstAvailableRow = row;
+            }
+        });
+
+        if (firstAvailableRow) {
+            $scope.setProductionSiteRowValues(firstAvailableRow, prodSiteTypeNo, x, y, productionSiteClass);
+        }
+    };
+
+    $scope.getProductionSiteRowClass = function (row) {
+        if (!row) {
+            return '';
+        }
+
+        var rowClass = row.prodSiteStatusClass || '';
+        return $scope.isAllowedProductionSiteClass(rowClass) ? rowClass : '';
     };
 
     $scope.$watch('selectedMapChoice', function () {
@@ -764,6 +1427,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                     baseClass = baseClass + ' ' + displayField;
                 }
                 break;
+            case 'FormFederation':
+                baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
+                break;
             case 'Terrain':
                 baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea unitExists' : 'terrain_' + terrain;
                 break;
@@ -771,35 +1437,13 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 baseClass = 'state_' + state;
                 break;
             case 'ProductionSite':
-                if ($scope.selectedState == null || state == $scope.selectedState.state) {
-
-                    if (".+*".indexOf(terrain) > -1)
-                        baseClass = 'terrain_sea';
-                    else if ($scope.selectedProductionSite.bonusSymbol == bonusSymbol) {
-                        if (productionSite.trim().length > 0) baseClass = 'prodSite_Existing';
-                        else if (population < $scope.selectedProductionSite.minPopulation) baseClass = 'prodSite_TooFew';
-                        else if (population > $scope.selectedProductionSite.maxPopulation) baseClass = 'prodSite_TooMany';
-                        else baseClass = 'prodSite_Yes';
-                    }
-                    else if ($scope.selectedProductionSite.terrain.indexOf(terrain) > -1) {
-                        if (population < $scope.selectedProductionSite.minPopulation) baseClass = 'prodSite_TooFew';
-                        else if (population > $scope.selectedProductionSite.maxPopulation) baseClass = 'prodSite_TooMany';
-                        if ($scope.selectedProductionSite.siteTypeNo == "1") {
-                            if (productionSite.trim().length > 0)
-                                baseClass = 'prodSite_Yes';
-                            else
-                                baseClass = ' ';
-                        }
-                        if (productionSite.trim().length > 0) baseClass = 'prodSite_Existing';
-                        else baseClass = 'prodSite_Yes';
-
-                    } else if ($scope.selectedProductionSite.siteTypeNo == "21") {
-                        if (productionSite.trim().length > 0 && $scope.selectedProductionSite.terrain.indexOf(productionSite) > -1)
-                            baseClass = 'prodSite_Yes';
-                        else
-                            baseClass = ' ';
-                    }
-                }
+                baseClass = $scope.getProductionSiteEligibilityClass({
+                    terrain: terrain,
+                    state: state,
+                    population: population,
+                    productionSite: productionSite,
+                    bonus: bonusSymbol
+                });
                 break;
         }
 
@@ -879,6 +1523,51 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
     };
 
+    $scope.hasProductionSiteData = function (productionSiteRow) {
+        if (!productionSiteRow) {
+            return false;
+        }
+
+        var prodSiteType = productionSiteRow.prodSiteType != null ? productionSiteRow.prodSiteType : productionSiteRow.ProdSiteType;
+        var x = productionSiteRow.x != null ? productionSiteRow.x : productionSiteRow.X;
+        var y = productionSiteRow.y != null ? productionSiteRow.y : productionSiteRow.Y;
+
+        return prodSiteType != null || x != null || y != null;
+    };
+
+    $scope.removeProductionSiteRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        row.entity.prodSiteType = null;
+        row.entity.ProdSiteType = null;
+        row.entity.x = null;
+        row.entity.X = null;
+        row.entity.y = null;
+        row.entity.Y = null;
+    };
+
+    $scope.hasFormFederationItemNo = function (federationRow) {
+        if (!federationRow) {
+            return false;
+        }
+
+        var itemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
+        return itemNo != null && itemNo.toString().trim() !== '';
+    };
+
+    $scope.removeFormFederationRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        row.entity.itemNo = null;
+        row.entity.ItemNo = null;
+        row.entity.federation_Fleet = null;
+        row.entity.Federation_Fleet = null;
+    };
+
     $scope.movementGridOptions = {
         data: 'tsMovementList',
         headerRowHeight: 30,
@@ -903,6 +1592,31 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         enableCellEdit: false,
         multiSelect: false,
         rowTemplate: '<div ng-click="itemGridClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isItemAlreadyInMovementGrid(row.entity.itemNo) ? \"itemGridRowAlreadyAdded\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
+    $scope.productionSiteGridOptions = {
+        data: 'tsBuildProductionSitesList',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'productionSiteColumnDefsMap',
+        enableCellSelection: true,
+        enableRowSelection: true,
+        enableCellEdit: true,
+        enabledCellEditOnFocus: true,
+        multiSelect: false,
+        rowTemplate: '<div ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{getProductionSiteRowClass(row.entity)}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
+    $scope.formFederationGridOptions = {
+        data: 'tsFormFederationsList',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'formFederationColumnDefsMap',
+        enableCellSelection: true,
+        enableRowSelection: true,
+        enableCellEdit: true,
+        enabledCellEditOnFocus: true,
+        multiSelect: false
     };
 
     $scope.movementColumnDefsMap = [
@@ -934,6 +1648,21 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
         { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
         { field: 'description', displayName: 'Description', cellClass: 'grid-left-align' }
+    ];
+
+    $scope.productionSiteColumnDefsMap = [
+        { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'prodSiteType', displayName: 'Type', width: '65px', cellClass: 'grid-center-align' },
+        { field: 'x', displayName: 'X', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'y', displayName: 'Y', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasProductionSiteData(row.entity)" ng-click="removeProductionSiteRow(row)"></span></div>' }
+    ];
+
+    $scope.formFederationColumnDefsMap = [
+        { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
+        { field: 'federation_Fleet', displayName: 'Federation', width: '95px', cellClass: 'grid-center-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasFormFederationItemNo(row.entity)" ng-click="removeFormFederationRow(row)"></span></div>' }
     ];
 
     $scope.refreshFilteredMovementItemsForMap();
