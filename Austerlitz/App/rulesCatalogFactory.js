@@ -1,8 +1,9 @@
 ﻿austerlitzModule.factory('rulesCatalogFactory', function ($http, $q) {
     return {
-        getArmyList: function () {
+        getArmyList: function (state) {
             var deferred = $q.defer();
-            $http.get('/Api/RulesCatalogApi/getArmyList').success(deferred.resolve).error(deferred.reject);
+            var stateFilter = state ? ('?state=' + encodeURIComponent(state)) : '';
+            $http.get('/Api/RulesCatalogApi/getArmyList' + stateFilter).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
         getRefProductionSites: function () {

@@ -38,8 +38,44 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             });
         });
 
-    turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (tsFormFederationsList) {
-        $scope.tsFormFederationsList = (tsFormFederationsList || []).map(function (row) {
+        angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
+            if ($scope.mapCoordinates[item.y] && $scope.mapCoordinates[item.y][item.x]) {
+                $scope.mapCoordinates[item.y][item.x].units.push(item.itemNo);
+            }
+        });
+    };
+
+    $scope.autoSavePromises = {};
+
+    $scope.normalizeBuildProductionSiteRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+            row.x = row.x != null ? row.x : row.X;
+            row.y = row.y != null ? row.y : row.Y;
+
+            row.OrderNo = row.orderNo;
+            row.ProdSiteType = row.prodSiteType;
+            row.X = row.x;
+            row.Y = row.y;
+            return row;
+        });
+    };
+
+    $scope.refreshSetUpBrigadesRows = function () {
+        if (!$scope.tsSetUpBrigadesList) {
+            $scope.tsSetUpBrigadesRows = [];
+            return;
+        }
+
+        $scope.tsSetUpBrigadesRows = $scope.tsSetUpBrigadesList.filter(function (row) {
+            var orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            return orderNo != null && parseInt(orderNo, 10) <= 8;
+        });
+    };
+
+    $scope.normalizeFormFederationRows = function (rows) {
+        return (rows || []).map(function (row) {
             row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
             row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
             row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
@@ -47,17 +83,326 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             row.OrderNo = row.orderNo;
             row.ItemNo = row.itemNo;
             row.Federation_Fleet = row.federation_Fleet;
-
             return row;
         });
-    });
+    };
 
-        angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
-            if ($scope.mapCoordinates[item.y] && $scope.mapCoordinates[item.y][item.x]) {
-                $scope.mapCoordinates[item.y][item.x].units.push(item.itemNo);
+    $scope.normalizeSetUpBrigadesRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.depot = row.depot != null ? row.depot : row.Depot;
+            row.brigadeName = row.brigadeName != null ? row.brigadeName : row.BrigadeName;
+
+            if (row.depot == null || row.depot === '') {
+                row.brigadeName = '';
             }
+
+            row.OrderNo = row.orderNo;
+            row.Depot = row.depot;
+            row.BrigadeName = row.brigadeName;
+            return row;
         });
     };
+
+    $scope.normalizeTransferGoodsRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.OrderNo = row.orderNo;
+            return row;
+        });
+    };
+
+    $scope.refreshTransferGoodsCostRows = function () {
+        if (!$scope.tsTransferGoodsList) {
+            $scope.tsTransferGoodsCostRows = [];
+            return;
+        }
+
+        $scope.tsTransferGoodsCostRows = $scope.tsTransferGoodsList.filter(function (row) {
+            var orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            if (orderNo == null || parseInt(orderNo, 10) > 3) {
+                return false;
+            }
+
+            var from = row.from != null ? row.from : row.From;
+            var louisdore = row.louisdore != null ? row.louisdore : row.Louisdore;
+            var citizens = row.citizens != null ? row.citizens : row.Citizens;
+            var ecPts = row.ecPts != null ? row.ecPts : row.EcPts;
+            var horses = row.horses != null ? row.horses : row.Horses;
+
+            return from != null || louisdore != null || citizens != null || ecPts != null || horses != null;
+        });
+    };
+
+    $scope.getTransferCostRow = function (warehouseNo) {
+        if (!$scope.tsTransferGoodsList) {
+            return null;
+        }
+
+        for (var i = 0; i < $scope.tsTransferGoodsList.length; i++) {
+            var orderNo = $scope.tsTransferGoodsList[i].orderNo != null ? $scope.tsTransferGoodsList[i].orderNo : $scope.tsTransferGoodsList[i].OrderNo;
+            if (orderNo == warehouseNo) {
+                return $scope.tsTransferGoodsList[i];
+            }
+        }
+
+        return $scope.tsTransferGoodsList[warehouseNo - 1] || null;
+    };
+
+    $scope.getTurnStateCodeForArmyList = function () {
+        if ($scope.masterData && $scope.masterData.turnId && $scope.masterData.turnId.length >= 4) {
+            return $scope.masterData.turnId.substr(3, 1);
+        }
+        return ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : 'E');
+    };
+
+    $scope.loadArmyListForTurnState = function () {
+        var stateCode = ($scope.getTurnStateCodeForArmyList() || 'E').toString().trim().toUpperCase();
+        var mapId = ($scope.selectedMapChoice && $scope.selectedMapChoice.mapId ? $scope.selectedMapChoice.mapId : '').toString().toUpperCase();
+        var isEuropeSphere = mapId === 'E' || mapId === 'EW' || mapId === 'EE';
+
+        rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
+            $scope.armyListRows = (armyList || []).filter(function (item) {
+                var itemNo = item.itemNo != null ? item.itemNo : item.ItemNo;
+                var parsedItemNo = parseInt(itemNo, 10);
+                if (itemNo == null || isNaN(parsedItemNo) || parsedItemNo % 2 === 0) {
+                    return false;
+                }
+
+                if (isEuropeSphere && (parsedItemNo === 17 || parsedItemNo === 37 || parsedItemNo === 39)) {
+                    return false;
+                }
+
+                if (!isEuropeSphere && parsedItemNo === 19) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+        });
+    };
+
+    $scope.getSphereFromCoordinate = function (x, y) {
+        var px = parseInt(x, 10);
+        var py = parseInt(y, 10);
+
+        if (isNaN(px) || isNaN(py)) {
+            return null;
+        }
+
+        if (px <= 80 && py <= 65) return 'Europe';
+        if (px <= 40 && py <= 99) return 'Carribbean';
+        if (px <= 90 && py <= 99) return 'India';
+        return null;
+    };
+
+    $scope.getDepotReferenceByItemNo = function (depotItemNo) {
+        if (!$scope.masterData || !$scope.masterData.turnReport || depotItemNo == null) {
+            return null;
+        }
+
+        var barracks = $scope.masterData.turnReport.barracks || $scope.masterData.turnReport.Barracks || [];
+        for (var i = 0; i < barracks.length; i++) {
+            var itemNo = barracks[i].itemNo != null ? barracks[i].itemNo : barracks[i].ItemNo;
+            if (itemNo == depotItemNo) {
+                return barracks[i];
+            }
+        }
+
+        var ports = $scope.masterData.turnReport.tradingPortsAndCities || $scope.masterData.turnReport.TradingPortsAndCities || [];
+        for (var j = 0; j < ports.length; j++) {
+            var portNo = ports[j].itemNo != null ? ports[j].itemNo : ports[j].ItemNo;
+            if (portNo == depotItemNo) {
+                return ports[j];
+            }
+        }
+
+        return null;
+    };
+
+    $scope.getSphereFromDepotItemNo = function (depotItemNo) {
+        var depotRef = $scope.getDepotReferenceByItemNo(depotItemNo);
+        if (!depotRef) {
+            return null;
+        }
+
+        var x = depotRef.x != null ? depotRef.x : depotRef.X;
+        var y = depotRef.y != null ? depotRef.y : depotRef.Y;
+        return $scope.getSphereFromCoordinate(x, y);
+    };
+
+    $scope.getArmyListItemByItemNo = function (itemNo) {
+        if (!$scope.armyListRows || itemNo == null) {
+            return null;
+        }
+
+        for (var i = 0; i < $scope.armyListRows.length; i++) {
+            var armyItemNo = $scope.armyListRows[i].itemNo != null ? $scope.armyListRows[i].itemNo : $scope.armyListRows[i].ItemNo;
+            if (armyItemNo == itemNo) {
+                return $scope.armyListRows[i];
+            }
+        }
+
+        return null;
+    };
+
+    $scope.canAddArmyItemToDepotSphere = function (armyItemNo, sphere) {
+        var parsedItemNo = parseInt(armyItemNo, 10);
+        if (isNaN(parsedItemNo)) {
+            return false;
+        }
+
+        if (parsedItemNo === 19) {
+            return sphere === 'Europe';
+        }
+
+        if (parsedItemNo === 17 || parsedItemNo === 37 || parsedItemNo === 39) {
+            return sphere === 'Carribbean' || sphere === 'India';
+        }
+
+        return true;
+    };
+
+    $scope.recalculateTransferGoodsForSetUpBrigades = function () {
+        if (!$scope.tsSetUpBrigadesList || !$scope.tsTransferGoodsList) {
+            return;
+        }
+
+        var totalsByWarehouse = {
+            1: { money: 0, citizens: 0, ecPts: 0, horses: 0 },
+            2: { money: 0, citizens: 0, ecPts: 0, horses: 0 },
+            3: { money: 0, citizens: 0, ecPts: 0, horses: 0 }
+        };
+
+        var battalionFields = ['batt1', 'batt2', 'batt3', 'batt4', 'batt5', 'batt6', 'batt7'];
+
+        angular.forEach($scope.tsSetUpBrigadesList, function (setUpRow) {
+            var depotItemNo = setUpRow.depot != null ? setUpRow.depot : setUpRow.Depot;
+            var sphere = $scope.getSphereFromDepotItemNo(depotItemNo);
+            var warehouseNo = sphere === 'Europe' ? 1 : (sphere === 'Carribbean' ? 2 : (sphere === 'India' ? 3 : null));
+            if (!warehouseNo) {
+                return;
+            }
+
+            angular.forEach(battalionFields, function (field) {
+                var battItemNo = setUpRow[field] != null ? setUpRow[field] : setUpRow[field.charAt(0).toUpperCase() + field.substr(1)];
+                if (!battItemNo) {
+                    return;
+                }
+
+                var armyItem = $scope.getArmyListItemByItemNo(battItemNo);
+                if (!armyItem) {
+                    return;
+                }
+
+                var recruits = 800;
+                var coCost = parseFloat(armyItem.cost != null ? armyItem.cost : armyItem.Cost);
+                var ecPtsPer25 = parseFloat(armyItem.ecPtsPer25 != null ? armyItem.ecPtsPer25 : armyItem.EcPtsPer25);
+                var isCavalry = !!(armyItem.isCavalry != null ? armyItem.isCavalry : armyItem.IsCavalry);
+                var shortName = (armyItem.shortName || armyItem.ShortName || '').toString();
+                var name = (armyItem.name || armyItem.Name || '').toString();
+                var isMounted = isCavalry || /mounted/i.test(name) || /^mc$/i.test(shortName);
+
+                if (isNaN(coCost)) coCost = 0;
+                if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
+
+                totalsByWarehouse[warehouseNo].citizens += recruits;
+                totalsByWarehouse[warehouseNo].money += (recruits * coCost);
+                totalsByWarehouse[warehouseNo].ecPts += (Math.ceil(recruits / 25) * ecPtsPer25);
+                if (isMounted) {
+                    totalsByWarehouse[warehouseNo].horses += recruits;
+                }
+            });
+        });
+
+        for (var warehouse = 1; warehouse <= 3; warehouse++) {
+            var transferRow = $scope.getTransferCostRow(warehouse);
+            if (!transferRow) {
+                continue;
+            }
+
+            transferRow.louisdore = Math.round(totalsByWarehouse[warehouse].money);
+            transferRow.Louisdore = Math.round(totalsByWarehouse[warehouse].money);
+            transferRow.citizens = totalsByWarehouse[warehouse].citizens;
+            transferRow.Citizens = totalsByWarehouse[warehouse].citizens;
+            transferRow.ecPts = Math.round(totalsByWarehouse[warehouse].ecPts);
+            transferRow.EcPts = Math.round(totalsByWarehouse[warehouse].ecPts);
+            transferRow.horses = totalsByWarehouse[warehouse].horses;
+            transferRow.Horses = totalsByWarehouse[warehouse].horses;
+
+            var hasBuildCost = transferRow.Louisdore > 0 || transferRow.Citizens > 0 || transferRow.EcPts > 0 || transferRow.Horses > 0;
+            if (hasBuildCost) {
+                transferRow.from = warehouse;
+                transferRow.From = warehouse;
+            } else {
+                transferRow.from = null;
+                transferRow.From = null;
+                transferRow.louisdore = null;
+                transferRow.Louisdore = null;
+                transferRow.citizens = null;
+                transferRow.Citizens = null;
+                transferRow.ecPts = null;
+                transferRow.EcPts = null;
+                transferRow.horses = null;
+                transferRow.Horses = null;
+            }
+        }
+
+        $scope.refreshTransferGoodsCostRows();
+
+        $scope.queueAutoSaveTsGrid('TransferGoods');
+    };
+
+    $scope.queueAutoSaveTsGrid = function (tsType) {
+        if ($scope.autoSavePromises[tsType]) {
+            $timeout.cancel($scope.autoSavePromises[tsType]);
+        }
+
+        $scope.autoSavePromises[tsType] = $timeout(function () {
+            var records = null;
+            if (tsType === 'Movement') records = $scope.tsMovementList;
+            if (tsType === 'BuildProductionSites') records = $scope.tsBuildProductionSitesList;
+            if (tsType === 'FormFederations') records = $scope.tsFormFederationsList;
+            if (tsType === 'SetUpBrigades') records = $scope.tsSetUpBrigadesList;
+            if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
+
+            if (!records) return;
+
+            turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
+                if (tsType === 'BuildProductionSites') $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(savedRows);
+                if (tsType === 'FormFederations') $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(savedRows);
+                if (tsType === 'SetUpBrigades') {
+                    $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(savedRows);
+                    $scope.refreshSetUpBrigadesRows();
+                }
+                if (tsType === 'TransferGoods') {
+                    $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
+                    $scope.refreshTransferGoodsCostRows();
+                }
+                if (tsType === 'Movement') $scope.tsMovementList = savedRows;
+            });
+        }, 100);
+    };
+
+    $scope.$on('ngGridEventEndCellEdit', function () {
+        if ($scope.isProductionSiteMode()) {
+            $scope.queueAutoSaveTsGrid('BuildProductionSites');
+            return;
+        }
+        if ($scope.isFormFederationMode()) {
+            $scope.queueAutoSaveTsGrid('FormFederations');
+            return;
+        }
+        if ($scope.isSetUpBrigadesMode()) {
+            $scope.queueAutoSaveTsGrid('SetUpBrigades');
+            $scope.queueAutoSaveTsGrid('TransferGoods');
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+            return;
+        }
+        $scope.queueAutoSaveTsGrid('Movement');
+    });
 
     $scope.getJumpOffPointText = function (coord) {
         if (!coord) return '';
@@ -118,19 +463,23 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     });
 
     turnSheetFactory.getTSBuildProductionSites($scope.masterData.turnId).then(function (tsBuildProductionSitesList) {
-        $scope.tsBuildProductionSitesList = (tsBuildProductionSitesList || []).map(function (row) {
-            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-            row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
-            row.x = row.x != null ? row.x : row.X;
-            row.y = row.y != null ? row.y : row.Y;
+        $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(tsBuildProductionSitesList);
+    });
 
-            row.OrderNo = row.orderNo;
-            row.ProdSiteType = row.prodSiteType;
-            row.X = row.x;
-            row.Y = row.y;
+    turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (tsFormFederationsList) {
+        $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(tsFormFederationsList);
+    });
 
-            return row;
-        });
+    turnSheetFactory.getTSSetUpBrigades($scope.masterData.turnId).then(function (tsSetUpBrigadesList) {
+        $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(tsSetUpBrigadesList);
+        $scope.refreshSetUpBrigadesRows();
+        $scope.recalculateTransferGoodsForSetUpBrigades();
+    });
+
+    turnSheetFactory.getTSTransferGoods($scope.masterData.turnId).then(function (tsTransferGoodsList) {
+        $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(tsTransferGoodsList);
+        $scope.refreshTransferGoodsCostRows();
+        $scope.recalculateTransferGoodsForSetUpBrigades();
     });
 
     rulesCatalogFactory.getRefProductionSites().then(function (productionSiteList) {
@@ -153,110 +502,23 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             });
         }
 
-    $scope.autoSavePromises = {};
+        $scope.selectedState = selectedState || $scope.stateList[3];
+        $scope.loadArmyListForTurnState();
+    });
 
-    $scope.normalizeBuildProductionSiteRows = function (rows) {
-        return (rows || []).map(function (row) {
-            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-            row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
-            row.x = row.x != null ? row.x : row.X;
-            row.y = row.y != null ? row.y : row.Y;
-
-            row.OrderNo = row.orderNo;
-            row.ProdSiteType = row.prodSiteType;
-            row.X = row.x;
-            row.Y = row.y;
-
-            return row;
-        });
-    };
-
-    $scope.normalizeFormFederationRows = function (rows) {
-        return (rows || []).map(function (row) {
-            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-            row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-            row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
-
-            row.OrderNo = row.orderNo;
-            row.ItemNo = row.itemNo;
-            row.Federation_Fleet = row.federation_Fleet;
-
-            return row;
-        });
-    };
-
-    $scope.queueAutoSaveTsGrid = function (tsType) {
-        if ($scope.autoSavePromises[tsType]) {
-            $timeout.cancel($scope.autoSavePromises[tsType]);
-        }
-
-        $scope.autoSavePromises[tsType] = $timeout(function () {
-            var records = null;
-            if (tsType === 'Movement') {
-                records = $scope.tsMovementList;
-            } else if (tsType === 'BuildProductionSites') {
-                records = $scope.tsBuildProductionSitesList;
-            } else if (tsType === 'FormFederations') {
-                records = $scope.tsFormFederationsList;
-            }
-
-            if (!records) {
-                return;
-            }
-
-            turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
-                if (tsType === 'BuildProductionSites') {
-                    $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(savedRows);
-                } else if (tsType === 'FormFederations') {
-                    $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(savedRows);
-                } else if (tsType === 'Movement') {
-                    $scope.tsMovementList = savedRows;
-                }
-            });
-        }, 100);
-    };
-
-    $scope.$on('ngGridEventEndCellEdit', function (event) {
-        if ($scope.isProductionSiteMode()) {
-            $scope.queueAutoSaveTsGrid('BuildProductionSites');
-            return;
-        }
-
-        if ($scope.isFormFederationMode()) {
-            $scope.queueAutoSaveTsGrid('FormFederations');
-            return;
-        }
-
-        $scope.queueAutoSaveTsGrid('Movement');
+    rulesCatalogFactory.getRefTerrain().then(function (terrainList) {
+        $scope.terrainList = terrainList;
     });
 
     $scope.saveTSFormFederations = function () {
         turnSheetFactory.postTSRecords($scope.tsFormFederationsList, 'FormFederations').then(function (returnTsFormFederationsList) {
-            $scope.tsFormFederationsList = (returnTsFormFederationsList || []).map(function (row) {
-                row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-                row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
-
-                row.OrderNo = row.orderNo;
-                row.ItemNo = row.itemNo;
-                row.Federation_Fleet = row.federation_Fleet;
-
-                return row;
-            });
-
+            $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(returnTsFormFederationsList);
             alert('Turnsheet form federations saved and Excel federation section updated successfully.');
         }, function (error) {
             var detail = (error && error.data) ? error.data : '';
             alert('Form federations save failed.' + (detail ? ' ' + detail : ''));
         });
     }
-
-        $scope.selectedState = selectedState || $scope.stateList[3];
-    });
-
-    rulesCatalogFactory.getRefTerrain().then(function (terrainList) {
-        $scope.terrainList = terrainList;
-    });
 
     $scope.saveTSMovement = function () {
         turnSheetFactory.postTSRecords($scope.tsMovementList, 'Movement').then(function (returnTsMovementList) {
@@ -306,9 +568,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
     $scope.displayOptions = [{ name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
                              { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
+                             { name: 'SetUpBrigades', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }];
-    $scope.selectedDisplayOption = $scope.displayOptions[3];
+    $scope.selectedDisplayOption = $scope.displayOptions[5];
 
     $scope.changeDisplayOption = function () {
         var selectedOptions = [];
@@ -324,7 +587,17 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         $scope.selectedItemGridCoordinate = null;
         $scope.refreshItemGridRows();
+
+        if ($scope.isSetUpBrigadesMode()) {
+            $scope.loadArmyListForTurnState();
+        }
     };
+
+    $scope.$watch('selectedMapChoice.mapId', function () {
+        if ($scope.isSetUpBrigadesMode()) {
+            $scope.loadArmyListForTurnState();
+        }
+    });
 
     $scope.isProductionSiteMode = function () {
         return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'ProductionSite';
@@ -332,6 +605,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.isFormFederationMode = function () {
         return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'FormFederation';
+    };
+
+    $scope.isSetUpBrigadesMode = function () {
+        return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'SetUpBrigades';
     };
 
     $scope.toggleSelection = function toggleSelection(mapOption) {
@@ -342,6 +619,34 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             $scope.selectedMapOptions.splice(idx, 1);
         else
             $scope.selectedMapOptions.push(mapOption);
+    };
+
+    $scope.pendingDepotSourceItemNo = null;
+    $scope.selectedArmyListItem = null;
+
+    $scope.getDepotSourceItemNoAtCoordinate = function (x, y) {
+        if (!$scope.masterData || !$scope.masterData.turnReport) {
+            return null;
+        }
+
+        var barracks = $scope.masterData.turnReport.barracks || $scope.masterData.turnReport.Barracks || [];
+        for (var i = 0; i < barracks.length; i++) {
+            if (barracks[i].x == x && barracks[i].y == y) {
+                return barracks[i].itemNo || barracks[i].ItemNo;
+            }
+            if (barracks[i].X == x && barracks[i].Y == y) {
+                return barracks[i].ItemNo || barracks[i].itemNo;
+            }
+        }
+
+        var ports = $scope.masterData.turnReport.tradingPortsAndCities || $scope.masterData.turnReport.TradingPortsAndCities || [];
+        for (var j = 0; j < ports.length; j++) {
+            if ((ports[j].x == x && ports[j].y == y) || (ports[j].X == x && ports[j].Y == y)) {
+                return ports[j].itemNo || ports[j].ItemNo;
+            }
+        }
+
+        return null;
     };
 
     $scope.coordinateClick = function (x, y) {
@@ -359,6 +664,13 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
             if (selectedRoute) {
                 $scope.movementClickRow({ entity: movementRow });
+            }
+        }
+
+        if ($scope.isSetUpBrigadesMode()) {
+            var depotSourceNo = $scope.getDepotSourceItemNoAtCoordinate(x, y);
+            if (depotSourceNo) {
+                $scope.pendingDepotSourceItemNo = depotSourceNo;
             }
         }
 
@@ -1657,6 +1969,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                     baseClass = baseClass + ' ' + displayField;
                 }
                 break;
+            case 'SetUpBrigades':
+                baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
+                break;
             case 'FormFederation':
                 baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
                 break;
@@ -1804,6 +2119,164 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         $scope.queueAutoSaveTsGrid('FormFederations');
     };
 
+    $scope.hasSetUpBrigadesData = function (setUpRow) {
+        if (!setUpRow) {
+            return false;
+        }
+
+        return (setUpRow.depot != null && setUpRow.depot !== '')
+            || (setUpRow.batt1 != null && setUpRow.batt1 !== '')
+            || (setUpRow.batt2 != null && setUpRow.batt2 !== '')
+            || (setUpRow.batt3 != null && setUpRow.batt3 !== '')
+            || (setUpRow.batt4 != null && setUpRow.batt4 !== '')
+            || (setUpRow.batt5 != null && setUpRow.batt5 !== '')
+            || (setUpRow.batt6 != null && setUpRow.batt6 !== '')
+            || (setUpRow.batt7 != null && setUpRow.batt7 !== '')
+            || (!!setUpRow.brigadeName && setUpRow.brigadeName !== '<Brigade Name>');
+    };
+
+    $scope.removeSetUpBrigadesRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        row.entity.depot = null;
+        row.entity.Depot = null;
+        row.entity.batt1 = null;
+        row.entity.Batt1 = null;
+        row.entity.batt2 = null;
+        row.entity.Batt2 = null;
+        row.entity.batt3 = null;
+        row.entity.Batt3 = null;
+        row.entity.batt4 = null;
+        row.entity.Batt4 = null;
+        row.entity.batt5 = null;
+        row.entity.Batt5 = null;
+        row.entity.batt6 = null;
+        row.entity.Batt6 = null;
+        row.entity.batt7 = null;
+        row.entity.Batt7 = null;
+        row.entity.brigadeName = '';
+        row.entity.BrigadeName = '';
+
+        $scope.queueAutoSaveTsGrid('SetUpBrigades');
+        $scope.recalculateTransferGoodsForSetUpBrigades();
+    };
+
+    $scope.hasTransferGoodsData = function (transferRow) {
+        if (!transferRow) {
+            return false;
+        }
+
+        return (transferRow.from != null && transferRow.from !== '')
+            || (transferRow.to != null && transferRow.to !== '')
+            || (transferRow.louisdore != null && transferRow.louisdore !== '')
+            || (transferRow.citizens != null && transferRow.citizens !== '')
+            || (transferRow.ecPts != null && transferRow.ecPts !== '')
+            || (transferRow.wood != null && transferRow.wood !== '')
+            || (transferRow.horses != null && transferRow.horses !== '')
+            || (transferRow.textiles != null && transferRow.textiles !== '');
+    };
+
+    $scope.removeTransferGoodsRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        row.entity.from = null;
+        row.entity.From = null;
+        row.entity.to = null;
+        row.entity.To = null;
+        row.entity.louisdore = null;
+        row.entity.Louisdore = null;
+        row.entity.citizens = null;
+        row.entity.Citizens = null;
+        row.entity.ecPts = null;
+        row.entity.EcPts = null;
+        row.entity.wood = null;
+        row.entity.Wood = null;
+        row.entity.horses = null;
+        row.entity.Horses = null;
+        row.entity.textiles = null;
+        row.entity.Textiles = null;
+
+        $scope.queueAutoSaveTsGrid('TransferGoods');
+    };
+
+    $scope.armyListClickRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        $scope.selectedArmyListItem = row.entity;
+    };
+
+    $scope.isArmyListItemSelected = function (armyItem) {
+        if (!armyItem || !$scope.selectedArmyListItem) {
+            return false;
+        }
+
+        return armyItem.itemNo == $scope.selectedArmyListItem.itemNo
+            || armyItem.ItemNo == $scope.selectedArmyListItem.ItemNo;
+    };
+
+    $scope.setUpBrigadesGridClick = function (row, col) {
+        if (!row || !row.entity || !col) {
+            return;
+        }
+
+        var field = (col.field || '').toLowerCase();
+
+        if (field === 'depot') {
+            if (!$scope.pendingDepotSourceItemNo) {
+                alert('Select a barracks/shipyard coordinate first.');
+                return;
+            }
+
+            row.entity.depot = $scope.pendingDepotSourceItemNo;
+            row.entity.Depot = $scope.pendingDepotSourceItemNo;
+            $scope.queueAutoSaveTsGrid('SetUpBrigades');
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+            return;
+        }
+
+        var battFields = ['batt1', 'batt2', 'batt3', 'batt4', 'batt5', 'batt6', 'batt7'];
+        if (battFields.indexOf(field) > -1) {
+            if (!$scope.selectedArmyListItem) {
+                alert('Select an army list row first.');
+                return;
+            }
+
+            var unitItemNo = $scope.selectedArmyListItem.itemNo != null ? $scope.selectedArmyListItem.itemNo : $scope.selectedArmyListItem.ItemNo;
+            var depotItemNo = row.entity.depot != null ? row.entity.depot : row.entity.Depot;
+            var sphere = $scope.getSphereFromDepotItemNo(depotItemNo);
+            if (!sphere) {
+                alert('Select a depot in this TS_03 row before adding battalions.');
+                return;
+            }
+
+            if (!$scope.canAddArmyItemToDepotSphere(unitItemNo, sphere)) {
+                alert('This troop type cannot be built in the selected sphere.');
+                return;
+            }
+
+            row.entity[field] = unitItemNo;
+
+            var pascalField = field.charAt(0).toUpperCase() + field.substr(1);
+            row.entity[pascalField] = unitItemNo;
+
+            var brigadeName = row.entity.brigadeName != null ? row.entity.brigadeName : row.entity.BrigadeName;
+            if (!brigadeName || brigadeName === '<Brigade Name>') {
+                var unitName = $scope.selectedArmyListItem.name || $scope.selectedArmyListItem.Name;
+                row.entity.brigadeName = unitName;
+                row.entity.BrigadeName = unitName;
+            }
+
+            $scope.queueAutoSaveTsGrid('SetUpBrigades');
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+        }
+    };
+
     $scope.movementGridOptions = {
         data: 'tsMovementList',
         headerRowHeight: 30,
@@ -1855,6 +2328,43 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         multiSelect: false
     };
 
+    $scope.setUpBrigadesGridOptions = {
+        data: 'tsSetUpBrigadesRows',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'setUpBrigadesColumnDefsMap',
+        enableCellSelection: true,
+        enableRowSelection: true,
+        enableCellEdit: true,
+        enabledCellEditOnFocus: true,
+        multiSelect: false,
+        rowTemplate: '<div ng-click="setUpBrigadesGridClick(row, col)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
+    $scope.transferGoodsGridOptions = {
+        data: 'tsTransferGoodsCostRows',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'transferGoodsColumnDefsMap',
+        enableCellSelection: true,
+        enableRowSelection: true,
+        enableCellEdit: true,
+        enabledCellEditOnFocus: true,
+        multiSelect: false
+    };
+
+    $scope.armyListGridOptions = {
+        data: 'armyListRows',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'armyListColumnDefsMap',
+        enableCellSelection: false,
+        enableRowSelection: true,
+        enableCellEdit: false,
+        multiSelect: false,
+        rowTemplate: '<div ng-click="armyListClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isArmyListItemSelected(row.entity) ? "itemGridRowSelected" : ""}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
     $scope.movementColumnDefsMap = [
         { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
 
@@ -1899,6 +2409,47 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
         { field: 'federation_Fleet', displayName: 'Federation', width: '95px', cellClass: 'grid-center-align' },
         { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasFormFederationItemNo(row.entity)" ng-click="removeFormFederationRow(row)"></span></div>' }
+    ];
+
+    $scope.setUpBrigadesColumnDefsMap = [
+        { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'depot', displayName: 'Depot', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'batt1', displayName: 'Batt1', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt2', displayName: 'Batt2', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt3', displayName: 'Batt3', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt4', displayName: 'Batt4', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt5', displayName: 'Batt5', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt6', displayName: 'Batt6', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'batt7', displayName: 'Batt7', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'brigadeName', displayName: 'Brigade Name', cellClass: 'grid-left-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasSetUpBrigadesData(row.entity)" ng-click="removeSetUpBrigadesRow(row)"></span></div>' }
+    ];
+
+    $scope.transferGoodsColumnDefsMap = [
+        { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'from', displayName: 'From', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'to', displayName: 'To', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'louisdore', displayName: 'Louisdore', width: '75px', cellClass: 'grid-center-align' },
+        { field: 'citizens', displayName: 'Citizens', width: '65px', cellClass: 'grid-center-align' },
+        { field: 'ecPts', displayName: 'EcPts', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'wood', displayName: 'Wood', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'horses', displayName: 'Horses', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'textiles', displayName: 'Textiles', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasTransferGoodsData(row.entity)" ng-click="removeTransferGoodsRow(row)"></span></div>' }
+    ];
+
+    $scope.armyListColumnDefsMap = [
+        { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
+        { field: 'name', displayName: 'Name', width: '120px', cellClass: 'grid-left-align' },
+        { field: 'shortName', displayName: 'Short', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'lr', displayName: 'LR', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'rg', displayName: 'RG', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'simMP', displayName: 'SimMP', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'mp', displayName: 'MP', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'ef', displayName: 'EF', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'hc', displayName: 'HC', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'formation', displayName: 'Formation', width: '80px', cellClass: 'grid-center-align' },
+        { field: 'troopSpecification', displayName: 'Spec', cellClass: 'grid-left-align' }
     ];
 
     $scope.refreshFilteredMovementItemsForMap();

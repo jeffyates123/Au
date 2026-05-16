@@ -1,7 +1,7 @@
 <div style="padding-left:0px; padding-right:0px;">
-    <div class="window">
+    <div class="window" ng-class="{'window-setupBrigades': isSetUpBrigadesMode()}">
         <div class="master" style="flex-direction:column;">
-            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode()" ng-grid="movementGridOptions">
+            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isSetUpBrigadesMode()" ng-grid="movementGridOptions">
             </div>
 
             <div class="movementGridStyle" ng-if="isProductionSiteMode()" ng-grid="productionSiteGridOptions">
@@ -10,7 +10,16 @@
             <div class="movementGridStyle" ng-if="isFormFederationMode()" ng-grid="formFederationGridOptions">
             </div>
 
-            <div class="itemGridStyle" ng-if="!isProductionSiteMode()" ng-grid="itemGridOptions">
+            <div class="setupBrigadesGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="setUpBrigadesGridOptions">
+            </div>
+
+            <div class="transferGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="transferGoodsGridOptions">
+            </div>
+
+            <div class="armyListGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="armyListGridOptions">
+            </div>
+
+            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isSetUpBrigadesMode()" ng-grid="itemGridOptions">
             </div>
 
         </div>

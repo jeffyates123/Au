@@ -338,6 +338,12 @@ namespace Austerlitz.Controllers
         }
 
         [HttpPost]
+        public bool PostSaveTurnsheetSpreadsheet(string turnId)
+        {
+            return SaveTurnsheetSpreadsheet(turnId);
+        }
+
+        [HttpPost]
         public bool SaveTurnsheetSpreadsheet(string turnId)
         {
             if (string.IsNullOrWhiteSpace(turnId))

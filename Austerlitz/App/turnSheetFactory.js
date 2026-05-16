@@ -13,7 +13,7 @@ austerlitzModule.factory('turnSheetFactory', function ($http, $q) {
         },
         saveTurnsheetSpreadsheet: function (turnId) {
             var deferred = $q.defer();
-            $http.post('/Api/TurnSheetApi/SaveTurnsheetSpreadsheet?turnId=' + encodeURIComponent(turnId || ''), null)
+            $http.post('/Api/TurnSheetApi/PostSaveTurnsheetSpreadsheet?turnId=' + encodeURIComponent(turnId || ''), null)
                 .success(deferred.resolve)
                 .error(deferred.reject);
             return deferred.promise;
