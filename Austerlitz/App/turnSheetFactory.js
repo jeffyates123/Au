@@ -11,6 +11,13 @@ austerlitzModule.factory('turnSheetFactory', function ($http, $q) {
             }).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
+        saveTurnsheetSpreadsheet: function (turnId) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnSheetApi/SaveTurnsheetSpreadsheet?turnId=' + encodeURIComponent(turnId || ''), null)
+                .success(deferred.resolve)
+                .error(deferred.reject);
+            return deferred.promise;
+        },
         getAllTurnsList: function () {
             var deferred = $q.defer();
             $http.get('/Api/TurnSheetApi/getAllTurnsList').success(deferred.resolve).error(deferred.reject);

@@ -23,7 +23,7 @@ function sendRegionalMapFile(file) {
     });
 };
 
-austerlitzModule.controller("turnMapsController", function ($scope, $routeParams, turnReportFactory, rulesCatalogFactory, turnSheetFactory, masterData) {
+austerlitzModule.controller("turnMapsController", function ($scope, $routeParams, $timeout, turnReportFactory, rulesCatalogFactory, turnSheetFactory, masterData) {
 
     $scope.masterData = masterData;
 
@@ -152,6 +152,83 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 }
             });
         }
+
+    $scope.autoSavePromises = {};
+
+    $scope.normalizeBuildProductionSiteRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+            row.x = row.x != null ? row.x : row.X;
+            row.y = row.y != null ? row.y : row.Y;
+
+            row.OrderNo = row.orderNo;
+            row.ProdSiteType = row.prodSiteType;
+            row.X = row.x;
+            row.Y = row.y;
+
+            return row;
+        });
+    };
+
+    $scope.normalizeFormFederationRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
+
+            row.OrderNo = row.orderNo;
+            row.ItemNo = row.itemNo;
+            row.Federation_Fleet = row.federation_Fleet;
+
+            return row;
+        });
+    };
+
+    $scope.queueAutoSaveTsGrid = function (tsType) {
+        if ($scope.autoSavePromises[tsType]) {
+            $timeout.cancel($scope.autoSavePromises[tsType]);
+        }
+
+        $scope.autoSavePromises[tsType] = $timeout(function () {
+            var records = null;
+            if (tsType === 'Movement') {
+                records = $scope.tsMovementList;
+            } else if (tsType === 'BuildProductionSites') {
+                records = $scope.tsBuildProductionSitesList;
+            } else if (tsType === 'FormFederations') {
+                records = $scope.tsFormFederationsList;
+            }
+
+            if (!records) {
+                return;
+            }
+
+            turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
+                if (tsType === 'BuildProductionSites') {
+                    $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(savedRows);
+                } else if (tsType === 'FormFederations') {
+                    $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(savedRows);
+                } else if (tsType === 'Movement') {
+                    $scope.tsMovementList = savedRows;
+                }
+            });
+        }, 100);
+    };
+
+    $scope.$on('ngGridEventEndCellEdit', function (event) {
+        if ($scope.isProductionSiteMode()) {
+            $scope.queueAutoSaveTsGrid('BuildProductionSites');
+            return;
+        }
+
+        if ($scope.isFormFederationMode()) {
+            $scope.queueAutoSaveTsGrid('FormFederations');
+            return;
+        }
+
+        $scope.queueAutoSaveTsGrid('Movement');
+    });
 
     $scope.saveTSFormFederations = function () {
         turnSheetFactory.postTSRecords($scope.tsFormFederationsList, 'FormFederations').then(function (returnTsFormFederationsList) {
@@ -378,7 +455,6 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             if (initialCoord != null) {
                 $scope.selectedMovementRow = row.entity;
                 $scope.selectedMovementItemCoordinate = { x: item.x, y: item.y };
-                row.entity.itemNo = item.itemNo;
                 row.entity.type = $scope.getItemTypeAbbrev(selectedItem);
                 row.entity.mp = item.mp;
 
@@ -785,12 +861,23 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.getItemFromItemNo = function (itemNo) {
         var rtnItem = {};
+        var parsedItemNo = parseInt(itemNo, 10);
 
         angular.forEach($scope.masterData.turnReport.movementItemList, function (item, index) {
-            var memberMatch = item.memberItemNos && item.memberItemNos.indexOf(parseInt(itemNo)) > -1;
-            if (item.itemNo == itemNo || memberMatch)
+            var originalItemNo = item.originalItemNo != null ? item.originalItemNo : item.OriginalItemNo;
+            if (originalItemNo == parsedItemNo) {
                 rtnItem = item;
+                return;
+            }
         });
+
+        if (!rtnItem || rtnItem.itemNo == null) {
+            angular.forEach($scope.masterData.turnReport.movementItemList, function (item, index) {
+                var memberMatch = item.memberItemNos && item.memberItemNos.indexOf(parsedItemNo) > -1;
+                if (item.itemNo == parsedItemNo || item.ItemNo == parsedItemNo || memberMatch)
+                    rtnItem = item;
+            });
+        }
 
         if (!rtnItem || rtnItem.itemNo == null) {
             rtnItem = $scope.getFederationMovementSummary(itemNo);
@@ -849,7 +936,6 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             if (movementRow.itemNo != null) {
                 var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo);
                 if (selectedItem && selectedItem.itemNo != null) {
-                    movementRow.itemNo = selectedItem.itemNo;
                     movementRow.type = $scope.getItemTypeAbbrev(selectedItem);
                 }
             }
@@ -877,17 +963,23 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 return $scope.filterMovementItemBySelectedMap(item);
             })
             .map(function (item) {
+                var originalItemNo = item.originalItemNo != null ? item.originalItemNo : item.OriginalItemNo;
+                var itemNo = originalItemNo != null ? originalItemNo : (item.itemNo != null ? item.itemNo : item.ItemNo);
+                var x = item.x != null ? item.x : item.X;
+                var y = item.y != null ? item.y : item.Y;
+
                 return {
-                    itemNo: item.originalItemNo || item.OriginalItemNo || item.itemNo || item.ItemNo,
+                    itemNo: itemNo,
+                    originalItemNo: itemNo,
                     fed: item.federationNo != null ? item.federationNo : item.FederationNo,
                     itemType: item.itemType != null ? item.itemType : item.ItemType,
                     shipTypeNo: item.shipTypeNo != null ? item.shipTypeNo : item.ShipTypeNo,
                     itemTypeName: $scope.getItemTypeAbbrev(item),
                     description: item.description || item.Description,
                     mp: item.originalMP != null ? item.originalMP : (item.OriginalMP != null ? item.OriginalMP : item.mp),
-                    x: item.x != null ? item.x : item.X,
-                    y: item.y != null ? item.y : item.Y,
-                    xy: (item.x != null ? item.x : item.X) + '/' + (item.y != null ? item.y : item.Y)
+                    x: x,
+                    y: y,
+                    xy: x + '/' + y
                 };
             })
             .sort(function (a, b) {
@@ -958,7 +1050,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
-        var selectedItemNo = row.entity.itemNo;
+        var selectedItemNo = row.entity.originalItemNo != null ? row.entity.originalItemNo : row.entity.itemNo;
         var selectedType = row.entity.itemTypeName;
         var selectedMp = row.entity.mp;
         var selectedXy = row.entity.xy;
@@ -997,6 +1089,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             firstAvailableRow.mp = selectedMp;
             firstAvailableRow.mpUsed = 0;
             firstAvailableRow.xy = selectedXy;
+            $scope.queueAutoSaveTsGrid('Movement');
         }
     };
 
@@ -1175,7 +1268,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
-        var sourceItemNo = row.entity.itemNo;
+        var sourceItemNo = row.entity.originalItemNo != null ? row.entity.originalItemNo : row.entity.itemNo;
         if (clickedFederationColumn && row.entity.fed != null && row.entity.fed !== '') {
             sourceItemNo = row.entity.fed;
         }
@@ -1184,8 +1277,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
-        if ($scope.isValueAlreadyUsedInMovementOrFormFederation(sourceItemNo)) {
-            alert('This unit/federation is already used in Movement or Form Federation grid.');
+        if ($scope.isItemAlreadyInFormFederationGrid(sourceItemNo)) {
+            alert('This unit/federation is already used in Form Federation grid.');
             return;
         }
 
@@ -1389,6 +1482,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         if (selectedTypeRow) {
             $scope.setProductionSiteRowValues(selectedTypeRow, prodSiteTypeNo, x, y, productionSiteClass);
+            $scope.queueAutoSaveTsGrid('BuildProductionSites');
             return;
         }
 
@@ -1407,6 +1501,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             });
 
             $scope.setProductionSiteRowValues(rowToUpdate, prodSiteTypeNo, x, y, productionSiteClass);
+            $scope.queueAutoSaveTsGrid('BuildProductionSites');
             return;
         }
 
@@ -1425,6 +1520,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
         if (firstAvailableRow) {
             $scope.setProductionSiteRowValues(firstAvailableRow, prodSiteTypeNo, x, y, productionSiteClass);
+            $scope.queueAutoSaveTsGrid('BuildProductionSites');
         }
     };
 
@@ -1655,6 +1751,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             $scope.clearDisplayField();
             $scope.clearRouteCandidates();
         }
+
+        $scope.queueAutoSaveTsGrid('Movement');
     };
 
     $scope.hasProductionSiteData = function (productionSiteRow) {
@@ -1680,6 +1778,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         row.entity.X = null;
         row.entity.y = null;
         row.entity.Y = null;
+
+        $scope.queueAutoSaveTsGrid('BuildProductionSites');
     };
 
     $scope.hasFormFederationItemNo = function (federationRow) {
@@ -1700,6 +1800,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         row.entity.ItemNo = null;
         row.entity.federation_Fleet = null;
         row.entity.Federation_Fleet = null;
+
+        $scope.queueAutoSaveTsGrid('FormFederations');
     };
 
     $scope.movementGridOptions = {

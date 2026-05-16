@@ -299,32 +299,14 @@ namespace Austerlitz.Controllers
         public TS_13BuildProductionSites[] PostTSBuildProductionSites(TS_13BuildProductionSites[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            var savedRows = turnReportManager.PostTSBuildProductionSites(saveRecords);
-
-            var firstRow = savedRows.FirstOrDefault();
-            if (firstRow != null)
-            {
-                var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
-                turnsheetExcelService.SaveBuildProductionSitesSection(firstRow.TurnId, savedRows);
-            }
-
-            return savedRows;
+            return turnReportManager.PostTSBuildProductionSites(saveRecords);
         }
 
         [HttpPost]
         public TS_14FormFederations[] PostTSFormFederations(TS_14FormFederations[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            var savedRows = turnReportManager.PostTSFormFederations(saveRecords);
-
-            var firstRow = savedRows.FirstOrDefault();
-            if (firstRow != null)
-            {
-                var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
-                turnsheetExcelService.SaveFormFederationsSection(firstRow.TurnId, savedRows);
-            }
-
-            return savedRows;
+            return turnReportManager.PostTSFormFederations(saveRecords);
         }
 
         [HttpPost]
@@ -352,12 +334,25 @@ namespace Austerlitz.Controllers
         public TS_18Movement[] PostTSMovement(TS_18Movement[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();
-            var savedRows = turnReportManager.PostTSMovement(saveRecords);
+            return turnReportManager.PostTSMovement(saveRecords);
+        }
 
+        [HttpPost]
+        public bool SaveTurnsheetSpreadsheet(string turnId)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                return false;
+            }
+
+            var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
             var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
-            turnsheetExcelService.SaveMovementSection(savedRows.First().TurnId, savedRows);
 
-            return savedRows;
+            turnsheetExcelService.SaveBuildProductionSitesSection(turnId, turnSheetManager.GetTSBuildProductionSites(turnId));
+            turnsheetExcelService.SaveFormFederationsSection(turnId, turnSheetManager.GetTSFormFederations(turnId));
+            turnsheetExcelService.SaveMovementSection(turnId, turnSheetManager.GetTSMovement(turnId));
+
+            return true;
         }
 
         [HttpPost]

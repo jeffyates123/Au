@@ -13,11 +13,6 @@
             <div class="itemGridStyle" ng-if="!isProductionSiteMode()" ng-grid="itemGridOptions">
             </div>
 
-            <div class="saveButton">
-                <button class="btn btn-info" tooltip-placement="right" tooltip="Save" ng-show="!isProductionSiteMode() && !isFormFederationMode()" ng-click="saveTSMovement()">Save Movement</button>
-                <button class="btn btn-info" tooltip-placement="right" tooltip="Save" ng-show="isProductionSiteMode()" ng-click="saveTSBuildProductionSites()">Save Production Sites</button>
-                <button class="btn btn-info" tooltip-placement="right" tooltip="Save" ng-show="isFormFederationMode()" ng-click="saveTSFormFederations()">Save Form Federations</button>
-            </div>
         </div>
 
 

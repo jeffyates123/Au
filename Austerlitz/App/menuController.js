@@ -66,6 +66,25 @@
         });
     };
 
+    $scope.saveTurnsheetSpreadsheet = function ($event) {
+        if ($event && $event.preventDefault) {
+            $event.preventDefault();
+        }
+
+        var turnId = $scope.masterData ? $scope.masterData.turnId : null;
+        if (!turnId || turnId === 'Unknown') {
+            alert('Select a valid turn before saving to spreadsheet.');
+            return;
+        }
+
+        turnSheetFactory.saveTurnsheetSpreadsheet(turnId).then(function () {
+            alert('Turnsheet spreadsheet saved successfully.');
+        }, function (error) {
+            var detail = (error && error.data) ? error.data : '';
+            alert('Spreadsheet save failed.' + (detail ? ' ' + detail : ''));
+        });
+    };
+
     $scope.getSelectedStateName = function () {
         var selectedState = ($scope.masterData && $scope.masterData.selectedState) ? $scope.masterData.selectedState : '';
         if (!selectedState) {

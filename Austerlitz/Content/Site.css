@@ -358,6 +358,15 @@ textarea {
     min-height: 60px;
 }
 
+.menuSpreadsheetSaveItem > a {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+}
+
 .stateMenuLinks .navbar-nav > li > a:hover,
 .stateMenuLinks .navbar-nav > li > a:focus {
     background-color: inherit !important;

@@ -57,6 +57,7 @@
                                   <li ng-class="{ active: isActive('/BrigadeCalculator') }"><a href="/BrigadeCalculator">BrigadeCalculator</a></li>
                                   <li ng-class="{ active: isActive('/Boarding') }"><a href="/Boarding">Boarding</a></li>
                                   <li ng-class="{ active: isActive('/SimBattle') }"><a href="/SimBattle">Sim Battles</a></li>
+                                  <li class="menuSpreadsheetSaveItem"><a href="" ng-click="saveTurnsheetSpreadsheet($event)">Save Spreadsheet</a></li>
                                   <li class="menuTurnInfoItem" ng-class="{ active: isActive('/home') }"><a href="/home"><div class="menuTurnRow"><span class="menuTurnValue">AU-{{masterData.selectedGameNo}}</span></div><div class="menuTurnRow"><span class="menuTurnValue">{{getSelectedMonthYearText()}}</span></div></a></li>
                               </ul>
                           </div>
