@@ -301,7 +301,7 @@ textarea {
 .setupBrigadesGridStyle {
     border: 1px solid rgb(212,212,212);
     width: 100%;
-    height: 220px;
+    height: 242px;
     font-size: 12px;
     font-family: Arial;
 }
@@ -318,7 +318,7 @@ textarea {
 .armyListGridStyle {
     border: 1px solid rgb(212,212,212);
     width: 100%;
-    height: 220px;
+    height: 600px;
     margin-top: 10px;
     font-size: 12px;
     font-family: Arial;
@@ -330,7 +330,7 @@ textarea {
 
 .window.window-setupBrigades .master {
     width: 45%;
-    height: 620px;
+    height: 752px;
 }
 
 .window.window-setupBrigades .detail {
