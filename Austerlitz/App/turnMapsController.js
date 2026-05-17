@@ -119,18 +119,14 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
 
         $scope.tsTransferGoodsCostRows = $scope.tsTransferGoodsList.filter(function (row) {
-            var orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-            if (orderNo == null || parseInt(orderNo, 10) > 3) {
-                return false;
-            }
-
             var from = row.from != null ? row.from : row.From;
+            var to = row.to != null ? row.to : row.To;
             var louisdore = row.louisdore != null ? row.louisdore : row.Louisdore;
             var citizens = row.citizens != null ? row.citizens : row.Citizens;
             var ecPts = row.ecPts != null ? row.ecPts : row.EcPts;
             var horses = row.horses != null ? row.horses : row.Horses;
 
-            return from != null || louisdore != null || citizens != null || ecPts != null || horses != null;
+            return from != null || to != null || louisdore != null || citizens != null || ecPts != null || horses != null;
         });
     };
 
@@ -270,20 +266,33 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
-        var totalsByWarehouse = {
-            1: { money: 0, citizens: 0, ecPts: 0, horses: 0 },
-            2: { money: 0, citizens: 0, ecPts: 0, horses: 0 },
-            3: { money: 0, citizens: 0, ecPts: 0, horses: 0 }
-        };
-
+        var totalsByDepot = {};
+        var depotOrder = [];
         var battalionFields = ['batt1', 'batt2', 'batt3', 'batt4', 'batt5', 'batt6', 'batt7'];
 
         angular.forEach($scope.tsSetUpBrigadesList, function (setUpRow) {
             var depotItemNo = setUpRow.depot != null ? setUpRow.depot : setUpRow.Depot;
+            if (depotItemNo == null || depotItemNo === '') {
+                return;
+            }
+
             var sphere = $scope.getSphereFromDepotItemNo(depotItemNo);
             var warehouseNo = sphere === 'Europe' ? 1 : (sphere === 'Carribbean' ? 2 : (sphere === 'India' ? 3 : null));
             if (!warehouseNo) {
                 return;
+            }
+
+            var depotKey = depotItemNo.toString();
+            if (!totalsByDepot[depotKey]) {
+                totalsByDepot[depotKey] = {
+                    from: warehouseNo,
+                    to: depotItemNo,
+                    money: 0,
+                    citizens: 0,
+                    ecPts: 0,
+                    horses: 0
+                };
+                depotOrder.push(depotKey);
             }
 
             angular.forEach(battalionFields, function (field) {
@@ -308,37 +317,55 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 if (isNaN(coCost)) coCost = 0;
                 if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
 
-                totalsByWarehouse[warehouseNo].citizens += recruits;
-                totalsByWarehouse[warehouseNo].money += (recruits * coCost);
-                totalsByWarehouse[warehouseNo].ecPts += (Math.ceil(recruits / 25) * ecPtsPer25);
+                totalsByDepot[depotKey].citizens += recruits;
+                totalsByDepot[depotKey].money += (recruits * coCost);
+                totalsByDepot[depotKey].ecPts += (Math.ceil(recruits / 25) * ecPtsPer25);
                 if (isMounted) {
-                    totalsByWarehouse[warehouseNo].horses += recruits;
+                    totalsByDepot[depotKey].horses += recruits;
                 }
             });
         });
 
-        for (var warehouse = 1; warehouse <= 3; warehouse++) {
-            var transferRow = $scope.getTransferCostRow(warehouse);
-            if (!transferRow) {
-                continue;
-            }
+        var transferLines = depotOrder.map(function (depotKey) {
+            var totals = totalsByDepot[depotKey];
+            return {
+                from: totals.from,
+                to: totals.to,
+                louisdore: Math.round(totals.money),
+                citizens: totals.citizens,
+                ecPts: Math.round(totals.ecPts),
+                horses: totals.horses
+            };
+        }).filter(function (line) {
+            return line.louisdore > 0 || line.citizens > 0 || line.ecPts > 0 || line.horses > 0;
+        });
 
-            transferRow.louisdore = Math.round(totalsByWarehouse[warehouse].money);
-            transferRow.Louisdore = Math.round(totalsByWarehouse[warehouse].money);
-            transferRow.citizens = totalsByWarehouse[warehouse].citizens;
-            transferRow.Citizens = totalsByWarehouse[warehouse].citizens;
-            transferRow.ecPts = Math.round(totalsByWarehouse[warehouse].ecPts);
-            transferRow.EcPts = Math.round(totalsByWarehouse[warehouse].ecPts);
-            transferRow.horses = totalsByWarehouse[warehouse].horses;
-            transferRow.Horses = totalsByWarehouse[warehouse].horses;
+        for (var i = 0; i < $scope.tsTransferGoodsList.length; i++) {
+            var transferRow = $scope.tsTransferGoodsList[i];
+            var line = i < transferLines.length ? transferLines[i] : null;
 
-            var hasBuildCost = transferRow.Louisdore > 0 || transferRow.Citizens > 0 || transferRow.EcPts > 0 || transferRow.Horses > 0;
-            if (hasBuildCost) {
-                transferRow.from = warehouse;
-                transferRow.From = warehouse;
+            if (line) {
+                transferRow.from = line.from;
+                transferRow.From = line.from;
+                transferRow.to = line.to;
+                transferRow.To = line.to;
+                transferRow.louisdore = line.louisdore;
+                transferRow.Louisdore = line.louisdore;
+                transferRow.citizens = line.citizens;
+                transferRow.Citizens = line.citizens;
+                transferRow.ecPts = line.ecPts;
+                transferRow.EcPts = line.ecPts;
+                transferRow.horses = line.horses;
+                transferRow.Horses = line.horses;
+                transferRow.wood = null;
+                transferRow.Wood = null;
+                transferRow.textiles = null;
+                transferRow.Textiles = null;
             } else {
                 transferRow.from = null;
                 transferRow.From = null;
+                transferRow.to = null;
+                transferRow.To = null;
                 transferRow.louisdore = null;
                 transferRow.Louisdore = null;
                 transferRow.citizens = null;
@@ -347,6 +374,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 transferRow.EcPts = null;
                 transferRow.horses = null;
                 transferRow.Horses = null;
+                transferRow.wood = null;
+                transferRow.Wood = null;
+                transferRow.textiles = null;
+                transferRow.Textiles = null;
             }
         }
 

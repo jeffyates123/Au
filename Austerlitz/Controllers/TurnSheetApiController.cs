@@ -354,6 +354,8 @@ namespace Austerlitz.Controllers
             var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
             var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
 
+            turnsheetExcelService.SaveTransferGoodsSection(turnId, turnSheetManager.GetTSTransferGoods(turnId));
+            turnsheetExcelService.SaveSetUpBrigadesSection(turnId, turnSheetManager.GetTSSetUpBrigades(turnId));
             turnsheetExcelService.SaveBuildProductionSitesSection(turnId, turnSheetManager.GetTSBuildProductionSites(turnId));
             turnsheetExcelService.SaveFormFederationsSection(turnId, turnSheetManager.GetTSFormFederations(turnId));
             turnsheetExcelService.SaveMovementSection(turnId, turnSheetManager.GetTSMovement(turnId));

@@ -13,12 +13,70 @@ namespace Austerlitz.Services
     {
         private const string TemplateFileName = "Excel Turnsheet.xlsx";
         private const string WorksheetName = "Sheet1$";
+        private const int TransferGoodsSectionHeaderRowFallback = 14;
+        private const int TransferGoodsDataRowOffset = 3;
+        private const int SetUpBrigadesSectionHeaderRowFallback = 37;
+        private const int SetUpBrigadesDataRowOffset = 3;
         private const int BuildProductionSitesSectionHeaderRowFallback = 158;
         private const int BuildProductionSitesDataRowOffset = 3;
         private const int FormFederationsSectionHeaderRowFallback = 169;
         private const int FormFederationsDataRowOffset = 3;
         private const int MovementSectionHeaderRowFallback = 213;
         private const int MovementDataRowOffset = 3;
+
+        public void SaveTransferGoodsSection(string turnId, IEnumerable<TS_01TransferGoods> transferGoodsRows)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("turnId is required.", nameof(turnId));
+            }
+
+            var rows = transferGoodsRows == null ? new TS_01TransferGoods[0] : transferGoodsRows.ToArray();
+
+            var workbookPath = GetOrCreateTurnsheetPath(turnId);
+            using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
+            {
+                connection.Open();
+
+                var headerRow = FindRowByFirstColumnValue(connection, "Transfer Goods") ?? TransferGoodsSectionHeaderRowFallback;
+                var firstDataRow = headerRow + TransferGoodsDataRowOffset;
+
+                for (var orderNo = 1; orderNo <= 10; orderNo++)
+                {
+                    var row = rows.Length >= orderNo
+                        ? rows[orderNo - 1]
+                        : new TS_01TransferGoods { TurnId = turnId, OrderNo = orderNo };
+                    WriteTransferGoodsRow(connection, firstDataRow + orderNo - 3, orderNo, row);
+                }
+            }
+        }
+
+        public void SaveSetUpBrigadesSection(string turnId, IEnumerable<TS_03SetUpBrigades> setUpBrigadesRows)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("turnId is required.", nameof(turnId));
+            }
+
+            var rows = setUpBrigadesRows == null ? new TS_03SetUpBrigades[0] : setUpBrigadesRows.ToArray();
+
+            var workbookPath = GetOrCreateTurnsheetPath(turnId);
+            using (var connection = new OleDbConnection(BuildConnectionString(workbookPath)))
+            {
+                connection.Open();
+
+                var headerRow = FindRowByFirstColumnValue(connection, "Set Up Brigades") ?? SetUpBrigadesSectionHeaderRowFallback;
+                var firstDataRow = headerRow + SetUpBrigadesDataRowOffset;
+
+                for (var orderNo = 1; orderNo <= 8; orderNo++)
+                {
+                    var row = rows.Length >= orderNo
+                        ? rows[orderNo - 1]
+                        : new TS_03SetUpBrigades { TurnId = turnId, OrderNo = orderNo };
+                    WriteSetUpBrigadesRow(connection, firstDataRow + orderNo - 3, orderNo, row);
+                }
+            }
+        }
 
         public void SaveBuildProductionSitesSection(string turnId, IEnumerable<TS_13BuildProductionSites> buildProductionSiteRows)
         {
@@ -157,34 +215,61 @@ namespace Austerlitz.Services
             return null;
         }
 
+        private static void WriteTransferGoodsRow(OleDbConnection connection, int excelRow, int orderNo, TS_01TransferGoods row)
+        {
+            //WriteCell(connection, excelRow, "A", orderNo.ToString());
+            WriteCell(connection, excelRow, "B", ToExcelNumberWhenPositive(row.From));
+            WriteCell(connection, excelRow, "C", ToExcelNumberWhenPositive(row.To));
+            WriteCell(connection, excelRow, "D", ToExcelNumberWhenPositive(row.Louisdore));
+            WriteCell(connection, excelRow, "E", ToExcelNumberWhenPositive(row.Citizens));
+            WriteCell(connection, excelRow, "F", ToExcelNumberWhenPositive(row.EcPts));
+            WriteCell(connection, excelRow, "G", ToExcelNumberWhenPositive(row.Wood));
+            WriteCell(connection, excelRow, "H", ToExcelNumberWhenPositive(row.Horses));
+            WriteCell(connection, excelRow, "I", ToExcelNumberWhenPositive(row.Textiles));
+        }
+
+        private static void WriteSetUpBrigadesRow(OleDbConnection connection, int excelRow, int orderNo, TS_03SetUpBrigades row)
+        {
+            //WriteCell(connection, excelRow, "A", orderNo.ToString());
+            WriteCell(connection, excelRow, "B", ToExcelNumber(row.Depot));
+            WriteCell(connection, excelRow, "C", ToExcelNumber(row.Batt1));
+            WriteCell(connection, excelRow, "D", ToExcelNumber(row.Batt2));
+            WriteCell(connection, excelRow, "E", ToExcelNumber(row.Batt3));
+            WriteCell(connection, excelRow, "F", ToExcelNumber(row.Batt4));
+            WriteCell(connection, excelRow, "G", ToExcelNumber(row.Batt5));
+            WriteCell(connection, excelRow, "H", ToExcelNumber(row.Batt6));
+            WriteCell(connection, excelRow, "I", ToExcelNumber(row.Batt7));
+            WriteCell(connection, excelRow, "J", ToExcelText(row.BrigadeName));
+        }
+
         private static void WriteMovementRow(OleDbConnection connection, int excelRow, int orderNo, TS_18Movement movement)
         {
             //WriteCell(connection, excelRow, "A", orderNo.ToString());
-            WriteCell(connection, excelRow, "B", ToExcelValue(movement.ItemNo));
-            WriteCell(connection, excelRow, "C", ToExcelValue(movement.Direction1));
-            WriteCell(connection, excelRow, "D", ToExcelValue(movement.Distance1));
-            WriteCell(connection, excelRow, "E", ToExcelValue(movement.Direction2));
-            WriteCell(connection, excelRow, "F", ToExcelValue(movement.Distance2));
-            WriteCell(connection, excelRow, "G", ToExcelValue(movement.Direction3));
-            WriteCell(connection, excelRow, "H", ToExcelValue(movement.Distance3));
+            WriteCell(connection, excelRow, "B", ToExcelNumber(movement.ItemNo));
+            WriteCell(connection, excelRow, "C", ToExcelNumber(movement.Direction1));
+            WriteCell(connection, excelRow, "D", ToExcelNumber(movement.Distance1));
+            WriteCell(connection, excelRow, "E", ToExcelNumber(movement.Direction2));
+            WriteCell(connection, excelRow, "F", ToExcelNumber(movement.Distance2));
+            WriteCell(connection, excelRow, "G", ToExcelNumber(movement.Direction3));
+            WriteCell(connection, excelRow, "H", ToExcelNumber(movement.Distance3));
         }
 
         private static void WriteBuildProductionSiteRow(OleDbConnection connection, int excelRow, int orderNo, TS_13BuildProductionSites row)
         {
             //WriteCell(connection, excelRow, "A", orderNo.ToString());
-            WriteCell(connection, excelRow, "B", ToExcelValue(row.ProdSiteType));
-            WriteCell(connection, excelRow, "C", ToExcelValue(row.X));
-            WriteCell(connection, excelRow, "D", ToExcelValue(row.Y));
+            WriteCell(connection, excelRow, "B", ToExcelNumber(row.ProdSiteType));
+            WriteCell(connection, excelRow, "C", ToExcelNumber(row.X));
+            WriteCell(connection, excelRow, "D", ToExcelNumber(row.Y));
         }
 
         private static void WriteFormFederationRow(OleDbConnection connection, int excelRow, TS_14FormFederations row)
         {
             //WriteCell(connection, excelRow, "A", orderNo.ToString());
-            WriteCell(connection, excelRow, "B", ToExcelValue(row.ItemNo));
-            WriteCell(connection, excelRow, "C", ToExcelValue(row.Federation_Fleet));
+            WriteCell(connection, excelRow, "B", ToExcelNumber(row.ItemNo));
+            WriteCell(connection, excelRow, "C", ToExcelNumber(row.Federation_Fleet));
         }
 
-        private static void WriteCell(OleDbConnection connection, int excelRow, string column, string value)
+        private static void WriteCell(OleDbConnection connection, int excelRow, string column, object value)
         {
             var singleRowRange = string.Format("[{0}{1}{2}:{1}{2}]", WorksheetName, column, excelRow);
             if (TryUpsertRangeCell(connection, singleRowRange, value))
@@ -204,7 +289,7 @@ namespace Austerlitz.Services
             throw new InvalidOperationException(string.Format("Excel cell write affected 0 rows for {0}{1}.", column, excelRow));
         }
 
-        private static bool TryUpsertRangeCell(OleDbConnection connection, string range, string value)
+        private static bool TryUpsertRangeCell(OleDbConnection connection, string range, object value)
         {
             try
             {
@@ -232,7 +317,11 @@ namespace Austerlitz.Services
 
                 var update = connection.CreateCommand();
                 update.CommandText = string.Format("UPDATE {0} SET [{1}] = ?", range, escapedFieldName);
-                update.Parameters.AddWithValue("@p1", safeValue);
+                var updateParam = update.Parameters.AddWithValue("@p1", safeValue);
+                if (value != null && value.GetType() == typeof(int))
+                {
+                    updateParam.DbType = System.Data.DbType.Int32;
+                }
 
                 var affected = update.ExecuteNonQuery();
                 if (affected > 0)
@@ -243,7 +332,11 @@ namespace Austerlitz.Services
                 // ACE sometimes reports 0 updated rows for range writes even though target is valid.
                 var insert = connection.CreateCommand();
                 insert.CommandText = string.Format("INSERT INTO {0} ([{1}]) VALUES (?)", range, escapedFieldName);
-                insert.Parameters.AddWithValue("@p1", safeValue);
+                var insertParam = insert.Parameters.AddWithValue("@p1", safeValue);
+                if (value != null && value.GetType() == typeof(int))
+                {
+                    insertParam.DbType = System.Data.DbType.Int32;
+                }
 
                 return insert.ExecuteNonQuery() > 0;
             }
@@ -253,9 +346,19 @@ namespace Austerlitz.Services
             }
         }
 
-        private static string ToExcelValue(int? value)
+        private static object ToExcelNumber(int? value)
         {
-            return value.HasValue ? value.Value.ToString() : string.Empty;
+            return value.HasValue ? (object)value.Value : string.Empty;
+        }
+
+        private static object ToExcelNumberWhenPositive(int? value)
+        {
+            return value.HasValue && value.Value > 0 ? (object)value.Value : string.Empty;
+        }
+
+        private static object ToExcelText(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? (object)string.Empty : value;
         }
     }
 }
