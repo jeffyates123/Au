@@ -2,6 +2,23 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
+# --- General rules ---
+# Build output
+**/bin/
+**/obj/
+# NuGet restore folder
+/packages/
+# Local tooling downloads
+/.tools/
+# Visual Studio / IDE state
+/.vs/
+*.user
+# Office lock files
+~$*.xlsx
+~$*.xls
+~$*.docx
+# --- Legacy explicit entries below (kept for safety) ---
+
 /.vs/CopilotSnapshots/382B68C98BB70D43B9F2374676628BE6
 /.vs/Austerlitz/copilot-chat/05bf84dc/sessions
 /.vs/Austerlitz/CopilotIndices/18.3.508.13148

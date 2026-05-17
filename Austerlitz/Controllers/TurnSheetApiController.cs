@@ -338,29 +338,43 @@ namespace Austerlitz.Controllers
         }
 
         [HttpPost]
-        public bool PostSaveTurnsheetSpreadsheet(string turnId)
+        public System.Web.Http.IHttpActionResult PostSaveTurnsheetSpreadsheet(string turnId)
         {
             return SaveTurnsheetSpreadsheet(turnId);
         }
 
         [HttpPost]
-        public bool SaveTurnsheetSpreadsheet(string turnId)
+        public System.Web.Http.IHttpActionResult SaveTurnsheetSpreadsheet(string turnId)
         {
             if (string.IsNullOrWhiteSpace(turnId))
             {
-                return false;
+                return Ok(false);
             }
 
-            var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
-            var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
+            try
+            {
+                var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
+                var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
 
-            turnsheetExcelService.SaveTransferGoodsSection(turnId, turnSheetManager.GetTSTransferGoods(turnId));
-            turnsheetExcelService.SaveSetUpBrigadesSection(turnId, turnSheetManager.GetTSSetUpBrigades(turnId));
-            turnsheetExcelService.SaveBuildProductionSitesSection(turnId, turnSheetManager.GetTSBuildProductionSites(turnId));
-            turnsheetExcelService.SaveFormFederationsSection(turnId, turnSheetManager.GetTSFormFederations(turnId));
-            turnsheetExcelService.SaveMovementSection(turnId, turnSheetManager.GetTSMovement(turnId));
+                turnsheetExcelService.SaveTransferGoodsSection(turnId, turnSheetManager.GetTSTransferGoods(turnId));
+                turnsheetExcelService.SaveSetUpBrigadesSection(turnId, turnSheetManager.GetTSSetUpBrigades(turnId));
+                turnsheetExcelService.SaveBuildProductionSitesSection(turnId, turnSheetManager.GetTSBuildProductionSites(turnId));
+                turnsheetExcelService.SaveFormFederationsSection(turnId, turnSheetManager.GetTSFormFederations(turnId));
+                turnsheetExcelService.SaveMovementSection(turnId, turnSheetManager.GetTSMovement(turnId));
 
-            return true;
+                return Ok(true);
+            }
+            catch (System.Exception ex)
+            {
+                var sb = new System.Text.StringBuilder();
+                for (var e = ex; e != null; e = e.InnerException)
+                {
+                    sb.AppendLine(e.GetType().FullName + ": " + e.Message);
+                    sb.AppendLine(e.StackTrace);
+                    sb.AppendLine("---");
+                }
+                return Content(System.Net.HttpStatusCode.InternalServerError, sb.ToString());
+            }
         }
 
         [HttpPost]
