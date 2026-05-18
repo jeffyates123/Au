@@ -1,7 +1,38 @@
 <div style="padding-left:0px; padding-right:0px;">
-    <div class="window" ng-class="{'window-setupBrigades': isSetUpBrigadesMode()}">
+    <div class="window" ng-class="{'window-setupBrigades': isSetUpBrigadesMode(), 'window-boarding': isBoardingMode()}">
         <div class="master" style="flex-direction:column;">
-            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isSetUpBrigadesMode()" ng-grid="movementGridOptions">
+            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isSetUpBrigadesMode() && !isBoardingMode()" ng-grid="movementGridOptions">
+            </div>
+
+            <div class="boardingGridTitle" ng-if="isBoardingMode()">Boarding</div>
+            <div class="movementGridStyle" ng-if="isBoardingMode()" ng-grid="boardingGridOptions">
+            </div>
+
+            <div class="boardingSummaryStyle" ng-if="isBoardingMode()">
+                <table class="table table-bordered table-condensed boardingSummaryTable">
+                    <thead>
+                        <tr>
+                            <th>War</th>
+                            <th>Merchant</th>
+                            <th>Load Cap.</th>
+                            <th>Brigades</th>
+                            <th>Other Units</th>
+                            <th>Weight</th>
+                            <th>Load</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{boardingSummary.war}}</td>
+                            <td>{{boardingSummary.merchant}}</td>
+                            <td>{{boardingSummary.loadCapacity}}</td>
+                            <td>{{boardingSummary.brigades}}</td>
+                            <td>{{boardingSummary.otherUnits}}</td>
+                            <td>{{boardingSummary.weight}}</td>
+                            <td><button type="button" class="btn btn-default btn-xs" ng-click="loadSelectedBoardingUnits()">Load</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="movementGridStyle" ng-if="isProductionSiteMode()" ng-grid="productionSiteGridOptions">
@@ -19,7 +50,10 @@
             <div class="armyListGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="armyListGridOptions">
             </div>
 
-            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isSetUpBrigadesMode()" ng-grid="itemGridOptions">
+            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isSetUpBrigadesMode() && !isBoardingMode()" ng-grid="itemGridOptions">
+            </div>
+
+            <div class="itemGridStyle" ng-if="isBoardingMode()" ng-grid="boardingItemGridOptions">
             </div>
 
         </div>

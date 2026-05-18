@@ -27,6 +27,123 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.masterData = masterData;
 
+    $scope.boardingSummary = {
+        war: 0,
+        merchant: 0,
+        loadCapacity: 0,
+        brigades: 0,
+        otherUnits: 0,
+        weight: 0
+    };
+
+    $scope.boardingSelectedLookup = {};
+    $scope.boardingLoadLookup = {};
+
+    $scope.getShipCatalogByType = function () {
+        var lookup = {};
+        var ships = ($scope.masterData && $scope.masterData.rulesCatalog && ($scope.masterData.rulesCatalog.ships || $scope.masterData.rulesCatalog.Ships)) || [];
+
+        angular.forEach(ships, function (ship) {
+            var shipType = ship.type != null ? ship.type : ship.Type;
+            if (shipType != null) {
+                lookup[shipType] = ship;
+            }
+        });
+
+        return lookup;
+    };
+
+    $scope.getBrigadeWeight = function (itemNo) {
+        if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.brigades) {
+            return 0;
+        }
+
+        var brigades = $scope.masterData.turnReport.brigades;
+        for (var i = 0; i < brigades.length; i++) {
+            if (brigades[i].itemNo == itemNo || brigades[i].ItemNo == itemNo) {
+                var totalMen = 0;
+                totalMen += parseInt(brigades[i].batt1Size != null ? brigades[i].batt1Size : brigades[i].Batt1Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt2Size != null ? brigades[i].batt2Size : brigades[i].Batt2Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt3Size != null ? brigades[i].batt3Size : brigades[i].Batt3Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt4Size != null ? brigades[i].batt4Size : brigades[i].Batt4Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt5Size != null ? brigades[i].batt5Size : brigades[i].Batt5Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt6Size != null ? brigades[i].batt6Size : brigades[i].Batt6Size, 10) || 0;
+                totalMen += parseInt(brigades[i].batt7Size != null ? brigades[i].batt7Size : brigades[i].Batt7Size, 10) || 0;
+                return totalMen * 2;
+            }
+        }
+
+        return 0;
+    };
+
+    $scope.isWarshipBoardingItem = function (item) {
+        if (!item) {
+            return false;
+        }
+
+        var itemType = parseInt(item.itemType, 10);
+        if (!isNaN(itemType)) {
+            return itemType === 2;
+        }
+
+        var itemTypeName = $scope.getItemTypeName(item.itemType);
+        return itemTypeName === 'Warship';
+    };
+
+    $scope.isMerchantBoardingItem = function (item) {
+        if (!item) {
+            return false;
+        }
+
+        var itemType = parseInt(item.itemType, 10);
+        if (!isNaN(itemType)) {
+            return itemType === 3;
+        }
+
+        var itemTypeName = $scope.getItemTypeName(item.itemType);
+        return itemTypeName === 'MerchantShip';
+    };
+
+    $scope.recalculateBoardingSummary = function () {
+        var summary = {
+            war: 0,
+            merchant: 0,
+            loadCapacity: 0,
+            brigades: 0,
+            otherUnits: 0,
+            weight: 0
+        };
+
+        var shipCatalogByType = $scope.getShipCatalogByType();
+
+        angular.forEach($scope.boardingItemRows || [], function (item) {
+            if (!item || !item.isSelected) {
+                return;
+            }
+
+            if ($scope.isWarshipBoardingItem(item)) {
+                summary.war++;
+                var warShip = shipCatalogByType[item.shipTypeNo];
+                summary.loadCapacity += parseInt(warShip && (warShip.loadCapacity != null ? warShip.loadCapacity : warShip.LoadCapacity), 10) || 0;
+            } else if ($scope.isMerchantBoardingItem(item)) {
+                summary.merchant++;
+                var merchantShip = shipCatalogByType[item.shipTypeNo];
+                summary.loadCapacity += parseInt(merchantShip && (merchantShip.loadCapacity != null ? merchantShip.loadCapacity : merchantShip.LoadCapacity), 10) || 0;
+            }
+
+            if (item.load) {
+                if (item.itemTypeName === 'Bg') {
+                    summary.brigades++;
+                    summary.weight += $scope.getBrigadeWeight(item.originalItemNo != null ? item.originalItemNo : item.itemNo);
+                } else if (!$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item)) {
+                    summary.otherUnits++;
+                }
+            }
+        });
+
+        $scope.boardingSummary = summary;
+    };
+
     $scope.attachUnitsToMapCoordinates = function () {
         if (!$scope.mapCoordinates || !$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
             return;
@@ -108,6 +225,23 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return (rows || []).map(function (row) {
             row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
             row.OrderNo = row.orderNo;
+            return row;
+        });
+    };
+
+    $scope.normalizeBoardingRows = function (rows) {
+        return (rows || []).map(function (row) {
+            row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
+            row.command = row.command != null ? row.command : row.Command;
+            row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            row.fleetNo = row.fleetNo != null ? row.fleetNo : row.FleetNo;
+            row.fleetOwner = row.fleetOwner != null ? row.fleetOwner : row.FleetOwner;
+
+            row.OrderNo = row.orderNo;
+            row.Command = row.command;
+            row.ItemNo = row.itemNo;
+            row.FleetNo = row.fleetNo;
+            row.FleetOwner = row.fleetOwner;
             return row;
         });
     };
@@ -386,6 +520,114 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         $scope.queueAutoSaveTsGrid('TransferGoods');
     };
 
+    $scope.getFirstSelectedShipFleetNo = function () {
+        var fleetNo = null;
+
+        angular.forEach($scope.boardingItemRows || [], function (item) {
+            if (fleetNo != null || !item || !item.isSelected) {
+                return;
+            }
+
+            if (!$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item)) {
+                return;
+            }
+
+            if (item.fed != null && item.fed !== '') {
+                fleetNo = item.fed;
+            }
+        });
+
+        return fleetNo;
+    };
+
+    $scope.getBoardingUnitsToLoad = function () {
+        return ($scope.boardingItemRows || []).filter(function (item) {
+            if (!item || !item.isSelected || !item.load) {
+                return false;
+            }
+
+            return !$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item);
+        });
+    };
+
+    $scope.loadSelectedBoardingUnits = function () {
+        if (!$scope.tsBoardingList || !$scope.tsBoardingList.length) {
+            return;
+        }
+
+        var unitsToLoad = $scope.getBoardingUnitsToLoad();
+        if (!unitsToLoad.length) {
+            return;
+        }
+
+        var emptyRows = $scope.tsBoardingList.filter(function (row) {
+            var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
+            return rowItemNo == null || rowItemNo === '';
+        });
+
+        if (emptyRows.length < unitsToLoad.length) {
+            alert('Not enough empty TS_20 rows to load all selected units.');
+            return;
+        }
+
+        var fleetNo = $scope.getFirstSelectedShipFleetNo();
+
+        for (var i = 0; i < unitsToLoad.length; i++) {
+            var row = emptyRows[i];
+            var unit = unitsToLoad[i];
+            var unitNo = unit.originalItemNo != null ? unit.originalItemNo : unit.itemNo;
+
+            row.command = null;
+            row.Command = null;
+            row.itemNo = unitNo;
+            row.ItemNo = unitNo;
+            row.fleetNo = fleetNo != null ? fleetNo : null;
+            row.FleetNo = fleetNo != null ? fleetNo : null;
+            row.fleetOwner = null;
+            row.FleetOwner = null;
+        }
+
+        angular.forEach(unitsToLoad, function (unit) {
+            var unitNo = unit.originalItemNo != null ? unit.originalItemNo : unit.itemNo;
+            unit.isSelected = false;
+            unit.load = false;
+            delete $scope.boardingSelectedLookup[unitNo];
+            delete $scope.boardingLoadLookup[unitNo];
+        });
+
+        $scope.recalculateBoardingSummary();
+        $scope.queueAutoSaveTsGrid('Boarding');
+    };
+
+    $scope.hasBoardingData = function (boardingRow) {
+        if (!boardingRow) {
+            return false;
+        }
+
+        var command = boardingRow.command != null ? boardingRow.command : boardingRow.Command;
+        var itemNo = boardingRow.itemNo != null ? boardingRow.itemNo : boardingRow.ItemNo;
+        var fleetNo = boardingRow.fleetNo != null ? boardingRow.fleetNo : boardingRow.FleetNo;
+
+        return command != null || itemNo != null || fleetNo != null;
+    };
+
+    $scope.removeBoardingRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        row.entity.command = null;
+        row.entity.Command = null;
+        row.entity.itemNo = null;
+        row.entity.ItemNo = null;
+        row.entity.fleetNo = null;
+        row.entity.FleetNo = null;
+        row.entity.fleetOwner = null;
+        row.entity.FleetOwner = null;
+
+        $scope.queueAutoSaveTsGrid('Boarding');
+    };
+
     $scope.queueAutoSaveTsGrid = function (tsType) {
         if ($scope.autoSavePromises[tsType]) {
             $timeout.cancel($scope.autoSavePromises[tsType]);
@@ -398,6 +640,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             if (tsType === 'FormFederations') records = $scope.tsFormFederationsList;
             if (tsType === 'SetUpBrigades') records = $scope.tsSetUpBrigadesList;
             if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
+            if (tsType === 'Boarding') records = $scope.tsBoardingList;
 
             if (!records) return;
 
@@ -411,6 +654,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 if (tsType === 'TransferGoods') {
                     $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
                     $scope.refreshTransferGoodsCostRows();
+                }
+                if (tsType === 'Boarding') {
+                    $scope.tsBoardingList = $scope.normalizeBoardingRows(savedRows);
                 }
                 if (tsType === 'Movement') $scope.tsMovementList = savedRows;
             });
@@ -430,6 +676,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             $scope.queueAutoSaveTsGrid('SetUpBrigades');
             $scope.queueAutoSaveTsGrid('TransferGoods');
             $scope.recalculateTransferGoodsForSetUpBrigades();
+            return;
+        }
+        if ($scope.isBoardingMode()) {
+            $scope.queueAutoSaveTsGrid('Boarding');
             return;
         }
         $scope.queueAutoSaveTsGrid('Movement');
@@ -511,6 +761,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(tsTransferGoodsList);
         $scope.refreshTransferGoodsCostRows();
         $scope.recalculateTransferGoodsForSetUpBrigades();
+    });
+
+    turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(function (tsBoardingList) {
+        $scope.tsBoardingList = $scope.normalizeBoardingRows(tsBoardingList);
     });
 
     rulesCatalogFactory.getRefProductionSites().then(function (productionSiteList) {
@@ -601,8 +855,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                              { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
                              { name: 'SetUpBrigades', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
+                             { name: 'Boarding', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
                              { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }];
-    $scope.selectedDisplayOption = $scope.displayOptions[5];
+    $scope.selectedDisplayOption = $scope.displayOptions[6];
 
     $scope.changeDisplayOption = function () {
         var selectedOptions = [];
@@ -640,6 +895,10 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.isSetUpBrigadesMode = function () {
         return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'SetUpBrigades';
+    };
+
+    $scope.isBoardingMode = function () {
+        return $scope.selectedDisplayOption && $scope.selectedDisplayOption.name === 'Boarding';
     };
 
     $scope.toggleSelection = function toggleSelection(mapOption) {
@@ -1298,6 +1557,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
             $scope.filteredMovementItemsForMap = [];
             $scope.itemGridRows = [];
+            $scope.boardingItemRows = [];
             return;
         }
 
@@ -1322,7 +1582,9 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                     mp: item.originalMP != null ? item.originalMP : (item.OriginalMP != null ? item.OriginalMP : item.mp),
                     x: x,
                     y: y,
-                    xy: x + '/' + y
+                    xy: x + '/' + y,
+                    isSelected: !!$scope.boardingSelectedLookup[itemNo],
+                    load: !!$scope.boardingLoadLookup[itemNo]
                 };
             })
             .sort(function (a, b) {
@@ -1334,6 +1596,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             });
 
         $scope.refreshItemGridRows();
+        $scope.recalculateBoardingSummary();
     };
 
     $scope.refreshItemGridRows = function () {
@@ -1350,6 +1613,29 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             }
 
             $scope.itemGridRows = federationCandidates;
+            return;
+        }
+
+        if ($scope.isBoardingMode()) {
+            if (!$scope.filteredMovementItemsForMap) {
+                $scope.boardingItemRows = [];
+                return;
+            }
+
+            var boardingSphereList = $scope.filteredMovementItemsForMap;
+
+            if ($scope.selectedItemGridCoordinate) {
+                var selectedCoordBoardingItems = boardingSphereList.filter(function (item) {
+                    return item.x == $scope.selectedItemGridCoordinate.x && item.y == $scope.selectedItemGridCoordinate.y;
+                });
+
+                $scope.boardingItemRows = selectedCoordBoardingItems.length > 0 ? selectedCoordBoardingItems : boardingSphereList;
+                $scope.recalculateBoardingSummary();
+                return;
+            }
+
+            $scope.boardingItemRows = boardingSphereList;
+            $scope.recalculateBoardingSummary();
             return;
         }
 
@@ -1370,6 +1656,44 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         }
 
         $scope.itemGridRows = sphereList;
+    };
+
+    $scope.boardingItemGridClickRow = function (row) {
+        if (!row || !row.entity) {
+            return;
+        }
+
+        $scope.setBoardingItemSelected(row.entity, !row.entity.isSelected);
+    };
+
+    $scope.setBoardingItemSelected = function (item, isSelected) {
+        if (!item) {
+            return;
+        }
+
+        var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+        var selected = !!isSelected;
+
+        item.isSelected = selected;
+        item.load = selected;
+
+        if (selected) {
+            $scope.boardingSelectedLookup[itemNo] = true;
+            $scope.boardingLoadLookup[itemNo] = true;
+        } else {
+            delete $scope.boardingSelectedLookup[itemNo];
+            delete $scope.boardingLoadLookup[itemNo];
+        }
+
+        $scope.recalculateBoardingSummary();
+    };
+
+    $scope.onBoardingLoadChanged = function (item) {
+        if (!item) {
+            return;
+        }
+
+        $scope.setBoardingItemSelected(item, !item.isSelected);
     };
 
     $scope.isFederationColumnClick = function (col) {
@@ -2000,6 +2324,12 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                     baseClass = baseClass + ' ' + displayField;
                 }
                 break;
+            case 'Boarding':
+                baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
+                if (displayField) {
+                    baseClass = baseClass + ' ' + displayField;
+                }
+                break;
             case 'SetUpBrigades':
                 baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
                 break;
@@ -2425,6 +2755,30 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         rowTemplate: '<div ng-click="armyListClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isArmyListItemSelected(row.entity) ? "itemGridRowSelected" : ""}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
     };
 
+    $scope.boardingGridOptions = {
+        data: 'tsBoardingList',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'boardingColumnDefsMap',
+        enableCellSelection: true,
+        enableRowSelection: true,
+        enableCellEdit: true,
+        enabledCellEditOnFocus: true,
+        multiSelect: false
+    };
+
+    $scope.boardingItemGridOptions = {
+        data: 'boardingItemRows',
+        headerRowHeight: 30,
+        rowHeight: 25,
+        columnDefs: 'boardingItemColumnDefsMap',
+        enableCellSelection: false,
+        enableRowSelection: true,
+        enableCellEdit: false,
+        multiSelect: false,
+        rowTemplate: '<div ng-click="boardingItemGridClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+    };
+
     $scope.movementColumnDefsMap = [
         { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
 
@@ -2510,6 +2864,25 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'hc', displayName: 'HC', width: '45px', cellClass: 'grid-center-align' },
         { field: 'formation', displayName: 'Formation', width: '80px', cellClass: 'grid-center-align' },
         { field: 'troopSpecification', displayName: 'Spec', cellClass: 'grid-left-align' }
+    ];
+
+    $scope.boardingColumnDefsMap = [
+        { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'command', displayName: 'Command', width: '70px', cellClass: 'grid-center-align' },
+        { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
+        { field: 'fleetNo', displayName: 'Fleet No', width: '70px', cellClass: 'grid-center-align' },
+        { field: 'fleetOwner', displayName: 'Fleet Owner', width: '80px', cellClass: 'grid-center-align' },
+        { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasBoardingData(row.entity)" ng-click="removeBoardingRow(row)"></span></div>' }
+    ];
+
+    $scope.boardingItemColumnDefsMap = [
+        { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
+        { field: 'fed', displayName: 'Fed', width: '45px', cellClass: 'grid-center-align' },
+        { field: 'itemTypeName', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
+        { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
+        { field: 'description', displayName: 'Description', width: '160px', cellClass: 'grid-left-align' },
+        { field: 'load', displayName: 'Load?', width: '50px', cellClass: 'grid-center-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><input type="checkbox" ng-checked="row.entity.load" ng-click="$event.stopPropagation(); onBoardingLoadChanged(row.entity);" /></div>' }
     ];
 
     $scope.refreshFilteredMovementItemsForMap();
