@@ -770,6 +770,18 @@ namespace Austerlitz.Domain
         {
             using (var dataContext = new AusterlitzDbContext())
             {
+                // Truncate BrigadeName to max 15 chars to satisfy database constraint
+                if (tsPostedRecords != null)
+                {
+                    foreach (var record in tsPostedRecords)
+                    {
+                        if (!string.IsNullOrEmpty(record.BrigadeName) && record.BrigadeName.Length > 15)
+                        {
+                            record.BrigadeName = record.BrigadeName.Substring(0, 15);
+                        }
+                    }
+                }
+
                 var listRepository = new TurnSheetRepository<TS_03SetUpBrigades>(dataContext);
                 var result = listRepository.SaveRange(tsPostedRecords);
                 return result.ToArray();
