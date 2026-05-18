@@ -14,6 +14,57 @@ namespace Austerlitz.Controllers
     {
         private int dummy;
 
+        private static int? FederationOverride(object entity, string newField, string baseField)
+        {
+            int? newValue = GetNullableInt(entity, newField);
+            if (newValue.HasValue)
+            {
+                return newValue.Value > 0 ? (int?)newValue.Value : null;
+            }
+
+            int? baseValue = GetNullableInt(entity, baseField);
+            if (baseValue.HasValue)
+            {
+                return baseValue.Value > 0 ? (int?)baseValue.Value : null;
+            }
+
+            return null;
+        }
+
+        private static int? GetNullableInt(object entity, string propertyName)
+        {
+            if (entity == null)
+            {
+                return null;
+            }
+
+            var type = entity.GetType();
+            var prop = type.GetProperty(propertyName);
+            if (prop == null)
+            {
+                return null;
+            }
+
+            var value = prop.GetValue(entity, null);
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (value is int)
+            {
+                return (int)value;
+            }
+
+            if (value is int?)
+            {
+                return (int?)value;
+            }
+
+            int parsed;
+            return int.TryParse(value.ToString(), out parsed) ? (int?)parsed : null;
+        }
+
         public TurnReport getTRFullTurnDetails(string turnId)
         {
             using (var dataContext = new AusterlitzDbContext())
@@ -50,11 +101,11 @@ namespace Austerlitz.Controllers
                 var turnTradingPortsAndCities = new GenericRepository<TR_TradingPortsAndCities>(dataContext);
                 turnReport.TradingPortsAndCities = turnTradingPortsAndCities.GetItems(x => x.TurnId == turnId).ToArray();
 
-                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = x.Federation > 0 ? (int?)x.Federation : null, ItemType = ItemType.Commander, Description = x.Name + " (" + x.CommandCapacity + ")", MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
+                List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "Federation"), ItemType = ItemType.Commander, Description = x.Name + " (" + x.CommandCapacity + ")", MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
                 var dummy = 0;
 
                 movementItems.AddRange(turnReport.Brigades.Select(x => new MovementItems() 
-                { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = x.Federation > 0 ? (int?)x.Federation : null, ItemType = ItemType.Brigade, 
+                { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "Federation"), ItemType = ItemType.Brigade, 
                     Description = x.Batt1Type + x.Batt1EF + " " + x.Batt2Type + x.Batt2EF + " " + x.Batt3Type + x.Batt3EF + " " + x.Batt4Type + x.Batt4EF + " " + x.Batt5Type + x.Batt5EF + " " + x.Batt6Type + x.Batt6EF + " " + x.Batt7Type + x.Batt7EF,
                     MP = x.MP
                     , OriginalMP = x.MP
@@ -64,10 +115,10 @@ namespace Austerlitz.Controllers
                 }).ToList());
 
                 // can add more union stuff here if necessary, not sure it makes much difference
-                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.Warship, ShipTypeNo = x.Type, Description = x.Name, MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.MerchantShip, ShipTypeNo = x.Type, Description = ItemType.MerchantShip.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.BaggageTrain, Description = ItemType.BaggageTrain.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
-                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, ItemType = ItemType.Spy, Description = ItemType.Spy.ToString(), MP = 75, OriginalMP = 75, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X,x.Y)}).ToList());
+                movementItems.AddRange(turnReport.Warships.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "FleetNo"), ItemType = ItemType.Warship, ShipTypeNo = x.Type, Description = x.Name, MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.MerchantShips.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "FleetNo"), ItemType = ItemType.MerchantShip, ShipTypeNo = x.Type, Description = ItemType.MerchantShip.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.BaggageTrains.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "FederationNo"), ItemType = ItemType.BaggageTrain, Description = ItemType.BaggageTrain.ToString(), MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList());
+                movementItems.AddRange(turnReport.Spies.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "FederationNo"), ItemType = ItemType.Spy, Description = ItemType.Spy.ToString(), MP = 75, OriginalMP = 75, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X,x.Y)}).ToList());
 
                 var federationMinMp = movementItems
                     .Where(x => x.FederationNo.HasValue)

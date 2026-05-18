@@ -2166,6 +2166,35 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             || (!!setUpRow.brigadeName && setUpRow.brigadeName !== '<Brigade Name>');
     };
 
+    $scope.isBrigadeSetupIncomplete = function (setUpRow) {
+        if (!setUpRow) {
+            return false;
+        }
+
+        var depot = setUpRow.depot != null ? setUpRow.depot : setUpRow.Depot;
+        var batt1 = setUpRow.batt1 != null ? setUpRow.batt1 : setUpRow.Batt1;
+        var batt2 = setUpRow.batt2 != null ? setUpRow.batt2 : setUpRow.Batt2;
+        var batt3 = setUpRow.batt3 != null ? setUpRow.batt3 : setUpRow.Batt3;
+        var batt4 = setUpRow.batt4 != null ? setUpRow.batt4 : setUpRow.Batt4;
+        var batt5 = setUpRow.batt5 != null ? setUpRow.batt5 : setUpRow.Batt5;
+        var batt6 = setUpRow.batt6 != null ? setUpRow.batt6 : setUpRow.Batt6;
+        var batt7 = setUpRow.batt7 != null ? setUpRow.batt7 : setUpRow.Batt7;
+
+        // If depot is set, require all first 5 battalions
+        if (depot != null && depot !== '') {
+            if (!batt1 || !batt2 || !batt3 || !batt4 || !batt5) {
+                return true;
+            }
+
+            // If Batt7 is set, require Batt6 also
+            if (batt7 && !batt6) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     $scope.removeSetUpBrigadesRow = function (row) {
         if (!row || !row.entity) {
             return;
@@ -2369,7 +2398,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         enableCellEdit: true,
         enabledCellEditOnFocus: true,
         multiSelect: false,
-        rowTemplate: '<div ng-click="setUpBrigadesGridClick(row, col)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
+        rowTemplate: '<div ng-click="setUpBrigadesGridClick(row, col)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isBrigadeSetupIncomplete(row.entity) ? \"setUpBrigadesIncompleteRow\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
     };
 
     $scope.transferGoodsGridOptions = {
@@ -2452,7 +2481,7 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'batt5', displayName: 'Batt5', width: '55px', cellClass: 'grid-center-align' },
         { field: 'batt6', displayName: 'Batt6', width: '55px', cellClass: 'grid-center-align' },
         { field: 'batt7', displayName: 'Batt7', width: '55px', cellClass: 'grid-center-align' },
-        { field: 'brigadeName', displayName: 'Brigade Name', cellClass: 'grid-left-align' },
+        { field: 'brigadeName', displayName: 'Brigade Name', cellClass: 'grid-left-align', enableCellEdit: true, editableCellTemplate: '<input class="inlineEditBox" ng-model="row.entity[col.field]" ng-keypress="$event.keyCode !== 13 || $event.stopPropagation()" maxlength="15" title="Maximum 15 characters" />' },
         { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasSetUpBrigadesData(row.entity)" ng-click="removeSetUpBrigadesRow(row)"></span></div>' }
     ];
 
