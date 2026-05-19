@@ -3068,26 +3068,4 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
 
     $scope.refreshFilteredMovementItemsForMap();
 
-})
-
-.filter('filterBrigade', function () {
-    return function (input) {
-
-        var brigades = [{ itemNo: 4081 },
-                        { itemNo: 4082 },
-                        { itemNo: 4083 }];
-
-        if (input != null) {
-            var itemsMatched = brigades.filter(function (brigade) {
-                return brigade.itemNo == input;
-            });
-        };
-
-        if (itemsMatched.length == 1)
-            return itemsMatched[0].itemNo;
-        else
-            return '*unknown language*'
-
-        return text;
-    }
 });
