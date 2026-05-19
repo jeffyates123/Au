@@ -53,24 +53,177 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         return lookup;
     };
 
+    $scope.getShipConditionByItemNo = function (itemNo) {
+        if (!$scope.masterData || !$scope.masterData.turnReport) {
+            return null;
+        }
+
+        var warships = $scope.masterData.turnReport.warships || $scope.masterData.turnReport.Warships || [];
+        for (var i = 0; i < warships.length; i++) {
+            var warItemNo = warships[i].itemNo != null ? warships[i].itemNo : warships[i].ItemNo;
+            if (warItemNo == itemNo) {
+                return warships[i].condition != null ? warships[i].condition : warships[i].Condition;
+            }
+        }
+
+        var merchantShips = $scope.masterData.turnReport.merchantShips || $scope.masterData.turnReport.MerchantShips || [];
+        for (var j = 0; j < merchantShips.length; j++) {
+            var merchantItemNo = merchantShips[j].itemNo != null ? merchantShips[j].itemNo : merchantShips[j].ItemNo;
+            if (merchantItemNo == itemNo) {
+                return merchantShips[j].condition != null ? merchantShips[j].condition : merchantShips[j].Condition;
+            }
+        }
+
+        return null;
+    };
+
+    $scope.getSeaFleetNoByItemNo = function (itemNo, itemType) {
+        if (!$scope.masterData || !$scope.masterData.turnReport) {
+            return null;
+        }
+
+        var parsedType = parseInt(itemType, 10);
+        if (parsedType === 2) {
+            var warships = $scope.masterData.turnReport.warships || $scope.masterData.turnReport.Warships || [];
+            for (var i = 0; i < warships.length; i++) {
+                var warItemNo = warships[i].itemNo != null ? warships[i].itemNo : warships[i].ItemNo;
+                if (warItemNo == itemNo) {
+                    return warships[i].fleetNo != null ? warships[i].fleetNo : warships[i].FleetNo;
+                }
+            }
+        }
+
+        if (parsedType === 3) {
+            var merchantShips = $scope.masterData.turnReport.merchantShips || $scope.masterData.turnReport.MerchantShips || [];
+            for (var j = 0; j < merchantShips.length; j++) {
+                var merchantItemNo = merchantShips[j].itemNo != null ? merchantShips[j].itemNo : merchantShips[j].ItemNo;
+                if (merchantItemNo == itemNo) {
+                    return merchantShips[j].fleetNo != null ? merchantShips[j].fleetNo : merchantShips[j].FleetNo;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    $scope.getSelectionFedValue = function (item, itemNo, itemType) {
+        var parsedType = parseInt(itemType, 10);
+        if (parsedType === 2 || parsedType === 3) {
+            var fleetNo = $scope.getSeaFleetNoByItemNo(itemNo, parsedType);
+            if (fleetNo != null && fleetNo !== '') {
+                return fleetNo;
+            }
+        }
+
+        return item.federationNo != null ? item.federationNo : item.FederationNo;
+    };
+
+    $scope.getArmyListLookupByShortName = function () {
+        var lookup = {};
+        var allArmyItems = ($scope.masterData && $scope.masterData.rulesCatalog && ($scope.masterData.rulesCatalog.armyList || $scope.masterData.rulesCatalog.ArmyList)) || [];
+
+        angular.forEach(allArmyItems, function (armyItem) {
+            var shortName = (armyItem.shortName != null ? armyItem.shortName : armyItem.ShortName);
+            if (shortName != null) {
+                lookup[shortName.toString().trim().toUpperCase()] = armyItem;
+            }
+        });
+
+        return lookup;
+    };
+
+    $scope.getBattalionWeightPerMan = function (armyItem) {
+        if (!armyItem) {
+            return 200;
+        }
+
+        var isCavalry = !!(armyItem.isCavalry != null ? armyItem.isCavalry : armyItem.IsCavalry);
+        var itemNo = parseInt(armyItem.itemNo != null ? armyItem.itemNo : armyItem.ItemNo, 10);
+
+        if (isCavalry) {
+            return 400;
+        }
+
+        if (!isNaN(itemNo) && itemNo >= 30) {
+            return 600;
+        }
+
+        return 200;
+    };
+
     $scope.getBrigadeWeight = function (itemNo) {
         if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.brigades) {
             return 0;
         }
 
         var brigades = $scope.masterData.turnReport.brigades;
+        var armyLookup = $scope.getArmyListLookupByShortName();
+
         for (var i = 0; i < brigades.length; i++) {
             if (brigades[i].itemNo == itemNo || brigades[i].ItemNo == itemNo) {
-                var totalMen = 0;
-                totalMen += parseInt(brigades[i].batt1Size != null ? brigades[i].batt1Size : brigades[i].Batt1Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt2Size != null ? brigades[i].batt2Size : brigades[i].Batt2Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt3Size != null ? brigades[i].batt3Size : brigades[i].Batt3Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt4Size != null ? brigades[i].batt4Size : brigades[i].Batt4Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt5Size != null ? brigades[i].batt5Size : brigades[i].Batt5Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt6Size != null ? brigades[i].batt6Size : brigades[i].Batt6Size, 10) || 0;
-                totalMen += parseInt(brigades[i].batt7Size != null ? brigades[i].batt7Size : brigades[i].Batt7Size, 10) || 0;
-                return totalMen * 2;
+                var totalWeight = 0;
+
+                for (var b = 1; b <= 7; b++) {
+                    var typeField = 'batt' + b + 'Type';
+                    var sizeField = 'batt' + b + 'Size';
+                    var pascalTypeField = 'Batt' + b + 'Type';
+                    var pascalSizeField = 'Batt' + b + 'Size';
+
+                    var battType = brigades[i][typeField] != null ? brigades[i][typeField] : brigades[i][pascalTypeField];
+                    var battSize = parseInt(brigades[i][sizeField] != null ? brigades[i][sizeField] : brigades[i][pascalSizeField], 10) || 0;
+
+                    if (!battType || battType.toString().trim() === '--' || battSize <= 0) {
+                        continue;
+                    }
+
+                    var armyItem = armyLookup[battType.toString().trim().toUpperCase()];
+                    var weightPerMan = $scope.getBattalionWeightPerMan(armyItem);
+                    totalWeight += (battSize * weightPerMan);
+                }
+
+                return totalWeight;
             }
+        }
+
+        return 0;
+    };
+
+    $scope.getBaggageTrainWeight = function (itemNo) {
+        if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.baggageTrains) {
+            return 0;
+        }
+
+        var baggageTrains = $scope.masterData.turnReport.baggageTrains;
+        for (var i = 0; i < baggageTrains.length; i++) {
+            var bagItemNo = baggageTrains[i].itemNo != null ? baggageTrains[i].itemNo : baggageTrains[i].ItemNo;
+            if (bagItemNo == itemNo) {
+                var qty1 = parseInt(baggageTrains[i].quantity1 != null ? baggageTrains[i].quantity1 : baggageTrains[i].Quantity1, 10) || 0;
+                var qty2 = parseInt(baggageTrains[i].quantity2 != null ? baggageTrains[i].quantity2 : baggageTrains[i].Quantity2, 10) || 0;
+                return 500000 + qty1 + qty2;
+            }
+        }
+
+        return 500000;
+    };
+
+    $scope.getLoadedUnitWeight = function (item) {
+        if (!item) {
+            return 0;
+        }
+
+        var itemType = parseInt(item.itemType, 10);
+        var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+
+        if (itemType === 0 || itemType === 5) {
+            return 0;
+        }
+
+        if (itemType === 1) {
+            return $scope.getBrigadeWeight(itemNo);
+        }
+
+        if (itemType === 4) {
+            return $scope.getBaggageTrainWeight(itemNo);
         }
 
         return 0;
@@ -134,12 +287,15 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             if (item.load) {
                 if (item.itemTypeName === 'Bg') {
                     summary.brigades++;
-                    summary.weight += $scope.getBrigadeWeight(item.originalItemNo != null ? item.originalItemNo : item.itemNo);
+                    summary.weight += $scope.getLoadedUnitWeight(item);
                 } else if (!$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item)) {
                     summary.otherUnits++;
+                    summary.weight += $scope.getLoadedUnitWeight(item);
                 }
             }
         });
+
+        summary.weight = Math.round((summary.weight / 1000) * 100) / 100;
 
         $scope.boardingSummary = summary;
     };
@@ -587,7 +743,11 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             row.FleetOwner = null;
         }
 
-        angular.forEach(unitsToLoad, function (unit) {
+        angular.forEach($scope.boardingItemRows || [], function (unit) {
+            if (!unit || !unit.isSelected) {
+                return;
+            }
+
             var unitNo = unit.originalItemNo != null ? unit.originalItemNo : unit.itemNo;
             unit.isSelected = false;
             unit.load = false;
@@ -1561,6 +1721,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
             return;
         }
 
+        var shipCatalogByType = $scope.getShipCatalogByType();
+
         $scope.filteredMovementItemsForMap = $scope.masterData.turnReport.movementItemList
             .filter(function (item) {
                 return $scope.filterMovementItemBySelectedMap(item);
@@ -1570,16 +1732,33 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
                 var itemNo = originalItemNo != null ? originalItemNo : (item.itemNo != null ? item.itemNo : item.ItemNo);
                 var x = item.x != null ? item.x : item.X;
                 var y = item.y != null ? item.y : item.Y;
+                var shipTypeNo = item.shipTypeNo != null ? item.shipTypeNo : item.ShipTypeNo;
+                var shipDef = shipCatalogByType[shipTypeNo];
+                var itemType = item.itemType != null ? item.itemType : item.ItemType;
+                var isShip = parseInt(itemType, 10) === 2 || parseInt(itemType, 10) === 3;
+                var baseCapacity = parseInt(shipDef && (shipDef.loadCapacity != null ? shipDef.loadCapacity : shipDef.LoadCapacity), 10) || 0;
+                var condition = isShip ? $scope.getShipConditionByItemNo(itemNo) : null;
+                var actualCapacity = null;
+
+                if (isShip) {
+                    var condPct = parseFloat(condition);
+                    if (isNaN(condPct)) {
+                        condPct = 100;
+                    }
+                    actualCapacity = Math.floor(baseCapacity * (condPct / 100));
+                }
 
                 return {
                     itemNo: itemNo,
                     originalItemNo: itemNo,
-                    fed: item.federationNo != null ? item.federationNo : item.FederationNo,
-                    itemType: item.itemType != null ? item.itemType : item.ItemType,
-                    shipTypeNo: item.shipTypeNo != null ? item.shipTypeNo : item.ShipTypeNo,
+                    fed: $scope.getSelectionFedValue(item, itemNo, itemType),
+                    itemType: itemType,
+                    shipTypeNo: shipTypeNo,
                     itemTypeName: $scope.getItemTypeAbbrev(item),
                     description: item.description || item.Description,
                     mp: item.originalMP != null ? item.originalMP : (item.OriginalMP != null ? item.OriginalMP : item.mp),
+                    capacity: actualCapacity,
+                    cond: condition,
                     x: x,
                     y: y,
                     xy: x + '/' + y,
@@ -2879,6 +3058,8 @@ austerlitzModule.controller("turnMapsController", function ($scope, $routeParams
         { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
         { field: 'fed', displayName: 'Fed', width: '45px', cellClass: 'grid-center-align' },
         { field: 'itemTypeName', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
+        { field: 'capacity', displayName: 'Capacity', width: '65px', cellClass: 'grid-center-align' },
+        { field: 'cond', displayName: 'Cond%', width: '60px', cellClass: 'grid-center-align' },
         { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
         { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
         { field: 'description', displayName: 'Description', width: '160px', cellClass: 'grid-left-align' },
