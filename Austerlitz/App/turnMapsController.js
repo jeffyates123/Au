@@ -170,6 +170,10 @@ austerlitzModule.controller('turnMapsController', function (
             }
         }
 
+        if ($scope.isProductionSiteMode()) {
+            $scope.selectProductionSiteRowAtCoordinate(x, y);
+        }
+
         var coord = $scope.getCoordinateByXY(x, y);
         $scope.selectedCoordinateDetails = '(X:' + x + ',Y: ' + y + ') ' + coord.state + coord.population + coord.productionSite + ' - ' + coord.owner + coord.terrain + coord.bonus;
         $scope.selectedItemGridCoordinate = { x: x, y: y };
@@ -406,6 +410,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.mapCoordinates = mapCoordinates;
         $scope.markJumpOffPoints();
         $scope.attachUnitsToMapCoordinates();
+        $scope.refreshMovementGridTypeValues();
     });
 
     turnReportFactory.getTRFullTurnDetails($scope.masterData.turnId).then(function (turnReport) {
@@ -417,6 +422,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     turnSheetFactory.getTSMovement($scope.masterData.turnId).then(function (tsMovementList) {
         $scope.tsMovementList = tsMovementList;
+        $scope.refreshMovementGridTypeValues();
     });
 
     turnSheetFactory.getTSBuildProductionSites($scope.masterData.turnId).then(function (tsBuildProductionSitesList) {
@@ -469,6 +475,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     rulesCatalogFactory.getRefTerrain().then(function (terrainList) {
         $scope.terrainList = terrainList;
+        $scope.refreshMovementGridTypeValues();
     });
 
     $scope.refreshFilteredMovementItemsForMap();

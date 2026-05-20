@@ -109,7 +109,7 @@
                                         ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)">
                                         
                                         <div ng-show="col.y>0 && col.x>0">
-                                            {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? col.productionSite : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
+                                            {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? getMapProductionSiteText(col) : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
                                         </div>
                                         <label class="turnMapBorder" ng-show="col.y==0 && col.x>0">{{col.x}}</label>
                                         <label class="turnMapBorder" ng-show="col.x==0 && col.y>0">{{col.y}}</label>

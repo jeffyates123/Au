@@ -57,6 +57,7 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                 });
             };
 
+
             $scope.getItemTypeName = function (itemType) {
                 if (itemType === null || itemType === undefined) return '';
                 if (typeof itemType === 'string') return itemType;
@@ -81,7 +82,7 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                 }
 
                 switch (typeName) {
-                    case 'Brigade': return 'Bg';
+                    case 'Brigade': return 'Bgd';
                     case 'Commander': return 'Cmd';
                     case 'Warship': return item.shipTypeNo != null ? item.shipTypeNo.toString() : 'War';
                     case 'Spy': return 'Spy';
@@ -200,6 +201,10 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                             bonus: bonusSymbol
                         });
                         break;
+                }
+
+                if ($scope.isProductionSiteMode && $scope.isProductionSiteMode() && $scope.hasBuildProductionSiteAtCoordinate && $scope.hasBuildProductionSiteAtCoordinate(x, y)) {
+                    baseClass = (baseClass ? baseClass + ' ' : '') + 'prodSite_BuiltThisTurn';
                 }
 
                 if (x > 0 && y > 0 && units && units.length > 0) {

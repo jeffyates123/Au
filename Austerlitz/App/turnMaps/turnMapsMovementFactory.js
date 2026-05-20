@@ -298,6 +298,40 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 };
             };
 
+            $scope.calculateMovementRowUsedMp = function (movementRow, selectedItem) {
+                if (!movementRow || !selectedItem || !$scope.mapCoordinates || !$scope.terrainList) {
+                    return movementRow ? movementRow.mpUsed : null;
+                }
+
+                var x = selectedItem.x != null ? selectedItem.x : selectedItem.X;
+                var y = selectedItem.y != null ? selectedItem.y : selectedItem.Y;
+                var currentCoord = $scope.getCoordinateByXY(x, y);
+                if (!currentCoord) {
+                    return movementRow.mpUsed;
+                }
+
+                var usedMp = 0;
+                for (var segmentNo = 1; segmentNo <= 3; segmentNo++) {
+                    var direction = parseInt(movementRow['direction' + segmentNo], 10);
+                    var distance = parseInt(movementRow['distance' + segmentNo], 10);
+
+                    if (!direction || !distance || isNaN(direction) || isNaN(distance)) {
+                        continue;
+                    }
+
+                    for (var step = 0; step < distance; step++) {
+                        currentCoord = $scope.getNextCoordinate(direction, currentCoord);
+                        if (!currentCoord) {
+                            return usedMp;
+                        }
+
+                        usedMp += $scope.getTerrainMPForItem(currentCoord, selectedItem);
+                    }
+                }
+
+                return usedMp;
+            };
+
             $scope.refreshMovementGridTypeValues = function () {
                 if (!$scope.tsMovementList || !$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) return;
 
@@ -306,6 +340,12 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                         var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo);
                         if (selectedItem && selectedItem.itemNo != null) {
                             movementRow.type = $scope.getItemTypeAbbrev(selectedItem);
+                            movementRow.mp = selectedItem.originalMP != null ? selectedItem.originalMP : (selectedItem.OriginalMP != null ? selectedItem.OriginalMP : selectedItem.mp);
+
+                            var x = selectedItem.x != null ? selectedItem.x : selectedItem.X;
+                            var y = selectedItem.y != null ? selectedItem.y : selectedItem.Y;
+                            movementRow.xy = x + '/' + y;
+                            movementRow.mpUsed = $scope.calculateMovementRowUsedMp(movementRow, selectedItem);
                         }
                     }
                 });

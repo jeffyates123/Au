@@ -3,6 +3,8 @@
 austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
     return {
         attach: function ($scope) {
+            $scope.selectedProductionSiteRow = null;
+
             $scope.normalizeBuildProductionSiteRows = function (rows) {
                 return (rows || []).map(function (row) {
                     row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
@@ -16,6 +18,100 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                     row.Y = row.y;
                     return row;
                 });
+            };
+
+            $scope.getProductionSiteTypeInfo = function (prodSiteTypeNo) {
+                if (!$scope.productionSiteList || prodSiteTypeNo == null || prodSiteTypeNo === '') {
+                    return null;
+                }
+
+                var parsedTypeNo = parseInt(prodSiteTypeNo, 10);
+                if (isNaN(parsedTypeNo)) {
+                    return null;
+                }
+
+                for (var i = 0; i < $scope.productionSiteList.length; i++) {
+                    var siteTypeNo = $scope.productionSiteList[i].siteTypeNo != null ? $scope.productionSiteList[i].siteTypeNo : $scope.productionSiteList[i].SiteTypeNo;
+                    var sitezTypeNo = $scope.productionSiteList[i].sitezTypeNo != null ? $scope.productionSiteList[i].sitezTypeNo : $scope.productionSiteList[i].SitezTypeNo;
+                    if (siteTypeNo == parsedTypeNo || sitezTypeNo == parsedTypeNo) {
+                        return $scope.productionSiteList[i];
+                    }
+                }
+
+                return null;
+            };
+
+            $scope.getProductionSiteDescription = function (row) {
+                if (!row) return '';
+
+                var prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+                var productionSite = $scope.getProductionSiteTypeInfo(prodSiteType);
+                return productionSite ? (productionSite.siteType || productionSite.SiteType || '') : '';
+            };
+
+            $scope.getProductionSiteSymbol = function (row) {
+                if (!row) return '';
+
+                var prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+                var productionSite = $scope.getProductionSiteTypeInfo(prodSiteType);
+                return productionSite ? (productionSite.symbol || productionSite.Symbol || productionSite.secondarySymbol || productionSite.SecondarySymbol || '') : '';
+            };
+
+            $scope.isCoordinateInSelectedMapChoice = function (x, y) {
+                if (!$scope.selectedMapChoice) return false;
+
+                return x >= $scope.selectedMapChoice.rangeMinX
+                    && x <= $scope.selectedMapChoice.rangeMaxX
+                    && y >= $scope.selectedMapChoice.rangeMinY
+                    && y <= $scope.selectedMapChoice.rangeMaxY;
+            };
+
+            $scope.getBuildProductionSiteRowAtCoordinate = function (x, y) {
+                if (!$scope.tsBuildProductionSitesList) return null;
+
+                var parsedX = parseInt(x, 10);
+                var parsedY = parseInt(y, 10);
+                if (isNaN(parsedX) || isNaN(parsedY) || !$scope.isCoordinateInSelectedMapChoice(parsedX, parsedY)) {
+                    return null;
+                }
+
+                for (var i = 0; i < $scope.tsBuildProductionSitesList.length; i++) {
+                    var row = $scope.tsBuildProductionSitesList[i];
+                    var prodSiteType = row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType;
+                    var rowX = row.x != null ? row.x : row.X;
+                    var rowY = row.y != null ? row.y : row.Y;
+
+                    if (prodSiteType != null && prodSiteType !== '' && rowX == parsedX && rowY == parsedY) {
+                        return row;
+                    }
+                }
+
+                return null;
+            };
+
+            $scope.hasBuildProductionSiteAtCoordinate = function (x, y) {
+                return !!$scope.getBuildProductionSiteRowAtCoordinate(x, y);
+            };
+
+            $scope.getMapProductionSiteText = function (coord) {
+                if (!coord) return '';
+
+                if ($scope.isProductionSiteMode()) {
+                    var buildRow = $scope.getBuildProductionSiteRowAtCoordinate(coord.x, coord.y);
+                    if (buildRow) {
+                        return $scope.getProductionSiteSymbol(buildRow);
+                    }
+                }
+
+                return coord.productionSite;
+            };
+
+            $scope.selectProductionSiteRow = function (row) {
+                $scope.selectedProductionSiteRow = row || null;
+            };
+
+            $scope.selectProductionSiteRowAtCoordinate = function (x, y) {
+                $scope.selectProductionSiteRow($scope.getBuildProductionSiteRowAtCoordinate(x, y));
             };
 
             $scope.getSelectedProductionSiteTypeNo = function () {
@@ -114,6 +210,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 row.y = y;
                 row.Y = y;
                 row.prodSiteStatusClass = productionSiteClass || '';
+                $scope.selectProductionSiteRow(row);
             };
 
             $scope.addOrUpdateProductionSiteRecord = function (x, y, productionSiteClass) {
@@ -188,8 +285,16 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
             $scope.getProductionSiteRowClass = function (row) {
                 if (!row) return '';
 
+                var classes = [];
                 var rowClass = row.prodSiteStatusClass || '';
-                return $scope.isAllowedProductionSiteClass(rowClass) ? rowClass : '';
+                if ($scope.isAllowedProductionSiteClass(rowClass)) {
+                    classes.push(rowClass);
+                }
+                if (row === $scope.selectedProductionSiteRow) {
+                    classes.push('productionSiteRowSelected');
+                }
+
+                return classes.join(' ');
             };
 
             $scope.hasProductionSiteData = function (productionSiteRow) {
@@ -205,12 +310,17 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
             $scope.removeProductionSiteRow = function (row) {
                 if (!row || !row.entity) return;
 
+                if ($scope.selectedProductionSiteRow === row.entity) {
+                    $scope.selectProductionSiteRow(null);
+                }
+
                 row.entity.prodSiteType = null;
                 row.entity.ProdSiteType = null;
                 row.entity.x = null;
                 row.entity.X = null;
                 row.entity.y = null;
                 row.entity.Y = null;
+                row.entity.prodSiteStatusClass = null;
 
                 $scope.queueAutoSaveTsGrid('BuildProductionSites');
             };

@@ -181,36 +181,37 @@ textarea {
 }
 
 .terrain_B {
-    background-color:rgb(135, 219, 106);
+    background-color: rgb(160, 220, 160);
+}
+
+.terrain_H {
+    background-color: rgb(0, 255, 0);
 }
 .terrain_D {
-    background-color:rgb(255, 255, 153);
+    background-color: rgb(255, 255, 153);
 }
 .terrain_G {
-    background-color:rgb(128, 128, 128);
-}
-.terrain_H {
-    background-color:rgb(0, 255, 0);
+    background-color: rgb(128, 128, 128);
 }
 .terrain_K {
-    background-color:rgb(192, 192, 192);
+    background-color: rgb(166, 166, 166);
 }
 .terrain_Q {
-    background-color:rgb(51, 153, 102);
+    background-color: rgb(102, 153, 153);
 }
 .terrain_S {
-    background-color:rgb(128, 128, 0);
+    background-color: rgb(128, 128, 0);
 }
 .terrain_T {
-    background-color:rgb(255, 204, 153);
+    background-color: rgb(244, 176, 132);
 }
 
 .terrain_sea {
-    background-color:rgb(204, 255, 255);
+    background-color: rgb(204, 255, 255);
 }
 
 .terrain_W {
-    background-color:rgb(0, 128, 0);
+    background-color: rgb(0, 128, 0);
 }
 
 
@@ -237,6 +238,7 @@ textarea {
 .prodSite_TooFew {background-color:rgb(255, 106, 0)}
 .prodSite_TooMany {background-color:red;}
 .prodSite_Existing {background-color:black; color: rgb(192, 192, 192)}
+.prodSite_BuiltThisTurn {background-color: purple !important; color: white !important;}
 
 .moveStart {background-color: black; color: rgb(192, 192, 192);}
 .moveDir1 {background-color: darkblue; color: rgb(192, 192, 192);}
@@ -326,6 +328,10 @@ textarea {
 
 .itemGridRowSelected {
     background-color: #f7f0c7;
+}
+
+.productionSiteRowSelected {
+    background-color: #d7b7ff !important;
 }
 
 .window.window-setupBrigades .master {

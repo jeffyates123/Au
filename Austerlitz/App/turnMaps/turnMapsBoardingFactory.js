@@ -110,14 +110,14 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
 
             $scope.getBattalionWeightPerMan = function (armyItem) {
                 if (!armyItem) {
-                    return 200;
+                    return 0;
                 }
 
                 var isCavalry = !!(armyItem.isCavalry != null ? armyItem.isCavalry : armyItem.IsCavalry);
                 var itemNo = parseInt(armyItem.itemNo != null ? armyItem.itemNo : armyItem.ItemNo, 10);
 
                 if (isCavalry) return 400;
-                if (!isNaN(itemNo) && itemNo >= 30) return 600;
+                if (!isNaN(itemNo) && itemNo >= 40) return 600;
 
                 return 200;
             };
@@ -230,7 +230,7 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     }
 
                     if (item.load) {
-                        if (item.itemTypeName === 'Bg') {
+                        if (parseInt(item.itemType, 10) === 1 || item.itemTypeName === 'Bgd') {
                             summary.brigades++;
                             summary.weight += $scope.getLoadedUnitWeight(item);
                         } else if (!$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item)) {
