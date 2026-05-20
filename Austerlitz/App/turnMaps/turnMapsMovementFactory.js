@@ -169,9 +169,9 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
             $scope.getCurrentTurnState = function () {
                 if (!$scope.masterData) return '';
 
-                var tsTurnDetails = ($scope.masterData.turnSheet && ($scope.masterData.turnSheet.tSTurnDetails || $scope.masterData.turnSheet.TSTurnDetails)) || null;
+                var tsTurnDetails = ($scope.masterData.turnSheet && $scope.masterData.turnSheet.tSTurnDetails) || null;
                 if (tsTurnDetails && tsTurnDetails.length > 0) {
-                    return tsTurnDetails[0].state || tsTurnDetails[0].State || '';
+                    return tsTurnDetails[0].state || '';
                 }
 
                 if ($scope.masterData.turnId && $scope.masterData.turnId.length >= 4) {
@@ -239,8 +239,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 var parsedItemNo = parseInt(itemNo, 10);
 
                 angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
-                    var originalItemNo = item.originalItemNo != null ? item.originalItemNo : item.OriginalItemNo;
-                    if (originalItemNo == parsedItemNo) {
+                    if (item.originalItemNo == parsedItemNo) {
                         rtnItem = item;
                     }
                 });
@@ -248,7 +247,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 if (!rtnItem || rtnItem.itemNo == null) {
                     angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
                         var memberMatch = item.memberItemNos && item.memberItemNos.indexOf(parsedItemNo) > -1;
-                        if (item.itemNo == parsedItemNo || item.ItemNo == parsedItemNo || memberMatch) {
+                        if (item.itemNo == parsedItemNo || memberMatch) {
                             rtnItem = item;
                         }
                     });
@@ -270,8 +269,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 if (isNaN(parsedFederationNo)) return {};
 
                 var federationItems = $scope.masterData.turnReport.movementItemList.filter(function (item) {
-                    var itemFedNo = item.federationNo != null ? item.federationNo : item.FederationNo;
-                    return itemFedNo == parsedFederationNo;
+                    return item.federationNo == parsedFederationNo;
                 });
 
                 if (!federationItems.length) return {};
@@ -303,9 +301,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                     return movementRow ? movementRow.mpUsed : null;
                 }
 
-                var x = selectedItem.x != null ? selectedItem.x : selectedItem.X;
-                var y = selectedItem.y != null ? selectedItem.y : selectedItem.Y;
-                var currentCoord = $scope.getCoordinateByXY(x, y);
+                var currentCoord = $scope.getCoordinateByXY(selectedItem.x, selectedItem.y);
                 if (!currentCoord) {
                     return movementRow.mpUsed;
                 }
@@ -340,11 +336,8 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                         var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo);
                         if (selectedItem && selectedItem.itemNo != null) {
                             movementRow.type = $scope.getItemTypeAbbrev(selectedItem);
-                            movementRow.mp = selectedItem.originalMP != null ? selectedItem.originalMP : (selectedItem.OriginalMP != null ? selectedItem.OriginalMP : selectedItem.mp);
-
-                            var x = selectedItem.x != null ? selectedItem.x : selectedItem.X;
-                            var y = selectedItem.y != null ? selectedItem.y : selectedItem.Y;
-                            movementRow.xy = x + '/' + y;
+                            movementRow.mp = selectedItem.originalMP != null ? selectedItem.originalMP : selectedItem.mp;
+                            movementRow.xy = selectedItem.x + '/' + selectedItem.y;
                             movementRow.mpUsed = $scope.calculateMovementRowUsedMp(movementRow, selectedItem);
                         }
                     }
@@ -375,15 +368,10 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                         return $scope.filterMovementItemBySelectedMap(item);
                     })
                     .map(function (item) {
-                        var originalItemNo = item.originalItemNo != null ? item.originalItemNo : item.OriginalItemNo;
-                        var itemNo = originalItemNo != null ? originalItemNo : (item.itemNo != null ? item.itemNo : item.ItemNo);
-                        var x = item.x != null ? item.x : item.X;
-                        var y = item.y != null ? item.y : item.Y;
-                        var shipTypeNo = item.shipTypeNo != null ? item.shipTypeNo : item.ShipTypeNo;
-                        var shipDef = shipCatalogByType[shipTypeNo];
-                        var itemType = item.itemType != null ? item.itemType : item.ItemType;
-                        var isShip = parseInt(itemType, 10) === 2 || parseInt(itemType, 10) === 3;
-                        var baseCapacity = parseInt(shipDef && (shipDef.loadCapacity != null ? shipDef.loadCapacity : shipDef.LoadCapacity), 10) || 0;
+                        var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+                        var shipDef = shipCatalogByType[item.shipTypeNo];
+                        var isShip = parseInt(item.itemType, 10) === 2 || parseInt(item.itemType, 10) === 3;
+                        var baseCapacity = parseInt(shipDef && shipDef.loadCapacity, 10) || 0;
                         var condition = isShip ? $scope.getShipConditionByItemNo(itemNo) : null;
                         var actualCapacity = null;
 
@@ -396,17 +384,17 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                         return {
                             itemNo: itemNo,
                             originalItemNo: itemNo,
-                            fed: $scope.getSelectionFedValue(item, itemNo, itemType),
-                            itemType: itemType,
-                            shipTypeNo: shipTypeNo,
+                            fed: $scope.getSelectionFedValue(item, itemNo, item.itemType),
+                            itemType: item.itemType,
+                            shipTypeNo: item.shipTypeNo,
                             itemTypeName: $scope.getItemTypeAbbrev(item),
-                            description: item.description || item.Description,
-                            mp: item.originalMP != null ? item.originalMP : (item.OriginalMP != null ? item.OriginalMP : item.mp),
+                            description: item.description,
+                            mp: item.originalMP != null ? item.originalMP : item.mp,
                             capacity: actualCapacity,
                             cond: condition,
-                            x: x,
-                            y: y,
-                            xy: x + '/' + y,
+                            x: item.x,
+                            y: item.y,
+                            xy: item.x + '/' + item.y,
                             isSelected: !!$scope.boardingSelectedLookup[itemNo],
                             load: !!$scope.boardingLoadLookup[itemNo]
                         };

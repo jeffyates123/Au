@@ -4,16 +4,7 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
     return {
         attach: function ($scope) {
             $scope.normalizeFormFederationRows = function (rows) {
-                return (rows || []).map(function (row) {
-                    row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-                    row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                    row.federation_Fleet = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
-
-                    row.OrderNo = row.orderNo;
-                    row.ItemNo = row.itemNo;
-                    row.Federation_Fleet = row.federation_Fleet;
-                    return row;
-                });
+                return rows || [];
             };
 
             $scope.isFederationColumnClick = function (col) {
@@ -33,8 +24,7 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
                 if (inMovement) return true;
 
                 var inFormFederation = $scope.tsFormFederationsList && $scope.tsFormFederationsList.some(function (row) {
-                    var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                    return rowItemNo == itemOrFedNo;
+                    return row.itemNo == itemOrFedNo;
                 });
 
                 return !!inFormFederation;
@@ -93,8 +83,7 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
                 if (!itemNo || !$scope.tsFormFederationsList) return false;
 
                 return $scope.tsFormFederationsList.some(function (row) {
-                    var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                    return rowItemNo == itemNo;
+                    return row.itemNo == itemNo;
                 });
             };
 
@@ -103,18 +92,16 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
 
                 if ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.movementItemList) {
                     angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
-                        var federationNo = item.federationNo != null ? item.federationNo : item.FederationNo;
-                        if (federationNo != null && federationNo !== '') {
-                            used[parseInt(federationNo, 10)] = true;
+                        if (item.federationNo != null && item.federationNo !== '') {
+                            used[parseInt(item.federationNo, 10)] = true;
                         }
                     });
                 }
 
                 if ($scope.tsFormFederationsList) {
                     angular.forEach($scope.tsFormFederationsList, function (row) {
-                        var federationNo = row.federation_Fleet != null ? row.federation_Fleet : row.Federation_Fleet;
-                        if (federationNo != null && federationNo !== '') {
-                            used[parseInt(federationNo, 10)] = true;
+                        if (row.federation_Fleet != null && row.federation_Fleet !== '') {
+                            used[parseInt(row.federation_Fleet, 10)] = true;
                         }
                     });
                 }
@@ -141,14 +128,12 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
 
                 for (var i = $scope.tsFormFederationsList.length - 1; i >= 0; i--) {
                     var federationRow = $scope.tsFormFederationsList[i];
-                    var rowItemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
-                    var rowFederationNo = federationRow.federation_Fleet != null ? federationRow.federation_Fleet : federationRow.Federation_Fleet;
 
-                    if (rowItemNo == null || rowItemNo === '' || rowFederationNo == null || rowFederationNo === '') {
+                    if (federationRow.itemNo == null || federationRow.itemNo === '' || federationRow.federation_Fleet == null || federationRow.federation_Fleet === '') {
                         continue;
                     }
 
-                    var existingItem = $scope.getItemFromItemNo(rowItemNo);
+                    var existingItem = $scope.getItemFromItemNo(federationRow.itemNo);
                     if (!existingItem || existingItem.itemNo == null) {
                         continue;
                     }
@@ -156,7 +141,7 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
                     if (existingItem.x == x
                         && existingItem.y == y
                         && $scope.isSeaItemType(existingItem) === isSeaUnit) {
-                        var parsedFed = parseInt(rowFederationNo, 10);
+                        var parsedFed = parseInt(federationRow.federation_Fleet, 10);
                         return isNaN(parsedFed) ? null : parsedFed;
                     }
                 }
@@ -192,8 +177,7 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
 
                 var firstAvailableRow = null;
                 angular.forEach($scope.tsFormFederationsList, function (federationRow) {
-                    var existingItemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
-                    if (firstAvailableRow == null && (existingItemNo == null || existingItemNo === '')) {
+                    if (firstAvailableRow == null && (federationRow.itemNo == null || federationRow.itemNo === '')) {
                         firstAvailableRow = federationRow;
                     }
                 });
@@ -204,25 +188,20 @@ austerlitzModule.factory('turnMapsFormFederationsFactory', function () {
                 }
 
                 firstAvailableRow.itemNo = sourceItemNo;
-                firstAvailableRow.ItemNo = sourceItemNo;
                 firstAvailableRow.federation_Fleet = federationNo;
-                firstAvailableRow.Federation_Fleet = federationNo;
             };
 
             $scope.hasFormFederationItemNo = function (federationRow) {
                 if (!federationRow) return false;
 
-                var itemNo = federationRow.itemNo != null ? federationRow.itemNo : federationRow.ItemNo;
-                return itemNo != null && itemNo.toString().trim() !== '';
+                return federationRow.itemNo != null && federationRow.itemNo.toString().trim() !== '';
             };
 
             $scope.removeFormFederationRow = function (row) {
                 if (!row || !row.entity) return;
 
                 row.entity.itemNo = null;
-                row.entity.ItemNo = null;
                 row.entity.federation_Fleet = null;
-                row.entity.Federation_Fleet = null;
 
                 $scope.queueAutoSaveTsGrid('FormFederations');
             };

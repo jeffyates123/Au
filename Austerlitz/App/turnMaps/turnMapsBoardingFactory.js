@@ -17,12 +17,11 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
 
             $scope.getShipCatalogByType = function () {
                 var lookup = {};
-                var ships = ($scope.masterData && $scope.masterData.rulesCatalog && ($scope.masterData.rulesCatalog.ships || $scope.masterData.rulesCatalog.Ships)) || [];
+                var ships = ($scope.masterData && $scope.masterData.rulesCatalog && $scope.masterData.rulesCatalog.ships) || [];
 
                 angular.forEach(ships, function (ship) {
-                    var shipType = ship.type != null ? ship.type : ship.Type;
-                    if (shipType != null) {
-                        lookup[shipType] = ship;
+                    if (ship.type != null) {
+                        lookup[ship.type] = ship;
                     }
                 });
 
@@ -34,19 +33,17 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     return null;
                 }
 
-                var warships = $scope.masterData.turnReport.warships || $scope.masterData.turnReport.Warships || [];
+                var warships = $scope.masterData.turnReport.warships || [];
                 for (var i = 0; i < warships.length; i++) {
-                    var warItemNo = warships[i].itemNo != null ? warships[i].itemNo : warships[i].ItemNo;
-                    if (warItemNo == itemNo) {
-                        return warships[i].condition != null ? warships[i].condition : warships[i].Condition;
+                    if (warships[i].itemNo == itemNo) {
+                        return warships[i].condition;
                     }
                 }
 
-                var merchantShips = $scope.masterData.turnReport.merchantShips || $scope.masterData.turnReport.MerchantShips || [];
+                var merchantShips = $scope.masterData.turnReport.merchantShips || [];
                 for (var j = 0; j < merchantShips.length; j++) {
-                    var merchantItemNo = merchantShips[j].itemNo != null ? merchantShips[j].itemNo : merchantShips[j].ItemNo;
-                    if (merchantItemNo == itemNo) {
-                        return merchantShips[j].condition != null ? merchantShips[j].condition : merchantShips[j].Condition;
+                    if (merchantShips[j].itemNo == itemNo) {
+                        return merchantShips[j].condition;
                     }
                 }
 
@@ -60,21 +57,19 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
 
                 var parsedType = parseInt(itemType, 10);
                 if (parsedType === 2) {
-                    var warships = $scope.masterData.turnReport.warships || $scope.masterData.turnReport.Warships || [];
+                    var warships = $scope.masterData.turnReport.warships || [];
                     for (var i = 0; i < warships.length; i++) {
-                        var warItemNo = warships[i].itemNo != null ? warships[i].itemNo : warships[i].ItemNo;
-                        if (warItemNo == itemNo) {
-                            return warships[i].fleetNo != null ? warships[i].fleetNo : warships[i].FleetNo;
+                        if (warships[i].itemNo == itemNo) {
+                            return warships[i].fleetNo;
                         }
                     }
                 }
 
                 if (parsedType === 3) {
-                    var merchantShips = $scope.masterData.turnReport.merchantShips || $scope.masterData.turnReport.MerchantShips || [];
+                    var merchantShips = $scope.masterData.turnReport.merchantShips || [];
                     for (var j = 0; j < merchantShips.length; j++) {
-                        var merchantItemNo = merchantShips[j].itemNo != null ? merchantShips[j].itemNo : merchantShips[j].ItemNo;
-                        if (merchantItemNo == itemNo) {
-                            return merchantShips[j].fleetNo != null ? merchantShips[j].fleetNo : merchantShips[j].FleetNo;
+                        if (merchantShips[j].itemNo == itemNo) {
+                            return merchantShips[j].fleetNo;
                         }
                     }
                 }
@@ -91,17 +86,16 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     }
                 }
 
-                return item.federationNo != null ? item.federationNo : item.FederationNo;
+                return item.federationNo;
             };
 
             $scope.getArmyListLookupByShortName = function () {
                 var lookup = {};
-                var allArmyItems = ($scope.masterData && $scope.masterData.rulesCatalog && ($scope.masterData.rulesCatalog.armyList || $scope.masterData.rulesCatalog.ArmyList)) || [];
+                var allArmyItems = ($scope.masterData && $scope.masterData.rulesCatalog && $scope.masterData.rulesCatalog.armyList) || [];
 
                 angular.forEach(allArmyItems, function (armyItem) {
-                    var shortName = (armyItem.shortName != null ? armyItem.shortName : armyItem.ShortName);
-                    if (shortName != null) {
-                        lookup[shortName.toString().trim().toUpperCase()] = armyItem;
+                    if (armyItem.shortName != null) {
+                        lookup[armyItem.shortName.toString().trim().toUpperCase()] = armyItem;
                     }
                 });
 
@@ -113,8 +107,8 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     return 0;
                 }
 
-                var isCavalry = !!(armyItem.isCavalry != null ? armyItem.isCavalry : armyItem.IsCavalry);
-                var itemNo = parseInt(armyItem.itemNo != null ? armyItem.itemNo : armyItem.ItemNo, 10);
+                var isCavalry = !!armyItem.isCavalry;
+                var itemNo = parseInt(armyItem.itemNo, 10);
 
                 if (isCavalry) return 400;
                 if (!isNaN(itemNo) && itemNo >= 40) return 600;
@@ -131,16 +125,12 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                 var armyLookup = $scope.getArmyListLookupByShortName();
 
                 for (var i = 0; i < brigades.length; i++) {
-                    if (brigades[i].itemNo == itemNo || brigades[i].ItemNo == itemNo) {
+                    if (brigades[i].itemNo == itemNo) {
                         var totalWeight = 0;
 
                         for (var b = 1; b <= 7; b++) {
-                            var typeField = 'batt' + b + 'Type';
-                            var sizeField = 'batt' + b + 'Size';
-                            var pascalTypeField = 'Batt' + b + 'Type';
-                            var pascalSizeField = 'Batt' + b + 'Size';
-                            var battType = brigades[i][typeField] != null ? brigades[i][typeField] : brigades[i][pascalTypeField];
-                            var battSize = parseInt(brigades[i][sizeField] != null ? brigades[i][sizeField] : brigades[i][pascalSizeField], 10) || 0;
+                            var battType = brigades[i]['batt' + b + 'Type'];
+                            var battSize = parseInt(brigades[i]['batt' + b + 'Size'], 10) || 0;
 
                             if (!battType || battType.toString().trim() === '--' || battSize <= 0) {
                                 continue;
@@ -163,10 +153,9 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
 
                 var baggageTrains = $scope.masterData.turnReport.baggageTrains;
                 for (var i = 0; i < baggageTrains.length; i++) {
-                    var bagItemNo = baggageTrains[i].itemNo != null ? baggageTrains[i].itemNo : baggageTrains[i].ItemNo;
-                    if (bagItemNo == itemNo) {
-                        var qty1 = parseInt(baggageTrains[i].quantity1 != null ? baggageTrains[i].quantity1 : baggageTrains[i].Quantity1, 10) || 0;
-                        var qty2 = parseInt(baggageTrains[i].quantity2 != null ? baggageTrains[i].quantity2 : baggageTrains[i].Quantity2, 10) || 0;
+                    if (baggageTrains[i].itemNo == itemNo) {
+                        var qty1 = parseInt(baggageTrains[i].quantity1, 10) || 0;
+                        var qty2 = parseInt(baggageTrains[i].quantity2, 10) || 0;
                         return 500000 + qty1 + qty2;
                     }
                 }
@@ -222,11 +211,11 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     if ($scope.isWarshipBoardingItem(item)) {
                         summary.war++;
                         var warShip = shipCatalogByType[item.shipTypeNo];
-                        summary.loadCapacity += parseInt(warShip && (warShip.loadCapacity != null ? warShip.loadCapacity : warShip.LoadCapacity), 10) || 0;
+                        summary.loadCapacity += parseInt(warShip && warShip.loadCapacity, 10) || 0;
                     } else if ($scope.isMerchantBoardingItem(item)) {
                         summary.merchant++;
                         var merchantShip = shipCatalogByType[item.shipTypeNo];
-                        summary.loadCapacity += parseInt(merchantShip && (merchantShip.loadCapacity != null ? merchantShip.loadCapacity : merchantShip.LoadCapacity), 10) || 0;
+                        summary.loadCapacity += parseInt(merchantShip && merchantShip.loadCapacity, 10) || 0;
                     }
 
                     if (item.load) {
@@ -245,20 +234,7 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
             };
 
             $scope.normalizeBoardingRows = function (rows) {
-                return (rows || []).map(function (row) {
-                    row.orderNo = row.orderNo != null ? row.orderNo : row.OrderNo;
-                    row.command = row.command != null ? row.command : row.Command;
-                    row.itemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                    row.fleetNo = row.fleetNo != null ? row.fleetNo : row.FleetNo;
-                    row.fleetOwner = row.fleetOwner != null ? row.fleetOwner : row.FleetOwner;
-
-                    row.OrderNo = row.orderNo;
-                    row.Command = row.command;
-                    row.ItemNo = row.itemNo;
-                    row.FleetNo = row.fleetNo;
-                    row.FleetOwner = row.fleetOwner;
-                    return row;
-                });
+                return rows || [];
             };
 
             $scope.getFirstSelectedShipFleetNo = function () {
@@ -286,8 +262,7 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                 if (!unitsToLoad.length) return;
 
                 var emptyRows = $scope.tsBoardingList.filter(function (row) {
-                    var rowItemNo = row.itemNo != null ? row.itemNo : row.ItemNo;
-                    return rowItemNo == null || rowItemNo === '';
+                    return row.itemNo == null || row.itemNo === '';
                 });
 
                 if (emptyRows.length < unitsToLoad.length) {
@@ -303,13 +278,9 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     var unitNo = unit.originalItemNo != null ? unit.originalItemNo : unit.itemNo;
 
                     row.command = null;
-                    row.Command = null;
                     row.itemNo = unitNo;
-                    row.ItemNo = unitNo;
                     row.fleetNo = fleetNo != null ? fleetNo : null;
-                    row.FleetNo = fleetNo != null ? fleetNo : null;
                     row.fleetOwner = null;
-                    row.FleetOwner = null;
                 }
 
                 angular.forEach($scope.boardingItemRows || [], function (unit) {
@@ -329,24 +300,16 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
             $scope.hasBoardingData = function (boardingRow) {
                 if (!boardingRow) return false;
 
-                var command = boardingRow.command != null ? boardingRow.command : boardingRow.Command;
-                var itemNo = boardingRow.itemNo != null ? boardingRow.itemNo : boardingRow.ItemNo;
-                var fleetNo = boardingRow.fleetNo != null ? boardingRow.fleetNo : boardingRow.FleetNo;
-
-                return command != null || itemNo != null || fleetNo != null;
+                return boardingRow.command != null || boardingRow.itemNo != null || boardingRow.fleetNo != null;
             };
 
             $scope.removeBoardingRow = function (row) {
                 if (!row || !row.entity) return;
 
                 row.entity.command = null;
-                row.entity.Command = null;
                 row.entity.itemNo = null;
-                row.entity.ItemNo = null;
                 row.entity.fleetNo = null;
-                row.entity.FleetNo = null;
                 row.entity.fleetOwner = null;
-                row.entity.FleetOwner = null;
 
                 $scope.queueAutoSaveTsGrid('Boarding');
             };
