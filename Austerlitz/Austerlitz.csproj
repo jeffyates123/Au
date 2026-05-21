@@ -265,6 +265,7 @@
     <Content Include="App\turnReportFactory.js" />
     <Content Include="App\turnSheetFactory.js" />
     <Content Include="App\turnSheetController.js" />
+    <Content Include="App\turnSheet\turnSheetSectionController.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\errors.json" />
@@ -648,6 +649,7 @@
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />
+    <Content Include="Templates\turnSheetSectionTemplate.html" />
     <Content Include="Turns\306E0008.TXT" />
     <Content Include="Turns\306E0008_2.TXT" />
     <Content Include="Turns\306E0008_3.TXT" />

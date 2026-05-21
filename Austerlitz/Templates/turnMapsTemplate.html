@@ -1,6 +1,9 @@
-<div style="padding-left:0px; padding-right:0px;">
+<div class="turn-maps-page">
     <div class="window" ng-class="{'window-setupBrigades': isSetUpBrigadesMode(), 'window-boarding': isBoardingMode()}">
+
+        <!-- Left panel: TS grids -->
         <div class="master" style="flex-direction:column;">
+
             <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isSetUpBrigadesMode() && !isBoardingMode()" ng-grid="movementGridOptions">
             </div>
 
@@ -58,56 +61,71 @@
 
         </div>
 
+        <!-- Right panel: map and controls -->
+        <div class="detail">
 
-        <div class="detail" style="overflow:auto;">
+            <!-- Row 1: Mode controls -->
+            <div class="map-toolbar-row">
+                <span class="map-control-item">
+                    <label class="control-label-sm">Mode</label>
+                    <select ng-options="do.name for do in displayOptions" ng-model="selectedDisplayOption" ng-change="changeDisplayOption()">
+                        <option value="">-- select --</option>
+                    </select>
+                </span>
+                <span class="map-control-item">
+                    <label class="control-label-sm">Map</label>
+                    <select ng-options="map.mapName for map in mapChoice" ng-model="selectedMapChoice"></select>
+                </span>
+                <span class="map-control-item">
+                    <label class="control-label-sm">State</label>
+                    <select ng-options="(st.state + ' \u2014 ' + st.stateName + ' (Tax:' + st.taxRate + ')') for st in stateList" ng-model="selectedState">
+                        <option value="">-- all states --</option>
+                    </select>
+                </span>
+                <span class="map-control-item" ng-show="isProductionSiteMode()">
+                    <label class="control-label-sm">Site</label>
+                    <select ng-options="(ps.sitezTypeNo + ': ' + ps.siteType) for ps in productionSiteList" ng-model="selectedProductionSite"></select>
+                </span>
+            </div>
 
-            <div>
-                <div>
-                    <label ng-repeat="mapOption in mapOptions">
-                        <input type="checkbox"
-                               name="selectedMapOptions[]"
-                               value="{{mapOption}}"
-                               ng-checked="selectedMapOptions.indexOf(mapOption) > -1"
-                               ng-click="toggleSelection(mapOption)" /> {{mapOption}}
-                        <br />
-                    </label>
-                    <br />
-                    <div>
-                        <select ng-options="do.name for do in displayOptions" ng-model="selectedDisplayOption" ng-change="changeDisplayOption()">
-                            <option value="">-- select a map colour option --</option>
-                        </select>
+            <!-- Row 2: Overlay toggles + coordinate detail -->
+            <div class="map-toolbar-row map-toolbar-row-overlays">
+                <span class="control-label-sm">Show:&nbsp;</span>
+                <label ng-repeat="mapOption in mapOptions" class="map-overlay-toggle">
+                    <input type="checkbox"
+                           name="selectedMapOptions[]"
+                           value="{{mapOption}}"
+                           ng-checked="selectedMapOptions.indexOf(mapOption) > -1"
+                           ng-click="toggleSelection(mapOption)" /> {{mapOption}}
+                </label>
+                <span class="coordinate-details" ng-show="selectedCoordinateDetails">
+                    &nbsp;&nbsp;<strong>{{selectedCoordinateDetails}}</strong>
+                </span>
+            </div>
 
-                        <select ng-options="map.mapName for map in mapChoice" ng-model="selectedMapChoice"></select>
-
-                        <select ng-options="(st.state + ' - ' + st.stateName + ' (Tax:' + st.taxRate + ', Fleet Morale:' + st.fleetMorale + ')') for st in stateList" ng-model="selectedState">
-                            <option value="">-- select a state --</option>
-                        </select>
-
-                        <select ng-options="(ps.sitezTypeNo + ' : ' + ps.siteType + ' (' + ps.terrain + ', Pop: ' + pop.minPopulation + '-' + pop.maxPopulation) group by ps.siteTypeNo for ps in productionSiteList" ng-model="selectedProductionSite"></select>
-                    </div>
-                </div>
-
-                <div style="display:inline-block;">
-                    <div>
-                        <h4 style="float:right;vertical-align:top" tooltip="X/Y, State, Population, Prod. Site : Political Owner, Terrain, Bonus" ng-show="selectedCoordinateDetails">{{selectedCoordinateDetails}} </h4>
-                    </div>
-
+            <!-- Map sliders and grid -->
+            <div class="map-panel-area">
+                <div class="map-x-slider">
                     <div range-slider
                          min="selectedMapChoice.rangeMinX" max="selectedMapChoice.rangeMaxX"
                          model-min="selectedMapChoice.minX" model-max="selectedMapChoice.maxX"
                          step="1"
                          style="width:400px">
                     </div>
+                </div>
 
-                    <div style="float:right; margin-left:50px;">
+                <div class="map-grid-row">
+                    <div>
                         <table class="turnMapTable" id="mapPanel">
                             <tbody>
                                 <tr></tr>
-
                                 <tr ng-repeat="cols in mapCoordinates">
-                                    <td class="turnMapCoord" style="width:24px;height:12px;" ng-repeat="col in cols | filter: filterMapFn" ng-dblclick="coordinateDblClick(col.x, col.y)" ng-click="coordinateClick(col.x, col.y)" ng-attr-title="{{col.jumpOffText || undefined}}" 
+                                    <td class="turnMapCoord" style="width:24px;height:12px;"
+                                        ng-repeat="col in cols | filter: filterMapFn"
+                                        ng-dblclick="coordinateDblClick(col.x, col.y)"
+                                        ng-click="coordinateClick(col.x, col.y)"
+                                        ng-attr-title="{{col.jumpOffText || undefined}}"
                                         ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)">
-                                        
                                         <div ng-show="col.y>0 && col.x>0">
                                             {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? getMapProductionSiteText(col) : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
                                         </div>
@@ -119,17 +137,17 @@
                         </table>
                     </div>
 
-                    <div range-slider
-                         min="selectedMapChoice.rangeMinY" max="selectedMapChoice.rangeMaxY"
-                         model-min="selectedMapChoice.minY" model-max="selectedMapChoice.maxY"
-                         step="1"
-                         orientation="vertical left" height="300px; width:25px">
+                    <div class="map-y-slider">
+                        <div range-slider
+                             min="selectedMapChoice.rangeMinY" max="selectedMapChoice.rangeMaxY"
+                             model-min="selectedMapChoice.minY" model-max="selectedMapChoice.maxY"
+                             step="1"
+                             orientation="vertical left" height="300px; width:25px">
+                        </div>
                     </div>
-
-
                 </div>
             </div>
+
         </div>
     </div>
-
 </div>

@@ -1,0 +1,17 @@
+<div class="ts-section-page">
+    <div class="ts-section-header">
+        <h3 class="ts-section-title">{{title}}</h3>
+        <div class="ts-section-actions">
+            <button type="button" class="btn btn-primary btn-sm" ng-click="saveData()" ng-disabled="isSaving">
+                <span ng-show="!isSaving">Save</span>
+                <span ng-show="isSaving">Saving...</span>
+            </button>
+        </div>
+    </div>
+
+    <div ng-show="loadError" class="alert alert-warning ts-section-alert">{{loadError}}</div>
+    <div ng-show="saveMessage" class="alert alert-success ts-section-alert">{{saveMessage}}</div>
+    <div ng-show="saveError" class="alert alert-danger ts-section-alert">{{saveError}}</div>
+
+    <div class="ts-section-grid" ng-grid="gridOptions"></div>
+</div>

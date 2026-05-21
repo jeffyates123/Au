@@ -157,106 +157,106 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
             };
 
             $scope.movementColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '30px', cellClass: 'grid-center-align' },
-                { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align', enableFocusedCellEdit: true, editableCellTemplate: '/Templates/itemSelectTemplate.html' },
+                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'itemNo', displayName: 'Item No', width: '60px', cellClass: 'grid-center-align', enableFocusedCellEdit: true, editableCellTemplate: '/Templates/itemSelectTemplate.html' },
                 { field: 'type', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'mpUsed', displayName: 'Used', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'xy', displayName: 'X/Y', width: '50px', cellClass: 'grid-center-align' },
-                { field: 'direction1', displayName: 'Dir1', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'distance1', displayName: 'Dist1', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'direction2', displayName: 'Dir2', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'distance2', displayName: 'Dist2', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'direction3', displayName: 'Dir3', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'distance3', displayName: 'Dist3', width: '40px', cellClass: 'grid-center-align' },
+                { field: 'mp', displayName: 'MP', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'Used', displayName: 'Used', width: '40px', cellClass: 'grid-center-align' },
+                { field: 'xy', displayName: 'X/Y', width: '44px', cellClass: 'grid-center-align' },
+                { field: 'direction1', displayName: 'D1', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'distance1', displayName: 'Ds1', width: '35px', cellClass: 'grid-center-align' },
+                { field: 'direction2', displayName: 'D2', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'distance2', displayName: 'Ds2', width: '35px', cellClass: 'grid-center-align' },
+                { field: 'direction3', displayName: 'D3', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'distance3', displayName: 'Ds3', width: '35px', cellClass: 'grid-center-align' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'Movement', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasMovementItemNo(row.entity)" ng-click="removeMovementRow(row)"></span></div>' }
             ];
 
             $scope.itemColumnDefsMap = [
-                { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'fed', displayName: 'Fed', width: '45px', cellClass: 'grid-center-align' },
+                { field: 'itemNo', displayName: 'Item No', width: '60px', cellClass: 'grid-center-align' },
+                { field: 'fed', displayName: 'Fed', width: '40px', cellClass: 'grid-center-align' },
                 { field: 'itemTypeName', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
+                { field: 'mp', displayName: 'MP', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'xy', displayName: 'X/Y', width: '50px', cellClass: 'grid-center-align' },
                 { field: 'description', displayName: 'Description', cellClass: 'grid-left-align' }
             ];
 
             $scope.productionSiteColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'prodSiteType', displayName: 'Type', width: '65px', cellClass: 'grid-center-align' },
-                { field: 'x', displayName: 'X', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'y', displayName: 'Y', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'description', displayName: 'Description', width: '120px', cellClass: 'grid-left-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText">{{getProductionSiteDescription(row.entity)}}</div>' },
+                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'prodSiteType', displayName: 'Type', width: '60px', cellClass: 'grid-center-align' },
+                { field: 'x', displayName: 'X', width: '48px', cellClass: 'grid-center-align' },
+                { field: 'y', displayName: 'Y', width: '48px', cellClass: 'grid-center-align' },
+                { field: 'description', displayName: 'Description', width: '110px', cellClass: 'grid-left-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText">{{getProductionSiteDescription(row.entity)}}</div>' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'BuildProductionSites', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasProductionSiteData(row.entity)" ng-click="removeProductionSiteRow(row)"></span></div>' }
             ];
 
             $scope.formFederationColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
-                { field: 'federation_Fleet', displayName: 'Federation', width: '95px', cellClass: 'grid-center-align' },
+                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'itemNo', displayName: 'Item No', width: '65px', cellClass: 'grid-center-align' },
+                { field: 'federation_Fleet', displayName: 'Federation', width: '90px', cellClass: 'grid-center-align' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'FormFederations', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasFormFederationItemNo(row.entity)" ng-click="removeFormFederationRow(row)"></span></div>' }
             ];
 
             $scope.setUpBrigadesColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'depot', displayName: 'Depot', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'batt1', displayName: 'Batt1', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt2', displayName: 'Batt2', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt3', displayName: 'Batt3', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt4', displayName: 'Batt4', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt5', displayName: 'Batt5', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt6', displayName: 'Batt6', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'batt7', displayName: 'Batt7', width: '55px', cellClass: 'grid-center-align' },
+                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'depot', displayName: 'Depot', width: '50px', cellClass: 'grid-center-align' },
+                { field: 'batt1', displayName: 'B1', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt2', displayName: 'B2', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt3', displayName: 'B3', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt4', displayName: 'B4', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt5', displayName: 'B5', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt6', displayName: 'B6', width: '32px', cellClass: 'grid-center-align' },
+                { field: 'batt7', displayName: 'B7', width: '32px', cellClass: 'grid-center-align' },
                 { field: 'brigadeName', displayName: 'Brigade Name', cellClass: 'grid-left-align', enableCellEdit: true, editableCellTemplate: '<input class="inlineEditBox" ng-model="row.entity[col.field]" ng-keypress="$event.keyCode !== 13 || $event.stopPropagation()" maxlength="15" title="Maximum 15 characters" />' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'SetUpBrigades', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasSetUpBrigadesData(row.entity)" ng-click="removeSetUpBrigadesRow(row)"></span></div>' }
             ];
 
             $scope.transferGoodsColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'from', displayName: 'From', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'to', displayName: 'To', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'louisdore', displayName: 'Louisdore', width: '75px', cellClass: 'grid-center-align' },
-                { field: 'citizens', displayName: 'Citizens', width: '65px', cellClass: 'grid-center-align' },
-                { field: 'ecPts', displayName: 'EcPts', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'wood', displayName: 'Wood', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'horses', displayName: 'Horses', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'textiles', displayName: 'Textiles', width: '60px', cellClass: 'grid-center-align' },
+                { field: 'orderNo', displayName: 'No', width: '26px', cellClass: 'grid-center-align' },
+                { field: 'from', displayName: 'From', width: '40px', cellClass: 'grid-center-align' },
+                { field: 'to', displayName: 'To', width: '40px', cellClass: 'grid-center-align' },
+                { field: 'louisdore', displayName: 'Louis.', width: '68px', cellClass: 'grid-center-align' },
+                { field: 'citizens', displayName: 'Ctz', width: '58px', cellClass: 'grid-center-align' },
+                { field: 'ecPts', displayName: 'EcPts', width: '46px', cellClass: 'grid-center-align' },
+                { field: 'wood', displayName: 'Wd', width: '46px', cellClass: 'grid-center-align' },
+                { field: 'horses', displayName: 'Horse', width: '50px', cellClass: 'grid-center-align' },
+                { field: 'textiles', displayName: 'Text', width: '50px', cellClass: 'grid-center-align' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'TransferGoods', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasTransferGoodsData(row.entity)" ng-click="removeTransferGoodsRow(row)"></span></div>' }
             ];
 
             $scope.armyListColumnDefsMap = [
-                { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
-                { field: 'name', displayName: 'Name', width: '120px', cellClass: 'grid-left-align' },
-                { field: 'shortName', displayName: 'Short', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'lr', displayName: 'LR', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'rg', displayName: 'RG', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'simMP', displayName: 'SimMP', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'ef', displayName: 'EF', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'hc', displayName: 'HC', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'formation', displayName: 'Formation', width: '80px', cellClass: 'grid-center-align' },
+                { field: 'itemNo', displayName: 'Item', width: '35px', cellClass: 'grid-center-align' },
+                { field: 'name', displayName: 'Name', width: '100px', cellClass: 'grid-left-align' },
+                { field: 'shortName', displayName: 'Short', width: '46px', cellClass: 'grid-center-align' },
+                { field: 'lr', displayName: 'LR', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'rg', displayName: 'RG', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'simMP', displayName: 'MP.S', width: '48px', cellClass: 'grid-center-align' },
+                { field: 'mp', displayName: 'MP', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'ef', displayName: 'EF', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'hc', displayName: 'HC', width: '30px', cellClass: 'grid-center-align' },
+                { field: 'formation', displayName: 'Form.', width: '65px', cellClass: 'grid-center-align' },
                 { field: 'troopSpecification', displayName: 'Spec', cellClass: 'grid-left-align' }
             ];
 
             $scope.boardingColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'command', displayName: 'Command', width: '70px', cellClass: 'grid-center-align' },
-                { field: 'itemNo', displayName: 'Item No', width: '70px', cellClass: 'grid-center-align' },
-                { field: 'fleetNo', displayName: 'Fleet No', width: '70px', cellClass: 'grid-center-align' },
-                { field: 'fleetOwner', displayName: 'Fleet Owner', width: '80px', cellClass: 'grid-center-align' },
+                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'command', displayName: 'Order', width: '65px', cellClass: 'grid-center-align' },
+                { field: 'itemNo', displayName: 'Item No', width: '62px', cellClass: 'grid-center-align' },
+                { field: 'fleetNo', displayName: 'Fleet No', width: '62px', cellClass: 'grid-center-align' },
+                { field: 'fleetOwner', displayName: 'Fl.Owner', width: '72px', cellClass: 'grid-center-align' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'Boarding', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasBoardingData(row.entity)" ng-click="removeBoardingRow(row)"></span></div>' }
             ];
 
             $scope.boardingItemColumnDefsMap = [
-                { field: 'itemNo', displayName: 'Item No', width: '55px', cellClass: 'grid-center-align' },
-                { field: 'fed', displayName: 'Fed', width: '45px', cellClass: 'grid-center-align' },
-                { field: 'itemTypeName', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'capacity', displayName: 'Capacity', width: '65px', cellClass: 'grid-center-align' },
-                { field: 'cond', displayName: 'Cond%', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '35px', cellClass: 'grid-center-align' },
-                { field: 'xy', displayName: 'X/Y', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'description', displayName: 'Description', width: '160px', cellClass: 'grid-left-align' },
-                { field: 'load', displayName: 'Load?', width: '50px', cellClass: 'grid-center-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><input type="checkbox" ng-checked="row.entity.load" ng-click="$event.stopPropagation(); onBoardingLoadChanged(row.entity);" /></div>' }
+                { field: 'itemNo', displayName: 'Item', width: '48px', cellClass: 'grid-center-align' },
+                { field: 'fed', displayName: 'Fed', width: '38px', cellClass: 'grid-center-align' },
+                { field: 'itemTypeName', displayName: 'Type', width: '34px', cellClass: 'grid-center-align' },
+                { field: 'capacity', displayName: 'Capacity', width: '58px', cellClass: 'grid-center-align' },
+                { field: 'cond', displayName: 'Cond%', width: '50px', cellClass: 'grid-center-align' },
+                { field: 'mp', displayName: 'MP', width: '28px', cellClass: 'grid-center-align' },
+                { field: 'xy', displayName: 'X/Y', width: '52px', cellClass: 'grid-center-align' },
+                { field: 'description', displayName: 'Description', width: '130px', cellClass: 'grid-left-align' },
+                { field: 'load', displayName: 'Load?', width: '44px', cellClass: 'grid-center-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><input type="checkbox" ng-checked="row.entity.load" ng-click="$event.stopPropagation(); onBoardingLoadChanged(row.entity);" /></div>' }
             ];
         }
     };
