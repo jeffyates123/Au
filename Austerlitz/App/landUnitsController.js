@@ -85,6 +85,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 resources: calculatePlaceholderResources(),
                 source: brigade
             };
+        }).sort(function (left, right) {
+            return (parseInt(left.id, 10) || 0) - (parseInt(right.id, 10) || 0);
         });
     };
 
