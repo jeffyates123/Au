@@ -31,8 +31,8 @@
                     <th class="landUnitsFedCol">Fed</th>
                     <th class="landUnitsMpCol">MP</th>
                     <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
-                    <th class="landUnitsToggleCol">Train</th>
                     <th class="landUnitsToggleCol">H/C</th>
+                    <th class="landUnitsToggleCol">Train</th>
                     <th class="landUnitsResourceCol">LD</th>
                     <th class="landUnitsResourceCol">Citz</th>
                     <th class="landUnitsResourceCol">EcPts</th>
@@ -48,13 +48,13 @@
                     <td class="landUnitsFedCol">{{brigade.fed}}</td>
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
-                        <span class="landUnitsBattalionChip" ng-class="{ landUnitsBattalionChipChanged: battalion.isEfChanged }" ng-show="battalion.display" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">{{battalion.display}}</span>
+                        <span class="landUnitsBattalionChip" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0 }" ng-show="battalion.display" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">{{battalion.display}}</span>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="toggleBrigadeFlag(brigade, 'trainSelected')">Train</button>
+                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)">H/C</button>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="toggleHeadcount(brigade)">H/C</button>
+                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)">Train</button>
                     </td>
                     <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
                     <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
@@ -75,5 +75,106 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="headcountModal.isOpen" ng-click="closeHeadcountModal()"></div>
+    <div class="landUnitsModal" ng-show="headcountModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Increase Headcount</h3>
+                <div class="landUnitsModalSubtitle">
+                    {{headcountModal.brigade.id}} {{headcountModal.brigade.name}} - {{headcountModal.brigade.position}}
+                </div>
+            </div>
+            <button type="button" class="close" ng-click="closeHeadcountModal()">&times;</button>
+        </div>
+
+        <div class="landUnitsModalBody">
+            <div class="form-group">
+                <label for="headcountTarget">Raise each battalion to</label>
+                <input id="headcountTarget" type="number" min="1" max="800" class="form-control input-sm landUnitsHeadcountInput" ng-model="headcountModal.targetHeadcount" ng-change="refreshHeadcountPreview()" />
+            </div>
+
+            <div class="form-group">
+                <label>Apply to</label>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="headcountScope" value="brigade" ng-model="headcountModal.scope" ng-change="onHeadcountScopeChanged()" />
+                        This brigade only
+                    </label>
+                </div>
+                <div class="radio">
+                    <label ng-class="{ landUnitsDisabledText: !canApplyFederationScope(headcountModal.brigade) }">
+                        <input type="radio" name="headcountScope" value="federation" ng-model="headcountModal.scope" ng-change="onHeadcountScopeChanged()" ng-disabled="!canApplyFederationScope(headcountModal.brigade)" />
+                        All brigades in Federation {{headcountModal.brigade.fed || '-'}}
+                    </label>
+                </div>
+            </div>
+
+            <div class="landUnitsHeadcountPreview">
+                <div><strong>Affected brigades:</strong> {{headcountModal.preview.affectedBrigades}}</div>
+                <div class="landUnitsHeadcountPreviewGrid">
+                    <span>LD: <strong>{{headcountModal.preview.ld | number}}</strong></span>
+                    <span>Citz: <strong>{{headcountModal.preview.citizens | number}}</strong></span>
+                    <span>EcPts: <strong>{{headcountModal.preview.ecPts | number}}</strong></span>
+                    <span>Horse: <strong>{{headcountModal.preview.horses | number}}</strong></span>
+                </div>
+                <div><strong>EF changes:</strong> {{headcountModal.preview.efChanges}} battalions</div>
+            </div>
+        </div>
+
+        <div class="landUnitsModalFooter">
+            <button type="button" class="btn btn-default btn-sm" ng-click="clearHeadcountPlan()">Clear</button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="closeHeadcountModal()">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" ng-click="applyHeadcountPlan()">Apply</button>
+        </div>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="trainModal.isOpen" ng-click="closeTrainModal()"></div>
+    <div class="landUnitsModal" ng-show="trainModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Train Brigade</h3>
+                <div class="landUnitsModalSubtitle">
+                    {{trainModal.brigade.id}} {{trainModal.brigade.name}} - {{trainModal.brigade.position}}
+                </div>
+            </div>
+            <button type="button" class="close" ng-click="closeTrainModal()">&times;</button>
+        </div>
+
+        <div class="landUnitsModalBody">
+            <div class="form-group">
+                <label>Apply to</label>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="trainScope" value="brigade" ng-model="trainModal.scope" ng-change="onTrainScopeChanged()" />
+                        This brigade only
+                    </label>
+                </div>
+                <div class="radio">
+                    <label ng-class="{ landUnitsDisabledText: !canApplyFederationScope(trainModal.brigade) }">
+                        <input type="radio" name="trainScope" value="federation" ng-model="trainModal.scope" ng-change="onTrainScopeChanged()" ng-disabled="!canApplyFederationScope(trainModal.brigade)" />
+                        All brigades in Federation {{trainModal.brigade.fed || '-'}}
+                    </label>
+                </div>
+            </div>
+
+            <div class="landUnitsHeadcountPreview">
+                <div><strong>Affected brigades:</strong> {{trainModal.preview.affectedBrigades}}</div>
+                <div><strong>Trainable battalions:</strong> {{trainModal.preview.trainableBattalions}}</div>
+                <div><strong>Skipped battalions:</strong> {{trainModal.preview.skippedBattalions}}</div>
+                <div class="landUnitsHeadcountPreviewGrid">
+                    <span>LD: <strong>{{trainModal.preview.ld | number}}</strong></span>
+                    <span>EcPts: <strong>{{trainModal.preview.ecPts | number}}</strong></span>
+                </div>
+                <div><strong>EF changes:</strong> {{trainModal.preview.efChanges}} battalions</div>
+            </div>
+        </div>
+
+        <div class="landUnitsModalFooter">
+            <button type="button" class="btn btn-default btn-sm" ng-click="clearTrainPlan()">Clear</button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="closeTrainModal()">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" ng-click="applyTrainPlan()">Apply</button>
+        </div>
     </div>
 </div>

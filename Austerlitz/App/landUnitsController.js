@@ -6,6 +6,19 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     $scope.isLoading = false;
     $scope.loadError = null;
     $scope.armyListByShortName = {};
+    $scope.headcountModal = {
+        isOpen: false,
+        brigade: null,
+        targetHeadcount: 800,
+        scope: 'brigade',
+        preview: calculateEmptyHeadcountPreview()
+    };
+    $scope.trainModal = {
+        isOpen: false,
+        brigade: null,
+        scope: 'brigade',
+        preview: calculateEmptyTrainPreview()
+    };
 
     $scope.brigadeActions = [
         'Movement',
@@ -66,7 +79,9 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 mp: brigade.mp,
                 battalions: buildBattalionDisplays(brigade),
                 trainSelected: false,
+                trainPlan: null,
                 headcountSelected: false,
+                headcountPlan: null,
                 resources: calculatePlaceholderResources(),
                 source: brigade
             };
@@ -82,15 +97,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         brigade.resources = calculatePlaceholderResources(brigade);
     };
 
-    $scope.toggleHeadcount = function (brigade) {
+    $scope.openHeadcountModal = function (brigade) {
         if (!brigade) {
-            return;
-        }
-
-        if (brigade.headcountSelected) {
-            brigade.headcountSelected = false;
-            brigade.resources = calculatePlaceholderResources();
-            resetBattalionDisplays(brigade);
             return;
         }
 
@@ -99,9 +107,149 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             return;
         }
 
-        brigade.headcountSelected = true;
-        brigade.resources = calculateHeadcountResources(brigade);
-        applyHeadcountEfChanges(brigade);
+        $scope.headcountModal.isOpen = true;
+        $scope.headcountModal.brigade = brigade;
+        $scope.headcountModal.targetHeadcount = brigade.headcountPlan ? brigade.headcountPlan.targetHeadcount : 800;
+        $scope.headcountModal.scope = brigade.headcountPlan ? brigade.headcountPlan.scope : 'brigade';
+
+        if ($scope.headcountModal.scope === 'federation' && !canApplyFederationScope(brigade)) {
+            $scope.headcountModal.scope = 'brigade';
+        }
+
+        $scope.refreshHeadcountPreview();
+    };
+
+    $scope.closeHeadcountModal = function () {
+        $scope.headcountModal.isOpen = false;
+        $scope.headcountModal.brigade = null;
+        $scope.headcountModal.preview = calculateEmptyHeadcountPreview();
+    };
+
+    $scope.canApplyFederationScope = function (brigade) {
+        return canApplyFederationScope(brigade);
+    };
+
+    $scope.onHeadcountScopeChanged = function () {
+        if ($scope.headcountModal.scope === 'federation' && !canApplyFederationScope($scope.headcountModal.brigade)) {
+            $scope.headcountModal.scope = 'brigade';
+        }
+        $scope.refreshHeadcountPreview();
+    };
+
+    $scope.refreshHeadcountPreview = function () {
+        var brigade = $scope.headcountModal.brigade;
+        if (!brigade) {
+            $scope.headcountModal.preview = calculateEmptyHeadcountPreview();
+            return;
+        }
+
+        var targetHeadcount = normalizeTargetHeadcount($scope.headcountModal.targetHeadcount);
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, $scope.headcountModal.scope);
+        $scope.headcountModal.preview = calculateHeadcountPreview(affectedBrigades, targetHeadcount);
+    };
+
+    $scope.applyHeadcountPlan = function () {
+        var brigade = $scope.headcountModal.brigade;
+        if (!brigade) {
+            return;
+        }
+
+        var targetHeadcount = normalizeTargetHeadcount($scope.headcountModal.targetHeadcount);
+        var scope = $scope.headcountModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+
+        angular.forEach(affectedBrigades, function (affectedBrigade) {
+            applyHeadcountPlanToBrigade(affectedBrigade, targetHeadcount, scope, brigade.id);
+        });
+
+        $scope.closeHeadcountModal();
+    };
+
+    $scope.clearHeadcountPlan = function () {
+        var brigade = $scope.headcountModal.brigade;
+        if (!brigade) {
+            return;
+        }
+
+        var scope = $scope.headcountModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+        angular.forEach(affectedBrigades, clearHeadcountPlanFromBrigade);
+
+        $scope.closeHeadcountModal();
+    };
+
+    $scope.openTrainModal = function (brigade) {
+        if (!brigade) {
+            return;
+        }
+
+        if (!isBrigadeAtBarracks(brigade)) {
+            alert('Training can only be done when the brigade is at one of your barracks.');
+            return;
+        }
+
+        $scope.trainModal.isOpen = true;
+        $scope.trainModal.brigade = brigade;
+        $scope.trainModal.scope = brigade.trainPlan ? brigade.trainPlan.scope : 'brigade';
+
+        if ($scope.trainModal.scope === 'federation' && !canApplyFederationScope(brigade)) {
+            $scope.trainModal.scope = 'brigade';
+        }
+
+        $scope.refreshTrainPreview();
+    };
+
+    $scope.closeTrainModal = function () {
+        $scope.trainModal.isOpen = false;
+        $scope.trainModal.brigade = null;
+        $scope.trainModal.preview = calculateEmptyTrainPreview();
+    };
+
+    $scope.onTrainScopeChanged = function () {
+        if ($scope.trainModal.scope === 'federation' && !canApplyFederationScope($scope.trainModal.brigade)) {
+            $scope.trainModal.scope = 'brigade';
+        }
+        $scope.refreshTrainPreview();
+    };
+
+    $scope.refreshTrainPreview = function () {
+        var brigade = $scope.trainModal.brigade;
+        if (!brigade) {
+            $scope.trainModal.preview = calculateEmptyTrainPreview();
+            return;
+        }
+
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, $scope.trainModal.scope);
+        $scope.trainModal.preview = calculateTrainPreview(affectedBrigades);
+    };
+
+    $scope.applyTrainPlan = function () {
+        var brigade = $scope.trainModal.brigade;
+        if (!brigade) {
+            return;
+        }
+
+        var scope = $scope.trainModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+
+        angular.forEach(affectedBrigades, function (affectedBrigade) {
+            applyTrainPlanToBrigade(affectedBrigade, scope, brigade.id);
+        });
+
+        $scope.closeTrainModal();
+    };
+
+    $scope.clearTrainPlan = function () {
+        var brigade = $scope.trainModal.brigade;
+        if (!brigade) {
+            return;
+        }
+
+        var scope = $scope.trainModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
+        var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+        angular.forEach(affectedBrigades, clearTrainPlanFromBrigade);
+
+        $scope.closeTrainModal();
     };
 
     $scope.getBrigadeToggleStyle = function (isSelected) {
@@ -143,7 +291,9 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 currentEf: null,
                 size: null,
                 display: '',
-                isEfChanged: false
+                isEfChanged: false,
+                efDrop: 0,
+                efIncrease: 0
             };
         }
 
@@ -154,7 +304,9 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             currentEf: ef,
             size: size,
             display: formatBattalionParts(type, ef, size),
-            isEfChanged: false
+            isEfChanged: false,
+            efDrop: 0,
+            efIncrease: 0
         };
     }
 
@@ -174,7 +326,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         };
     }
 
-    function calculateHeadcountResources(brigade) {
+    function calculateHeadcountResources(brigade, targetHeadcount) {
         var resources = {
             ld: 0,
             citizens: 0,
@@ -183,7 +335,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         };
 
         angular.forEach(brigade.battalions, function (battalion) {
-            var missingMen = getMissingHeadcount(battalion);
+            var missingMen = getMissingHeadcount(battalion, targetHeadcount);
             if (missingMen <= 0) {
                 return;
             }
@@ -214,34 +366,127 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         };
     }
 
-    function applyHeadcountEfChanges(brigade) {
+    function applyHeadcountEfChanges(brigade, targetHeadcount) {
         angular.forEach(brigade.battalions, function (battalion) {
             var originalEf = parseInt(battalion.originalEf, 10);
-            var missingMen = getMissingHeadcount(battalion);
+            var missingMen = getMissingHeadcount(battalion, targetHeadcount);
             var drop = getEfDrop(missingMen, battalion.size);
 
             if (!battalion.display || isNaN(originalEf) || drop <= 0) {
                 battalion.currentEf = battalion.originalEf;
-                battalion.isEfChanged = false;
-                battalion.display = formatBattalionParts(battalion.type, battalion.originalEf, battalion.size);
+                updateBattalionDisplayState(battalion);
                 return;
             }
 
             battalion.currentEf = Math.max(0, originalEf - drop);
-            battalion.isEfChanged = battalion.currentEf !== originalEf;
-            battalion.display = formatBattalionParts(battalion.type, battalion.currentEf, battalion.size);
+            updateBattalionDisplayState(battalion);
         });
+    }
+
+    function applyHeadcountPlanToBrigade(brigade, targetHeadcount, scope, sourceBrigadeId) {
+        brigade.headcountPlan = {
+            targetHeadcount: targetHeadcount,
+            scope: scope,
+            sourceBrigadeId: sourceBrigadeId
+        };
+        brigade.headcountSelected = true;
+        recalculateBrigadeEffects(brigade);
+    }
+
+    function clearHeadcountPlanFromBrigade(brigade) {
+        brigade.headcountPlan = null;
+        brigade.headcountSelected = false;
+        recalculateBrigadeEffects(brigade);
+    }
+
+    function applyTrainPlanToBrigade(brigade, scope, sourceBrigadeId) {
+        brigade.trainPlan = {
+            scope: scope,
+            sourceBrigadeId: sourceBrigadeId
+        };
+        brigade.trainSelected = true;
+        recalculateBrigadeEffects(brigade);
+    }
+
+    function clearTrainPlanFromBrigade(brigade) {
+        brigade.trainPlan = null;
+        brigade.trainSelected = false;
+        recalculateBrigadeEffects(brigade);
+    }
+
+    function recalculateBrigadeEffects(brigade) {
+        var resources = {
+            ld: 0,
+            citizens: 0,
+            ecPts: 0,
+            horses: 0
+        };
+
+        resetBattalionDisplays(brigade);
+
+        if (brigade.headcountPlan) {
+            addResources(resources, calculateHeadcountResources(brigade, brigade.headcountPlan.targetHeadcount));
+            applyHeadcountEfChanges(brigade, brigade.headcountPlan.targetHeadcount);
+        }
+
+        if (brigade.trainPlan) {
+            addResources(resources, calculateTrainResources(brigade));
+            applyTrainEfChanges(brigade);
+        }
+
+        brigade.resources = {
+            ld: resources.ld || '',
+            citizens: resources.citizens || '',
+            ecPts: resources.ecPts || '',
+            horses: resources.horses || ''
+        };
     }
 
     function resetBattalionDisplays(brigade) {
         angular.forEach(brigade.battalions, function (battalion) {
             battalion.currentEf = battalion.originalEf;
             battalion.isEfChanged = false;
+            battalion.efDrop = 0;
+            battalion.efIncrease = 0;
             battalion.display = battalion.type ? formatBattalionParts(battalion.type, battalion.originalEf, battalion.size) : '';
         });
     }
 
-    function getMissingHeadcount(battalion) {
+    function applyTrainEfChanges(brigade) {
+        angular.forEach(brigade.battalions, function (battalion) {
+            var currentEf = parseInt(battalion.currentEf, 10);
+            var originalEf = parseInt(battalion.originalEf, 10);
+            var maxEf = getBattalionMaxEf(battalion);
+
+            if (!battalion.display || isNaN(currentEf) || isNaN(originalEf) || maxEf == null || currentEf >= maxEf) {
+                updateBattalionDisplayState(battalion);
+                return;
+            }
+
+            battalion.currentEf = Math.min(maxEf, currentEf + 1);
+            updateBattalionDisplayState(battalion);
+        });
+    }
+
+    function updateBattalionDisplayState(battalion) {
+        var originalEf = parseInt(battalion.originalEf, 10);
+        var currentEf = parseInt(battalion.currentEf, 10);
+
+        battalion.efDrop = 0;
+        battalion.efIncrease = 0;
+        battalion.isEfChanged = !isNaN(originalEf) && !isNaN(currentEf) && currentEf !== originalEf;
+
+        if (battalion.isEfChanged && currentEf < originalEf) {
+            battalion.efDrop = Math.min(2, originalEf - currentEf);
+        }
+        else if (battalion.isEfChanged && currentEf > originalEf) {
+            battalion.efIncrease = currentEf - originalEf;
+        }
+
+        battalion.display = battalion.type ? formatBattalionParts(battalion.type, battalion.currentEf, battalion.size) : '';
+    }
+
+    function getMissingHeadcount(battalion, targetHeadcount) {
         if (!battalion || !battalion.type) {
             return 0;
         }
@@ -251,7 +496,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             currentSize = 0;
         }
 
-        return Math.max(0, 800 - currentSize);
+        return Math.max(0, targetHeadcount - currentSize);
     }
 
     function getEfDrop(missingMen, currentSize) {
@@ -281,6 +526,170 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         }
 
         return $scope.armyListByShortName[battalion.type.toString().trim().toUpperCase()] || null;
+    }
+
+    function canTrainBattalion(battalion) {
+        if (!battalion || !battalion.type) {
+            return false;
+        }
+
+        var currentEf = parseInt(battalion.currentEf, 10);
+        var maxEf = getBattalionMaxEf(battalion);
+        return !isNaN(currentEf) && maxEf != null && currentEf < maxEf;
+    }
+
+    function getBattalionMaxEf(battalion) {
+        return battalion && battalion.type ? 10 : null;
+    }
+
+    function getEffectiveTrainingHeadcount(brigade, battalion) {
+        var currentSize = parseInt(battalion.size, 10);
+        if (isNaN(currentSize)) {
+            currentSize = 0;
+        }
+
+        if (brigade.headcountPlan) {
+            return Math.min(800, Math.max(currentSize, brigade.headcountPlan.targetHeadcount));
+        }
+
+        return Math.min(800, Math.max(0, currentSize));
+    }
+
+    function addResources(total, resources) {
+        total.ld += parseInt(resources.ld, 10) || 0;
+        total.citizens += parseInt(resources.citizens, 10) || 0;
+        total.ecPts += parseInt(resources.ecPts, 10) || 0;
+        total.horses += parseInt(resources.horses, 10) || 0;
+    }
+
+    function normalizeTargetHeadcount(value) {
+        var parsed = parseInt(value, 10);
+        if (isNaN(parsed)) {
+            parsed = 800;
+        }
+
+        if (parsed < 1) return 1;
+        if (parsed > 800) return 800;
+        return parsed;
+    }
+
+    function canApplyFederationScope(brigade) {
+        return !!(brigade && brigade.fed && parseInt(brigade.fed, 10) > 0);
+    }
+
+    function getHeadcountAffectedBrigades(brigade, scope) {
+        if (!brigade) {
+            return [];
+        }
+
+        if (scope !== 'federation' || !canApplyFederationScope(brigade)) {
+            return [brigade];
+        }
+
+        var federationNo = parseInt(brigade.fed, 10);
+        return $scope.brigadeRows.filter(function (row) {
+            return parseInt(row.fed, 10) === federationNo;
+        });
+    }
+
+    function calculateHeadcountPreview(affectedBrigades, targetHeadcount) {
+        var preview = calculateEmptyHeadcountPreview();
+        preview.affectedBrigades = affectedBrigades.length;
+
+        angular.forEach(affectedBrigades, function (brigade) {
+            var resources = calculateHeadcountResources(brigade, targetHeadcount);
+            preview.ld += parseInt(resources.ld, 10) || 0;
+            preview.citizens += parseInt(resources.citizens, 10) || 0;
+            preview.ecPts += parseInt(resources.ecPts, 10) || 0;
+            preview.horses += parseInt(resources.horses, 10) || 0;
+
+            angular.forEach(brigade.battalions, function (battalion) {
+                var originalEf = parseInt(battalion.originalEf, 10);
+                var missingMen = getMissingHeadcount(battalion, targetHeadcount);
+                if (!isNaN(originalEf) && getEfDrop(missingMen, battalion.size) > 0) {
+                    preview.efChanges += 1;
+                }
+            });
+        });
+
+        return preview;
+    }
+
+    function calculateTrainResources(brigade) {
+        var resources = {
+            ld: 0,
+            citizens: 0,
+            ecPts: 0,
+            horses: 0
+        };
+
+        angular.forEach(brigade.battalions, function (battalion) {
+            if (!canTrainBattalion(battalion)) {
+                return;
+            }
+
+            var armyItem = getArmyItemForBattalion(battalion);
+            var headcount = getEffectiveTrainingHeadcount(brigade, battalion);
+            var cost = parseFloat(armyItem.cost);
+            var ecPtsPer25 = parseFloat(armyItem.ecPtsPer25);
+            if (isNaN(cost)) cost = 0;
+            if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
+
+            resources.ld += Math.round((headcount * cost) / 10);
+            resources.ecPts += Math.round((Math.ceil(headcount / 25) * ecPtsPer25) / 8);
+        });
+
+        return {
+            ld: resources.ld || '',
+            citizens: '',
+            ecPts: resources.ecPts || '',
+            horses: ''
+        };
+    }
+
+    function calculateTrainPreview(affectedBrigades) {
+        var preview = calculateEmptyTrainPreview();
+        preview.affectedBrigades = affectedBrigades.length;
+
+        angular.forEach(affectedBrigades, function (brigade) {
+            var resources = calculateTrainResources(brigade);
+            preview.ld += parseInt(resources.ld, 10) || 0;
+            preview.ecPts += parseInt(resources.ecPts, 10) || 0;
+
+            angular.forEach(brigade.battalions, function (battalion) {
+                if (canTrainBattalion(battalion)) {
+                    preview.trainableBattalions += 1;
+                    preview.efChanges += 1;
+                }
+                else if (battalion && battalion.type) {
+                    preview.skippedBattalions += 1;
+                }
+            });
+        });
+
+        return preview;
+    }
+
+    function calculateEmptyTrainPreview() {
+        return {
+            affectedBrigades: 0,
+            trainableBattalions: 0,
+            skippedBattalions: 0,
+            ld: 0,
+            ecPts: 0,
+            efChanges: 0
+        };
+    }
+
+    function calculateEmptyHeadcountPreview() {
+        return {
+            affectedBrigades: 0,
+            ld: 0,
+            citizens: 0,
+            ecPts: 0,
+            horses: 0,
+            efChanges: 0
+        };
     }
 
     function isMountedArmyItem(armyItem) {
