@@ -13,7 +13,7 @@ namespace Austerlitz.DAL
     using System.Collections.Generic;
     
     public partial class TS_20Boarding
-    {
+    {  
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
         public Nullable<int> Command { get; set; }
