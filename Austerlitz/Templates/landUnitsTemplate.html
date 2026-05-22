@@ -48,7 +48,16 @@
                     <td class="landUnitsFedCol">{{brigade.fed}}</td>
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
-                        <span class="landUnitsBattalionChip" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0 }" ng-show="battalion.display" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">{{battalion.display}}</span>
+                        <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
+                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0 }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">
+                                <span ng-show="battalion.display">{{battalion.display}}</span>
+                                <span ng-show="!battalion.display">&nbsp;</span>
+                            </button>
+                            <ul class="dropdown-menu landUnitsBattalionMenu">
+                                <li><a href="" ng-click="startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
+                                <li ng-class="{ disabled: !canStartMerge(battalion) }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
+                            </ul>
+                        </div>
                     </td>
                     <td class="landUnitsToggleCol">
                         <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)">H/C</button>

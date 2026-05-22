@@ -49,7 +49,7 @@ namespace Austerlitz.DAL.Management
             foreach (var entity in entities)
             {
 
-                var original = GetItems((x => x.TurnId == entity.TurnId && x.OrderNo == entity.OrderNo)).Single();
+                var original = GetItems((x => x.TurnId == entity.TurnId && x.OrderNo == entity.OrderNo)).SingleOrDefault();
                 if (original != null)
                 {
                     _austerlitzDbContext.Entry(original).CurrentValues.SetValues(entity);

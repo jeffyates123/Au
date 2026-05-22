@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.controller('landUnitsController', function ($scope, masterData, turnDataLoaderService, rulesCatalogFactory) {
+austerlitzModule.controller('landUnitsController', function ($scope, masterData, turnDataLoaderService, rulesCatalogFactory, turnSheetFactory) {
     $scope.masterData = masterData;
     $scope.brigadeRows = [];
     $scope.isLoading = false;
@@ -18,6 +18,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         brigade: null,
         scope: 'brigade',
         preview: calculateEmptyTrainPreview()
+    };
+    $scope.battalionAction = {
+        type: null,
+        source: null,
+        eligibleKeys: {}
     };
 
     $scope.brigadeActions = [
@@ -271,6 +276,307 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         var brigadeName = brigade && brigade.name ? brigade.name : 'selected brigade';
         alert(actionName + ' for ' + brigadeName + ' is not implemented yet.');
     };
+
+    $scope.startBattalionAction = function (actionType, brigade, battalion, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+
+        if (!brigade || !battalion) {
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        if (!hasNumericCoordinate(brigade)) {
+            alert('Battalion actions require a brigade at a map coordinate.');
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        if (actionType === 'merge' && !battalion.type) {
+            alert('Choose a non-empty battalion to start a merge.');
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        $scope.battalionAction = {
+            type: actionType,
+            source: { brigade: brigade, battalion: battalion },
+            eligibleKeys: buildEligibleBattalionKeyMap(actionType, brigade, battalion)
+        };
+    };
+
+    $scope.onBattalionLozengeClick = function ($event, brigade, battalion) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+
+        if (!$scope.battalionAction.type) {
+            return;
+        }
+
+        if (!isBattalionEligibleTarget(brigade, battalion)) {
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        var source = $scope.battalionAction.source;
+        if (!source || isSameBattalionSlot(source.brigade, source.battalion, brigade, battalion)) {
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        if ($scope.battalionAction.type === 'exchange') {
+            exchangeBattalions(source.brigade, source.battalion, brigade, battalion);
+            persistExchangeBattalionOrder(source.brigade, source.battalion, brigade, battalion);
+        }
+        else if ($scope.battalionAction.type === 'merge') {
+            mergeBattalions(source.brigade, source.battalion, brigade, battalion);
+            persistMergeBattalionOrder(source.brigade, source.battalion, brigade, battalion);
+        }
+
+        $scope.resetBattalionAction();
+    };
+
+    $scope.resetBattalionAction = function () {
+        $scope.battalionAction = {
+            type: null,
+            source: null,
+            eligibleKeys: {}
+        };
+    };
+
+    $scope.isBattalionActionSource = function (brigade, battalion) {
+        var source = $scope.battalionAction.source;
+        return !!(source && isSameBattalionSlot(source.brigade, source.battalion, brigade, battalion));
+    };
+
+    $scope.isBattalionEligibleTarget = function (brigade, battalion) {
+        return isBattalionEligibleTarget(brigade, battalion);
+    };
+
+    $scope.canStartMerge = function (battalion) {
+        return !!(battalion && battalion.type);
+    };
+
+    function buildEligibleBattalionKeyMap(actionType, sourceBrigade, sourceBattalion) {
+        var eligible = {};
+        angular.forEach($scope.brigadeRows, function (brigade) {
+            angular.forEach(brigade.battalions, function (battalion) {
+                if (isSameBattalionSlot(sourceBrigade, sourceBattalion, brigade, battalion)) {
+                    return;
+                }
+
+                if (actionType === 'exchange' && isSameCoordinate(sourceBrigade, brigade)) {
+                    eligible[getBattalionKey(brigade, battalion)] = true;
+                    return;
+                }
+
+                if (actionType === 'merge'
+                    && sourceBattalion.type
+                    && battalion.type
+                    && sourceBattalion.type === battalion.type
+                    && isSameCoordinate(sourceBrigade, brigade)) {
+                    eligible[getBattalionKey(brigade, battalion)] = true;
+                }
+            });
+        });
+
+        return eligible;
+    }
+
+    function isBattalionEligibleTarget(brigade, battalion) {
+        if (!$scope.battalionAction.type) {
+            return false;
+        }
+
+        return !!$scope.battalionAction.eligibleKeys[getBattalionKey(brigade, battalion)];
+    }
+
+    function getBattalionKey(brigade, battalion) {
+        return brigade.id + ':' + battalion.slot;
+    }
+
+    function isSameBattalionSlot(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
+        return !!(leftBrigade && rightBrigade && leftBattalion && rightBattalion
+            && leftBrigade.id === rightBrigade.id
+            && leftBattalion.slot === rightBattalion.slot);
+    }
+
+    function isSameCoordinate(leftBrigade, rightBrigade) {
+        if (!hasNumericCoordinate(leftBrigade) || !hasNumericCoordinate(rightBrigade)) {
+            return false;
+        }
+
+        return parseInt(leftBrigade.source.x_OrState, 10) === parseInt(rightBrigade.source.x_OrState, 10)
+            && parseInt(leftBrigade.source.y_OrFleet, 10) === parseInt(rightBrigade.source.y_OrFleet, 10);
+    }
+
+    function hasNumericCoordinate(brigade) {
+        if (!brigade || !brigade.source) {
+            return false;
+        }
+
+        return !isNaN(parseInt(brigade.source.x_OrState, 10))
+            && !isNaN(parseInt(brigade.source.y_OrFleet, 10));
+    }
+
+    function exchangeBattalions(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
+        var leftSnapshot = copyBattalionBaseline(leftBattalion);
+        copyBattalionBaselineInto(leftBattalion, rightBattalion);
+        copyBattalionBaselineInto(rightBattalion, leftSnapshot);
+
+        recalculateBrigadeEffects(leftBrigade);
+        if (leftBrigade.id !== rightBrigade.id) {
+            recalculateBrigadeEffects(rightBrigade);
+        }
+    }
+
+    function mergeBattalions(sourceBrigade, sourceBattalion, targetBrigade, targetBattalion) {
+        if (!sourceBattalion.type || !targetBattalion.type || sourceBattalion.type !== targetBattalion.type) {
+            return;
+        }
+
+        var sourceSize = parseInt(sourceBattalion.size, 10) || 0;
+        var targetSize = parseInt(targetBattalion.size, 10) || 0;
+        var sourceEf = parseInt(sourceBattalion.originalEf, 10) || 0;
+        var targetEf = parseInt(targetBattalion.originalEf, 10) || 0;
+        var combinedSize = sourceSize + targetSize;
+        var mergedEf = combinedSize > 0 ? Math.floor(((sourceSize * sourceEf) + (targetSize * targetEf)) / combinedSize) : targetEf;
+
+        targetBattalion.type = targetBattalion.type || sourceBattalion.type;
+        targetBattalion.originalEf = mergedEf;
+        targetBattalion.currentEf = mergedEf;
+        targetBattalion.size = Math.min(800, combinedSize);
+        targetBattalion.display = formatBattalionParts(targetBattalion.type, targetBattalion.originalEf, targetBattalion.size);
+
+        clearBattalionBaseline(sourceBattalion);
+
+        recalculateBrigadeEffects(sourceBrigade);
+        if (sourceBrigade.id !== targetBrigade.id) {
+            recalculateBrigadeEffects(targetBrigade);
+        }
+    }
+
+    function copyBattalionBaseline(battalion) {
+        return {
+            type: battalion.type,
+            originalEf: battalion.originalEf,
+            currentEf: battalion.originalEf,
+            size: battalion.size
+        };
+    }
+
+    function copyBattalionBaselineInto(target, source) {
+        target.type = source.type;
+        target.originalEf = source.originalEf;
+        target.currentEf = source.originalEf;
+        target.size = source.size;
+        target.display = target.type ? formatBattalionParts(target.type, target.originalEf, target.size) : '';
+    }
+
+    function clearBattalionBaseline(battalion) {
+        battalion.type = '';
+        battalion.originalEf = null;
+        battalion.currentEf = null;
+        battalion.size = null;
+        battalion.display = '';
+        battalion.isEfChanged = false;
+        battalion.efDrop = 0;
+        battalion.efIncrease = 0;
+    }
+
+    function persistExchangeBattalionOrder(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
+        turnSheetFactory.getTSExchangeBattalions($scope.masterData.turnId).then(function (rows) {
+            var targetRow = findMatchingExchangeRow(rows, leftBrigade, leftBattalion, rightBrigade, rightBattalion)
+                || findNextEmptyTurnSheetRow(rows, ['brigadeA', 'battA', 'brigadeB', 'battB']);
+
+            if (!targetRow) {
+                targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
+                rows.push(targetRow);
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeA = leftBrigade.id;
+            targetRow.battA = leftBattalion.slot;
+            targetRow.brigadeB = rightBrigade.id;
+            targetRow.battB = rightBattalion.slot;
+
+            return turnSheetFactory.postTSRecords(rows, 'ExchangeBattalions').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function persistMergeBattalionOrder(sourceBrigade, sourceBattalion, targetBrigade, targetBattalion) {
+        turnSheetFactory.getTSMergeBattalions($scope.masterData.turnId).then(function (rows) {
+            var targetRow = findMatchingMergeRow(rows, sourceBrigade, sourceBattalion, targetBrigade, targetBattalion)
+                || findNextEmptyTurnSheetRow(rows, ['bridageA', 'battA', 'brigadeB', 'battB']);
+
+            if (!targetRow) {
+                targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
+                rows.push(targetRow);
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.bridageA = sourceBrigade.id;
+            targetRow.battA = sourceBattalion.slot;
+            targetRow.brigadeB = targetBrigade.id;
+            targetRow.battB = targetBattalion.slot;
+
+            return turnSheetFactory.postTSRecords(rows, 'MergeBattalions').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function findMatchingExchangeRow(rows, leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
+        return findMatchingPairRow(rows, leftBrigade.id, leftBattalion.slot, rightBrigade.id, rightBattalion.slot, 'brigadeA', 'battA', 'brigadeB', 'battB');
+    }
+
+    function findMatchingMergeRow(rows, sourceBrigade, sourceBattalion, targetBrigade, targetBattalion) {
+        return findMatchingPairRow(rows, sourceBrigade.id, sourceBattalion.slot, targetBrigade.id, targetBattalion.slot, 'bridageA', 'battA', 'brigadeB', 'battB');
+    }
+
+    function findMatchingPairRow(rows, brigadeA, battA, brigadeB, battB, brigadeAField, battAField, brigadeBField, battBField) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            var row = rows[i];
+            var directMatch = sameNullableInt(row[brigadeAField], brigadeA)
+                && sameNullableInt(row[battAField], battA)
+                && sameNullableInt(row[brigadeBField], brigadeB)
+                && sameNullableInt(row[battBField], battB);
+            var reverseMatch = sameNullableInt(row[brigadeAField], brigadeB)
+                && sameNullableInt(row[battAField], battB)
+                && sameNullableInt(row[brigadeBField], brigadeA)
+                && sameNullableInt(row[battBField], battA);
+
+            if (directMatch || reverseMatch) {
+                return row;
+            }
+        }
+
+        return null;
+    }
+
+    function findNextEmptyTurnSheetRow(rows, fields) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            var row = rows[i];
+            var hasValue = false;
+            for (var f = 0; f < fields.length; f++) {
+                if (row[fields[f]] != null && row[fields[f]] !== '') {
+                    hasValue = true;
+                    break;
+                }
+            }
+            if (!hasValue) {
+                return row;
+            }
+        }
+
+        return null;
+    }
+
+    function sameNullableInt(left, right) {
+        return parseInt(left, 10) === parseInt(right, 10);
+    }
+
+    function showTurnSheetOrderError(error) {
+        var detail = (error && error.data) ? error.data : 'Unable to save turn-sheet order.';
+        alert(detail);
+    }
 
     function buildBattalionDisplays(brigade) {
         var battalions = [];

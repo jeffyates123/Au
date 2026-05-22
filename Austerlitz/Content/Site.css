@@ -935,6 +935,40 @@ textarea {
     line-height: 1.25;
 }
 
+.landUnitsBattalionDropdown {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 12px;
+}
+
+.landUnitsBattalionChipButton {
+    border: 1px solid transparent;
+    text-align: center;
+}
+
+.landUnitsBattalionChipButton:hover,
+.landUnitsBattalionChipButton:focus {
+    border-color: #999999;
+    outline: none;
+}
+
+.landUnitsBattalionActionSource .landUnitsBattalionChipButton {
+    border-color: #2f6fb0;
+    background: #d7e9fb;
+    color: #123a5f;
+    font-weight: bold;
+}
+
+.landUnitsBattalionActionEligible .landUnitsBattalionChipButton {
+    border-color: #b88900;
+    box-shadow: 0 0 0 2px rgba(184, 137, 0, 0.24);
+}
+
+.landUnitsBattalionMenu {
+    min-width: 110px;
+    font-size: 12px;
+}
+
 .landUnitsBattalionChipEfDrop1 {
     border: 1px solid #e5a7a7;
     background: #fde0e0;
