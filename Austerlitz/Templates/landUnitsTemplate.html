@@ -31,7 +31,12 @@
                     <th class="landUnitsFedCol">Fed</th>
                     <th class="landUnitsMpCol">MP</th>
                     <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
-                    <th class="landUnitsTotalCol">Total</th>
+                    <th class="landUnitsToggleCol">Train</th>
+                    <th class="landUnitsToggleCol">H/C</th>
+                    <th class="landUnitsResourceCol">LD</th>
+                    <th class="landUnitsResourceCol">Citz</th>
+                    <th class="landUnitsResourceCol">EcPts</th>
+                    <th class="landUnitsResourceCol">Horse</th>
                     <th class="landUnitsMenuCol"></th>
                 </tr>
             </thead>
@@ -43,9 +48,18 @@
                     <td class="landUnitsFedCol">{{brigade.fed}}</td>
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
-                        <span class="landUnitsBattalionChip" ng-show="battalion">{{battalion}}</span>
+                        <span class="landUnitsBattalionChip" ng-class="{ landUnitsBattalionChipChanged: battalion.isEfChanged }" ng-show="battalion.display" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">{{battalion.display}}</span>
                     </td>
-                    <td class="landUnitsTotalCol">{{brigade.totalMen | number}}</td>
+                    <td class="landUnitsToggleCol">
+                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="toggleBrigadeFlag(brigade, 'trainSelected')">Train</button>
+                    </td>
+                    <td class="landUnitsToggleCol">
+                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="toggleHeadcount(brigade)">H/C</button>
+                    </td>
+                    <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
+                    <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
+                    <td class="landUnitsResourceCol">{{brigade.resources.ecPts}}</td>
+                    <td class="landUnitsResourceCol">{{brigade.resources.horses}}</td>
                     <td class="landUnitsMenuCol">
                         <div class="dropdown landUnitsActionDropdown">
                             <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">

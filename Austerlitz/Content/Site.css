@@ -860,7 +860,7 @@ textarea {
 }
 
 .landUnitsTable {
-    min-width: 1180px;
+    min-width: 1400px;
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
@@ -909,14 +909,18 @@ textarea {
     text-align: center;
 }
 
-.landUnitsTotalCol {
-    width: 82px;
-    text-align: right;
-    font-weight: bold;
-}
-
 .landUnitsMenuCol {
     width: 36px;
+    text-align: right;
+}
+
+.landUnitsToggleCol {
+    width: 58px;
+    text-align: center;
+}
+
+.landUnitsResourceCol {
+    width: 58px;
     text-align: right;
 }
 
@@ -929,6 +933,31 @@ textarea {
     color: #555;
     font-size: 11px;
     line-height: 1.25;
+}
+
+.landUnitsBattalionChipChanged {
+    border: 1px solid #b88900;
+    background: #fff0bf;
+    color: #5a4300;
+    font-weight: bold;
+}
+
+.landUnitsToggleButton {
+    min-width: 42px;
+    padding: 2px 6px;
+    border: 1px solid #cfcfcf;
+    border-radius: 10px;
+    background: #eeeeee;
+    color: #555555;
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+.landUnitsToggleButton:hover,
+.landUnitsToggleButton:focus {
+    border-color: #999999;
+    color: #222222;
+    outline: none;
 }
 
 .landUnitsActionDropdown {
