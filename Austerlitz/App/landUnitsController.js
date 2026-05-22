@@ -539,7 +539,17 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     }
 
     function getBattalionMaxEf(battalion) {
-        return battalion && battalion.type ? 10 : null;
+        var armyItem = getArmyItemForBattalion(battalion);
+        if (!armyItem) {
+            return null;
+        }
+
+        var maxEf = parseInt(armyItem.ef, 10);
+        if (isNaN(maxEf)) {
+            maxEf = parseInt(armyItem.EF, 10);
+        }
+
+        return isNaN(maxEf) ? null : maxEf;
     }
 
     function getEffectiveTrainingHeadcount(brigade, battalion) {
