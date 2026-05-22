@@ -1,5 +1,12 @@
 ﻿austerlitzModule.controller("menuController", function ($scope, $location, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, masterData) {
     $scope.masterData = masterData;
+    $scope.sidebarGameNoOptions = [];
+    $scope.sidebarStateOptions = [];
+    $scope.sidebarMonthYearOptions = [];
+    $scope.sidebarSelectedGameNo = $scope.masterData.selectedGameNo || null;
+    $scope.sidebarSelectedState = $scope.masterData.selectedState || null;
+    $scope.sidebarSelectedMonthYear = $scope.masterData.selectedMonthYear || null;
+    $scope.sidebarSelectedTurnDetails = {};
 
     $scope.init = function () {
         var rememberedTurnId = $scope.masterData.getSelectedTurnId ? $scope.masterData.getSelectedTurnId() : null;
@@ -49,6 +56,9 @@
                     $scope.masterData.turnId = selectedTurn.turnId;
                 }
             }
+
+            $scope.refreshSidebarGameNoOptions();
+            $scope.setSidebarSelectedTurnById($scope.masterData.turnId, false);
         });
     };
 
@@ -64,6 +74,204 @@
         rulesCatalogFactory.getRulesCatalog().then(function (rulesCatalog) {
             $scope.masterData.rulesCatalog = rulesCatalog;
         });
+    };
+
+    $scope.syncSidebarSelectedFiltersToMasterData = function () {
+        if ($scope.masterData.setSelectedTurnFilters) {
+            $scope.masterData.setSelectedTurnFilters($scope.sidebarSelectedGameNo, $scope.sidebarSelectedState, $scope.sidebarSelectedMonthYear);
+            return;
+        }
+
+        $scope.masterData.selectedGameNo = $scope.sidebarSelectedGameNo;
+        $scope.masterData.selectedState = $scope.sidebarSelectedState;
+        $scope.masterData.selectedMonthYear = $scope.sidebarSelectedMonthYear;
+    };
+
+    $scope.getSidebarMonthNo = function (monthText) {
+        if (!monthText) return 0;
+
+        switch (monthText.toString().substr(0, 3).toUpperCase()) {
+            case 'JAN': return 1;
+            case 'FEB': return 2;
+            case 'MAR': return 3;
+            case 'APR': return 4;
+            case 'MAY': return 5;
+            case 'JUN': return 6;
+            case 'JUL': return 7;
+            case 'AUG': return 8;
+            case 'SEP': return 9;
+            case 'OCT': return 10;
+            case 'NOV': return 11;
+            case 'DEC': return 12;
+            default: return 0;
+        }
+    };
+
+    $scope.normalizeSidebarTurn = function (turn) {
+        if (!turn || !turn.turnId) {
+            return null;
+        }
+
+        var turnId = turn.turnId;
+        var gameNo = (turn.gameNo != null ? turn.gameNo : (turnId.length >= 3 ? turnId.substr(0, 3) : '')).toString().trim();
+        var state = (turn.state != null ? turn.state : (turnId.length >= 4 ? turnId.substr(3, 1) : '')).toString().trim();
+        var monthText = turn.month || (turnId.length >= 8 ? turnId.substring(4, turnId.length - 4) : '');
+        var year = turn.year || (turnId.length >= 8 ? parseInt(turnId.substr(turnId.length - 4), 10) : 0);
+
+        return {
+            turnId: turnId,
+            gameNo: gameNo,
+            state: state,
+            monthText: monthText,
+            year: year,
+            monthNo: $scope.getSidebarMonthNo(monthText),
+            monthYearLabel: (monthText || '') + (year || '')
+        };
+    };
+
+    $scope.getSidebarNormalizedTurns = function () {
+        if (!$scope.masterData.turnsList || !$scope.masterData.turnsList.length) {
+            return [];
+        }
+
+        return $scope.masterData.turnsList
+            .map($scope.normalizeSidebarTurn)
+            .filter(function (turn) { return !!turn; });
+    };
+
+    $scope.setSidebarSelectedTurnById = function (turnId, shouldLoad) {
+        var turns = $scope.getSidebarNormalizedTurns();
+        var matchedTurn = null;
+
+        for (var i = 0; i < turns.length; i++) {
+            if (turns[i].turnId === turnId) {
+                matchedTurn = turns[i];
+                break;
+            }
+        }
+
+        if (!matchedTurn && turns.length > 0) {
+            matchedTurn = turns[0];
+        }
+
+        if (!matchedTurn) {
+            return;
+        }
+
+        $scope.sidebarSelectedGameNo = matchedTurn.gameNo;
+        $scope.refreshSidebarStateOptions();
+        $scope.sidebarSelectedState = matchedTurn.state;
+        $scope.refreshSidebarMonthYearOptions();
+        $scope.sidebarSelectedMonthYear = matchedTurn.monthYearLabel;
+        $scope.sidebarSelectedTurnDetails = { turnId: matchedTurn.turnId };
+        $scope.syncSidebarSelectedFiltersToMasterData();
+
+        if (shouldLoad) {
+            $scope.loadSidebarTurnFromDatabase();
+        }
+    };
+
+    $scope.refreshSidebarGameNoOptions = function () {
+        var turns = $scope.getSidebarNormalizedTurns();
+        var seen = {};
+        var options = [];
+
+        for (var i = 0; i < turns.length; i++) {
+            var gameNo = (turns[i].gameNo || '').toString();
+            if (!seen[gameNo]) {
+                seen[gameNo] = true;
+                options.push(gameNo);
+            }
+        }
+
+        $scope.sidebarGameNoOptions = options;
+    };
+
+    $scope.refreshSidebarStateOptions = function () {
+        var turns = $scope.getSidebarNormalizedTurns().filter(function (turn) {
+            return turn.gameNo === $scope.sidebarSelectedGameNo;
+        });
+
+        var seen = {};
+        var options = [];
+        for (var i = 0; i < turns.length; i++) {
+            var state = (turns[i].state || '').toString();
+            if (!seen[state]) {
+                seen[state] = true;
+                options.push(state);
+            }
+        }
+
+        $scope.sidebarStateOptions = options;
+        if ($scope.sidebarStateOptions.indexOf($scope.sidebarSelectedState) < 0) {
+            $scope.sidebarSelectedState = options.length > 0 ? options[0] : null;
+        }
+    };
+
+    $scope.refreshSidebarMonthYearOptions = function () {
+        var turns = $scope.getSidebarNormalizedTurns().filter(function (turn) {
+            return turn.gameNo === $scope.sidebarSelectedGameNo && turn.state === $scope.sidebarSelectedState;
+        });
+
+        var seen = {};
+        var options = [];
+        for (var i = 0; i < turns.length; i++) {
+            var monthYear = turns[i].monthYearLabel;
+            if (!seen[monthYear]) {
+                seen[monthYear] = true;
+                options.push(monthYear);
+            }
+        }
+
+        $scope.sidebarMonthYearOptions = options;
+        if ($scope.sidebarMonthYearOptions.indexOf($scope.sidebarSelectedMonthYear) < 0) {
+            $scope.sidebarSelectedMonthYear = options.length > 0 ? options[0] : null;
+        }
+    };
+
+    $scope.onSidebarGameNoChanged = function () {
+        $scope.refreshSidebarStateOptions();
+        $scope.refreshSidebarMonthYearOptions();
+        $scope.syncSidebarSelectedFiltersToMasterData();
+        $scope.onSidebarMonthYearChanged();
+    };
+
+    $scope.onSidebarStateChanged = function () {
+        $scope.refreshSidebarMonthYearOptions();
+        $scope.syncSidebarSelectedFiltersToMasterData();
+        $scope.onSidebarMonthYearChanged();
+    };
+
+    $scope.onSidebarMonthYearChanged = function () {
+        $scope.syncSidebarSelectedFiltersToMasterData();
+
+        var turns = $scope.getSidebarNormalizedTurns();
+        for (var i = 0; i < turns.length; i++) {
+            var turn = turns[i];
+            if (turn.gameNo === $scope.sidebarSelectedGameNo
+                && turn.state === $scope.sidebarSelectedState
+                && turn.monthYearLabel === $scope.sidebarSelectedMonthYear) {
+                $scope.sidebarSelectedTurnDetails = { turnId: turn.turnId };
+                $scope.loadSidebarTurnFromDatabase();
+                return;
+            }
+        }
+    };
+
+    $scope.loadSidebarTurnFromDatabase = function () {
+        if (!$scope.sidebarSelectedTurnDetails || !$scope.sidebarSelectedTurnDetails.turnId) {
+            return;
+        }
+
+        if ($scope.masterData.setSelectedTurnId) {
+            $scope.masterData.setSelectedTurnId($scope.sidebarSelectedTurnDetails.turnId);
+        }
+        else {
+            $scope.masterData.turnId = $scope.sidebarSelectedTurnDetails.turnId;
+        }
+
+        $scope.syncSidebarSelectedFiltersToMasterData();
+        turnDataLoaderService.loadTurn($scope.masterData, $scope.masterData.turnId);
     };
 
     $scope.saveTurnsheetSpreadsheet = function ($event) {
@@ -174,6 +382,14 @@
             return currentPath === '/home' || currentPath === '/' || currentPath === '';
         }
 
-        return currentPath === targetPath;
+        if (targetPath === '/military') {
+            return currentPath.indexOf('/military') === 0;
+        }
+
+        if (targetPath === '/turnsheet') {
+            return currentPath.indexOf('/turnsheet') === 0;
+        }
+
+        return currentPath === targetPath || currentPath.indexOf(targetPath + '/') === 0;
     };
 });

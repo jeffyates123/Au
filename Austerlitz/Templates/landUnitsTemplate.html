@@ -1,0 +1,65 @@
+<div class="landUnitsPage" ng-init="initLandUnits()">
+    <div class="landUnitsHeader">
+        <div>
+            <h2 class="landUnitsTitle">Military</h2>
+            <div class="landUnitsSubtitle">Brigades</div>
+        </div>
+        <div class="landUnitsTurnInfo">
+            <span>{{masterData.turnId}}</span>
+        </div>
+    </div>
+
+    <div class="alert alert-info landUnitsAlert" ng-show="isLoading">
+        Loading brigades...
+    </div>
+
+    <div class="alert alert-danger landUnitsAlert" ng-show="loadError">
+        {{loadError}}
+    </div>
+
+    <div class="alert alert-warning landUnitsAlert" ng-show="!isLoading && !loadError && brigadeRows.length === 0">
+        No brigades are available for the selected turn.
+    </div>
+
+    <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
+        <table class="table landUnitsTable">
+            <thead>
+                <tr>
+                    <th class="landUnitsIdCol">ID</th>
+                    <th class="landUnitsNameCol">Name</th>
+                    <th class="landUnitsPositionCol">Pos</th>
+                    <th class="landUnitsFedCol">Fed</th>
+                    <th class="landUnitsMpCol">MP</th>
+                    <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
+                    <th class="landUnitsTotalCol">Total</th>
+                    <th class="landUnitsMenuCol"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="brigade in brigadeRows track by brigade.id">
+                    <td class="landUnitsIdCol">{{brigade.id}}</td>
+                    <td class="landUnitsNameCol">{{brigade.name}}</td>
+                    <td class="landUnitsPositionCol">{{brigade.position}}</td>
+                    <td class="landUnitsFedCol">{{brigade.fed}}</td>
+                    <td class="landUnitsMpCol">{{brigade.mp}}</td>
+                    <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
+                        <span class="landUnitsBattalionChip" ng-show="battalion">{{battalion}}</span>
+                    </td>
+                    <td class="landUnitsTotalCol">{{brigade.totalMen | number}}</td>
+                    <td class="landUnitsMenuCol">
+                        <div class="dropdown landUnitsActionDropdown">
+                            <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">
+                                ...
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right landUnitsActionMenu">
+                                <li ng-repeat="action in brigadeActions">
+                                    <a href="" ng-click="selectBrigadeAction(action, brigade)">{{action}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

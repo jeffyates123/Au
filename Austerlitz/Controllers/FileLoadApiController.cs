@@ -704,6 +704,7 @@ namespace Austerlitz.Controllers
                 //1049  25  S. TRINIDAD     18/41  0 20 100%  11 1100    0    0        1050  23  SANTA ANA       18/41  0 20 100%   9  950    0    0
                 //1051  23  RAYO             7/34  0 20 100%   7  950    0    0        1052  21  NEPTUNO         18/41  0 25 100%  17  800    0    0
                 bool locationFound = false;
+                int originalLineLocation = lineLocation;
 
                 for (; lineLocation < lineList.Count; lineLocation++)
                 {
@@ -776,7 +777,8 @@ namespace Austerlitz.Controllers
                     }
                 }
 
-                return lineLocation;
+
+                return locationFound ? lineLocation : originalLineLocation;
             }
             catch (Exception ex)
             {
@@ -1282,6 +1284,8 @@ namespace Austerlitz.Controllers
                     return "R";
                 case "Austria":
                     return "A";
+                case "Ottoman Empire":
+                    return "T";
                 case "Confederation of Rhine":
                     return "B";
                 case "Great Britain":

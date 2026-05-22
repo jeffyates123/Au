@@ -32,6 +32,8 @@
 
     <script src="~/App/menuController.js"></script>
     <script src="~/App/homeController.js"></script>
+    <script src="~/App/landUnitsController.js"></script>
+    <script src="~/App/sectionPlaceholderController.js"></script>
 
     <script src="~/App/turnMaps/turnMapsConfigFactory.js"></script>
     <script src="~/App/turnMaps/turnMapsSharedFactory.js"></script>
@@ -46,90 +48,65 @@
     <script src="~/App/turnSheet/turnSheetSectionController.js"></script>
 </head>
 
-<body style="padding-top:60px" ng-controller="menuController">
-    <header>
-        <div class="nav navbar-default navbar-fixed-top stateMenuBar" ng-style="getMenuBarStyle()">
-            <div class="container-fluid">
-
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a href="/home" class="navbar-brand menuTurnTitle">
-                        <div class="menuCountryTitle">{{getSelectedStateName()}}</div>
-                    </a>
-                </div>
-
-                <div class="collapse navbar-collapse" id="main-nav">
-                    <ul class="nav navbar-nav">
-
-                        <li ng-class="{ active: isActive('/TurnMaps') }"><a href="/TurnMaps">Turn Maps</a></li>
-
-                        <li class="dropdown" ng-class="{ active: isActive('/TurnSheet') }">
-                            <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button">
-                                Turn Sheet <span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu ts-dropdown-menu">
-                                <li class="dropdown-header">Land Forces</li>
-                                <li><a href="/TurnSheet/SetUpBrigades">TS_03 Set Up Brigades</a></li>
-                                <li><a href="/TurnSheet/SetUpAdditionalBrigades">TS_04 Set Up Additional Brigades</a></li>
-                                <li><a href="/TurnSheet/IncreaseHeadcount">TS_05 Increase Headcount</a></li>
-                                <li><a href="/TurnSheet/IncreaseBrigadeXP">TS_06 Increase Brigade XP</a></li>
-                                <li><a href="/TurnSheet/ExchangeBattalions">TS_07 Exchange Battalions</a></li>
-                                <li><a href="/TurnSheet/MergeBattalions">TS_08 Merge Battalions</a></li>
-                                <li><a href="/TurnSheet/BuildBaggageTrain">TS_11 Build Baggage Train</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li class="dropdown-header">Naval</li>
-                                <li><a href="/TurnSheet/RepairShips_BaggageTrains">TS_09 Repair Ships &amp; Baggage Trains</a></li>
-                                <li><a href="/TurnSheet/BuildShips">TS_10 Build Ships</a></li>
-                                <li><a href="/TurnSheet/CoastalDefence">TS_15 Coastal Defence</a></li>
-                                <li><a href="/TurnSheet/SeaBlockade">TS_16 Sea Blockade</a></li>
-                                <li><a href="/TurnSheet/Boarding">TS_20 Boarding</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li class="dropdown-header">Economics &amp; Territory</li>
-                                <li><a href="/TurnSheet/TransferGoods">TS_01 Transfer Goods</a></li>
-                                <li><a href="/TurnSheet/DemolishItems">TS_02 Demolish Items</a></li>
-                                <li><a href="/TurnSheet/IncreasePopulationDensity">TS_12 Increase Population Density</a></li>
-                                <li><a href="/TurnSheet/BuildProductionSites">TS_13 Build Production Sites</a></li>
-                                <li><a href="/TurnSheet/TradeAndLoading1">TS_17 Trade &amp; Loading (Part 1)</a></li>
-                                <li><a href="/TurnSheet/TradeAndLoading2">TS_19 Trade &amp; Loading (Part 2)</a></li>
-                                <li><a href="/TurnSheet/HandOverTerritory">TS_21 Hand Over Territory</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li class="dropdown-header">Movement &amp; Diplomacy</li>
-                                <li><a href="/TurnSheet/FormFederations">TS_14 Form Federations</a></li>
-                                <li><a href="/TurnSheet/Movement">TS_18 Movement</a></li>
-                                <li><a href="/TurnSheet/ChangeNames">TS_22 Change Names</a></li>
-                                <li><a href="/TurnSheet/ChangeStateRelationships">TS_23 Change State Relationships</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="menuSpreadsheetSaveItem"><a href="" ng-click="saveTurnsheetSpreadsheet($event)">Save Spreadsheet</a></li>
-                        <li class="menuTurnInfoItem" ng-class="{ active: isActive('/home') }">
-                            <a href="/home">
-                                <div class="menuTurnRow"><span class="menuTurnValue">AU-{{masterData.selectedGameNo}}</span></div>
-                                <div class="menuTurnRow"><span class="menuTurnValue">{{getSelectedMonthYearText()}}</span></div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
+<body ng-controller="menuController">
+    <div class="appShell" ng-init="init();">
+        <header class="appTopBanner" ng-style="getMenuBarStyle()">
+            <div class="appBannerLeft">
+                <span class="appBannerCountry">{{getSelectedStateName()}}</span>
+                <span class="appBannerDivider">|</span>
+                <span>AU-{{masterData.selectedGameNo || '--'}}</span>
+                <span class="appBannerDivider">|</span>
+                <span>{{getSelectedMonthYearText() || masterData.turnId}}</span>
             </div>
-        </div>
-    </header>
-
-    <main ng-init="init();" ng-view="">
-        @RenderBody()
-    </main>
-
-    <footer class="container" style="padding:60px">
-        <div class="nav navbar-default navbar-fixed-bottom stateMenuBar stateMenuBarBottom" ng-style="getMenuBarStyle()">
-            <div class="container-fluid">
-                <div class="stateMenuBarBottomCode">AU-{{masterData.selectedGameNo}}</div>
+            <div class="appBannerRight">
+                <span>{{masterData.turnId}}</span>
             </div>
-        </div>
-    </footer>
+        </header>
+
+        <aside class="appSidebar">
+            <div class="appSidebarTitle">
+                <div class="appSidebarCountry">{{getSelectedStateName()}}</div>
+                <div class="appSidebarGame">AU-{{masterData.selectedGameNo || '--'}}</div>
+            </div>
+
+            <div class="appSidebarTurnSelector">
+                <label for="sidebarSelectedGameNo">Game</label>
+                <select id="sidebarSelectedGameNo" class="form-control input-sm" ng-options="gameNo for gameNo in sidebarGameNoOptions" ng-model="sidebarSelectedGameNo" ng-change="onSidebarGameNoChanged()">
+                    <option value="">-- game --</option>
+                </select>
+
+                <label for="sidebarSelectedState">State</label>
+                <select id="sidebarSelectedState" class="form-control input-sm" ng-options="state for state in sidebarStateOptions" ng-model="sidebarSelectedState" ng-change="onSidebarStateChanged()">
+                    <option value="">-- state --</option>
+                </select>
+
+                <label for="sidebarSelectedMonthYear">Turn</label>
+                <select id="sidebarSelectedMonthYear" class="form-control input-sm" ng-options="monthYear for monthYear in sidebarMonthYearOptions" ng-model="sidebarSelectedMonthYear" ng-change="onSidebarMonthYearChanged()">
+                    <option value="">-- turn --</option>
+                </select>
+
+                <button type="button" class="btn btn-default btn-xs appSidebarSave" ng-click="saveTurnsheetSpreadsheet($event)">Save Spreadsheet</button>
+            </div>
+
+            <nav class="appSidebarNav">
+                <a href="/home" ng-class="{ active: isActive('/home') }">Overview</a>
+                <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
+                <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Military</a>
+                <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Naval</a>
+                <a href="/Section/Diplomacy" ng-class="{ active: isActive('/Section/Diplomacy') }">Diplomacy</a>
+                <a href="/Section/Battles" ng-class="{ active: isActive('/Section/Battles') }">Battles</a>
+                <a href="/TurnMaps" ng-class="{ active: isActive('/TurnMaps') }">Map</a>
+                <a href="/Section/Intelligence" ng-class="{ active: isActive('/Section/Intelligence') }">Intelligence</a>
+                <a href="/TurnSheet/Movement" ng-class="{ active: isActive('/TurnSheet') }">
+                    Turnsheet <span class="appSidebarBadge">1</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="appMainContent" ng-view="">
+            @RenderBody()
+        </main>
+    </div>
 </body>
 
 </html>

@@ -3,8 +3,9 @@
 
 
 body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+    padding-top: 0;
+    padding-bottom: 0;
+    background: #f7f4ef;
 }
 
 /* Set padding to keep content from hitting the edges */
@@ -561,6 +562,170 @@ textarea {
     line-height: 34px;
 }
 
+/* App shell with slim banner and sidebar navigation */
+.appShell {
+    min-height: 100vh;
+    background: #f7f4ef;
+}
+
+.appTopBanner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+    font-size: 12px;
+    line-height: 32px;
+}
+
+.appBannerLeft,
+.appBannerRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.appBannerCountry {
+    font-weight: bold;
+}
+
+.appBannerDivider {
+    opacity: 0.45;
+}
+
+.appSidebar {
+    position: fixed;
+    top: 32px;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    width: 164px;
+    padding: 14px 12px;
+    border-right: 1px solid #ddd8cf;
+    background: #fbfaf7;
+    overflow-y: auto;
+}
+
+.appSidebarTitle {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e3ded5;
+}
+
+.appSidebarCountry {
+    color: #333;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.appSidebarGame {
+    margin-top: 2px;
+    color: #777;
+    font-size: 11px;
+}
+
+.appSidebarTurnSelector {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e3ded5;
+}
+
+.appSidebarTurnSelector label {
+    display: block;
+    margin: 6px 0 2px;
+    color: #777;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.appSidebarTurnSelector select.form-control {
+    height: 26px;
+    max-width: none;
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+.appSidebarSave {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 11px;
+}
+
+.appSidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.appSidebarNav a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 9px;
+    border-radius: 2px;
+    color: #444;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.appSidebarNav a:hover,
+.appSidebarNav a:focus {
+    background: #eee8df;
+    color: #222;
+    text-decoration: none;
+}
+
+.appSidebarNav a.active {
+    background: #e5e1d9;
+    color: #222;
+    font-weight: bold;
+}
+
+.appSidebarBadge {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: #ddd7ce;
+    color: #555;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+}
+
+.appMainContent {
+    margin-left: 164px;
+    padding-top: 32px;
+    min-height: 100vh;
+    background: #f7f4ef;
+}
+
+.sectionPlaceholderPage {
+    padding: 24px;
+}
+
+.sectionPlaceholderPanel {
+    max-width: 560px;
+    padding: 22px;
+    border: 1px solid #e0dacf;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.sectionPlaceholderPanel h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
 .menuCountryTitle {
     font-weight: bold;
     display: block;
@@ -648,4 +813,142 @@ textarea {
     height: 560px;
     font-size: 12px;
     font-family: Arial;
+}
+
+/* Land units page */
+.landUnitsPage {
+    padding: 16px 20px;
+    color: #222;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.landUnitsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.landUnitsTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.landUnitsSubtitle {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #666;
+}
+
+.landUnitsTurnInfo {
+    font-size: 12px;
+    color: #666;
+}
+
+.landUnitsAlert {
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.landUnitsTableWrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.landUnitsTable {
+    min-width: 1180px;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+    background: #fff;
+}
+
+.landUnitsTable > thead > tr > th {
+    padding: 8px 8px;
+    color: #555;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+}
+
+.landUnitsTable > tbody > tr > td {
+    padding: 7px 8px;
+    vertical-align: middle;
+    border-top: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.landUnitsTable > tbody > tr:hover {
+    background: #f7f7f7;
+}
+
+.landUnitsIdCol {
+    width: 58px;
+    text-align: left;
+}
+
+.landUnitsNameCol {
+    width: 180px;
+    text-align: left;
+}
+
+.landUnitsPositionCol,
+.landUnitsFedCol,
+.landUnitsMpCol {
+    width: 54px;
+    text-align: center;
+}
+
+.landUnitsBattalionCol {
+    width: 105px;
+    text-align: center;
+}
+
+.landUnitsTotalCol {
+    width: 82px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.landUnitsMenuCol {
+    width: 36px;
+    text-align: right;
+}
+
+.landUnitsBattalionChip {
+    display: inline-block;
+    min-width: 74px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #f3f3f3;
+    color: #555;
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+.landUnitsActionDropdown {
+    position: relative;
+}
+
+.landUnitsActionButton {
+    padding: 0 4px;
+    color: #777;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.landUnitsActionButton:hover,
+.landUnitsActionButton:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+.landUnitsActionMenu {
+    min-width: 170px;
+    font-size: 12px;
 }

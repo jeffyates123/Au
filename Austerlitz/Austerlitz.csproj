@@ -247,10 +247,12 @@
     <Content Include="App\editableCellDirective.js" />
     <Content Include="App\homeController.js" />
     <Content Include="App\bgModalController.js" />
+    <Content Include="App\landUnitsController.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\menuController.js" />
     <Content Include="App\simBattleFactory.js" />
     <Content Include="App\rulesCatalogFactory.js" />
+    <Content Include="App\sectionPlaceholderController.js" />
     <Content Include="App\simBattleController.js" />
     <Content Include="App\turnDataLoaderService.js" />
     <Content Include="App\turnMaps\turnMapsBoardingFactory.js" />
@@ -647,6 +649,8 @@
     <Content Include="Templates\headerTemplate.html" />
     <Content Include="Templates\homeTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
+    <Content Include="Templates\landUnitsTemplate.html" />
+    <Content Include="Templates\sectionPlaceholderTemplate.html" />
     <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />
     <Content Include="Templates\turnSheetSectionTemplate.html" />

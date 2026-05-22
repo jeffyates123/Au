@@ -13,6 +13,14 @@
             controller: 'turnSheetSectionController',
             templateUrl: '/Templates/turnSheetSectionTemplate.html'
         })
+        .when('/Military/Brigades', {
+            controller: 'landUnitsController',
+            templateUrl: '/Templates/landUnitsTemplate.html'
+        })
+        .when('/Section/:sectionName', {
+            controller: 'sectionPlaceholderController',
+            templateUrl: '/Templates/sectionPlaceholderTemplate.html'
+        })
         .otherwise({
             redirectTo: '/'
         });
