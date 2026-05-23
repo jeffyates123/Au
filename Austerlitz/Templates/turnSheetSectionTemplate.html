@@ -2,16 +2,30 @@
     <div class="ts-section-header">
         <h3 class="ts-section-title">{{title}}</h3>
         <div class="ts-section-actions">
-            <button type="button" class="btn btn-primary btn-sm" ng-click="saveData()" ng-disabled="isSaving">
-                <span ng-show="!isSaving">Save</span>
-                <span ng-show="isSaving">Saving...</span>
-            </button>
+            <a class="btn btn-default btn-sm" href="/TurnSheet">All Sections</a>
         </div>
     </div>
 
     <div ng-show="loadError" class="alert alert-warning ts-section-alert">{{loadError}}</div>
-    <div ng-show="saveMessage" class="alert alert-success ts-section-alert">{{saveMessage}}</div>
-    <div ng-show="saveError" class="alert alert-danger ts-section-alert">{{saveError}}</div>
+    <div ng-show="isLoading" class="alert alert-info ts-section-alert">Loading...</div>
 
-    <div class="ts-section-grid" ng-grid="gridOptions"></div>
+    <div class="ts-table-wrap" ng-show="!loadError && !isLoading">
+        <table class="table table-condensed table-bordered ts-html-table">
+            <thead>
+                <tr>
+                    <th ng-repeat="column in columns">{{column.displayName}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="row in rows track by $index">
+                    <td ng-repeat="column in columns" ng-class="{ 'ts-empty-cell': isEmptyValue(row, column) }">
+                        {{getCellValue(row, column)}}
+                    </td>
+                </tr>
+                <tr ng-show="!rows.length">
+                    <td colspan="{{columns.length}}" class="ts-empty-table">No rows for this turn.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

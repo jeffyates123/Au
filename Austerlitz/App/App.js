@@ -9,8 +9,12 @@
             controller: 'turnMapsController',
             templateUrl: '/Templates/turnMapsTemplate.html'
         })
+        .when('/TurnSheet', {
+            controller: 'turnSheetAllSectionsController',
+            templateUrl: '/Templates/turnSheetAllSectionsTemplate.html'
+        })
         .when('/TurnSheet/:section', {
-            controller: 'turnSheetSectionController',
+            controller: 'turnSheetReadOnlySectionController',
             templateUrl: '/Templates/turnSheetSectionTemplate.html'
         })
         .when('/Military/Brigades', {

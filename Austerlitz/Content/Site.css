@@ -690,6 +690,38 @@ textarea {
     font-weight: bold;
 }
 
+.appSidebarGroup {
+    border-radius: 2px;
+}
+
+.appSidebarGroup.active > .appSidebarGroupLink {
+    background: #e5e1d9;
+    color: #222;
+    font-weight: bold;
+}
+
+.appSidebarSubNav {
+    position: static;
+    float: none;
+    min-width: 0;
+    width: 100%;
+    max-height: 420px;
+    margin: 2px 0 0;
+    padding: 4px;
+    overflow-y: auto;
+    border: 1px solid #ded8ce;
+    background: #fbfaf7;
+    box-shadow: none;
+}
+
+.appSidebarSubNav a {
+    display: block;
+    padding: 3px 6px;
+    color: #666;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
 .appSidebarBadge {
     min-width: 16px;
     height: 16px;
@@ -801,18 +833,85 @@ textarea {
     align-items: center;
 }
 
+.ts-turn-label {
+    color: #666;
+    font-size: 12px;
+}
+
 .ts-section-alert {
     margin-bottom: 10px;
     padding: 6px 12px;
     font-size: 13px;
 }
 
-.ts-section-grid {
+.ts-table-wrap {
     border: 1px solid rgb(212, 212, 212);
     width: 100%;
-    height: 560px;
+    overflow-x: auto;
+    background: #fff;
+}
+
+.ts-html-table {
+    margin-bottom: 0;
     font-size: 12px;
     font-family: Arial;
+}
+
+.ts-html-table > thead > tr > th {
+    white-space: nowrap;
+    background: #eee8df;
+    color: #333;
+    font-weight: bold;
+}
+
+.ts-html-table > tbody > tr > td {
+    min-width: 54px;
+    white-space: nowrap;
+}
+
+.ts-empty-cell {
+    color: #bbb;
+}
+
+.ts-empty-table {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+}
+
+.ts-all-page {
+    padding-bottom: 40px;
+}
+
+.ts-all-section {
+    margin-bottom: 16px;
+    border: 1px solid #ded8ce;
+    background: #fff;
+}
+
+.ts-all-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-bottom: 1px solid #ded8ce;
+    background: #f2eee7;
+}
+
+.ts-all-section-title {
+    color: #333;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.ts-collapse-button {
+    padding: 0;
+}
+
+.ts-row-count {
+    margin-left: auto;
+    color: #777;
+    font-size: 11px;
 }
 
 /* Land units page */
@@ -952,6 +1051,33 @@ textarea {
     line-height: 1.25;
 }
 
+.landUnitsFederationChip {
+    display: inline-block;
+    min-width: 34px;
+    padding: 2px 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: #eeeeee;
+    color: #555555;
+    font-size: 11px;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.landUnitsFederationChip:hover,
+.landUnitsFederationChip:focus {
+    border-color: #999999;
+    color: #222222;
+    outline: none;
+}
+
+.landUnitsFederationChipChanged {
+    border-color: #b88900;
+    background: #fff0c2;
+    color: #6a4b00;
+    font-weight: bold;
+}
+
 .landUnitsBattalionDropdown {
     display: inline-flex;
     align-items: center;
@@ -1004,6 +1130,13 @@ textarea {
     border: 1px solid #8ebf88;
     background: #dff2dc;
     color: #205a20;
+    font-weight: bold;
+}
+
+.landUnitsBattalionChipNew {
+    border: 1px solid #8aa6d6;
+    background: #e3ecfb;
+    color: #1f4778;
     font-weight: bold;
 }
 
@@ -1070,6 +1203,16 @@ textarea {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
+.landUnitsAddBattalionModal {
+    width: 680px;
+    margin-left: -340px;
+}
+
+.landUnitsFormFederationModal {
+    width: 760px;
+    margin-left: -380px;
+}
+
 .landUnitsModalHeader {
     display: flex;
     align-items: flex-start;
@@ -1095,6 +1238,31 @@ textarea {
 
 .landUnitsHeadcountInput {
     width: 120px;
+}
+
+.landUnitsFederationTargetRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.landUnitsFederationTargetRow label {
+    margin-bottom: 0;
+}
+
+.landUnitsFederationInput {
+    width: 90px;
+}
+
+.landUnitsFederationHint {
+    color: #777777;
+    font-size: 11px;
+}
+
+.landUnitsFormFederationError {
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
 }
 
 .landUnitsDisabledText {
@@ -1124,4 +1292,73 @@ textarea {
     padding: 10px 14px;
     border-top: 1px solid #e6e0d8;
     background: #faf8f4;
+}
+
+.landUnitsArmyListTableWrap {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e6e0d8;
+}
+
+.landUnitsArmyListTable {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.landUnitsArmyListTable > tbody > tr {
+    cursor: pointer;
+}
+
+.landUnitsArmyListTable > tbody > tr:hover {
+    background: #f4f0e9;
+}
+
+.landUnitsArmyListTable > tbody > tr.active {
+    background: #d7e9fb;
+}
+
+.landUnitsFormFederationTableWrap {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e6e0d8;
+}
+
+.landUnitsFormFederationTable {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.landUnitsFormFederationTable > tbody > tr.landUnitsFormFederationOriginal {
+    background: #e3ecfb;
+}
+
+.landUnitsFormFederationTable > tbody > tr.landUnitsFormFederationStaged {
+    background: #fff0c2;
+}
+
+.landUnitsFormFederationTable > tbody > tr.landUnitsFormFederationOriginal.landUnitsFormFederationStaged {
+    background: #dff2dc;
+}
+
+.landUnitsFederationActionButton {
+    min-width: 58px;
+    padding: 2px 6px;
+    border: 1px solid #cfcfcf;
+    border-radius: 10px;
+    background: #eeeeee;
+    color: #555555;
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+.landUnitsFederationActionButton:hover,
+.landUnitsFederationActionButton:focus {
+    border-color: #999999;
+    color: #222222;
+    outline: none;
+}
+
+.landUnitsFederationActionButton:disabled {
+    color: #aaaaaa;
+    cursor: not-allowed;
 }

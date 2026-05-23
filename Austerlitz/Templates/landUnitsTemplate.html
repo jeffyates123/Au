@@ -51,16 +51,21 @@
                         <input ng-show="brigade.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="brigade.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, brigade)" ng-blur="applyRenameBrigade(brigade)" />
                     </td>
                     <td class="landUnitsPositionCol">{{brigade.position}}</td>
-                    <td class="landUnitsFedCol">{{brigade.fed}}</td>
+                    <td class="landUnitsFedCol">
+                        <button type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: brigade.fedChanged }" ng-click="openFormFederationModal(brigade, $event)" title="Click to form or change federation">
+                            {{brigade.fed || '-'}}
+                        </button>
+                    </td>
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
                         <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
-                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0 }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">
+                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">
                                 <span>{{battalion.display || '- -- ---'}}</span>
                             </button>
                             <ul class="dropdown-menu landUnitsBattalionMenu">
-                                <li><a href="" ng-click="startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
-                                <li ng-class="{ disabled: !canStartMerge(battalion) }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
+                                <li ng-show="!battalion.type"><a href="" ng-click="openAddBattalionModal(brigade, battalion, $event)">Add Battalion</a></li>
+                                <li ng-class="{ disabled: battalion.isNewAddition }"><a href="" ng-click="$event.preventDefault(); !battalion.isNewAddition && startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
+                                <li ng-class="{ disabled: !canStartMerge(battalion) || battalion.isNewAddition }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
                             </ul>
                         </div>
                     </td>
@@ -189,6 +194,128 @@
             <button type="button" class="btn btn-default btn-sm" ng-click="clearTrainPlan()">Clear</button>
             <button type="button" class="btn btn-default btn-sm" ng-click="closeTrainModal()">Cancel</button>
             <button type="button" class="btn btn-primary btn-sm" ng-click="applyTrainPlan()">Apply</button>
+        </div>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="formFederationModal.isOpen" ng-click="closeFormFederationModal()"></div>
+    <div class="landUnitsModal landUnitsFormFederationModal" ng-show="formFederationModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Form Federation</h3>
+                <div class="landUnitsModalSubtitle">
+                    {{formFederationModal.brigade.id}} {{formFederationModal.brigade.name}} - {{formFederationModal.brigade.position}}
+                </div>
+            </div>
+            <button type="button" class="close" ng-click="closeFormFederationModal()">&times;</button>
+        </div>
+
+        <div class="landUnitsModalBody">
+            <div class="form-group landUnitsFederationTargetRow">
+                <label for="formFederationTarget">Federation</label>
+                <input id="formFederationTarget" type="number" min="0" max="90" class="form-control input-sm landUnitsFederationInput" ng-model="formFederationModal.targetFederationNo" ng-change="onFormFederationTargetChanged()" ng-disabled="isFormFederationTargetLocked()" />
+                <button type="button" class="btn btn-default btn-xs" ng-click="selectNextAvailableFederationNo()" ng-disabled="isFormFederationTargetLocked()">Next</button>
+                <span class="landUnitsFederationHint">Use 0 to remove federation</span>
+            </div>
+
+            <div class="alert alert-warning landUnitsFormFederationError" ng-show="formFederationModal.validationError">
+                {{formFederationModal.validationError}}
+            </div>
+
+            <div class="landUnitsFormFederationTableWrap">
+                <table class="table table-condensed landUnitsFormFederationTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Pos</th>
+                            <th>Fed</th>
+                            <th>MP</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="candidate in formFederationModal.coordinateBrigades track by candidate.id" ng-class="{ landUnitsFormFederationOriginal: isFormFederationOriginal(candidate), landUnitsFormFederationStaged: isFormFederationStaged(candidate) }">
+                            <td>{{candidate.id}}</td>
+                            <td>{{candidate.name}}</td>
+                            <td>{{candidate.position}}</td>
+                            <td>{{getFormFederationDisplayFed(candidate)}}</td>
+                            <td>{{candidate.mp}}</td>
+                            <td><button type="button" class="landUnitsFederationActionButton" ng-click="stageFormFederationBrigade(candidate)" ng-disabled="!canStageFormFederationBrigade(candidate)">+Brigade</button></td>
+                            <td><button type="button" class="landUnitsFederationActionButton" ng-click="stageFormFederationFed(candidate)" ng-disabled="!canStageFormFederationFed(candidate)">+Fed</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="landUnitsHeadcountPreview">
+                <div><strong>Staged TS14 orders:</strong> {{formFederationModal.stagedOrders.length}}</div>
+                <div ng-repeat="order in formFederationModal.stagedOrders track by order.itemNo">
+                    {{order.itemNo}} / {{order.federation_Fleet}}
+                </div>
+            </div>
+        </div>
+
+        <div class="landUnitsModalFooter">
+            <button type="button" class="btn btn-default btn-sm" ng-click="closeFormFederationModal()">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" ng-click="saveFormFederationModal()">Save</button>
+        </div>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="addBattalionModal.isOpen" ng-click="closeAddBattalionModal()"></div>
+    <div class="landUnitsModal landUnitsAddBattalionModal" ng-show="addBattalionModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Set Up Additional Battalion</h3>
+                <div class="landUnitsModalSubtitle">
+                    {{addBattalionModal.brigade.id}} {{addBattalionModal.brigade.name}} - first free battalion slot
+                </div>
+            </div>
+            <button type="button" class="close" ng-click="closeAddBattalionModal()">&times;</button>
+        </div>
+
+        <div class="landUnitsModalBody">
+            <div class="landUnitsArmyListTableWrap">
+                <table class="table table-condensed landUnitsArmyListTable">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Name</th>
+                            <th>Short</th>
+                            <th>EF</th>
+                            <th>HC</th>
+                            <th>Cost</th>
+                            <th>EcPts/25</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="armyItem in getAdditionalBattalionOptions()" ng-click="selectAdditionalBattalion(armyItem)" ng-class="{ active: addBattalionModal.selectedArmyItem === armyItem }">
+                            <td>{{armyItem.itemNo}}</td>
+                            <td>{{armyItem.name}}</td>
+                            <td>{{armyItem.shortName}}</td>
+                            <td>{{armyItem.ef}}</td>
+                            <td>{{armyItem.hc}}</td>
+                            <td>{{armyItem.cost}}</td>
+                            <td>{{armyItem.ecPtsPer25}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="landUnitsHeadcountPreview">
+                <div><strong>Selected:</strong> {{addBattalionModal.selectedArmyItem ? addBattalionModal.selectedArmyItem.itemNo + ' / ' + addBattalionModal.selectedArmyItem.shortName + ' - ' + addBattalionModal.selectedArmyItem.name : 'None'}}</div>
+                <div class="landUnitsHeadcountPreviewGrid">
+                    <span>LD: <strong>{{addBattalionModal.cost.ld | number}}</strong></span>
+                    <span>Citz: <strong>{{addBattalionModal.cost.citizens | number}}</strong></span>
+                    <span>EcPts: <strong>{{addBattalionModal.cost.ecPts | number}}</strong></span>
+                    <span>Horse: <strong>{{addBattalionModal.cost.horses | number}}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="landUnitsModalFooter">
+            <button type="button" class="btn btn-default btn-sm" ng-click="closeAddBattalionModal()">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" ng-click="saveAdditionalBattalion()" ng-disabled="!addBattalionModal.selectedArmyItem">Save</button>
         </div>
     </div>
 </div>

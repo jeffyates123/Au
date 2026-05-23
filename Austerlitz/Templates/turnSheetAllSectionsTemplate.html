@@ -1,0 +1,45 @@
+<div class="ts-section-page ts-all-page">
+    <div class="ts-section-header">
+        <h3 class="ts-section-title">Turnsheet - All Sections</h3>
+        <div class="ts-section-actions">
+            <span class="ts-turn-label">{{masterData.turnId}}</span>
+        </div>
+    </div>
+
+    <div ng-show="loadError" class="alert alert-warning ts-section-alert">{{loadError}}</div>
+    <div ng-show="isLoading && !loadError" class="alert alert-info ts-section-alert">Loading turn sheet sections...</div>
+
+    <div class="ts-all-section" ng-repeat="section in sections track by section.key">
+        <div class="ts-all-section-header">
+            <button type="button" class="btn btn-link btn-xs ts-collapse-button" ng-click="toggleSection(section)">
+                <span ng-show="!section.collapsed">Hide</span>
+                <span ng-show="section.collapsed">Show</span>
+            </button>
+            <a class="ts-all-section-title" href="/TurnSheet/{{section.key}}">{{section.title}}</a>
+            <span class="ts-row-count">{{section.rows.length}} rows</span>
+        </div>
+
+        <div ng-show="section.loadError" class="alert alert-warning ts-section-alert">{{section.loadError}}</div>
+        <div ng-show="section.isLoading" class="alert alert-info ts-section-alert">Loading...</div>
+
+        <div class="ts-table-wrap" ng-show="!section.collapsed && !section.isLoading && !section.loadError">
+            <table class="table table-condensed table-bordered ts-html-table">
+                <thead>
+                    <tr>
+                        <th ng-repeat="column in section.columns">{{column.displayName}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in section.rows track by $index">
+                        <td ng-repeat="column in section.columns" ng-class="{ 'ts-empty-cell': isEmptyValue(row, column) }">
+                            {{getCellValue(row, column)}}
+                        </td>
+                    </tr>
+                    <tr ng-show="!section.rows.length">
+                        <td colspan="{{section.columns.length}}" class="ts-empty-table">No rows for this turn.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

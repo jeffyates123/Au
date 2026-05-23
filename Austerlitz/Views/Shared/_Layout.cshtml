@@ -45,7 +45,9 @@
     <script src="~/App/turnMaps/turnMapsGridConfigFactory.js"></script>
     <script src="~/App/turnMapsController.js"></script>
 
-    <script src="~/App/turnSheet/turnSheetSectionController.js"></script>
+    <script src="~/App/turnSheet/turnSheetSectionsFactory.js"></script>
+    <script src="~/App/turnSheet/turnSheetAllSectionsController.js"></script>
+    <script src="~/App/turnSheet/turnSheetReadOnlySectionController.js"></script>
 </head>
 
 <body ng-controller="menuController">
@@ -97,9 +99,37 @@
                 <a href="/Section/Battles" ng-class="{ active: isActive('/Section/Battles') }">Battles</a>
                 <a href="/TurnMaps" ng-class="{ active: isActive('/TurnMaps') }">Map</a>
                 <a href="/Section/Intelligence" ng-class="{ active: isActive('/Section/Intelligence') }">Intelligence</a>
-                <a href="/TurnSheet/Movement" ng-class="{ active: isActive('/TurnSheet') }">
-                    Turnsheet <span class="appSidebarBadge">1</span>
-                </a>
+                <div class="dropdown appSidebarGroup" ng-class="{ active: isActive('/TurnSheet') }">
+                    <a href="" class="dropdown-toggle appSidebarGroupLink" data-toggle="dropdown" ng-click="$event.preventDefault()">
+                        Turnsheet <span class="caret"></span>
+                    </a>
+                    <div class="dropdown-menu appSidebarSubNav">
+                        <a href="/TurnSheet">All Sections</a>
+                        <a href="/TurnSheet/TransferGoods">TS_01 Transfer Goods</a>
+                        <a href="/TurnSheet/DemolishItems">TS_02 Demolish Items</a>
+                        <a href="/TurnSheet/SetUpBrigades">TS_03 Set Up Brigades</a>
+                        <a href="/TurnSheet/SetUpAdditionalBrigades">TS_04 Additional Brigades</a>
+                        <a href="/TurnSheet/IncreaseHeadcount">TS_05 Increase Headcount</a>
+                        <a href="/TurnSheet/IncreaseBrigadeXP">TS_06 Increase Brigade XP</a>
+                        <a href="/TurnSheet/ExchangeBattalions">TS_07 Exchange Battalions</a>
+                        <a href="/TurnSheet/MergeBattalions">TS_08 Merge Battalions</a>
+                        <a href="/TurnSheet/RepairShips_BaggageTrains">TS_09 Repair Ships</a>
+                        <a href="/TurnSheet/BuildShips">TS_10 Build Ships</a>
+                        <a href="/TurnSheet/BuildBaggageTrain">TS_11 Build Baggage Train</a>
+                        <a href="/TurnSheet/IncreasePopulationDensity">TS_12 Population Density</a>
+                        <a href="/TurnSheet/BuildProductionSites">TS_13 Production Sites</a>
+                        <a href="/TurnSheet/FormFederations">TS_14 Form Federations</a>
+                        <a href="/TurnSheet/CoastalDefence">TS_15 Coastal Defence</a>
+                        <a href="/TurnSheet/SeaBlockade">TS_16 Sea Blockade</a>
+                        <a href="/TurnSheet/TradeAndLoading1">TS_17 Trade & Loading 1</a>
+                        <a href="/TurnSheet/Movement">TS_18 Movement</a>
+                        <a href="/TurnSheet/TradeAndLoading2">TS_19 Trade & Loading 2</a>
+                        <a href="/TurnSheet/Boarding">TS_20 Boarding</a>
+                        <a href="/TurnSheet/HandOverTerritory">TS_21 Hand Over Territory</a>
+                        <a href="/TurnSheet/ChangeNames">TS_22 Change Names</a>
+                        <a href="/TurnSheet/ChangeStateRelationships">TS_23 Relationships</a>
+                    </div>
+                </div>
             </nav>
         </aside>
 

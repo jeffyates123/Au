@@ -356,11 +356,32 @@ namespace Austerlitz.Controllers
                 var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
                 var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
 
-                turnsheetExcelService.SaveTransferGoodsSection(turnId, turnSheetManager.GetTSTransferGoods(turnId));
-                turnsheetExcelService.SaveSetUpBrigadesSection(turnId, turnSheetManager.GetTSSetUpBrigades(turnId));
-                turnsheetExcelService.SaveBuildProductionSitesSection(turnId, turnSheetManager.GetTSBuildProductionSites(turnId));
-                turnsheetExcelService.SaveFormFederationsSection(turnId, turnSheetManager.GetTSFormFederations(turnId));
-                turnsheetExcelService.SaveMovementSection(turnId, turnSheetManager.GetTSMovement(turnId));
+                turnsheetExcelService.SaveTurnsheet(turnId, new[]
+                {
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_01", turnSheetManager.GetTSTransferGoods(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_02", turnSheetManager.GetTSDemolishItems(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_03", turnSheetManager.GetTSSetUpBrigades(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_04", turnSheetManager.GetTSSetUpAdditionalBrigades(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_05", turnSheetManager.GetTSIncreaseHeadcount(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_06", turnSheetManager.GetTSIncreaseBrigadeXP(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_07", turnSheetManager.GetTSExchangeBattalions(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_08", turnSheetManager.GetTSMergeBattalions(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_09", turnSheetManager.GetTSRepairShips_BaggageTrains(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_10", turnSheetManager.GetTSBuildShips(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_11", turnSheetManager.GetTSBuildBaggageTrain(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_12", turnSheetManager.GetTSIncreasePopulationDensity(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_13", turnSheetManager.GetTSBuildProductionSites(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_14", turnSheetManager.GetTSFormFederations(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_15", turnSheetManager.GetTSCoastalDefence(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_16", turnSheetManager.GetTSSeaBlockade(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_17", turnSheetManager.GetTSTradeAndLoading1(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_18", turnSheetManager.GetTSMovement(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_19", turnSheetManager.GetTSTradeAndLoading2(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_20", turnSheetManager.GetTSBoarding(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_21", turnSheetManager.GetTSHandOverTerritory(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_22", turnSheetManager.GetTSChangeNames(turnId)),
+                    new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_23", turnSheetManager.GetTSChangeStateRelationships(turnId))
+                });
 
                 return Ok(true);
             }

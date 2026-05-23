@@ -5,6 +5,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     $scope.brigadeRows = [];
     $scope.isLoading = false;
     $scope.loadError = null;
+    $scope.armyListRows = [];
     $scope.armyListByShortName = {};
     $scope.headcountModal = {
         isOpen: false,
@@ -23,6 +24,20 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         type: null,
         source: null,
         eligibleKeys: {}
+    };
+    $scope.addBattalionModal = {
+        isOpen: false,
+        brigade: null,
+        selectedArmyItem: null,
+        cost: calculateEmptyAdditionalBattalionCost()
+    };
+    $scope.formFederationModal = {
+        isOpen: false,
+        brigade: null,
+        targetFederationNo: null,
+        validationError: '',
+        coordinateBrigades: [],
+        stagedOrders: []
     };
     $scope.sphereOptions = ['All', 'Europe', 'Caribbean', 'India'];
     $scope.selectedSphere = getInitialSphereFilter();
@@ -68,6 +83,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     $scope.loadArmyListForHeadcountCosts = function () {
         var stateCode = getTurnStateCode();
         rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
+            $scope.armyListRows = armyList || [];
             $scope.armyListByShortName = buildArmyListLookup(armyList);
         });
     };
@@ -83,6 +99,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 name: trimValue(brigade.name),
                 position: formatPosition(brigade),
                 fed: formatFederation(brigade.federation),
+                originalFed: formatFederation(brigade.federation),
+                fedChanged: false,
                 mp: brigade.mp,
                 battalions: buildBattalionDisplays(brigade),
                 trainSelected: false,
@@ -113,6 +131,155 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         }
         catch (e) {
         }
+    };
+
+    $scope.openFormFederationModal = function (brigade, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+        if (!brigade) {
+            return;
+        }
+
+        var targetFederationNo = parseInt(brigade.fed, 10);
+        if (isNaN(targetFederationNo)) {
+            targetFederationNo = getNextAvailableLandFederationNo();
+            if (targetFederationNo == null) {
+                alert('No available land federation numbers (61-90).');
+                targetFederationNo = '';
+            }
+        }
+
+        $scope.formFederationModal.isOpen = true;
+        $scope.formFederationModal.brigade = brigade;
+        $scope.formFederationModal.targetFederationNo = targetFederationNo;
+        $scope.formFederationModal.validationError = '';
+        $scope.formFederationModal.coordinateBrigades = getSameCoordinateBrigades(brigade);
+        $scope.formFederationModal.stagedOrders = [];
+
+        stageFormFederationBrigade(brigade, true);
+    };
+
+    $scope.closeFormFederationModal = function () {
+        $scope.formFederationModal.isOpen = false;
+        $scope.formFederationModal.brigade = null;
+        $scope.formFederationModal.targetFederationNo = null;
+        $scope.formFederationModal.validationError = '';
+        $scope.formFederationModal.coordinateBrigades = [];
+        $scope.formFederationModal.stagedOrders = [];
+    };
+
+    $scope.selectNextAvailableFederationNo = function () {
+        if ($scope.isFormFederationTargetLocked()) {
+            return;
+        }
+
+        var nextFederationNo = getNextAvailableLandFederationNo();
+        if (nextFederationNo == null) {
+            alert('No available land federation numbers (61-90).');
+            return;
+        }
+
+        $scope.formFederationModal.targetFederationNo = nextFederationNo;
+        $scope.onFormFederationTargetChanged();
+    };
+
+    $scope.onFormFederationTargetChanged = function () {
+        if ($scope.isFormFederationTargetLocked()) {
+            return;
+        }
+
+        var targetFederationNo = getFormFederationTargetNo();
+        if (!isValidTargetFederationNo(targetFederationNo)) {
+            return;
+        }
+
+        angular.forEach($scope.formFederationModal.stagedOrders, function (order) {
+            order.federation_Fleet = targetFederationNo;
+        });
+        removeNoOpFormFederationOrders();
+    };
+
+    $scope.stageFormFederationBrigade = function (brigade) {
+        stageFormFederationBrigade(brigade, false);
+    };
+
+    $scope.canStageFormFederationBrigade = function (brigade) {
+        var targetFederationNo = getFormFederationTargetNo();
+        return !!brigade
+            && isValidTargetFederationNo(targetFederationNo)
+            && getEffectiveFederationNo(brigade) !== targetFederationNo;
+    };
+
+    $scope.stageFormFederationFed = function (brigade) {
+        if (!$scope.canStageFormFederationFed(brigade)) {
+            if (!brigade || !brigade.fed) {
+                alert('This brigade is not currently in a federation.');
+            }
+            return;
+        }
+
+        var sourceFederationNo = parseInt(brigade.fed, 10);
+        if (isNaN(sourceFederationNo)) {
+            return;
+        }
+
+        stageFormFederationOrder({
+            type: 'federation',
+            itemNo: sourceFederationNo,
+            federation_Fleet: getFormFederationTargetNo(),
+            sourceFederationNo: sourceFederationNo,
+            sourceBrigadeId: brigade.id,
+            affectedBrigadeIds: getBrigadesByFederation(sourceFederationNo).map(function (row) { return row.id; })
+        });
+    };
+
+    $scope.canStageFormFederationFed = function (brigade) {
+        if (!brigade || !brigade.fed) {
+            return false;
+        }
+
+        var targetFederationNo = getFormFederationTargetNo();
+        var sourceFederationNo = parseInt(brigade.fed, 10);
+        return !isNaN(sourceFederationNo)
+            && isValidTargetFederationNo(targetFederationNo)
+            && getEffectiveFederationNo(brigade) !== targetFederationNo
+            && sourceFederationNo !== targetFederationNo;
+    };
+
+    $scope.isFormFederationTargetLocked = function () {
+        return ($scope.formFederationModal.stagedOrders || []).length > 0;
+    };
+
+    $scope.getFormFederationDisplayFed = function (brigade) {
+        var federationNo = getEffectiveFederationNo(brigade);
+        return federationNo > 0 ? federationNo : '-';
+    };
+
+    $scope.isFormFederationOriginal = function (brigade) {
+        return !!($scope.formFederationModal.brigade && brigade && sameNullableInt($scope.formFederationModal.brigade.id, brigade.id));
+    };
+
+    $scope.isFormFederationStaged = function (brigade) {
+        if (!brigade) {
+            return false;
+        }
+
+        var stagedIds = getFormFederationStagedBrigadeIds();
+        return !!stagedIds[brigade.id];
+    };
+
+    $scope.saveFormFederationModal = function () {
+        if (!isValidTargetFederationNo(getFormFederationTargetNo())) {
+            return;
+        }
+
+        var stagedOrders = $scope.formFederationModal.stagedOrders || [];
+        if (!stagedOrders.length) {
+            alert('No federation changes are staged.');
+            return;
+        }
+
+        persistFormFederationOrders(stagedOrders);
     };
 
     $scope.beginRenameBrigade = function (brigade) {
@@ -234,6 +401,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             applyHeadcountPlanToBrigade(affectedBrigade, targetHeadcount, scope, brigade.id);
         });
 
+        persistHeadcountOrder(brigade, scope, targetHeadcount);
         $scope.closeHeadcountModal();
     };
 
@@ -247,6 +415,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
         angular.forEach(affectedBrigades, clearHeadcountPlanFromBrigade);
 
+        clearHeadcountOrder(brigade, scope);
         $scope.closeHeadcountModal();
     };
 
@@ -308,6 +477,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             applyTrainPlanToBrigade(affectedBrigade, scope, brigade.id);
         });
 
+        persistTrainOrder(brigade, scope);
         $scope.closeTrainModal();
     };
 
@@ -321,6 +491,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
         angular.forEach(affectedBrigades, clearTrainPlanFromBrigade);
 
+        clearTrainOrder(brigade, scope);
         $scope.closeTrainModal();
     };
 
@@ -338,6 +509,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     };
 
     $scope.selectBrigadeAction = function (actionName, brigade) {
+        if (actionName === 'Form Federation') {
+            $scope.openFormFederationModal(brigade);
+            return;
+        }
+
         var brigadeName = brigade && brigade.name ? brigade.name : 'selected brigade';
         alert(actionName + ' for ' + brigadeName + ' is not implemented yet.');
     };
@@ -359,6 +535,12 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         if (actionType === 'merge' && !battalion.type) {
             alert('Choose a non-empty battalion to start a merge.');
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        if (battalion.isNewAddition) {
+            alert('A newly added additional battalion cannot be exchanged or merged in the same turn.');
             $scope.resetBattalionAction();
             return;
         }
@@ -421,11 +603,88 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return !!(battalion && battalion.type);
     };
 
+    $scope.openAddBattalionModal = function (brigade, battalion, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+
+        if (!brigade || !battalion || battalion.type) {
+            return;
+        }
+
+        if (!findFirstFreeBattalion(brigade)) {
+            alert("can't be done as no space");
+            return;
+        }
+
+        $scope.addBattalionModal.isOpen = true;
+        $scope.addBattalionModal.brigade = brigade;
+        $scope.addBattalionModal.selectedArmyItem = null;
+        $scope.addBattalionModal.cost = calculateEmptyAdditionalBattalionCost();
+    };
+
+    $scope.closeAddBattalionModal = function () {
+        $scope.addBattalionModal.isOpen = false;
+        $scope.addBattalionModal.brigade = null;
+        $scope.addBattalionModal.selectedArmyItem = null;
+        $scope.addBattalionModal.cost = calculateEmptyAdditionalBattalionCost();
+    };
+
+    $scope.getAdditionalBattalionOptions = function () {
+        var brigade = $scope.addBattalionModal.brigade;
+        if (!brigade) {
+            return [];
+        }
+
+        var sphere = getBrigadeSphere(brigade);
+        return ($scope.armyListRows || []).filter(function (armyItem) {
+            return isArmyItemValidForAdditionalBattalion(armyItem, sphere);
+        });
+    };
+
+    $scope.selectAdditionalBattalion = function (armyItem) {
+        $scope.addBattalionModal.selectedArmyItem = armyItem;
+        $scope.addBattalionModal.cost = calculateAdditionalBattalionCost(armyItem);
+    };
+
+    $scope.saveAdditionalBattalion = function () {
+        var brigade = $scope.addBattalionModal.brigade;
+        var armyItem = $scope.addBattalionModal.selectedArmyItem;
+        var targetBattalion = findFirstFreeBattalion(brigade);
+
+        if (!brigade || !armyItem || !targetBattalion) {
+            alert("can't be done as no space");
+            return;
+        }
+
+        turnSheetFactory.getTSSetUpAdditionalBrigades($scope.masterData.turnId).then(function (rows) {
+            var targetRow = findMatchingAdditionalBattalionRow(rows, brigade.id)
+                || findNextEmptyTurnSheetRow(rows, ['brigadeNo', 'battType']);
+
+            if (!targetRow) {
+                alert("can't be done as no space");
+                return;
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeNo = brigade.id;
+            targetRow.battType = armyItem.itemNo;
+
+            turnSheetFactory.postTSRecords(rows, 'SetUpAdditionalBrigades').then(function () {
+                applyAdditionalBattalionPreview(brigade, targetBattalion, armyItem);
+                $scope.closeAddBattalionModal();
+            }, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    };
+
     function buildEligibleBattalionKeyMap(actionType, sourceBrigade, sourceBattalion) {
         var eligible = {};
         angular.forEach($scope.brigadeRows, function (brigade) {
             angular.forEach(brigade.battalions, function (battalion) {
                 if (isSameBattalionSlot(sourceBrigade, sourceBattalion, brigade, battalion)) {
+                    return;
+                }
+
+                if (battalion.isNewAddition) {
                     return;
                 }
 
@@ -546,6 +805,76 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         battalion.isEfChanged = false;
         battalion.efDrop = 0;
         battalion.efIncrease = 0;
+        battalion.isNewAddition = false;
+    }
+
+    function findFirstFreeBattalion(brigade) {
+        if (!brigade || !brigade.battalions) {
+            return null;
+        }
+
+        for (var i = 0; i < brigade.battalions.length; i++) {
+            if (!brigade.battalions[i].type) {
+                return brigade.battalions[i];
+            }
+        }
+
+        return null;
+    }
+
+    function applyAdditionalBattalionPreview(brigade, battalion, armyItem) {
+        battalion.type = trimValue(armyItem.shortName);
+        battalion.originalEf = armyItem.ef;
+        battalion.currentEf = armyItem.ef;
+        battalion.size = 800;
+        battalion.isNewAddition = true;
+        battalion.display = formatBattalionParts(battalion.type, battalion.originalEf, battalion.size);
+        recalculateBrigadeEffects(brigade);
+    }
+
+    function calculateEmptyAdditionalBattalionCost() {
+        return {
+            ld: '',
+            citizens: '',
+            ecPts: '',
+            horses: ''
+        };
+    }
+
+    function calculateAdditionalBattalionCost(armyItem) {
+        if (!armyItem) {
+            return calculateEmptyAdditionalBattalionCost();
+        }
+
+        var cost = parseFloat(armyItem.cost);
+        var ecPtsPer25 = parseFloat(armyItem.ecPtsPer25);
+        if (isNaN(cost)) cost = 0;
+        if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
+
+        return {
+            ld: Math.round(800 * cost * 2),
+            citizens: 800,
+            ecPts: Math.round(Math.ceil(800 / 25) * ecPtsPer25),
+            horses: isMountedArmyItem(armyItem) ? 800 : ''
+        };
+    }
+
+    function isArmyItemValidForAdditionalBattalion(armyItem, sphere) {
+        var parsedItemNo = parseInt(armyItem && armyItem.itemNo, 10);
+        if (isNaN(parsedItemNo)) {
+            return false;
+        }
+
+        if (sphere === 'Europe') {
+            if (parsedItemNo === 17 || parsedItemNo === 37 || parsedItemNo === 39) return false;
+            return true;
+        }
+
+        if (parsedItemNo % 2 === 0) return false;
+        if (parsedItemNo === 19) return false;
+        if (parsedItemNo === 17 || parsedItemNo === 37 || parsedItemNo === 39) return sphere === 'Caribbean' || sphere === 'India';
+
+        return true;
     }
 
     function persistExchangeBattalionOrder(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
@@ -585,6 +914,361 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             targetRow.battB = targetBattalion.slot;
 
             return turnSheetFactory.postTSRecords(rows, 'MergeBattalions').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function persistFormFederationOrders(stagedOrders) {
+        turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (rows) {
+            rows = rows || [];
+
+            var conflicts = stagedOrders.filter(function (order) {
+                return !!findMatchingFormFederationRow(rows, order.itemNo);
+            });
+
+            if (conflicts.length && !window.confirm('One or more TS14 orders already exist for these brigade/federation numbers. Overwrite them?')) {
+                return;
+            }
+
+            for (var i = 0; i < stagedOrders.length; i++) {
+                var order = stagedOrders[i];
+                var targetRow = findMatchingFormFederationRow(rows, order.itemNo)
+                    || findNextEmptyTurnSheetRow(rows, ['itemNo', 'federation_Fleet']);
+
+                if (!targetRow) {
+                    alert('No empty TS_14 row is available.');
+                    return;
+                }
+
+                targetRow.turnId = $scope.masterData.turnId;
+                targetRow.itemNo = order.itemNo;
+                targetRow.federation_Fleet = order.federation_Fleet;
+            }
+
+            return turnSheetFactory.postTSRecords(rows, 'FormFederations').then(function () {
+                applyStagedFormFederationChanges(stagedOrders);
+                $scope.closeFormFederationModal();
+            }, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function stageFormFederationBrigade(brigade, isOriginal) {
+        if (!$scope.canStageFormFederationBrigade(brigade)) {
+            return;
+        }
+
+        var brigadeId = parseInt(brigade.id, 10);
+        if (isNaN(brigadeId)) {
+            return;
+        }
+
+        stageFormFederationOrder({
+            type: 'brigade',
+            itemNo: brigadeId,
+            federation_Fleet: getFormFederationTargetNo(),
+            sourceBrigadeId: brigade.id,
+            affectedBrigadeIds: [brigade.id],
+            isOriginal: !!isOriginal
+        });
+    }
+
+    function stageFormFederationOrder(order) {
+        if (!order || order.itemNo == null || !isValidTargetFederationNo(order.federation_Fleet)) {
+            return;
+        }
+
+        var stagedOrders = $scope.formFederationModal.stagedOrders || [];
+        for (var i = 0; i < stagedOrders.length; i++) {
+            if (sameNullableInt(stagedOrders[i].itemNo, order.itemNo)) {
+                stagedOrders[i].federation_Fleet = order.federation_Fleet;
+                stagedOrders[i].affectedBrigadeIds = order.affectedBrigadeIds || stagedOrders[i].affectedBrigadeIds;
+                stagedOrders[i].type = order.type || stagedOrders[i].type;
+                stagedOrders[i].sourceFederationNo = order.sourceFederationNo;
+                stagedOrders[i].sourceBrigadeId = order.sourceBrigadeId || stagedOrders[i].sourceBrigadeId;
+                stagedOrders[i].isOriginal = stagedOrders[i].isOriginal || !!order.isOriginal;
+                return;
+            }
+        }
+
+        stagedOrders.push(order);
+        $scope.formFederationModal.stagedOrders = stagedOrders;
+    }
+
+    function removeNoOpFormFederationOrders() {
+        var targetFederationNo = getFormFederationTargetNo();
+        $scope.formFederationModal.stagedOrders = ($scope.formFederationModal.stagedOrders || []).filter(function (order) {
+            if (!order) {
+                return false;
+            }
+
+            if (order.type === 'federation') {
+                return parseInt(order.sourceFederationNo, 10) !== targetFederationNo;
+            }
+
+            var brigade = getBrigadeById(order.itemNo);
+            return brigade && getCurrentFederationNo(brigade) !== targetFederationNo;
+        });
+    }
+
+    function applyStagedFormFederationChanges(stagedOrders) {
+        angular.forEach(stagedOrders || [], function (order) {
+            if (order.type === 'federation') {
+                angular.forEach(getBrigadesByFederation(order.sourceFederationNo), function (brigade) {
+                    setBrigadeFederation(brigade, order.federation_Fleet);
+                });
+                return;
+            }
+
+            var brigade = getBrigadeById(order.itemNo);
+            setBrigadeFederation(brigade, order.federation_Fleet);
+        });
+    }
+
+    function setBrigadeFederation(brigade, federationNo) {
+        if (!brigade) {
+            return;
+        }
+
+        var parsed = parseInt(federationNo, 10);
+        var formatted = !isNaN(parsed) && parsed > 0 ? parsed : '';
+        brigade.fed = formatted;
+        brigade.fedChanged = true;
+
+        if (brigade.source) {
+            brigade.source.federation = formatted || 0;
+        }
+    }
+
+    function getFormFederationTargetNo() {
+        var parsed = parseInt($scope.formFederationModal.targetFederationNo, 10);
+        return isNaN(parsed) ? null : parsed;
+    }
+
+    function getCurrentFederationNo(brigade) {
+        var parsed = parseInt(brigade && brigade.fed, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function getEffectiveFederationNo(brigade) {
+        if (!brigade) {
+            return 0;
+        }
+
+        var brigadeId = parseInt(brigade.id, 10);
+        var currentFederationNo = getCurrentFederationNo(brigade);
+        var stagedOrders = $scope.formFederationModal.stagedOrders || [];
+
+        for (var i = stagedOrders.length - 1; i >= 0; i--) {
+            var order = stagedOrders[i];
+            if (!order) {
+                continue;
+            }
+
+            if (order.type === 'brigade' && sameNullableInt(order.itemNo, brigadeId)) {
+                return parseInt(order.federation_Fleet, 10) || 0;
+            }
+
+            if (order.type === 'federation' && sameNullableInt(order.sourceFederationNo, currentFederationNo)) {
+                return parseInt(order.federation_Fleet, 10) || 0;
+            }
+        }
+
+        return currentFederationNo;
+    }
+
+    function isValidTargetFederationNo(targetFederationNo) {
+        if (targetFederationNo === 0) {
+            $scope.formFederationModal.validationError = '';
+            return true;
+        }
+
+        if (targetFederationNo >= 61 && targetFederationNo <= 90) {
+            $scope.formFederationModal.validationError = '';
+            return true;
+        }
+
+        if (isFederationNoOnModalCoordinate(targetFederationNo)) {
+            $scope.formFederationModal.validationError = '';
+            return true;
+        }
+
+        $scope.formFederationModal.validationError = 'Enter 0, a land federation number from 61 to 90, or a federation number already on this coordinate.';
+        return false;
+    }
+
+    function getSameCoordinateBrigades(brigade) {
+        if (!brigade) {
+            return [];
+        }
+
+        return $scope.brigadeRows.filter(function (row) {
+            return isSameCoordinate(brigade, row);
+        });
+    }
+
+    function getNextAvailableLandFederationNo() {
+        var used = {};
+        angular.forEach($scope.brigadeRows || [], function (brigade) {
+            var federationNo = parseInt(brigade.fed, 10);
+            if (!isNaN(federationNo)) {
+                used[federationNo] = true;
+            }
+        });
+
+        angular.forEach(($scope.formFederationModal && $scope.formFederationModal.stagedOrders) || [], function (order) {
+            var federationNo = parseInt(order.federation_Fleet, 10);
+            if (!isNaN(federationNo) && federationNo > 0) {
+                used[federationNo] = true;
+            }
+        });
+
+        for (var federationNo = 61; federationNo <= 90; federationNo++) {
+            if (!used[federationNo]) {
+                return federationNo;
+            }
+        }
+
+        return null;
+    }
+
+    function getBrigadesByFederation(federationNo) {
+        return ($scope.brigadeRows || []).filter(function (brigade) {
+            return sameNullableInt(brigade.fed, federationNo);
+        });
+    }
+
+    function getBrigadeById(id) {
+        for (var i = 0; i < $scope.brigadeRows.length; i++) {
+            if (sameNullableInt($scope.brigadeRows[i].id, id)) {
+                return $scope.brigadeRows[i];
+            }
+        }
+
+        return null;
+    }
+
+    function isFederationNoOnModalCoordinate(federationNo) {
+        if (federationNo == null) {
+            return false;
+        }
+
+        return ($scope.formFederationModal.coordinateBrigades || []).some(function (brigade) {
+            return sameNullableInt(brigade.fed, federationNo);
+        });
+    }
+
+    function isFormFederationBrigadeStaged(brigade) {
+        if (!brigade) {
+            return false;
+        }
+
+        return !!getFormFederationStagedBrigadeIds()[brigade.id];
+    }
+
+    function getFormFederationStagedBrigadeIds() {
+        var staged = {};
+        angular.forEach($scope.formFederationModal.stagedOrders || [], function (order) {
+            angular.forEach(order.affectedBrigadeIds || [], function (brigadeId) {
+                staged[brigadeId] = true;
+            });
+        });
+        return staged;
+    }
+
+    function findMatchingFormFederationRow(rows, itemNo) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            if (sameNullableInt(rows[i].itemNo, itemNo)) {
+                return rows[i];
+            }
+        }
+
+        return null;
+    }
+
+    function persistHeadcountOrder(brigade, scope, targetHeadcount) {
+        var brigadeOrFederation = getTurnSheetBrigadeOrFederationValue(brigade, scope);
+        if (brigadeOrFederation == null) {
+            return;
+        }
+
+        turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId).then(function (rows) {
+            rows = rows || [];
+            var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation)
+                || findNextEmptyTurnSheetRow(rows, ['brigadeOrFederation', 'increaseAmount']);
+
+            if (!targetRow) {
+                targetRow = { turnId: $scope.masterData.turnId, orderNo: rows.length + 1 };
+                rows.push(targetRow);
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeOrFederation = brigadeOrFederation;
+            targetRow.increaseAmount = targetHeadcount;
+
+            return turnSheetFactory.postTSRecords(rows, 'IncreaseHeadcount').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function clearHeadcountOrder(brigade, scope) {
+        var brigadeOrFederation = getTurnSheetBrigadeOrFederationValue(brigade, scope);
+        if (brigadeOrFederation == null) {
+            return;
+        }
+
+        turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId).then(function (rows) {
+            rows = rows || [];
+            var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation);
+            if (!targetRow) {
+                return;
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeOrFederation = null;
+            targetRow.increaseAmount = null;
+
+            return turnSheetFactory.postTSRecords(rows, 'IncreaseHeadcount').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function persistTrainOrder(brigade, scope) {
+        var brigadeOrFederation = getTurnSheetBrigadeOrFederationValue(brigade, scope);
+        if (brigadeOrFederation == null) {
+            return;
+        }
+
+        turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId).then(function (rows) {
+            rows = rows || [];
+            var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation)
+                || findNextEmptyTurnSheetRow(rows, ['brigadeOrFederation']);
+
+            if (!targetRow) {
+                targetRow = { turnId: $scope.masterData.turnId, orderNo: rows.length + 1 };
+                rows.push(targetRow);
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeOrFederation = brigadeOrFederation;
+
+            return turnSheetFactory.postTSRecords(rows, 'IncreaseBrigadeXP').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function clearTrainOrder(brigade, scope) {
+        var brigadeOrFederation = getTurnSheetBrigadeOrFederationValue(brigade, scope);
+        if (brigadeOrFederation == null) {
+            return;
+        }
+
+        turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId).then(function (rows) {
+            rows = rows || [];
+            var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation);
+            if (!targetRow) {
+                return;
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.brigadeOrFederation = null;
+
+            return turnSheetFactory.postTSRecords(rows, 'IncreaseBrigadeXP').then(angular.noop, showTurnSheetOrderError);
         }, showTurnSheetOrderError);
     }
 
@@ -634,6 +1318,26 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return null;
     }
 
+    function findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            if (sameNullableInt(rows[i].brigadeOrFederation, brigadeOrFederation)) {
+                return rows[i];
+            }
+        }
+
+        return null;
+    }
+
+    function getTurnSheetBrigadeOrFederationValue(brigade, scope) {
+        if (!brigade) {
+            return null;
+        }
+
+        var value = scope === 'federation' ? brigade.fed : brigade.id;
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+    }
+
     function sameNullableInt(left, right) {
         return parseInt(left, 10) === parseInt(right, 10);
     }
@@ -671,6 +1375,16 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return null;
     }
 
+    function findMatchingAdditionalBattalionRow(rows, brigadeNo) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            if (sameNullableInt(rows[i].brigadeNo, brigadeNo)) {
+                return rows[i];
+            }
+        }
+
+        return null;
+    }
+
     function buildBattalionDisplays(brigade) {
         var battalions = [];
         for (var i = 1; i <= 7; i++) {
@@ -694,7 +1408,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 display: '',
                 isEfChanged: false,
                 efDrop: 0,
-                efIncrease: 0
+                efIncrease: 0,
+                isNewAddition: false
             };
         }
 
@@ -707,7 +1422,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             display: formatBattalionParts(type, ef, size),
             isEfChanged: false,
             efDrop: 0,
-            efIncrease: 0
+            efIncrease: 0,
+            isNewAddition: false
         };
     }
 
