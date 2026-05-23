@@ -2,7 +2,10 @@
     <div class="landUnitsHeader">
         <div>
             <h2 class="landUnitsTitle">Military</h2>
-            <div class="landUnitsSubtitle">Brigades</div>
+            <div class="landUnitsSubtitle">
+                Brigades
+                <select class="form-control input-sm landUnitsSphereFilter" ng-options="sphere for sphere in sphereOptions" ng-model="selectedSphere" ng-change="onSphereChanged()"></select>
+            </div>
         </div>
         <div class="landUnitsTurnInfo">
             <span>{{masterData.turnId}}</span>
@@ -41,17 +44,19 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="brigade in brigadeRows track by brigade.id">
+                <tr ng-repeat="brigade in filteredBrigadeRows() track by brigade.id">
                     <td class="landUnitsIdCol">{{brigade.id}}</td>
-                    <td class="landUnitsNameCol">{{brigade.name}}</td>
+                    <td class="landUnitsNameCol" ng-dblclick="beginRenameBrigade(brigade)">
+                        <span ng-show="!brigade.isRenaming" title="Double-click to rename">{{brigade.name}}</span>
+                        <input ng-show="brigade.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="brigade.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, brigade)" ng-blur="applyRenameBrigade(brigade)" />
+                    </td>
                     <td class="landUnitsPositionCol">{{brigade.position}}</td>
                     <td class="landUnitsFedCol">{{brigade.fed}}</td>
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
                         <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
                             <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0 }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">
-                                <span ng-show="battalion.display">{{battalion.display}}</span>
-                                <span ng-show="!battalion.display">&nbsp;</span>
+                                <span>{{battalion.display || '- -- ---'}}</span>
                             </button>
                             <ul class="dropdown-menu landUnitsBattalionMenu">
                                 <li><a href="" ng-click="startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>

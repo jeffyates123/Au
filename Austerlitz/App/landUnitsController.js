@@ -24,6 +24,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         source: null,
         eligibleKeys: {}
     };
+    $scope.sphereOptions = ['All', 'Europe', 'Caribbean', 'India'];
+    $scope.selectedSphere = getInitialSphereFilter();
 
     $scope.brigadeActions = [
         'Movement',
@@ -93,6 +95,69 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         }).sort(function (left, right) {
             return (parseInt(left.id, 10) || 0) - (parseInt(right.id, 10) || 0);
         });
+    };
+
+    $scope.filteredBrigadeRows = function () {
+        if (!$scope.selectedSphere || $scope.selectedSphere === 'All') {
+            return $scope.brigadeRows;
+        }
+
+        return $scope.brigadeRows.filter(function (brigade) {
+            return getBrigadeSphere(brigade) === $scope.selectedSphere;
+        });
+    };
+
+    $scope.onSphereChanged = function () {
+        try {
+            window.localStorage.setItem('austerlitz.landUnits.selectedSphere', $scope.selectedSphere || 'All');
+        }
+        catch (e) {
+        }
+    };
+
+    $scope.beginRenameBrigade = function (brigade) {
+        if (!brigade) {
+            return;
+        }
+
+        brigade.isRenaming = true;
+        brigade.pendingName = brigade.name;
+    };
+
+    $scope.onRenameKeydown = function ($event, brigade) {
+        if ($event.keyCode === 13) {
+            $event.preventDefault();
+            $scope.applyRenameBrigade(brigade);
+        }
+        else if ($event.keyCode === 27) {
+            $event.preventDefault();
+            $scope.cancelRenameBrigade(brigade);
+        }
+    };
+
+    $scope.applyRenameBrigade = function (brigade) {
+        if (!brigade || !brigade.isRenaming) {
+            return;
+        }
+
+        var newName = trimValue(brigade.pendingName).substr(0, 15);
+        if (!newName) {
+            newName = brigade.name;
+        }
+
+        brigade.name = newName;
+        brigade.isRenaming = false;
+        brigade.pendingName = null;
+        persistRenameOrder(brigade, newName);
+    };
+
+    $scope.cancelRenameBrigade = function (brigade) {
+        if (!brigade) {
+            return;
+        }
+
+        brigade.isRenaming = false;
+        brigade.pendingName = null;
     };
 
     $scope.toggleBrigadeFlag = function (brigade, flagName) {
@@ -576,6 +641,34 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     function showTurnSheetOrderError(error) {
         var detail = (error && error.data) ? error.data : 'Unable to save turn-sheet order.';
         alert(detail);
+    }
+
+    function persistRenameOrder(brigade, newName) {
+        turnSheetFactory.getTSChangeNames($scope.masterData.turnId).then(function (rows) {
+            var targetRow = findMatchingRenameRow(rows, brigade.id)
+                || findNextEmptyTurnSheetRow(rows, ['itemNo', 'name']);
+
+            if (!targetRow) {
+                targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
+                rows.push(targetRow);
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.itemNo = brigade.id;
+            targetRow.name = newName;
+
+            return turnSheetFactory.postTSRecords(rows, 'ChangeNames').then(angular.noop, showTurnSheetOrderError);
+        }, showTurnSheetOrderError);
+    }
+
+    function findMatchingRenameRow(rows, itemNo) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            if (sameNullableInt(rows[i].itemNo, itemNo)) {
+                return rows[i];
+            }
+        }
+
+        return null;
     }
 
     function buildBattalionDisplays(brigade) {
@@ -1064,6 +1157,34 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         }
 
         return null;
+    }
+
+    function getInitialSphereFilter() {
+        var stored = null;
+        try {
+            stored = window.localStorage.getItem('austerlitz.landUnits.selectedSphere');
+        }
+        catch (e) {
+        }
+
+        return $scope.sphereOptions && $scope.sphereOptions.indexOf(stored) >= 0 ? stored : 'All';
+    }
+
+    function getBrigadeSphere(brigade) {
+        if (!brigade || !brigade.source) {
+            return 'Unknown';
+        }
+
+        var x = parseInt(brigade.source.x_OrState, 10);
+        var y = parseInt(brigade.source.y_OrFleet, 10);
+        if (isNaN(x) || isNaN(y)) {
+            return 'Unknown';
+        }
+
+        if (x <= 80 && y <= 65) return 'Europe';
+        if (x <= 40 && y <= 99) return 'Caribbean';
+        if (x <= 90 && y <= 99) return 'India';
+        return 'Unknown';
     }
 
     function formatPosition(brigade) {
