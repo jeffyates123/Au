@@ -383,7 +383,8 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                     targetBattalion.type = targetBattalion.type || sourceBattalion.type;
                     targetBattalion.originalEf = mergedEf;
                     targetBattalion.currentEf = mergedEf;
-                    targetBattalion.size = Math.min(800, combinedSize);
+                    targetBattalion.baseSize = Math.min(800, combinedSize);
+                    targetBattalion.size = targetBattalion.baseSize;
                     targetBattalion.display = $scope.formatBattalionParts(targetBattalion.type, targetBattalion.originalEf, targetBattalion.size);
             
                     $scope.clearBattalionBaseline(sourceBattalion);
@@ -401,6 +402,7 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                         type: battalion.type,
                         originalEf: battalion.originalEf,
                         currentEf: battalion.originalEf,
+                        baseSize: battalion.baseSize,
                         size: battalion.size
                     };
                 };
@@ -409,6 +411,7 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                     target.type = source.type;
                     target.originalEf = source.originalEf;
                     target.currentEf = source.originalEf;
+                    target.baseSize = source.baseSize;
                     target.size = source.size;
                     target.display = target.type ? $scope.formatBattalionParts(target.type, target.originalEf, target.size) : '';
                 };
@@ -417,6 +420,7 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                     battalion.type = '';
                     battalion.originalEf = null;
                     battalion.currentEf = null;
+                    battalion.baseSize = null;
                     battalion.size = null;
                     battalion.display = '';
                     battalion.isEfChanged = false;
@@ -443,6 +447,7 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                     battalion.type = $scope.trimValue(armyItem.shortName);
                     battalion.originalEf = armyItem.ef;
                     battalion.currentEf = armyItem.ef;
+                    battalion.baseSize = 800;
                     battalion.size = 800;
                     battalion.isNewAddition = true;
                     battalion.display = $scope.formatBattalionParts(battalion.type, battalion.originalEf, battalion.size);

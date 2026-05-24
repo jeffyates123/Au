@@ -47,7 +47,7 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                     angular.forEach(brigade.battalions, function (battalion) {
                         var originalEf = parseInt(battalion.originalEf, 10);
                         var missingMen = $scope.getMissingHeadcount(battalion, targetHeadcount);
-                        var drop = $scope.getEfDrop(missingMen, battalion.size);
+                        var drop = $scope.getEfDrop(missingMen, $scope.getBattalionBaselineSize(battalion));
             
                         if (!battalion.display || isNaN(originalEf) || drop <= 0) {
                             battalion.currentEf = battalion.originalEf;
@@ -126,6 +126,7 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                         battalion.isEfChanged = false;
                         battalion.efDrop = 0;
                         battalion.efIncrease = 0;
+                        battalion.size = $scope.getBattalionDisplaySize(brigade, battalion);
                         battalion.display = battalion.type ? $scope.formatBattalionParts(battalion.type, battalion.originalEf, battalion.size) : '';
                     });
                 };
@@ -169,7 +170,7 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                         return 0;
                     }
             
-                    var currentSize = parseInt(battalion.size, 10);
+                    var currentSize = $scope.getBattalionBaselineSize(battalion);
                     if (isNaN(currentSize)) {
                         currentSize = 0;
                     }
@@ -231,7 +232,7 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                 };
 
             $scope.getEffectiveTrainingHeadcount = function (brigade, battalion) {
-                    var currentSize = parseInt(battalion.size, 10);
+                    var currentSize = $scope.getBattalionBaselineSize(battalion);
                     if (isNaN(currentSize)) {
                         currentSize = 0;
                     }
@@ -294,13 +295,36 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                         angular.forEach(brigade.battalions, function (battalion) {
                             var originalEf = parseInt(battalion.originalEf, 10);
                             var missingMen = $scope.getMissingHeadcount(battalion, targetHeadcount);
-                            if (!isNaN(originalEf) && $scope.getEfDrop(missingMen, battalion.size) > 0) {
+                            if (!isNaN(originalEf) && $scope.getEfDrop(missingMen, $scope.getBattalionBaselineSize(battalion)) > 0) {
                                 preview.efChanges += 1;
                             }
                         });
                     });
             
                     return preview;
+                };
+
+            $scope.getBattalionBaselineSize = function (battalion) {
+                    var baseline = parseInt(battalion && battalion.baseSize, 10);
+                    if (!isNaN(baseline)) {
+                        return baseline;
+                    }
+
+                    var size = parseInt(battalion && battalion.size, 10);
+                    return isNaN(size) ? 0 : size;
+                };
+
+            $scope.getBattalionDisplaySize = function (brigade, battalion) {
+                    if (!battalion || !battalion.type) {
+                        return null;
+                    }
+
+                    var baseline = $scope.getBattalionBaselineSize(battalion);
+                    if (brigade && brigade.headcountPlan) {
+                        return Math.min(800, Math.max(baseline, brigade.headcountPlan.targetHeadcount));
+                    }
+
+                    return baseline;
                 };
 
             $scope.calculateTrainResources = function (brigade) {
