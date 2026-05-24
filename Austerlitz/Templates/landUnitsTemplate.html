@@ -76,10 +76,10 @@
                         </div>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: brigadeHasLockedBattalion(brigade) }" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)" title="{{brigadeHasLockedBattalion(brigade) ? 'Brigade contains a battalion already used in Exchange Battalions or Merge Battalions this turn.' : ''}}">H/C</button>
+                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">H/C</button>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: brigadeHasLockedBattalion(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" title="{{brigadeHasLockedBattalion(brigade) ? 'Brigade contains a battalion already used in Exchange Battalions or Merge Battalions this turn.' : ''}}">Train</button>
+                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">Train</button>
                     </td>
                     <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
                     <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>

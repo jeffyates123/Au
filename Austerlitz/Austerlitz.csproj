@@ -247,6 +247,16 @@
     <Content Include="App\editableCellDirective.js" />
     <Content Include="App\homeController.js" />
     <Content Include="App\bgModalController.js" />
+    <Content Include="App\landUnits\landUnitsStateFactory.js" />
+    <Content Include="App\landUnits\landUnitsModelFactory.js" />
+    <Content Include="App\landUnits\landUnitsEffectsFactory.js" />
+    <Content Include="App\landUnits\landUnitsTurnSheetFactory.js" />
+    <Content Include="App\landUnits\landUnitsReplayFactory.js" />
+    <Content Include="App\landUnits\landUnitsFederationFactory.js" />
+    <Content Include="App\landUnits\landUnitsHeadcountTrainFactory.js" />
+    <Content Include="App\landUnits\landUnitsBattalionOrdersFactory.js" />
+    <Content Include="App\landUnits\landUnitsRenameFactory.js" />
+    <Content Include="App\landUnits\landUnitsUiFactory.js" />
     <Content Include="App\landUnitsController.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\menuController.js" />
