@@ -399,6 +399,33 @@ namespace Austerlitz.Controllers
         }
 
         [HttpPost]
+        public System.Web.Http.IHttpActionResult PostClearTurnOrders(string turnId)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                return BadRequest("TurnId is required.");
+            }
+
+            try
+            {
+                var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
+                var deletedRows = turnSheetManager.ClearTurnOrders(turnId);
+                return Ok(new { deletedRows = deletedRows });
+            }
+            catch (System.Exception ex)
+            {
+                var sb = new System.Text.StringBuilder();
+                for (var e = ex; e != null; e = e.InnerException)
+                {
+                    sb.AppendLine(e.GetType().FullName + ": " + e.Message);
+                    sb.AppendLine(e.StackTrace);
+                    sb.AppendLine("---");
+                }
+                return Content(System.Net.HttpStatusCode.InternalServerError, sb.ToString());
+            }
+        }
+
+        [HttpPost]
         public TS_19TradeAndLoading2[] PostTSTradeAndLoading2(TS_19TradeAndLoading2[] saveRecords)
         {
             var turnReportManager = new Austerlitz.Domain.TurnSheetManager();

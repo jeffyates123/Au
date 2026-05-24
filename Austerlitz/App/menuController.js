@@ -1,4 +1,4 @@
-﻿austerlitzModule.controller("menuController", function ($scope, $location, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, masterData) {
+﻿austerlitzModule.controller("menuController", function ($scope, $location, $route, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, masterData) {
     $scope.masterData = masterData;
     $scope.sidebarGameNoOptions = [];
     $scope.sidebarStateOptions = [];
@@ -290,6 +290,34 @@
         }, function (error) {
             var detail = (error && error.data) ? error.data : '';
             alert('Spreadsheet save failed.' + (detail ? ' ' + detail : ''));
+        });
+    };
+
+    $scope.clearTurnOrders = function ($event) {
+        if ($event && $event.preventDefault) {
+            $event.preventDefault();
+        }
+
+        var turnId = $scope.masterData ? $scope.masterData.turnId : null;
+        if (!turnId || turnId === 'Unknown') {
+            alert('Select a valid turn before clearing turn orders.');
+            return;
+        }
+
+        if (!window.confirm('Clear all TS01-TS23 orders for ' + turnId + '? This cannot be undone.')) {
+            return;
+        }
+
+        turnSheetFactory.clearTurnOrders(turnId).then(function () {
+            turnDataLoaderService.loadTS($scope.masterData, turnId).finally(function () {
+                if ($route && $route.reload) {
+                    $route.reload();
+                }
+                alert('Turn orders cleared.');
+            });
+        }, function (error) {
+            var detail = (error && error.data) ? error.data : '';
+            alert('Clear turn orders failed.' + (detail ? ' ' + detail : ''));
         });
     };
 

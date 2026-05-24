@@ -1,10 +1,11 @@
 'use strict';
 
-austerlitzModule.controller('landUnitsController', function ($scope, masterData, turnDataLoaderService, rulesCatalogFactory, turnSheetFactory) {
+austerlitzModule.controller('landUnitsController', function ($scope, $q, masterData, turnDataLoaderService, rulesCatalogFactory, turnSheetFactory) {
     $scope.masterData = masterData;
     $scope.brigadeRows = [];
     $scope.isLoading = false;
     $scope.loadError = null;
+    $scope.replayWarnings = [];
     $scope.armyListRows = [];
     $scope.armyListByShortName = {};
     $scope.headcountModal = {
@@ -63,7 +64,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         if ($scope.masterData.turnReport && $scope.masterData.turnReport.brigades) {
             $scope.refreshBrigadeRows();
-            $scope.loadArmyListForHeadcountCosts();
+            $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders);
             return;
         }
 
@@ -71,7 +72,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         $scope.loadError = null;
         turnDataLoaderService.loadTR($scope.masterData, $scope.masterData.turnId).then(function () {
             $scope.refreshBrigadeRows();
-            $scope.loadArmyListForHeadcountCosts();
+            return $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders);
         }, function (error) {
             $scope.loadError = (error && error.data) ? error.data : 'Unable to load turn report.';
             $scope.brigadeRows = [];
@@ -82,9 +83,42 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
     $scope.loadArmyListForHeadcountCosts = function () {
         var stateCode = getTurnStateCode();
-        rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
+        return rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
             $scope.armyListRows = armyList || [];
             $scope.armyListByShortName = buildArmyListLookup(armyList);
+        }, function () {
+            $scope.armyListRows = [];
+            $scope.armyListByShortName = {};
+        });
+    };
+
+    $scope.replayBrigadeTurnOrders = function () {
+        if (!$scope.masterData || !$scope.masterData.turnId || $scope.masterData.turnId === 'Unknown') {
+            return;
+        }
+
+        $scope.replayWarnings = [];
+
+        return $q.all([
+            turnSheetFactory.getTSSetUpAdditionalBrigades($scope.masterData.turnId),
+            turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId),
+            turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId),
+            turnSheetFactory.getTSExchangeBattalions($scope.masterData.turnId),
+            turnSheetFactory.getTSMergeBattalions($scope.masterData.turnId),
+            turnSheetFactory.getTSFormFederations($scope.masterData.turnId)
+        ]).then(function (results) {
+            var warnings = [];
+
+            replaySetUpAdditionalBrigades(results[0], warnings);
+            replayIncreaseHeadcount(results[1], warnings);
+            replayIncreaseBrigadeXP(results[2], warnings);
+            replayExchangeBattalions(results[3], warnings);
+            replayMergeBattalions(results[4], warnings);
+            replayFormFederations(results[5], warnings);
+
+            $scope.replayWarnings = warnings;
+        }, function (error) {
+            $scope.replayWarnings = [(error && error.data) ? error.data : 'Unable to load saved brigade turn orders.'];
         });
     };
 
@@ -341,6 +375,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             return;
         }
 
+        if (brigadeHasLockedBattalion(brigade)) {
+            alertLockedTurnOrder('Increase headcount', brigade);
+            return;
+        }
+
         if (!isBrigadeAtBarracks(brigade)) {
             alert('Headcount can only be increased when the brigade is at one of your barracks.');
             return;
@@ -396,6 +435,9 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         var targetHeadcount = normalizeTargetHeadcount($scope.headcountModal.targetHeadcount);
         var scope = $scope.headcountModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
         var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+        if (hasAnyLockedBrigade(affectedBrigades, 'Increase headcount')) {
+            return;
+        }
 
         angular.forEach(affectedBrigades, function (affectedBrigade) {
             applyHeadcountPlanToBrigade(affectedBrigade, targetHeadcount, scope, brigade.id);
@@ -421,6 +463,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
     $scope.openTrainModal = function (brigade) {
         if (!brigade) {
+            return;
+        }
+
+        if (brigadeHasLockedBattalion(brigade)) {
+            alertLockedTurnOrder('Training', brigade);
             return;
         }
 
@@ -472,6 +519,9 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         var scope = $scope.trainModal.scope === 'federation' && canApplyFederationScope(brigade) ? 'federation' : 'brigade';
         var affectedBrigades = getHeadcountAffectedBrigades(brigade, scope);
+        if (hasAnyLockedBrigade(affectedBrigades, 'Training')) {
+            return;
+        }
 
         angular.forEach(affectedBrigades, function (affectedBrigade) {
             applyTrainPlanToBrigade(affectedBrigade, scope, brigade.id);
@@ -545,6 +595,12 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             return;
         }
 
+        if (isBattalionLockedForOrders(battalion)) {
+            alertLockedTurnOrder(actionType === 'merge' ? 'Merge' : 'Exchange', brigade);
+            $scope.resetBattalionAction();
+            return;
+        }
+
         $scope.battalionAction = {
             type: actionType,
             source: { brigade: brigade, battalion: battalion },
@@ -553,11 +609,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     };
 
     $scope.onBattalionLozengeClick = function ($event, brigade, battalion) {
-        if ($event && $event.preventDefault) $event.preventDefault();
-
         if (!$scope.battalionAction.type) {
             return;
         }
+
+        if ($event && $event.preventDefault) $event.preventDefault();
 
         if (!isBattalionEligibleTarget(brigade, battalion)) {
             $scope.resetBattalionAction();
@@ -566,6 +622,12 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         var source = $scope.battalionAction.source;
         if (!source || isSameBattalionSlot(source.brigade, source.battalion, brigade, battalion)) {
+            $scope.resetBattalionAction();
+            return;
+        }
+
+        if (isBattalionLockedForOrders(source.battalion) || isBattalionLockedForOrders(battalion)) {
+            alertLockedTurnOrder($scope.battalionAction.type === 'merge' ? 'Merge' : 'Exchange', isBattalionLockedForOrders(source.battalion) ? source.brigade : brigade);
             $scope.resetBattalionAction();
             return;
         }
@@ -603,11 +665,63 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return !!(battalion && battalion.type);
     };
 
+    $scope.isBattalionLockedForOrders = function (battalion) {
+        return isBattalionLockedForOrders(battalion);
+    };
+
+    $scope.brigadeHasLockedBattalion = function (brigade) {
+        return brigadeHasLockedBattalion(brigade);
+    };
+
+    $scope.getBattalionTitle = function (battalion) {
+        if (isBattalionLockedForOrders(battalion)) {
+            return 'This battalion has already been used in Exchange Battalions or Merge Battalions this turn.';
+        }
+
+        return battalion && battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : '';
+    };
+
+    $scope.clearBattalionTurnOrder = function (brigade, battalion, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+
+        if (!brigade || !battalion || !isBattalionLockedForOrders(battalion)) {
+            return;
+        }
+
+        if (!window.confirm('Clear the Exchange Battalions or Merge Battalions order for this battalion?')) {
+            return;
+        }
+
+        var clearedOrders = [];
+        $q.all([
+            clearExchangeBattalionOrders(brigade, battalion, clearedOrders),
+            clearMergeBattalionOrders(brigade, battalion, clearedOrders)
+        ]).then(function () {
+            if (!clearedOrders.length) {
+                alert('No matching Exchange Battalions or Merge Battalions order was found for this battalion.');
+                return;
+            }
+
+            $scope.resetBattalionAction();
+            $scope.refreshBrigadeRows();
+            $scope.loadArmyListForHeadcountCosts().then(function () {
+                $scope.replayBrigadeTurnOrders();
+            });
+            alert('Cleared ' + clearedOrders.join(', ') + '.');
+        }, showTurnSheetOrderError);
+    };
+
     $scope.openAddBattalionModal = function (brigade, battalion, $event) {
         if ($event && $event.preventDefault) $event.preventDefault();
         if ($event && $event.stopPropagation) $event.stopPropagation();
 
         if (!brigade || !battalion || battalion.type) {
+            return;
+        }
+
+        if (brigadeHasLockedBattalion(brigade)) {
+            alertLockedTurnOrder('Set up additional battalion', brigade);
             return;
         }
 
@@ -651,6 +765,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         var armyItem = $scope.addBattalionModal.selectedArmyItem;
         var targetBattalion = findFirstFreeBattalion(brigade);
 
+        if (brigadeHasLockedBattalion(brigade)) {
+            alertLockedTurnOrder('Set up additional battalion', brigade);
+            return;
+        }
+
         if (!brigade || !armyItem || !targetBattalion) {
             alert("can't be done as no space");
             return;
@@ -658,7 +777,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         turnSheetFactory.getTSSetUpAdditionalBrigades($scope.masterData.turnId).then(function (rows) {
             var targetRow = findMatchingAdditionalBattalionRow(rows, brigade.id)
-                || findNextEmptyTurnSheetRow(rows, ['brigadeNo', 'battType']);
+                || findNextEmptyTurnSheetRowWithinLimit(rows, ['brigadeNo', 'battType'], 6);
 
             if (!targetRow) {
                 alert("can't be done as no space");
@@ -688,6 +807,10 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                     return;
                 }
 
+                if (isBattalionLockedForOrders(battalion)) {
+                    return;
+                }
+
                 if (actionType === 'exchange' && isSameCoordinate(sourceBrigade, brigade)) {
                     eligible[getBattalionKey(brigade, battalion)] = true;
                     return;
@@ -706,12 +829,180 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return eligible;
     }
 
+    function replaySetUpAdditionalBrigades(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['brigadeNo', 'battType']), function (row) {
+            var brigade = getBrigadeById(row.brigadeNo);
+            var armyItem = getArmyItemByItemNo(row.battType);
+            if (!brigade) {
+                addReplayWarning(warnings, 'TS04', row, 'brigade not found: ' + row.brigadeNo);
+                return;
+            }
+            if (!armyItem) {
+                addReplayWarning(warnings, 'TS04', row, 'army item not found: ' + row.battType);
+                return;
+            }
+
+            var targetBattalion = findFirstFreeBattalion(brigade);
+            if (!targetBattalion) {
+                addReplayWarning(warnings, 'TS04', row, 'no free battalion slot for brigade ' + row.brigadeNo);
+                return;
+            }
+
+            applyAdditionalBattalionPreview(brigade, targetBattalion, armyItem);
+        });
+    }
+
+    function replayIncreaseHeadcount(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['brigadeOrFederation', 'increaseAmount']), function (row) {
+            var targetHeadcount = normalizeTargetHeadcount(row.increaseAmount);
+            var affectedBrigades = getBrigadeOrFederationAffectedBrigades(row.brigadeOrFederation);
+            if (!affectedBrigades.length) {
+                addReplayWarning(warnings, 'TS05', row, 'brigade/federation not found: ' + row.brigadeOrFederation);
+                return;
+            }
+
+            var scope = getReplayScope(row.brigadeOrFederation);
+            angular.forEach(affectedBrigades, function (brigade) {
+                applyHeadcountPlanToBrigade(brigade, targetHeadcount, scope, row.brigadeOrFederation);
+            });
+        });
+    }
+
+    function replayIncreaseBrigadeXP(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['brigadeOrFederation']), function (row) {
+            var affectedBrigades = getBrigadeOrFederationAffectedBrigades(row.brigadeOrFederation);
+            if (!affectedBrigades.length) {
+                addReplayWarning(warnings, 'TS06', row, 'brigade/federation not found: ' + row.brigadeOrFederation);
+                return;
+            }
+
+            var scope = getReplayScope(row.brigadeOrFederation);
+            angular.forEach(affectedBrigades, function (brigade) {
+                applyTrainPlanToBrigade(brigade, scope, row.brigadeOrFederation);
+            });
+        });
+    }
+
+    function replayExchangeBattalions(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['brigadeA', 'battA', 'brigadeB', 'battB']), function (row) {
+            var left = getReplayBattalionRef(row.brigadeA, row.battA);
+            var right = getReplayBattalionRef(row.brigadeB, row.battB);
+            if (!left || !right) {
+                addReplayWarning(warnings, 'Exchange Battalions', row, 'brigade or battalion slot not found');
+                return;
+            }
+            if (!isSameCoordinate(left.brigade, right.brigade)) {
+                addReplayWarning(warnings, 'Exchange Battalions', row, 'brigades are not at the same coordinate');
+                return;
+            }
+            if (left.battalion.isNewAddition || right.battalion.isNewAddition) {
+                addReplayWarning(warnings, 'Exchange Battalions', row, 'newly added battalions cannot be exchanged in the same turn');
+                return;
+            }
+            if (isBattalionLockedForOrders(left.battalion) || isBattalionLockedForOrders(right.battalion)) {
+                addReplayWarning(warnings, 'Exchange Battalions', row, 'battalion already used by Exchange Battalions or Merge Battalions this turn');
+                return;
+            }
+
+            exchangeBattalions(left.brigade, left.battalion, right.brigade, right.battalion);
+        });
+    }
+
+    function replayMergeBattalions(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['bridageA', 'battA', 'brigadeB', 'battB']), function (row) {
+            var source = getReplayBattalionRef(row.bridageA, row.battA);
+            var target = getReplayBattalionRef(row.brigadeB, row.battB);
+            if (!source || !target) {
+                addReplayWarning(warnings, 'Merge Battalions', row, 'brigade or battalion slot not found');
+                return;
+            }
+            if (!isSameCoordinate(source.brigade, target.brigade)) {
+                addReplayWarning(warnings, 'Merge Battalions', row, 'brigades are not at the same coordinate');
+                return;
+            }
+            if (source.battalion.isNewAddition || target.battalion.isNewAddition) {
+                addReplayWarning(warnings, 'Merge Battalions', row, 'newly added battalions cannot be merged in the same turn');
+                return;
+            }
+            if (isBattalionLockedForOrders(source.battalion) || isBattalionLockedForOrders(target.battalion)) {
+                addReplayWarning(warnings, 'Merge Battalions', row, 'battalion already used by Exchange Battalions or Merge Battalions this turn');
+                return;
+            }
+            if (!source.battalion.type || !target.battalion.type || source.battalion.type !== target.battalion.type) {
+                addReplayWarning(warnings, 'Merge Battalions', row, 'battalion types do not match');
+                return;
+            }
+
+            mergeBattalions(source.brigade, source.battalion, target.brigade, target.battalion);
+        });
+    }
+
+    function replayFormFederations(rows, warnings) {
+        angular.forEach(getFilledRowsInOrder(rows, ['itemNo', 'federation_Fleet']), function (row) {
+            var brigade = getBrigadeById(row.itemNo);
+            if (brigade) {
+                setBrigadeFederation(brigade, row.federation_Fleet);
+                return;
+            }
+
+            var affectedBrigades = getBrigadesByFederation(row.itemNo);
+            if (!affectedBrigades.length) {
+                addReplayWarning(warnings, 'TS14', row, 'brigade/federation not found: ' + row.itemNo);
+                return;
+            }
+
+            angular.forEach(affectedBrigades, function (affectedBrigade) {
+                setBrigadeFederation(affectedBrigade, row.federation_Fleet);
+            });
+        });
+    }
+
     function isBattalionEligibleTarget(brigade, battalion) {
         if (!$scope.battalionAction.type) {
             return false;
         }
 
         return !!$scope.battalionAction.eligibleKeys[getBattalionKey(brigade, battalion)];
+    }
+
+    function isBattalionLockedForOrders(battalion) {
+        return !!(battalion && battalion.isLockedByTurnOrder);
+    }
+
+    function brigadeHasLockedBattalion(brigade) {
+        if (!brigade || !brigade.battalions) {
+            return false;
+        }
+
+        for (var i = 0; i < brigade.battalions.length; i++) {
+            if (isBattalionLockedForOrders(brigade.battalions[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function hasAnyLockedBrigade(brigades, actionName) {
+        for (var i = 0; brigades && i < brigades.length; i++) {
+            if (brigadeHasLockedBattalion(brigades[i])) {
+                alertLockedTurnOrder(actionName, brigades[i]);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function alertLockedTurnOrder(actionName, brigade) {
+        var brigadeLabel = brigade && brigade.id ? ' Brigade ' + brigade.id + ' contains' : ' This action uses';
+        alert(actionName + ' is not possible.' + brigadeLabel + ' a battalion already used in an Exchange Battalions or Merge Battalions order this turn.');
+    }
+
+    function markBattalionLockedForOrders(battalion) {
+        if (battalion) {
+            battalion.isLockedByTurnOrder = true;
+        }
     }
 
     function getBattalionKey(brigade, battalion) {
@@ -743,9 +1034,15 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     }
 
     function exchangeBattalions(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
+        if (isBattalionLockedForOrders(leftBattalion) || isBattalionLockedForOrders(rightBattalion)) {
+            return;
+        }
+
         var leftSnapshot = copyBattalionBaseline(leftBattalion);
         copyBattalionBaselineInto(leftBattalion, rightBattalion);
         copyBattalionBaselineInto(rightBattalion, leftSnapshot);
+        markBattalionLockedForOrders(leftBattalion);
+        markBattalionLockedForOrders(rightBattalion);
 
         recalculateBrigadeEffects(leftBrigade);
         if (leftBrigade.id !== rightBrigade.id) {
@@ -754,6 +1051,10 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     }
 
     function mergeBattalions(sourceBrigade, sourceBattalion, targetBrigade, targetBattalion) {
+        if (isBattalionLockedForOrders(sourceBattalion) || isBattalionLockedForOrders(targetBattalion)) {
+            return;
+        }
+
         if (!sourceBattalion.type || !targetBattalion.type || sourceBattalion.type !== targetBattalion.type) {
             return;
         }
@@ -772,6 +1073,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         targetBattalion.display = formatBattalionParts(targetBattalion.type, targetBattalion.originalEf, targetBattalion.size);
 
         clearBattalionBaseline(sourceBattalion);
+        markBattalionLockedForOrders(sourceBattalion);
+        markBattalionLockedForOrders(targetBattalion);
 
         recalculateBrigadeEffects(sourceBrigade);
         if (sourceBrigade.id !== targetBrigade.id) {
@@ -880,11 +1183,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     function persistExchangeBattalionOrder(leftBrigade, leftBattalion, rightBrigade, rightBattalion) {
         turnSheetFactory.getTSExchangeBattalions($scope.masterData.turnId).then(function (rows) {
             var targetRow = findMatchingExchangeRow(rows, leftBrigade, leftBattalion, rightBrigade, rightBattalion)
-                || findNextEmptyTurnSheetRow(rows, ['brigadeA', 'battA', 'brigadeB', 'battB']);
+                || findNextEmptyTurnSheetRowWithinLimit(rows, ['brigadeA', 'battA', 'brigadeB', 'battB'], 4);
 
             if (!targetRow) {
-                targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
-                rows.push(targetRow);
+                alert('No empty Exchange Battalions row is available.');
+                return;
             }
 
             targetRow.turnId = $scope.masterData.turnId;
@@ -900,11 +1203,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
     function persistMergeBattalionOrder(sourceBrigade, sourceBattalion, targetBrigade, targetBattalion) {
         turnSheetFactory.getTSMergeBattalions($scope.masterData.turnId).then(function (rows) {
             var targetRow = findMatchingMergeRow(rows, sourceBrigade, sourceBattalion, targetBrigade, targetBattalion)
-                || findNextEmptyTurnSheetRow(rows, ['bridageA', 'battA', 'brigadeB', 'battB']);
+                || findNextEmptyTurnSheetRowWithinLimit(rows, ['bridageA', 'battA', 'brigadeB', 'battB'], 8);
 
             if (!targetRow) {
-                targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
-                rows.push(targetRow);
+                alert('No empty Merge Battalions row is available.');
+                return;
             }
 
             targetRow.turnId = $scope.masterData.turnId;
@@ -915,6 +1218,61 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
             return turnSheetFactory.postTSRecords(rows, 'MergeBattalions').then(angular.noop, showTurnSheetOrderError);
         }, showTurnSheetOrderError);
+    }
+
+    function clearExchangeBattalionOrders(brigade, battalion, clearedOrders) {
+        return turnSheetFactory.getTSExchangeBattalions($scope.masterData.turnId).then(function (rows) {
+            var changed = false;
+            angular.forEach(getFilledRowsInOrder(rows, ['brigadeA', 'battA', 'brigadeB', 'battB']), function (row) {
+                if (!turnSheetPairIncludesBattalion(row, brigade, battalion, 'brigadeA', 'battA', 'brigadeB', 'battB')) {
+                    return;
+                }
+
+                clearTurnSheetPairRow(row, ['brigadeA', 'battA', 'brigadeB', 'battB']);
+                changed = true;
+                clearedOrders.push('Exchange Battalions row ' + ((row && row.orderNo) || '?'));
+            });
+
+            if (changed) {
+                return turnSheetFactory.postTSRecords(rows, 'ExchangeBattalions');
+            }
+
+            return null;
+        });
+    }
+
+    function clearMergeBattalionOrders(brigade, battalion, clearedOrders) {
+        return turnSheetFactory.getTSMergeBattalions($scope.masterData.turnId).then(function (rows) {
+            var changed = false;
+            angular.forEach(getFilledRowsInOrder(rows, ['bridageA', 'battA', 'brigadeB', 'battB']), function (row) {
+                if (!turnSheetPairIncludesBattalion(row, brigade, battalion, 'bridageA', 'battA', 'brigadeB', 'battB')) {
+                    return;
+                }
+
+                clearTurnSheetPairRow(row, ['bridageA', 'battA', 'brigadeB', 'battB']);
+                changed = true;
+                clearedOrders.push('Merge Battalions row ' + ((row && row.orderNo) || '?'));
+            });
+
+            if (changed) {
+                return turnSheetFactory.postTSRecords(rows, 'MergeBattalions');
+            }
+
+            return null;
+        });
+    }
+
+    function turnSheetPairIncludesBattalion(row, brigade, battalion, brigadeAField, battAField, brigadeBField, battBField) {
+        return !!(row && brigade && battalion)
+            && ((sameNullableInt(row[brigadeAField], brigade.id) && sameNullableInt(row[battAField], battalion.slot))
+                || (sameNullableInt(row[brigadeBField], brigade.id) && sameNullableInt(row[battBField], battalion.slot)));
+    }
+
+    function clearTurnSheetPairRow(row, fields) {
+        row.turnId = $scope.masterData.turnId;
+        angular.forEach(fields, function (field) {
+            row[field] = null;
+        });
     }
 
     function persistFormFederationOrders(stagedOrders) {
@@ -932,7 +1290,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             for (var i = 0; i < stagedOrders.length; i++) {
                 var order = stagedOrders[i];
                 var targetRow = findMatchingFormFederationRow(rows, order.itemNo)
-                    || findNextEmptyTurnSheetRow(rows, ['itemNo', 'federation_Fleet']);
+                    || findNextEmptyTurnSheetRowWithinLimit(rows, ['itemNo', 'federation_Fleet'], 21);
 
                 if (!targetRow) {
                     alert('No empty TS_14 row is available.');
@@ -1193,11 +1551,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId).then(function (rows) {
             rows = rows || [];
             var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation)
-                || findNextEmptyTurnSheetRow(rows, ['brigadeOrFederation', 'increaseAmount']);
+                || findNextEmptyTurnSheetRowWithinLimit(rows, ['brigadeOrFederation', 'increaseAmount'], 12);
 
             if (!targetRow) {
-                targetRow = { turnId: $scope.masterData.turnId, orderNo: rows.length + 1 };
-                rows.push(targetRow);
+                alert('No empty TS_05 row is available.');
+                return;
             }
 
             targetRow.turnId = $scope.masterData.turnId;
@@ -1238,11 +1596,11 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId).then(function (rows) {
             rows = rows || [];
             var targetRow = findMatchingBrigadeOrFederationRow(rows, brigadeOrFederation)
-                || findNextEmptyTurnSheetRow(rows, ['brigadeOrFederation']);
+                || findNextEmptyTurnSheetRowWithinLimit(rows, ['brigadeOrFederation'], 16);
 
             if (!targetRow) {
-                targetRow = { turnId: $scope.masterData.turnId, orderNo: rows.length + 1 };
-                rows.push(targetRow);
+                alert('No empty TS_06 row is available.');
+                return;
             }
 
             targetRow.turnId = $scope.masterData.turnId;
@@ -1338,6 +1696,106 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         return isNaN(parsed) ? null : parsed;
     }
 
+    function getFilledRowsInOrder(rows, fields) {
+        return (rows || []).filter(function (row) {
+            return hasAnyTurnSheetValue(row, fields);
+        }).sort(function (left, right) {
+            return (parseInt(left.orderNo, 10) || 0) - (parseInt(right.orderNo, 10) || 0);
+        });
+    }
+
+    function hasAnyTurnSheetValue(row, fields) {
+        if (!row) {
+            return false;
+        }
+
+        for (var i = 0; i < fields.length; i++) {
+            if (row[fields[i]] != null && row[fields[i]] !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function addReplayWarning(warnings, sectionName, row, detail) {
+        warnings.push(sectionName + ' row ' + ((row && row.orderNo) || '?') + ': ' + detail + '.');
+    }
+
+    function getBrigadeOrFederationAffectedBrigades(value) {
+        var parsed = parseInt(value, 10);
+        if (isNaN(parsed)) {
+            return [];
+        }
+
+        var brigade = getBrigadeById(parsed);
+        if (brigade) {
+            return [brigade];
+        }
+
+        return getBrigadesByFederation(parsed);
+    }
+
+    function getReplayScope(value) {
+        return getBrigadeById(value) ? 'brigade' : 'federation';
+    }
+
+    function getReplayBattalionRef(brigadeNo, battalionSlot) {
+        var brigade = getBrigadeById(brigadeNo);
+        var slot = parseInt(battalionSlot, 10);
+        if (!brigade || isNaN(slot) || slot < 1 || slot > brigade.battalions.length) {
+            return null;
+        }
+
+        return {
+            brigade: brigade,
+            battalion: brigade.battalions[slot - 1]
+        };
+    }
+
+    function getArmyItemByItemNo(itemNo) {
+        var parsed = parseInt(itemNo, 10);
+        if (isNaN(parsed)) {
+            return null;
+        }
+
+        for (var i = 0; i < $scope.armyListRows.length; i++) {
+            if (parseInt($scope.armyListRows[i].itemNo, 10) === parsed) {
+                return $scope.armyListRows[i];
+            }
+        }
+
+        return null;
+    }
+
+    function findNextEmptyTurnSheetRowWithinLimit(rows, fields, maxRows) {
+        rows = rows || [];
+        for (var orderNo = 1; orderNo <= maxRows; orderNo++) {
+            var row = findTurnSheetRowByOrderNo(rows, orderNo);
+            if (!row) {
+                row = { turnId: $scope.masterData.turnId, orderNo: orderNo };
+                rows.push(row);
+                return row;
+            }
+
+            if (!hasAnyTurnSheetValue(row, fields)) {
+                return row;
+            }
+        }
+
+        return null;
+    }
+
+    function findTurnSheetRowByOrderNo(rows, orderNo) {
+        for (var i = 0; rows && i < rows.length; i++) {
+            if (sameNullableInt(rows[i].orderNo, orderNo)) {
+                return rows[i];
+            }
+        }
+
+        return null;
+    }
+
     function sameNullableInt(left, right) {
         return parseInt(left, 10) === parseInt(right, 10);
     }
@@ -1409,7 +1867,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 isEfChanged: false,
                 efDrop: 0,
                 efIncrease: 0,
-                isNewAddition: false
+                isNewAddition: false,
+                isLockedByTurnOrder: false
             };
         }
 
@@ -1423,7 +1882,8 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
             isEfChanged: false,
             efDrop: 0,
             efIncrease: 0,
-            isNewAddition: false
+            isNewAddition: false,
+            isLockedByTurnOrder: false
         };
     }
 
@@ -1541,6 +2001,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
 
         resetBattalionDisplays(brigade);
 
+        // H/C must run before Train because it can change EF and effective headcount.
         if (brigade.headcountPlan) {
             addResources(resources, calculateHeadcountResources(brigade, brigade.headcountPlan.targetHeadcount));
             applyHeadcountEfChanges(brigade, brigade.headcountPlan.targetHeadcount);
@@ -1755,15 +2216,7 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
                 return;
             }
 
-            var armyItem = getArmyItemForBattalion(battalion);
-            var headcount = getEffectiveTrainingHeadcount(brigade, battalion);
-            var cost = parseFloat(armyItem.cost);
-            var ecPtsPer25 = parseFloat(armyItem.ecPtsPer25);
-            if (isNaN(cost)) cost = 0;
-            if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
-
-            resources.ld += Math.round((headcount * cost) / 10);
-            resources.ecPts += Math.round((Math.ceil(headcount / 25) * ecPtsPer25) / 8);
+            addResources(resources, calculateBattalionTrainingResources(brigade, battalion));
         });
 
         return {
@@ -1774,17 +2227,47 @@ austerlitzModule.controller('landUnitsController', function ($scope, masterData,
         };
     }
 
+    function calculateBattalionTrainingResources(brigade, battalion) {
+        var resources = calculatePlaceholderResources();
+        if (!canTrainBattalion(battalion)) {
+            return resources;
+        }
+
+        var armyItem = getArmyItemForBattalion(battalion);
+        if (!armyItem) {
+            return resources;
+        }
+
+        var headcount = getEffectiveTrainingHeadcount(brigade, battalion);
+        var setupCost = calculateBattalionSetupCost(armyItem, headcount);
+
+        resources.ld = Math.round(setupCost.ld / 10) || '';
+        resources.ecPts = Math.round(setupCost.ecPts / 8) || '';
+        return resources;
+    }
+
+    function calculateBattalionSetupCost(armyItem, headcount) {
+        var cost = parseFloat(armyItem && armyItem.cost);
+        var ecPtsPer25 = parseFloat(armyItem && armyItem.ecPtsPer25);
+        if (isNaN(cost)) cost = 0;
+        if (isNaN(ecPtsPer25)) ecPtsPer25 = 0;
+
+        return {
+            ld: headcount * cost,
+            ecPts: Math.ceil(headcount / 25) * ecPtsPer25
+        };
+    }
+
     function calculateTrainPreview(affectedBrigades) {
         var preview = calculateEmptyTrainPreview();
         preview.affectedBrigades = affectedBrigades.length;
 
         angular.forEach(affectedBrigades, function (brigade) {
-            var resources = calculateTrainResources(brigade);
-            preview.ld += parseInt(resources.ld, 10) || 0;
-            preview.ecPts += parseInt(resources.ecPts, 10) || 0;
-
             angular.forEach(brigade.battalions, function (battalion) {
                 if (canTrainBattalion(battalion)) {
+                    var resources = calculateBattalionTrainingResources(brigade, battalion);
+                    preview.ld += parseInt(resources.ld, 10) || 0;
+                    preview.ecPts += parseInt(resources.ecPts, 10) || 0;
                     preview.trainableBattalions += 1;
                     preview.efChanges += 1;
                 }

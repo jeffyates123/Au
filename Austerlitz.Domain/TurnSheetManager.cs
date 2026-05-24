@@ -734,6 +734,51 @@ namespace Austerlitz.Domain
             }
         }
 
+        public int ClearTurnOrders(string turnId)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                return 0;
+            }
+
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var deletedRows = 0;
+                deletedRows += ClearTurnOrderSet<TS_01TransferGoods>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_02DemolishItems>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_03SetUpBrigades>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_04SetUpAdditionalBrigades>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_05IncreaseHeadcount>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_06IncreaseBrigadeXP>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_07ExchangeBattalions>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_08MergeBattalions>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_09RepairShips_BaggageTrains>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_10BuildShips>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_11BuildBaggageTrain>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_12IncreasePopulationDensity>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_13BuildProductionSites>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_14FormFederations>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_15CoastalDefence>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_16SeaBlockade>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_17TradeAndLoading1>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_18Movement>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_19TradeAndLoading2>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_20Boarding>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_21HandOverTerritory>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_22ChangeNames>(dataContext, turnId);
+                deletedRows += ClearTurnOrderSet<TS_23ChangeStateRelationships>(dataContext, turnId);
+
+                dataContext.SaveChanges();
+                return deletedRows;
+            }
+        }
+
+        private int ClearTurnOrderSet<T>(AusterlitzDbContext dataContext, string turnId) where T : class, ITurnSheetEntity
+        {
+            var listRepository = new TurnSheetRepository<T>(dataContext);
+            return listRepository.DeleteByTurnId(turnId);
+        }
+
         public TS_00TurnDetails PostTSTurnDetails(TS_00TurnDetails tsPostedRecords)
         {
             using (var dataContext = new AusterlitzDbContext())

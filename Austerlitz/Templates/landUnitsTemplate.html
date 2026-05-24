@@ -20,6 +20,11 @@
         {{loadError}}
     </div>
 
+    <div class="alert alert-warning landUnitsAlert" ng-show="replayWarnings.length">
+        <strong>Some saved turn orders could not be replayed:</strong>
+        <div ng-repeat="warning in replayWarnings track by $index">{{warning}}</div>
+    </div>
+
     <div class="alert alert-warning landUnitsAlert" ng-show="!isLoading && !loadError && brigadeRows.length === 0">
         No brigades are available for the selected turn.
     </div>
@@ -59,21 +64,22 @@
                     <td class="landUnitsMpCol">{{brigade.mp}}</td>
                     <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
                         <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
-                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{battalion.isEfChanged ? 'EF changed from ' + battalion.originalEf + ' to ' + battalion.currentEf : ''}}">
+                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition, landUnitsBattalionChipLocked: isBattalionLockedForOrders(battalion) }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{getBattalionTitle(battalion)}}">
                                 <span>{{battalion.display || '- -- ---'}}</span>
                             </button>
                             <ul class="dropdown-menu landUnitsBattalionMenu">
-                                <li ng-show="!battalion.type"><a href="" ng-click="openAddBattalionModal(brigade, battalion, $event)">Add Battalion</a></li>
-                                <li ng-class="{ disabled: battalion.isNewAddition }"><a href="" ng-click="$event.preventDefault(); !battalion.isNewAddition && startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
-                                <li ng-class="{ disabled: !canStartMerge(battalion) || battalion.isNewAddition }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
+                                <li ng-show="!battalion.type" ng-class="{ disabled: brigadeHasLockedBattalion(brigade) }"><a href="" ng-click="$event.preventDefault(); !brigadeHasLockedBattalion(brigade) && openAddBattalionModal(brigade, battalion, $event)">Add Battalion</a></li>
+                                <li ng-show="isBattalionLockedForOrders(battalion)"><a href="" ng-click="clearBattalionTurnOrder(brigade, battalion, $event)">Clear Order</a></li>
+                                <li ng-class="{ disabled: battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
+                                <li ng-class="{ disabled: !canStartMerge(battalion) || battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
                             </ul>
                         </div>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)">H/C</button>
+                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: brigadeHasLockedBattalion(brigade) }" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)" title="{{brigadeHasLockedBattalion(brigade) ? 'Brigade contains a battalion already used in Exchange Battalions or Merge Battalions this turn.' : ''}}">H/C</button>
                     </td>
                     <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)">Train</button>
+                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: brigadeHasLockedBattalion(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" title="{{brigadeHasLockedBattalion(brigade) ? 'Brigade contains a battalion already used in Exchange Battalions or Merge Battalions this turn.' : ''}}">Train</button>
                     </td>
                     <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
                     <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>

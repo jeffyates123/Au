@@ -86,8 +86,6 @@
                 <select id="sidebarSelectedMonthYear" class="form-control input-sm" ng-options="monthYear for monthYear in sidebarMonthYearOptions" ng-model="sidebarSelectedMonthYear" ng-change="onSidebarMonthYearChanged()">
                     <option value="">-- turn --</option>
                 </select>
-
-                <button type="button" class="btn btn-default btn-xs appSidebarSave" ng-click="saveTurnsheetSpreadsheet($event)">Save Spreadsheet</button>
             </div>
 
             <nav class="appSidebarNav">
@@ -130,6 +128,8 @@
                         <a href="/TurnSheet/ChangeStateRelationships">TS_23 Relationships</a>
                     </div>
                 </div>
+                <button type="button" class="btn btn-default btn-xs appSidebarSave appSidebarTurnsheetAction" ng-click="clearTurnOrders($event)">Clear Turn Orders</button>
+                <button type="button" class="btn btn-default btn-xs appSidebarSave appSidebarTurnsheetAction" ng-click="saveTurnsheetSpreadsheet($event)">Save to Spreadsheet</button>
             </nav>
         </aside>
 

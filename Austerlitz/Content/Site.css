@@ -660,6 +660,10 @@ textarea {
     font-size: 11px;
 }
 
+.appSidebarTurnsheetAction {
+    text-align: center;
+}
+
 .appSidebarNav {
     display: flex;
     flex-direction: column;
@@ -1140,6 +1144,13 @@ textarea {
     font-weight: bold;
 }
 
+.landUnitsBattalionChipLocked {
+    border: 1px solid #b88900;
+    background: #fff0c2;
+    color: #6a4b00;
+    font-weight: bold;
+}
+
 .landUnitsToggleButton {
     min-width: 42px;
     padding: 2px 6px;
@@ -1156,6 +1167,10 @@ textarea {
     border-color: #999999;
     color: #222222;
     outline: none;
+}
+
+.landUnitsToggleButtonDisabled {
+    opacity: 0.65;
 }
 
 .landUnitsActionDropdown {

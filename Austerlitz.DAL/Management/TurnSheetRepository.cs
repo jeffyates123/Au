@@ -41,6 +41,18 @@ namespace Austerlitz.DAL.Management
         {
             return dbSet.Where(e => e.TurnId.Equals(turnId)).ToList<T>().AsQueryable();
         }
+
+        public int DeleteByTurnId(string turnId)
+        {
+            var entities = dbSet.Where(e => e.TurnId.Equals(turnId)).ToList();
+            foreach (var entity in entities)
+            {
+                dbSet.Remove(entity);
+            }
+
+            return entities.Count;
+        }
+
         //http://stackoverflow.com/questions/4029493/update-existing-entitycollection-in-entity-framework
         public virtual IEnumerable<T> SaveRange(T[] entities)
         {
