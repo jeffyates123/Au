@@ -98,6 +98,41 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return lookup;
                 };
 
+            $scope.normalizeBrigadeBattalionEfValues = function () {
+                    angular.forEach($scope.brigadeRows || [], function (brigade) {
+                        angular.forEach((brigade && brigade.battalions) || [], function (battalion) {
+                            if (!battalion || !battalion.type) {
+                                return;
+                            }
+
+                            var existingEf = parseInt(battalion.originalEf, 10);
+                            if (!isNaN(existingEf) && existingEf > 0) {
+                                return;
+                            }
+
+                            var armyItem = $scope.armyListByShortName[(battalion.type || '').toString().trim().toUpperCase()];
+                            if (!armyItem) {
+                                return;
+                            }
+
+                            var defaultEf = parseInt(armyItem.ef, 10);
+                            if (isNaN(defaultEf)) {
+                                defaultEf = parseInt(armyItem.EF, 10);
+                            }
+                            if (isNaN(defaultEf) || defaultEf <= 0) {
+                                return;
+                            }
+
+                            battalion.originalEf = defaultEf;
+                            battalion.currentEf = defaultEf;
+                            battalion.display = $scope.formatBattalionParts(battalion.type, battalion.currentEf, battalion.size);
+                            if (brigade.source) {
+                                brigade.source['batt' + battalion.slot + 'EF'] = defaultEf;
+                            }
+                        });
+                    });
+                };
+
             $scope.getTurnStateCode = function () {
                     if ($scope.masterData && $scope.masterData.selectedState) {
                         return $scope.masterData.selectedState;
@@ -228,6 +263,7 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
                         $scope.armyListRows = armyList || [];
                         $scope.armyListByShortName = $scope.buildArmyListLookup(armyList);
+                        $scope.normalizeBrigadeBattalionEfValues();
                     }, function () {
                         $scope.armyListRows = [];
                         $scope.armyListByShortName = {};
