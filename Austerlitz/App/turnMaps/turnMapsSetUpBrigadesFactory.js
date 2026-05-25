@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
+austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (turnSheetValueRulesFactory) {
     var TS_COST_TYPE_ORDER = ['TS03', 'TS04', 'TS05', 'TS06'];
     var TS_COST_LABELS = {
         TS03: 'Set Up Brigades',
@@ -8,7 +8,7 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
         TS05: 'Increase Headcount',
         TS06: 'Increase Brigade XP (Train)'
     };
-    var MANAGED_TS01_ROW_LIMIT = 12;
+    var MANAGED_TS01_ROW_LIMIT = 10;
     var MANAGED_TS01_STORAGE_KEY_PREFIX = 'austerlitz.turnMaps.managedTs01Rows.';
 
     function toInt(value, fallback) {
@@ -19,6 +19,15 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
     function toFloat(value, fallback) {
         var parsed = parseFloat(value);
         return isNaN(parsed) ? (fallback || 0) : parsed;
+    }
+
+    function hasMeaningfulText(value) {
+        if (value == null) {
+            return false;
+        }
+
+        var text = value.toString().trim();
+        return !!text && text !== '<Brigade Name>' && text.toLowerCase() !== 'temp brigade name';
     }
 
     function createEmptyGoods() {
@@ -74,15 +83,35 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
 
             $scope.normalizeSetUpBrigadesRows = function (rows) {
                 return (rows || []).map(function (row) {
-                    if (!row.depot) {
+                    row.depot = turnSheetValueRulesFactory.toPositiveIntOrNull(row.depot);
+                    row.batt1 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt1);
+                    row.batt2 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt2);
+                    row.batt3 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt3);
+                    row.batt4 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt4);
+                    row.batt5 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt5);
+                    row.batt6 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt6);
+                    row.batt7 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt7);
+
+                    if (!row.depot || !hasMeaningfulText(row.brigadeName)) {
                         row.brigadeName = '';
                     }
+
                     return row;
                 });
             };
 
             $scope.normalizeTransferGoodsRows = function (rows) {
-                return rows || [];
+                return (rows || []).map(function (row) {
+                    row.from = turnSheetValueRulesFactory.toPositiveIntOrNull(row.from);
+                    row.to = turnSheetValueRulesFactory.toPositiveIntOrNull(row.to);
+                    row.louisdore = turnSheetValueRulesFactory.toPositiveIntOrNull(row.louisdore);
+                    row.citizens = turnSheetValueRulesFactory.toPositiveIntOrNull(row.citizens);
+                    row.ecPts = turnSheetValueRulesFactory.toPositiveIntOrNull(row.ecPts);
+                    row.wood = turnSheetValueRulesFactory.toPositiveIntOrNull(row.wood);
+                    row.horses = turnSheetValueRulesFactory.toPositiveIntOrNull(row.horses);
+                    row.textiles = turnSheetValueRulesFactory.toPositiveIntOrNull(row.textiles);
+                    return row;
+                });
             };
 
             $scope.refreshTransferGoodsCostRows = function () {
@@ -883,23 +912,28 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
             $scope.hasSetUpBrigadesData = function (setUpRow) {
                 if (!setUpRow) return false;
 
-                return (setUpRow.depot != null && setUpRow.depot !== '')
-                    || (setUpRow.batt1 != null && setUpRow.batt1 !== '')
-                    || (setUpRow.batt2 != null && setUpRow.batt2 !== '')
-                    || (setUpRow.batt3 != null && setUpRow.batt3 !== '')
-                    || (setUpRow.batt4 != null && setUpRow.batt4 !== '')
-                    || (setUpRow.batt5 != null && setUpRow.batt5 !== '')
-                    || (setUpRow.batt6 != null && setUpRow.batt6 !== '')
-                    || (setUpRow.batt7 != null && setUpRow.batt7 !== '')
-                    || (!!setUpRow.brigadeName && setUpRow.brigadeName !== '<Brigade Name>');
+                return turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.depot)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt1)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt2)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt3)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt4)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt5)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt6)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt7)
+                    || hasMeaningfulText(setUpRow.brigadeName);
             };
 
             $scope.isBrigadeSetupIncomplete = function (setUpRow) {
                 if (!setUpRow) return false;
 
-                if (setUpRow.depot != null && setUpRow.depot !== '') {
-                    if (!setUpRow.batt1 || !setUpRow.batt2 || !setUpRow.batt3 || !setUpRow.batt4 || !setUpRow.batt5) return true;
-                    if (setUpRow.batt7 && !setUpRow.batt6) return true;
+                if (turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.depot)) {
+                    if (!turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt1)
+                        || !turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt2)
+                        || !turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt3)
+                        || !turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt4)
+                        || !turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt5)) return true;
+                    if (turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt7)
+                        && !turnSheetValueRulesFactory.hasPositiveIntValue(setUpRow.batt6)) return true;
                 }
 
                 return false;
@@ -925,14 +959,14 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function () {
             $scope.hasTransferGoodsData = function (transferRow) {
                 if (!transferRow) return false;
 
-                return (transferRow.from != null && transferRow.from !== '')
-                    || (transferRow.to != null && transferRow.to !== '')
-                    || (transferRow.louisdore != null && transferRow.louisdore !== '')
-                    || (transferRow.citizens != null && transferRow.citizens !== '')
-                    || (transferRow.ecPts != null && transferRow.ecPts !== '')
-                    || (transferRow.wood != null && transferRow.wood !== '')
-                    || (transferRow.horses != null && transferRow.horses !== '')
-                    || (transferRow.textiles != null && transferRow.textiles !== '');
+                return turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.from)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.to)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.louisdore)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.citizens)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.ecPts)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.wood)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.horses)
+                    || turnSheetValueRulesFactory.hasPositiveIntValue(transferRow.textiles);
             };
 
             $scope.removeTransferGoodsRow = function (row) {

@@ -175,6 +175,9 @@ namespace Austerlitz.Controllers
 
                             auDB.TS_00TurnDetails.Add(newTurn);
                             auDB.SaveChanges();
+
+                            var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
+                            turnSheetManager.EnsureAllTurnsheetSectionsSeeded(turnId);
                         }
 
 

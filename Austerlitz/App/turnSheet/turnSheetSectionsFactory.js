@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory) {
+austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory, turnSheetValueRulesFactory) {
     var sections = [
         {
             key: 'TransferGoods',
@@ -365,12 +365,68 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory)
         return row;
     }
 
+    function normalizeSetUpBrigadesRow(row) {
+        if (!row) {
+            return row;
+        }
+
+        row.depot = turnSheetValueRulesFactory.toPositiveIntOrNull(row.depot);
+        row.batt1 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt1);
+        row.batt2 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt2);
+        row.batt3 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt3);
+        row.batt4 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt4);
+        row.batt5 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt5);
+        row.batt6 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt6);
+        row.batt7 = turnSheetValueRulesFactory.toPositiveIntOrNull(row.batt7);
+
+        var brigadeName = row.brigadeName == null ? '' : row.brigadeName.toString().trim();
+        if (!brigadeName || brigadeName === '<Brigade Name>' || !row.depot) {
+            row.brigadeName = '';
+        }
+
+        return row;
+    }
+
+    function normalizeTransferGoodsRow(row) {
+        if (!row) {
+            return row;
+        }
+
+        row.from = turnSheetValueRulesFactory.toPositiveIntOrNull(row.from);
+        row.to = turnSheetValueRulesFactory.toPositiveIntOrNull(row.to);
+        row.louisdore = turnSheetValueRulesFactory.toPositiveIntOrNull(row.louisdore);
+        row.citizens = turnSheetValueRulesFactory.toPositiveIntOrNull(row.citizens);
+        row.ecPts = turnSheetValueRulesFactory.toPositiveIntOrNull(row.ecPts);
+        row.wood = turnSheetValueRulesFactory.toPositiveIntOrNull(row.wood);
+        row.horses = turnSheetValueRulesFactory.toPositiveIntOrNull(row.horses);
+        row.textiles = turnSheetValueRulesFactory.toPositiveIntOrNull(row.textiles);
+
+        return row;
+    }
+
+    function normalizeSectionSpecificRow(section, row) {
+        if (!section || !row) {
+            return row;
+        }
+
+        if (section.key === 'SetUpBrigades') {
+            return normalizeSetUpBrigadesRow(row);
+        }
+
+        if (section.key === 'TransferGoods') {
+            return normalizeTransferGoodsRow(row);
+        }
+
+        return row;
+    }
+
     function normalizeRows(section, rows, turnId) {
         rows = rows || [];
 
         var byOrderNo = {};
         var highestOrderNo = section.maxRows || 0;
         angular.forEach(rows, function (row, index) {
+            row = normalizeSectionSpecificRow(section, row);
             var orderNo = getOrderNo(row, index + 1);
             highestOrderNo = Math.max(highestOrderNo, orderNo);
             byOrderNo[orderNo] = row;
