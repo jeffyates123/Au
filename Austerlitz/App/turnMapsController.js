@@ -99,7 +99,6 @@ austerlitzModule.controller('turnMapsController', function (
         }
         if ($scope.isSetUpBrigadesMode()) {
             $scope.queueAutoSaveTsGrid('SetUpBrigades');
-            $scope.queueAutoSaveTsGrid('TransferGoods');
             $scope.recalculateTransferGoodsForSetUpBrigades();
             return;
         }
@@ -418,6 +417,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.attachUnitsToMapCoordinates();
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
+        $scope.recalculateTransferGoodsForSetUpBrigades();
     });
 
     turnSheetFactory.getTSMovement($scope.masterData.turnId).then(function (tsMovementList) {
@@ -439,8 +439,24 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.recalculateTransferGoodsForSetUpBrigades();
     });
 
+    turnSheetFactory.getTSSetUpAdditionalBrigades($scope.masterData.turnId).then(function (tsSetUpAdditionalBrigadesList) {
+        $scope.tsSetUpAdditionalBrigadesList = tsSetUpAdditionalBrigadesList || [];
+        $scope.recalculateTransferGoodsForSetUpBrigades();
+    });
+
+    turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId).then(function (tsIncreaseHeadcountList) {
+        $scope.tsIncreaseHeadcountList = tsIncreaseHeadcountList || [];
+        $scope.recalculateTransferGoodsForSetUpBrigades();
+    });
+
+    turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId).then(function (tsIncreaseBrigadeXpList) {
+        $scope.tsIncreaseBrigadeXpList = tsIncreaseBrigadeXpList || [];
+        $scope.recalculateTransferGoodsForSetUpBrigades();
+    });
+
     turnSheetFactory.getTSTransferGoods($scope.masterData.turnId).then(function (tsTransferGoodsList) {
         $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(tsTransferGoodsList);
+        $scope.loadManagedTransferGoodsRowsFromStorage();
         $scope.refreshTransferGoodsCostRows();
         $scope.recalculateTransferGoodsForSetUpBrigades();
     });

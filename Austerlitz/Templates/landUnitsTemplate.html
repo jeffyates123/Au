@@ -41,10 +41,10 @@
                     <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
                     <th class="landUnitsToggleCol">H/C</th>
                     <th class="landUnitsToggleCol">Train</th>
-                    <th class="landUnitsResourceCol">LD</th>
-                    <th class="landUnitsResourceCol">Citz</th>
-                    <th class="landUnitsResourceCol">EcPts</th>
-                    <th class="landUnitsResourceCol">Horse</th>
+                    <th class="landUnitsResourceCol">HC</th>
+                    <th class="landUnitsResourceCol">Train</th>
+                    <th class="landUnitsResourceCol">Costs</th>
+                    <th class="landUnitsResourceCol">TS01</th>
                     <th class="landUnitsMenuCol"></th>
                 </tr>
             </thead>
@@ -81,10 +81,10 @@
                     <td class="landUnitsToggleCol">
                         <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">Train</button>
                     </td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.ecPts}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.horses}}</td>
+                    <td class="landUnitsResourceCol">{{brigade.headcountPlan ? 'HC' : ''}}</td>
+                    <td class="landUnitsResourceCol">{{brigade.trainPlan ? 'Train' : ''}}</td>
+                    <td class="landUnitsResourceCol">{{getBrigadeCostIndicator(brigade)}}</td>
+                    <td class="landUnitsResourceCol">{{(brigade.headcountPlan || brigade.trainPlan) ? 'See Economy' : ''}}</td>
                     <td class="landUnitsMenuCol">
                         <div class="dropdown landUnitsActionDropdown">
                             <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">

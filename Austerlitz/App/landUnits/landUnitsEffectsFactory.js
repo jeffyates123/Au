@@ -426,6 +426,26 @@ austerlitzModule.factory('landUnitsEffectsFactory', function () {
                     };
                 };
 
+            $scope.getBrigadeCostIndicator = function (brigade) {
+                    if (!brigade) {
+                        return '';
+                    }
+
+                    if (brigade.headcountPlan && brigade.trainPlan) {
+                        return 'HC + Train';
+                    }
+
+                    if (brigade.headcountPlan) {
+                        return 'HC';
+                    }
+
+                    if (brigade.trainPlan) {
+                        return 'Train';
+                    }
+
+                    return '';
+                };
+
             $scope.isMountedArmyItem = function (armyItem) {
                     if (!armyItem) {
                         return false;
