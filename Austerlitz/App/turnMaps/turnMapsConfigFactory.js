@@ -17,7 +17,6 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
         { name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
         { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
-        { name: 'SetUpBrigades', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'FormFederation', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'Boarding', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
@@ -35,7 +34,7 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
                 mapOptions: ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'],
                 selectedMapOptions: ['State', 'Population', 'ProductionSite'],
                 displayOptions: displays,
-                selectedDisplayOption: displays[6]
+                selectedDisplayOption: displays[5]
             };
         },
 

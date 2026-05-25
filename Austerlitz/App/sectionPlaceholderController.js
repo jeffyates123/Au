@@ -9,8 +9,14 @@ austerlitzModule.controller('sectionPlaceholderController', function ($scope, $r
             return 'Section';
         }
 
-        return sectionName
+        var formattedName = sectionName
             .replace(/([a-z])([A-Z])/g, '$1 $2')
             .replace(/[-_]+/g, ' ');
+
+        if (formattedName.toLowerCase() === 'naval') {
+            return 'Navy';
+        }
+
+        return formattedName;
     }
 });

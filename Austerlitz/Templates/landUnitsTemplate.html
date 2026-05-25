@@ -1,9 +1,9 @@
 <div class="landUnitsPage" ng-init="initLandUnits()">
     <div class="landUnitsHeader">
         <div>
-            <h2 class="landUnitsTitle">Military</h2>
+            <h2 class="landUnitsTitle">Army</h2>
             <div class="landUnitsSubtitle">
-                Brigades
+                Operations
                 <select class="form-control input-sm landUnitsSphereFilter" ng-options="sphere for sphere in sphereOptions" ng-model="selectedSphere" ng-change="onSphereChanged()"></select>
             </div>
         </div>
@@ -11,95 +11,210 @@
             <span>{{masterData.turnId}}</span>
         </div>
     </div>
-
-    <div class="alert alert-info landUnitsAlert" ng-show="isLoading">
-        Loading brigades...
+    <div class="landUnitsTabs">
+        <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'setUpBrigades' }" ng-click="selectArmyTab('setUpBrigades')">Set-Up Brigades</button>
+        <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'existingArmy' }" ng-click="selectArmyTab('existingArmy')">Existing Army</button>
     </div>
 
-    <div class="alert alert-danger landUnitsAlert" ng-show="loadError">
-        {{loadError}}
-    </div>
+    <div ng-show="activeArmyTab === 'setUpBrigades'">
+        <div class="landUnitsSetUpBrushBar">
+            <strong>Selected unit:</strong>
+            <span ng-if="selectedSetUpArmyItem">
+                {{selectedSetUpArmyItem.itemNo}} / {{selectedSetUpArmyItem.shortName}} - {{selectedSetUpArmyItem.name}}
+            </span>
+            <span ng-if="!selectedSetUpArmyItem">None</span>
+            <button type="button" class="btn btn-default btn-xs" ng-click="pickSetUpArmyItem(null)" ng-disabled="!selectedSetUpArmyItem">Clear</button>
+        </div>
 
-    <div class="alert alert-warning landUnitsAlert" ng-show="replayWarnings.length">
-        <strong>Some saved turn orders could not be replayed:</strong>
-        <div ng-repeat="warning in replayWarnings track by $index">{{warning}}</div>
-    </div>
-
-    <div class="alert alert-warning landUnitsAlert" ng-show="!isLoading && !loadError && brigadeRows.length === 0">
-        No brigades are available for the selected turn.
-    </div>
-
-    <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
-        <table class="table landUnitsTable">
-            <thead>
-                <tr>
-                    <th class="landUnitsIdCol">ID</th>
-                    <th class="landUnitsNameCol">Name</th>
-                    <th class="landUnitsPositionCol">Pos</th>
-                    <th class="landUnitsFedCol">Fed</th>
-                    <th class="landUnitsMpCol">MP</th>
-                    <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
-                    <th class="landUnitsToggleCol">H/C</th>
-                    <th class="landUnitsToggleCol">Train</th>
-                    <th class="landUnitsResourceCol">LD</th>
-                    <th class="landUnitsResourceCol">Citz</th>
-                    <th class="landUnitsResourceCol">EcPts</th>
-                    <th class="landUnitsResourceCol">Horse</th>
-                    <th class="landUnitsMenuCol"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="brigade in filteredBrigadeRows() track by brigade.id">
-                    <td class="landUnitsIdCol">{{brigade.id}}</td>
-                    <td class="landUnitsNameCol" ng-dblclick="beginRenameBrigade(brigade)">
-                        <span ng-show="!brigade.isRenaming" title="Double-click to rename">{{brigade.name}}</span>
-                        <input ng-show="brigade.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="brigade.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, brigade)" ng-blur="applyRenameBrigade(brigade)" />
-                    </td>
-                    <td class="landUnitsPositionCol">{{brigade.position}}</td>
-                    <td class="landUnitsFedCol">
-                        <button type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: brigade.fedChanged }" ng-click="openFormFederationModal(brigade, $event)" title="Click to form or change federation">
-                            {{brigade.fed || '-'}}
-                        </button>
-                    </td>
-                    <td class="landUnitsMpCol">{{brigade.mp}}</td>
-                    <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
-                        <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
-                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition, landUnitsBattalionChipLocked: isBattalionLockedForOrders(battalion) }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{getBattalionTitle(battalion)}}">
-                                <span>{{battalion.display || '- -- ---'}}</span>
+        <div class="landUnitsTableWrap">
+            <table class="table landUnitsTable landUnitsSetUpTable">
+                <thead>
+                    <tr>
+                        <th class="landUnitsIdCol">No</th>
+                        <th class="landUnitsSetUpDepotCol">Barracks/Shipyard</th>
+                        <th class="landUnitsPositionCol">X/Y</th>
+                        <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
+                        <th class="landUnitsNameCol">Brigade Name</th>
+                        <th class="landUnitsMenuCol"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="setUpRow in tsSetUpBrigadesRows track by setUpRow.orderNo" ng-class="{ landUnitsSetUpRowInvalid: isBrigadeSetupIncomplete(setUpRow) }">
+                        <td class="landUnitsIdCol">{{setUpRow.orderNo}}</td>
+                        <td class="landUnitsSetUpDepotCol">
+                            <select class="form-control input-sm landUnitsSetUpDepotSelect" ng-model="setUpRow.depot" ng-change="setSetUpDepot(setUpRow, setUpRow.depot)">
+                                <option value="">-- select --</option>
+                                <option ng-repeat="depot in setUpDepotSelectionOptions track by $index" ng-value="depot.itemNo">{{depot.label}}</option>
+                            </select>
+                        </td>
+                        <td class="landUnitsPositionCol">{{getSetUpDepotPositionText(setUpRow)}}</td>
+                        <td class="landUnitsBattalionCol" ng-repeat="field in ['batt1','batt2','batt3','batt4','batt5','batt6','batt7'] track by field">
+                            <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton landUnitsSetUpBattalionButton" ng-click="paintSetUpBattalion(setUpRow, field)">
+                                {{getSetUpBattalionDisplay(setUpRow, field)}}
                             </button>
-                            <ul class="dropdown-menu landUnitsBattalionMenu">
-                                <li ng-show="!battalion.type" ng-class="{ disabled: brigadeHasLockedBattalion(brigade) }"><a href="" ng-click="$event.preventDefault(); !brigadeHasLockedBattalion(brigade) && openAddBattalionModal(brigade, battalion, $event)">Add Battalion</a></li>
-                                <li ng-show="isBattalionLockedForOrders(battalion)"><a href="" ng-click="clearBattalionTurnOrder(brigade, battalion, $event)">Clear Order</a></li>
-                                <li ng-class="{ disabled: battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
-                                <li ng-class="{ disabled: !canStartMerge(battalion) || battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                    <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">H/C</button>
-                    </td>
-                    <td class="landUnitsToggleCol">
-                        <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">Train</button>
-                    </td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.ecPts}}</td>
-                    <td class="landUnitsResourceCol">{{brigade.resources.horses}}</td>
-                    <td class="landUnitsMenuCol">
-                        <div class="dropdown landUnitsActionDropdown">
-                            <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">
-                                ...
+                        </td>
+                        <td class="landUnitsNameCol">
+                            <input class="form-control input-sm landUnitsRenameInput" ng-model="setUpRow.brigadeName" maxlength="15" ng-blur="updateSetUpBrigadeName(setUpRow)" />
+                        </td>
+                        <td class="landUnitsMenuCol">
+                            <button type="button" class="btn btn-link landUnitsActionButton" ng-click="clearSetUpBrigadesRow(setUpRow)" title="Clear row">-</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="landUnitsTableWrap" ng-if="ts01BarracksSummaryRows.length">
+            <table class="table landUnitsTable landUnitsSetUpSummaryTable">
+                <thead>
+                    <tr>
+                        <th>Barracks</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>LD</th>
+                        <th>Citz</th>
+                        <th>EcPts</th>
+                        <th>Horse</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in ts01BarracksSummaryRows track by ('ts01:' + row.to + ':' + $index)">
+                        <td>{{row.locationLabel}}</td>
+                        <td>{{row.from}}</td>
+                        <td>{{row.to}}</td>
+                        <td>{{row.goods.louisdore}}</td>
+                        <td>{{row.goods.citizens}}</td>
+                        <td>{{row.goods.ecPts}}</td>
+                        <td>{{row.goods.horses}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="landUnitsSetUpPickerWrap">
+            <table class="table table-condensed landUnitsArmyListTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Name</th>
+                        <th>Short</th>
+                        <th>LR</th>
+                        <th>RG</th>
+                        <th>MP.S</th>
+                        <th>MP</th>
+                        <th>EF</th>
+                        <th>HC</th>
+                        <th>Formation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="armyItem in setupArmyListRows track by armyItem.itemNo" ng-class="{ active: isSetUpArmyItemSelected(armyItem) }" ng-click="pickSetUpArmyItem(armyItem)">
+                        <td>{{armyItem.itemNo}}</td>
+                        <td>{{armyItem.name}}</td>
+                        <td>{{armyItem.shortName}}</td>
+                        <td>{{armyItem.lr}}</td>
+                        <td>{{armyItem.rg}}</td>
+                        <td>{{armyItem.simMP}}</td>
+                        <td>{{armyItem.mp}}</td>
+                        <td>{{armyItem.ef}}</td>
+                        <td>{{armyItem.hc}}</td>
+                        <td>{{armyItem.formation}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div ng-show="activeArmyTab === 'existingArmy'">
+        <div class="alert alert-info landUnitsAlert" ng-show="isLoading">
+            Loading brigades...
+        </div>
+
+        <div class="alert alert-danger landUnitsAlert" ng-show="loadError">
+            {{loadError}}
+        </div>
+
+        <div class="alert alert-warning landUnitsAlert" ng-show="replayWarnings.length">
+            <strong>Some saved turn orders could not be replayed:</strong>
+            <div ng-repeat="warning in replayWarnings track by $index">{{warning}}</div>
+        </div>
+
+        <div class="alert alert-warning landUnitsAlert" ng-show="!isLoading && !loadError && brigadeRows.length === 0">
+            No brigades are available for the selected turn.
+        </div>
+
+        <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
+            <table class="table landUnitsTable">
+                <thead>
+                    <tr>
+                        <th class="landUnitsIdCol">ID</th>
+                        <th class="landUnitsNameCol">Name</th>
+                        <th class="landUnitsPositionCol">Pos</th>
+                        <th class="landUnitsFedCol">Fed</th>
+                        <th class="landUnitsMpCol">MP</th>
+                        <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
+                        <th class="landUnitsToggleCol">H/C</th>
+                        <th class="landUnitsToggleCol">Train</th>
+                        <th class="landUnitsResourceCol">LD</th>
+                        <th class="landUnitsResourceCol">Citz</th>
+                        <th class="landUnitsResourceCol">EcPts</th>
+                        <th class="landUnitsResourceCol">Horse</th>
+                        <th class="landUnitsMenuCol"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="brigade in filteredBrigadeRows() track by brigade.id">
+                        <td class="landUnitsIdCol">{{brigade.id}}</td>
+                        <td class="landUnitsNameCol" ng-dblclick="beginRenameBrigade(brigade)">
+                            <span ng-show="!brigade.isRenaming" title="Double-click to rename">{{brigade.name}}</span>
+                            <input ng-show="brigade.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="brigade.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, brigade)" ng-blur="applyRenameBrigade(brigade)" />
+                        </td>
+                        <td class="landUnitsPositionCol">{{brigade.position}}</td>
+                        <td class="landUnitsFedCol">
+                            <button type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: brigade.fedChanged }" ng-click="openFormFederationModal(brigade, $event)" title="Click to form or change federation">
+                                {{brigade.fed || '-'}}
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-right landUnitsActionMenu">
-                                <li ng-repeat="action in brigadeActions">
-                                    <a href="" ng-click="selectBrigadeAction(action, brigade)">{{action}}</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        </td>
+                        <td class="landUnitsMpCol">{{brigade.mp}}</td>
+                        <td class="landUnitsBattalionCol" ng-repeat="battalion in brigade.battalions track by $index">
+                            <div class="dropdown landUnitsBattalionDropdown" ng-class="{ landUnitsBattalionActionSource: isBattalionActionSource(brigade, battalion), landUnitsBattalionActionEligible: isBattalionEligibleTarget(brigade, battalion) }">
+                                <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle" data-toggle="dropdown" ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition, landUnitsBattalionChipLocked: isBattalionLockedForOrders(battalion) }" ng-click="onBattalionLozengeClick($event, brigade, battalion)" title="{{getBattalionTitle(battalion)}}">
+                                    <span>{{battalion.display || '- -- ---'}}</span>
+                                </button>
+                                <ul class="dropdown-menu landUnitsBattalionMenu">
+                                    <li ng-show="!battalion.type" ng-class="{ disabled: brigadeHasLockedBattalion(brigade) }"><a href="" ng-click="$event.preventDefault(); !brigadeHasLockedBattalion(brigade) && openAddBattalionModal(brigade, battalion, $event)">Add Battalion</a></li>
+                                    <li ng-show="isBattalionLockedForOrders(battalion)"><a href="" ng-click="clearBattalionTurnOrder(brigade, battalion, $event)">Clear Order</a></li>
+                                    <li ng-class="{ disabled: battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('exchange', brigade, battalion, $event)">Exchange</a></li>
+                                    <li ng-class="{ disabled: !canStartMerge(battalion) || battalion.isNewAddition || isBattalionLockedForOrders(battalion) }"><a href="" ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('merge', brigade, battalion, $event)">Merge</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td class="landUnitsToggleCol">
+                            <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.headcountSelected)" ng-click="openHeadcountModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">H/C</button>
+                        </td>
+                        <td class="landUnitsToggleCol">
+                            <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">Train</button>
+                        </td>
+                        <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
+                        <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
+                        <td class="landUnitsResourceCol">{{brigade.resources.ecPts}}</td>
+                        <td class="landUnitsResourceCol">{{brigade.resources.horses}}</td>
+                        <td class="landUnitsMenuCol">
+                            <div class="dropdown landUnitsActionDropdown">
+                                <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">
+                                    ...
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right landUnitsActionMenu">
+                                    <li ng-repeat="action in brigadeActions">
+                                        <a href="" ng-click="selectBrigadeAction(action, brigade)">{{action}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="landUnitsModalBackdrop" ng-show="headcountModal.isOpen" ng-click="closeHeadcountModal()"></div>

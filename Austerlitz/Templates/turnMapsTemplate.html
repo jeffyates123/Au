@@ -1,10 +1,10 @@
 <div class="turn-maps-page">
-    <div class="window" ng-class="{'window-setupBrigades': isSetUpBrigadesMode(), 'window-boarding': isBoardingMode()}">
+    <div class="window" ng-class="{'window-boarding': isBoardingMode()}">
 
         <!-- Left panel: TS grids -->
         <div class="master" style="flex-direction:column;">
 
-            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isSetUpBrigadesMode() && !isBoardingMode()" ng-grid="movementGridOptions">
+            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isBoardingMode()" ng-grid="movementGridOptions">
             </div>
 
             <div class="boardingGridTitle" ng-if="isBoardingMode()">Boarding</div>
@@ -44,52 +44,7 @@
             <div class="movementGridStyle" ng-if="isFormFederationMode()" ng-grid="formFederationGridOptions">
             </div>
 
-            <div class="setupBrigadesGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="setUpBrigadesGridOptions">
-            </div>
-
-            <div class="boardingSummaryStyle" ng-if="isSetUpBrigadesMode() && economyTsCostSummarySections.length">
-                <table class="table table-bordered table-condensed boardingSummaryTable">
-                    <thead>
-                        <tr>
-                            <th>TS Type</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Location</th>
-                            <th>Louis.</th>
-                            <th>Ctz</th>
-                            <th>EcPts</th>
-                            <th>Horse</th>
-                            <th>Wd</th>
-                            <th>Text</th>
-                        </tr>
-                    </thead>
-                    <tbody ng-repeat="section in economyTsCostSummarySections track by section.tsType">
-                        <tr ng-repeat="row in section.rows track by (section.tsType + ':' + row.to + ':' + $index)">
-                            <td>{{ $first ? section.tsType + ' - ' + section.tsLabel : '' }}</td>
-                            <td>{{row.from}}</td>
-                            <td>{{row.to}}</td>
-                            <td>{{row.locationLabel}}</td>
-                            <td>{{row.goods.louisdore}}</td>
-                            <td>{{row.goods.citizens}}</td>
-                            <td>{{row.goods.ecPts}}</td>
-                            <td>{{row.goods.horses}}</td>
-                            <td>{{row.goods.wood}}</td>
-                            <td>{{row.goods.textiles}}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="alert alert-warning" ng-repeat="warning in economyTsCostWarnings track by $index">
-                    {{warning}}
-                </div>
-            </div>
-
-            <div class="transferGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="transferGoodsGridOptions">
-            </div>
-
-            <div class="armyListGridStyle" ng-if="isSetUpBrigadesMode()" ng-grid="armyListGridOptions">
-            </div>
-
-            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isSetUpBrigadesMode() && !isBoardingMode()" ng-grid="itemGridOptions">
+            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isBoardingMode()" ng-grid="itemGridOptions">
             </div>
 
             <div class="itemGridStyle" ng-if="isBoardingMode()" ng-grid="boardingItemGridOptions">

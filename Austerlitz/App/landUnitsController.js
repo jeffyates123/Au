@@ -3,6 +3,7 @@
 austerlitzModule.controller('landUnitsController', function (
     $scope,
     $q,
+    $timeout,
     masterData,
     turnDataLoaderService,
     rulesCatalogFactory,
@@ -16,7 +17,8 @@ austerlitzModule.controller('landUnitsController', function (
     landUnitsHeadcountTrainFactory,
     landUnitsBattalionOrdersFactory,
     landUnitsRenameFactory,
-    landUnitsUiFactory) {
+    landUnitsUiFactory,
+    landUnitsSetUpBrigadesFactory) {
 
     $scope.masterData = masterData;
     angular.extend($scope, landUnitsStateFactory.createInitialState());
@@ -30,6 +32,35 @@ austerlitzModule.controller('landUnitsController', function (
     landUnitsBattalionOrdersFactory.attach($scope, $q, turnSheetFactory);
     landUnitsRenameFactory.attach($scope, turnSheetFactory);
     landUnitsUiFactory.attach($scope);
+    landUnitsSetUpBrigadesFactory.attach($scope, rulesCatalogFactory, turnSheetFactory);
+
+    var setUpAutoSavePromises = {};
+    $scope.queueSetUpTsSave = function (tsType) {
+        if (setUpAutoSavePromises[tsType]) {
+            $timeout.cancel(setUpAutoSavePromises[tsType]);
+        }
+        setUpAutoSavePromises[tsType] = $timeout(function () {
+            var records = null;
+            if (tsType === 'SetUpBrigades') records = $scope.tsSetUpBrigadesList;
+            if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
+            if (!records) return;
+
+            turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
+                if (tsType === 'SetUpBrigades') {
+                    $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(savedRows);
+                    $scope.refreshSetUpBrigadesRows();
+                }
+                if (tsType === 'TransferGoods') {
+                    $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
+                    $scope.refreshTransferGoodsCostRows();
+                }
+            });
+        }, 120);
+    };
+
+    $scope.selectArmyTab = function (tabKey) {
+        $scope.activeArmyTab = tabKey || 'setUpBrigades';
+    };
 
     $scope.initLandUnits = function () {
         if (!$scope.masterData || !$scope.masterData.turnId || $scope.masterData.turnId === 'Unknown') {
@@ -39,7 +70,13 @@ austerlitzModule.controller('landUnitsController', function (
 
         if ($scope.masterData.turnReport && $scope.masterData.turnReport.brigades) {
             $scope.refreshBrigadeRows();
-            $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders);
+            $scope.buildSetUpDepotOptions();
+            $q.all([
+                $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
+                $scope.loadSetUpArmyListForTurnState()
+            ]).finally(function () {
+                $scope.loadSetUpBrigadesData();
+            });
             return;
         }
 
@@ -47,7 +84,13 @@ austerlitzModule.controller('landUnitsController', function (
         $scope.loadError = null;
         turnDataLoaderService.loadTR($scope.masterData, $scope.masterData.turnId).then(function () {
             $scope.refreshBrigadeRows();
-            return $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders);
+            $scope.buildSetUpDepotOptions();
+            return $q.all([
+                $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
+                $scope.loadSetUpArmyListForTurnState()
+            ]).finally(function () {
+                $scope.loadSetUpBrigadesData();
+            });
         }, function (error) {
             $scope.loadError = (error && error.data) ? error.data : 'Unable to load turn report.';
             $scope.brigadeRows = [];

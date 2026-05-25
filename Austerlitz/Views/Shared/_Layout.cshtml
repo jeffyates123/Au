@@ -44,6 +44,7 @@
     <script src="~/App/landUnits/landUnitsBattalionOrdersFactory.js"></script>
     <script src="~/App/landUnits/landUnitsRenameFactory.js"></script>
     <script src="~/App/landUnits/landUnitsUiFactory.js"></script>
+    <script src="~/App/landUnits/landUnitsSetUpBrigadesFactory.js"></script>
     <script src="~/App/landUnitsController.js"></script>
     <script src="~/App/sectionPlaceholderController.js"></script>
 
@@ -69,7 +70,7 @@
     <div class="appShell" ng-init="init();">
         <header class="appTopBanner" ng-style="getMenuBarStyle()">
             <div class="appBannerLeft">
-                <span class="appBannerCountry">{{getSelectedStateName()}}</span>
+                <a href="/" class="appBannerCountry appBannerCountryLink">{{getSelectedStateName()}}</a>
                 <span class="appBannerDivider">|</span>
                 <span>AU-{{masterData.selectedGameNo || '--'}}</span>
                 <span class="appBannerDivider">|</span>
@@ -106,8 +107,8 @@
             <nav class="appSidebarNav">
                 <a href="/home" ng-class="{ active: isActive('/home') }">Overview</a>
                 <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
-                <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Military</a>
-                <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Naval</a>
+                <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Army</a>
+                <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Navy</a>
                 <a href="/Section/Diplomacy" ng-class="{ active: isActive('/Section/Diplomacy') }">Diplomacy</a>
                 <a href="/Section/Battles" ng-class="{ active: isActive('/Section/Battles') }">Battles</a>
                 <a href="/TurnMaps" ng-class="{ active: isActive('/TurnMaps') }">Map</a>

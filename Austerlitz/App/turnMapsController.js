@@ -37,7 +37,6 @@ austerlitzModule.controller('turnMapsController', function (
     turnMapsBoardingFactory,
     turnMapsProductionSitesFactory,
     turnMapsFormFederationsFactory,
-    turnMapsSetUpBrigadesFactory,
     turnMapsGridConfigFactory) {
 
     $scope.masterData = masterData;
@@ -47,7 +46,6 @@ austerlitzModule.controller('turnMapsController', function (
 
     turnMapsBoardingFactory.attach($scope);
     turnMapsProductionSitesFactory.attach($scope);
-    turnMapsSetUpBrigadesFactory.attach($scope, rulesCatalogFactory);
     turnMapsSharedFactory.attach($scope);
     turnMapsFormFederationsFactory.attach($scope);
     turnMapsMovementFactory.attach($scope);
@@ -63,7 +61,6 @@ austerlitzModule.controller('turnMapsController', function (
             if (tsType === 'Movement') records = $scope.tsMovementList;
             if (tsType === 'BuildProductionSites') records = $scope.tsBuildProductionSitesList;
             if (tsType === 'FormFederations') records = $scope.tsFormFederationsList;
-            if (tsType === 'SetUpBrigades') records = $scope.tsSetUpBrigadesList;
             if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
             if (tsType === 'Boarding') records = $scope.tsBoardingList;
 
@@ -72,10 +69,6 @@ austerlitzModule.controller('turnMapsController', function (
             turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
                 if (tsType === 'BuildProductionSites') $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(savedRows);
                 if (tsType === 'FormFederations') $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(savedRows);
-                if (tsType === 'SetUpBrigades') {
-                    $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(savedRows);
-                    $scope.refreshSetUpBrigadesRows();
-                }
                 if (tsType === 'TransferGoods') {
                     $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
                     $scope.refreshTransferGoodsCostRows();
@@ -97,11 +90,6 @@ austerlitzModule.controller('turnMapsController', function (
             $scope.queueAutoSaveTsGrid('FormFederations');
             return;
         }
-        if ($scope.isSetUpBrigadesMode()) {
-            $scope.queueAutoSaveTsGrid('SetUpBrigades');
-            $scope.recalculateTransferGoodsForSetUpBrigades();
-            return;
-        }
         if ($scope.isBoardingMode()) {
             $scope.queueAutoSaveTsGrid('Boarding');
             return;
@@ -114,9 +102,6 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.selectedItemGridCoordinate = null;
         $scope.refreshItemGridRows();
 
-        if ($scope.isSetUpBrigadesMode()) {
-            $scope.loadArmyListForTurnState();
-        }
     };
 
     $scope.isProductionSiteMode = function () {
@@ -125,10 +110,6 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.isFormFederationMode = function () {
         return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'FormFederation');
-    };
-
-    $scope.isSetUpBrigadesMode = function () {
-        return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'SetUpBrigades');
     };
 
     $scope.isBoardingMode = function () {
@@ -159,13 +140,6 @@ austerlitzModule.controller('turnMapsController', function (
 
             if (selectedRoute) {
                 $scope.movementClickRow({ entity: movementRow });
-            }
-        }
-
-        if ($scope.isSetUpBrigadesMode()) {
-            var depotSourceNo = $scope.getDepotSourceItemNoAtCoordinate(x, y);
-            if (depotSourceNo) {
-                $scope.pendingDepotSourceItemNo = depotSourceNo;
             }
         }
 
@@ -386,12 +360,6 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
-    $scope.$watch('selectedMapChoice.mapId', function () {
-        if ($scope.isSetUpBrigadesMode()) {
-            $scope.loadArmyListForTurnState();
-        }
-    });
-
     $scope.$watch('selectedMapChoice', function () {
         $scope.refreshFilteredMovementItemsForMap();
     }, true);
@@ -417,7 +385,6 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.attachUnitsToMapCoordinates();
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
-        $scope.recalculateTransferGoodsForSetUpBrigades();
     });
 
     turnSheetFactory.getTSMovement($scope.masterData.turnId).then(function (tsMovementList) {
@@ -431,34 +398,6 @@ austerlitzModule.controller('turnMapsController', function (
 
     turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (tsFormFederationsList) {
         $scope.tsFormFederationsList = $scope.normalizeFormFederationRows(tsFormFederationsList);
-    });
-
-    turnSheetFactory.getTSSetUpBrigades($scope.masterData.turnId).then(function (tsSetUpBrigadesList) {
-        $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(tsSetUpBrigadesList);
-        $scope.refreshSetUpBrigadesRows();
-        $scope.recalculateTransferGoodsForSetUpBrigades();
-    });
-
-    turnSheetFactory.getTSSetUpAdditionalBrigades($scope.masterData.turnId).then(function (tsSetUpAdditionalBrigadesList) {
-        $scope.tsSetUpAdditionalBrigadesList = tsSetUpAdditionalBrigadesList || [];
-        $scope.recalculateTransferGoodsForSetUpBrigades();
-    });
-
-    turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId).then(function (tsIncreaseHeadcountList) {
-        $scope.tsIncreaseHeadcountList = tsIncreaseHeadcountList || [];
-        $scope.recalculateTransferGoodsForSetUpBrigades();
-    });
-
-    turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId).then(function (tsIncreaseBrigadeXpList) {
-        $scope.tsIncreaseBrigadeXpList = tsIncreaseBrigadeXpList || [];
-        $scope.recalculateTransferGoodsForSetUpBrigades();
-    });
-
-    turnSheetFactory.getTSTransferGoods($scope.masterData.turnId).then(function (tsTransferGoodsList) {
-        $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(tsTransferGoodsList);
-        $scope.loadManagedTransferGoodsRowsFromStorage();
-        $scope.refreshTransferGoodsCostRows();
-        $scope.recalculateTransferGoodsForSetUpBrigades();
     });
 
     turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(function (tsBoardingList) {
@@ -486,7 +425,6 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         $scope.selectedState = selectedState || $scope.stateList[3];
-        $scope.loadArmyListForTurnState();
     });
 
     rulesCatalogFactory.getRefTerrain().then(function (terrainList) {
