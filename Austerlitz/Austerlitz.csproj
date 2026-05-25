@@ -205,6 +205,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\TurnReportImportParsingUtils.cs" />
+    <Compile Include="Services\TurnReportImportService.cs" />
     <Compile Include="Services\TurnsheetExcelService.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -265,14 +267,18 @@
     <Content Include="App\sectionPlaceholderController.js" />
     <Content Include="App\simBattleController.js" />
     <Content Include="App\turnDataLoaderService.js" />
+    <Content Include="App\ts01TransferGoodsUtilsFactory.js" />
     <Content Include="App\turnMaps\turnMapsBoardingFactory.js" />
     <Content Include="App\turnMaps\turnMapsConfigFactory.js" />
+    <Content Include="App\turnMaps\turnMapsDepotLookupFactory.js" />
     <Content Include="App\turnMaps\turnMapsFormFederationsFactory.js" />
     <Content Include="App\turnMaps\turnMapsGridConfigFactory.js" />
     <Content Include="App\turnMaps\turnMapsMovementFactory.js" />
     <Content Include="App\turnMaps\turnMapsProductionSitesFactory.js" />
+    <Content Include="App\turnMaps\turnMapsTransferGoodsStorageFactory.js" />
     <Content Include="App\turnMaps\turnMapsSetUpBrigadesFactory.js" />
     <Content Include="App\turnMaps\turnMapsSharedFactory.js" />
+    <Content Include="App\turnMaps\turnMapsTsTransferBuilderFactory.js" />
     <Content Include="App\turnMapsController.js" />
     <Content Include="App\turnReportFactory.js" />
     <Content Include="App\turnSheetFactory.js" />

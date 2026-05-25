@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnSheetValueRulesFactory) {
+austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnSheetValueRulesFactory, ts01TransferGoodsUtilsFactory) {
     var LAND_UNITS_MANAGED_TS01_KEY_PREFIX = 'austerlitz.landUnits.managedTs01Rows.';
     var LAND_UNITS_TS01_MAX_ROWS = 10;
 
@@ -12,58 +12,33 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
     return {
         attach: function ($scope, turnSheetFactory) {
             $scope.getLandUnitsManagedTs01StorageKey = function () {
-                    return LAND_UNITS_MANAGED_TS01_KEY_PREFIX + ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '');
+                    return ts01TransferGoodsUtilsFactory.buildManagedStorageKey(
+                        LAND_UNITS_MANAGED_TS01_KEY_PREFIX,
+                        $scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : ''
+                    );
                 };
 
             $scope.loadLandUnitsManagedTs01OrderNos = function () {
-                    try {
-                        var raw = window.localStorage.getItem($scope.getLandUnitsManagedTs01StorageKey());
-                        var parsed = raw ? JSON.parse(raw) : [];
-                        if (!Array.isArray(parsed)) {
-                            return [];
-                        }
-
-                        return parsed.map(function (value) { return toInt(value, 0); }).filter(function (value) { return value > 0; });
-                    }
-                    catch (e) {
-                        return [];
-                    }
+                    return ts01TransferGoodsUtilsFactory.loadManagedOrderNos(
+                        LAND_UNITS_MANAGED_TS01_KEY_PREFIX,
+                        $scope.masterData && $scope.masterData.turnId
+                    );
                 };
 
             $scope.saveLandUnitsManagedTs01OrderNos = function (orderNos) {
-                    try {
-                        window.localStorage.setItem($scope.getLandUnitsManagedTs01StorageKey(), JSON.stringify(orderNos || []));
-                    }
-                    catch (e) {
-                    }
+                    ts01TransferGoodsUtilsFactory.saveManagedOrderNos(
+                        LAND_UNITS_MANAGED_TS01_KEY_PREFIX,
+                        $scope.masterData && $scope.masterData.turnId,
+                        orderNos
+                    );
                 };
 
             $scope.isTransferGoodsRowEmpty = function (row) {
-                    if (!row) {
-                        return true;
-                    }
-
-                    return !(turnSheetValueRulesFactory.hasPositiveIntValue(row.from)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.to)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.louisdore)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.citizens)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.ecPts)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.wood)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.horses)
-                        || turnSheetValueRulesFactory.hasPositiveIntValue(row.textiles));
+                    return ts01TransferGoodsUtilsFactory.isTransferGoodsRowEmpty(row, turnSheetValueRulesFactory);
                 };
 
             $scope.getWarehouseNoForCoordinate = function (x, y) {
-                    var px = toInt(x, NaN);
-                    var py = toInt(y, NaN);
-                    if (isNaN(px) || isNaN(py)) {
-                        return null;
-                    }
-
-                    if (px <= 80 && py <= 65) return 1;
-                    if (px <= 40 && py <= 99) return 2;
-                    if (px <= 90 && py <= 99) return 3;
-                    return null;
+                    return ts01TransferGoodsUtilsFactory.getWarehouseNoForCoordinate(x, y);
                 };
 
             $scope.getDepotForBrigade = function (brigade) {
@@ -71,27 +46,11 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
                         return null;
                     }
 
-                    var x = toInt(brigade.source.x_OrState, NaN);
-                    var y = toInt(brigade.source.y_OrFleet, NaN);
-                    if (isNaN(x) || isNaN(y)) {
-                        return null;
-                    }
-
-                    var barracks = $scope.masterData.turnReport.barracks || [];
-                    for (var i = 0; i < barracks.length; i++) {
-                        if (toInt(barracks[i].x, NaN) === x && toInt(barracks[i].y, NaN) === y) {
-                            return barracks[i].itemNo;
-                        }
-                    }
-
-                    var ports = $scope.masterData.turnReport.tradingPortsAndCities || [];
-                    for (var j = 0; j < ports.length; j++) {
-                        if (toInt(ports[j].x, NaN) === x && toInt(ports[j].y, NaN) === y) {
-                            return ports[j].itemNo;
-                        }
-                    }
-
-                    return null;
+                    return ts01TransferGoodsUtilsFactory.getDepotSourceItemNoAtCoordinate(
+                        $scope.masterData.turnReport,
+                        brigade.source.x_OrState,
+                        brigade.source.y_OrFleet
+                    );
                 };
 
             $scope.syncTransferGoodsForLandUnitsPlans = function () {
