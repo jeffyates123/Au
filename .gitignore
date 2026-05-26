@@ -6,6 +6,10 @@
 # Build output
 **/bin/
 **/obj/
+*.dll
+*.exe
+*.pdb
+*.cache
 # NuGet restore folder
 /packages/
 # Local tooling downloads
@@ -122,3 +126,43 @@
 /Austerlitz.Domain/bin/Debug/Austerlitz.DAL.pdb
 /Austerlitz/Rules/france_tactical_journal.pdf
 /Austerlitz/Turns/AU2025.08C Updated.xls
+/Austerlitz/bin/EntityFramework.dll
+/Austerlitz/bin/EntityFramework.SqlServer.dll
+/Austerlitz/bin/EntityFramework.SqlServer.xml
+/Austerlitz/bin/EntityFramework.xml
+/Austerlitz/bin/Microsoft.Practices.Unity.Configuration.dll
+/Austerlitz/bin/Microsoft.Practices.Unity.Configuration.xml
+/Austerlitz/bin/Microsoft.Practices.Unity.dll
+/Austerlitz/bin/Microsoft.Practices.Unity.RegistrationByConvention.dll
+/Austerlitz/bin/Microsoft.Practices.Unity.RegistrationByConvention.xml
+/Austerlitz/bin/Microsoft.Practices.Unity.xml
+/Austerlitz/bin/Microsoft.Web.Infrastructure.dll
+/Austerlitz/bin/Newtonsoft.Json.dll
+/Austerlitz/bin/Newtonsoft.Json.xml
+/Austerlitz/bin/Owin.dll
+/Austerlitz/bin/System.Net.Http.Extensions.dll
+/Austerlitz/bin/System.Net.Http.Extensions.xml
+/Austerlitz/bin/System.Net.Http.Formatting.dll
+/Austerlitz/bin/System.Net.Http.Formatting.xml
+/Austerlitz/bin/System.Net.Http.Primitives.dll
+/Austerlitz/bin/System.Net.Http.Primitives.xml
+/Austerlitz/bin/System.Web.Helpers.dll
+/Austerlitz/bin/System.Web.Helpers.xml
+/Austerlitz/bin/System.Web.Http.dll
+/Austerlitz/bin/System.Web.Http.WebHost.dll
+/Austerlitz/bin/System.Web.Http.WebHost.xml
+/Austerlitz/bin/System.Web.Http.xml
+/Austerlitz/bin/System.Web.Mvc.dll
+/Austerlitz/bin/System.Web.Mvc.xml
+/Austerlitz/bin/System.Web.Optimization.dll
+/Austerlitz/bin/System.Web.Optimization.xml
+/Austerlitz/bin/System.Web.Razor.dll
+/Austerlitz/bin/System.Web.Razor.xml
+/Austerlitz/bin/System.Web.WebPages.Deployment.dll
+/Austerlitz/bin/System.Web.WebPages.Deployment.xml
+/Austerlitz/bin/System.Web.WebPages.dll
+/Austerlitz/bin/System.Web.WebPages.Razor.dll
+/Austerlitz/bin/System.Web.WebPages.Razor.xml
+/Austerlitz/bin/System.Web.WebPages.xml
+/Austerlitz/bin/WebGrease.dll
+/Austerlitz/.vs/Austerlitz.csproj.dtbcache.json
