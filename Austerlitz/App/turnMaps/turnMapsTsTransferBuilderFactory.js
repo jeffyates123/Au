@@ -21,9 +21,31 @@ austerlitzModule.factory('turnMapsTsTransferBuilderFactory', function () {
         var totalsByDepot = {};
         var depotOrder = [];
         var battalionFields = ['batt1', 'batt2', 'batt3', 'batt4', 'batt5', 'batt6', 'batt7'];
+        var foreignEuropeBrigadesAccepted = 0;
+        var rows = (ctx.tsSetUpBrigadesList || []).slice().sort(function (left, right) {
+            return ctx.toInt(left && left.orderNo, 0) - ctx.toInt(right && right.orderNo, 0);
+        });
 
-        angular.forEach(ctx.tsSetUpBrigadesList || [], function (setUpRow) {
+        angular.forEach(rows, function (setUpRow) {
             if (!setUpRow.depot) return;
+            var hasAnyBattalionSelected = battalionFields.some(function (field) {
+                return !!setUpRow[field];
+            });
+            if (!hasAnyBattalionSelected) return;
+
+            var europeRule = ctx.getTs03EuropeCostRule ? (ctx.getTs03EuropeCostRule(setUpRow.depot) || null) : null;
+            var moneyMultiplier = europeRule && ctx.toFloat(europeRule.moneyMultiplier, 0) > 0
+                ? ctx.toFloat(europeRule.moneyMultiplier, 1)
+                : 1;
+            var isForeignEuropeOutsideSphere = !!(europeRule && europeRule.isForeignEuropeOutsideSphere);
+            if (isForeignEuropeOutsideSphere && foreignEuropeBrigadesAccepted >= 1) {
+                if (ctx.addTsCostWarning) {
+                    var rowNo = ctx.toInt(setUpRow.orderNo, 0);
+                    ctx.addTsCostWarning('TS03 row ' + (rowNo || '?') + ' is in Europe outside home/political sphere and is excluded (max 1 brigade per month).');
+                }
+                return;
+            }
+
             var sphere = ctx.getSphereFromDepotItemNo(setUpRow.depot);
             var warehouseNo = ctx.getWarehouseNoFromSphere(sphere);
             if (!warehouseNo) return;
@@ -34,6 +56,8 @@ austerlitzModule.factory('turnMapsTsTransferBuilderFactory', function () {
                 depotOrder.push(depotKey);
             }
 
+            if (isForeignEuropeOutsideSphere) foreignEuropeBrigadesAccepted += 1;
+
             angular.forEach(battalionFields, function (field) {
                 var battItemNo = setUpRow[field];
                 if (!battItemNo) return;
@@ -42,7 +66,7 @@ austerlitzModule.factory('turnMapsTsTransferBuilderFactory', function () {
 
                 var recruits = 800;
                 totalsByDepot[depotKey].citizens += recruits;
-                totalsByDepot[depotKey].money += (recruits * ctx.toFloat(armyItem.cost, 0));
+                totalsByDepot[depotKey].money += (recruits * ctx.toFloat(armyItem.cost, 0) * moneyMultiplier);
                 totalsByDepot[depotKey].ecPts += (Math.ceil(recruits / 25) * ctx.toFloat(armyItem.ecPtsPer25, 0));
                 if (ctx.isMountedArmyItem(armyItem)) totalsByDepot[depotKey].horses += recruits;
             });

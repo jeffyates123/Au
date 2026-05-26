@@ -42,10 +42,14 @@
                     <tr ng-repeat="setUpRow in tsSetUpBrigadesRows track by setUpRow.orderNo" ng-class="{ landUnitsSetUpRowInvalid: isBrigadeSetupIncomplete(setUpRow) }">
                         <td class="landUnitsIdCol">{{setUpRow.orderNo}}</td>
                         <td class="landUnitsSetUpDepotCol">
-                            <select class="form-control input-sm landUnitsSetUpDepotSelect" ng-model="setUpRow.depot" ng-change="setSetUpDepot(setUpRow, setUpRow.depot)">
-                                <option value="">-- select --</option>
-                                <option ng-repeat="depot in setUpDepotSelectionOptions track by $index" ng-value="depot.itemNo">{{depot.label}}</option>
+                            <select class="form-control input-sm landUnitsSetUpDepotSelect"
+                                    name="setUpDepot{{setUpRow.orderNo}}"
+                                    ng-model="setUpRow.depot"
+                                    ng-change="setSetUpDepot(setUpRow)"
+                                    ng-options="depot.itemNo as depot.label for depot in setUpDepotSelectionOptions">
                             </select>
+
+
                         </td>
                         <td class="landUnitsPositionCol">{{getSetUpDepotPositionText(setUpRow)}}</td>
                         <td class="landUnitsBattalionCol" ng-repeat="field in ['batt1','batt2','batt3','batt4','batt5','batt6','batt7'] track by field">

@@ -42,12 +42,18 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
             || toInt(goods.textiles, 0) > 0;
     }
 
+    function normalizeStateCode(value) {
+        var text = (value || '').toString().trim().toUpperCase();
+        return text ? text.substr(0, 1) : '';
+    }
+
     return {
         attach: function ($scope, rulesCatalogFactory) {
             $scope.pendingDepotSourceItemNo = null;
             $scope.selectedArmyListItem = null;
             $scope.economyTsCostSummarySections = [];
             $scope.economyTsCostWarnings = [];
+            $scope.tsCostRuleWarnings = [];
             $scope.managedTransferGoodsRowOrderNos = [];
             $scope.armyListCostRows = [];
             $scope.armyListCostByItemNo = {};
@@ -162,6 +168,42 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
             $scope.getSphereFromDepotItemNo = function (depotItemNo) { return turnMapsDepotLookupFactory.getSphereFromDepotItemNo($scope.masterData, depotItemNo); };
             $scope.getLocationLabel = function (locationItemNo) { return turnMapsDepotLookupFactory.getLocationLabel($scope.masterData, locationItemNo); };
             $scope.getLineLocationContext = function (depotItemNo) { return turnMapsDepotLookupFactory.getLineLocationContext($scope.masterData, depotItemNo); };
+            $scope.getMapCoordinateForDepotItemNo = function (depotItemNo) {
+                var depotRef = $scope.getDepotReferenceByItemNo(depotItemNo);
+                if (!depotRef) return null;
+                var x = toInt(depotRef.x, 0);
+                var y = toInt(depotRef.y, 0);
+                if (!x || !y) return null;
+                var mapRows = ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.mapCoordinates) || [];
+                if (!mapRows[y] || !mapRows[y][x]) return null;
+                return mapRows[y][x];
+            };
+            $scope.getTs03EuropeCostRule = function (depotItemNo) {
+                var sphere = ($scope.getSphereFromDepotItemNo(depotItemNo) || '').toString().trim();
+                if (sphere.toUpperCase() !== 'EUROPE') {
+                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+
+                var homeState = normalizeStateCode($scope.getTurnStateCodeForArmyList());
+                if (!homeState) {
+                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+
+                var mapCoord = $scope.getMapCoordinateForDepotItemNo(depotItemNo);
+                if (!mapCoord) {
+                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+
+                var regionState = normalizeStateCode(mapCoord.state);
+                var ownerState = normalizeStateCode(mapCoord.owner);
+                if (regionState && regionState === homeState) {
+                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+                if (ownerState && ownerState === homeState) {
+                    return { moneyMultiplier: 1.5, isForeignEuropeOutsideSphere: false };
+                }
+                return { moneyMultiplier: 3, isForeignEuropeOutsideSphere: true };
+            };
 
             $scope.getArmyListItemByItemNo = function (itemNo) { return itemNo == null ? null : ($scope.armyListCostByItemNo[toInt(itemNo, 0)] || null); };
             $scope.getArmyListItemByShortName = function (shortName) {
@@ -210,6 +252,11 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
                     getArmyListItemByShortName: $scope.getArmyListItemByShortName,
                     getLocationLabel: $scope.getLocationLabel,
                     getLineLocationContext: $scope.getLineLocationContext,
+                    getTs03EuropeCostRule: $scope.getTs03EuropeCostRule,
+                    addTsCostWarning: function (warningText) {
+                        if (!warningText) return;
+                        $scope.tsCostRuleWarnings = ($scope.tsCostRuleWarnings || []).concat([warningText]);
+                    },
                     getDepotForBrigadeState: function (brigadeState) {
                         return $scope.getDepotSourceItemNoAtCoordinate(brigadeState.x, brigadeState.y);
                     },
@@ -280,7 +327,6 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
 
             $scope.writeManagedTransferGoodsRows = function (lines) {
                 if (!$scope.tsTransferGoodsList) return;
-                $scope.economyTsCostWarnings = [];
                 var previousManaged = ($scope.managedTransferGoodsRowOrderNos || []).slice();
                 var existingManagedRows = previousManaged.map($scope.getTransferGoodsRowByOrderNo).filter(Boolean).sort(function (left, right) {
                     return toInt(left.orderNo, 0) - toInt(right.orderNo, 0);
@@ -346,8 +392,11 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
 
             $scope.recalculateTransferGoodsForSetUpBrigades = function () {
                 if (!$scope.tsTransferGoodsList) return;
+                $scope.tsCostRuleWarnings = [];
                 var lines = $scope.calculateTsCostTransferLines();
+                $scope.latestTsCostTransferLines = lines;
                 $scope.buildEconomyTsCostSummary(lines);
+                $scope.economyTsCostWarnings = ($scope.tsCostRuleWarnings || []).slice();
                 $scope.writeManagedTransferGoodsRows(lines);
             };
 

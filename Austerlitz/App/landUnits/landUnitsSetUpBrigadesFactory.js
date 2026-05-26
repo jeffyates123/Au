@@ -309,9 +309,7 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                 return !!(armyItem && $scope.selectedSetUpArmyItem && toInt(armyItem.itemNo, 0) === toInt($scope.selectedSetUpArmyItem.itemNo, 0));
             };
 
-            $scope.setSetUpDepot = function (row, depotItemNo) {
-                if (!row) return;
-                row.depot = turnSheetValueRulesFactory.toPositiveIntOrNull(depotItemNo);
+            $scope.setSetUpDepot = function (row) {
                 $scope.queueSetUpTsSave('SetUpBrigades');
                 $scope.recalculateTransferGoodsForSetUpBrigades();
             };

@@ -145,6 +145,58 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return null;
                 };
 
+            $scope.normalizeStateCode = function (value) {
+                    var text = (value || '').toString().trim().toUpperCase();
+                    return text ? text.substr(0, 1) : '';
+                };
+
+            $scope.getMapCoordinateAt = function (x, y) {
+                    var px = parseInt(x, 10);
+                    var py = parseInt(y, 10);
+                    if (isNaN(px) || isNaN(py)) {
+                        return null;
+                    }
+
+                    var mapRows = ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.mapCoordinates) || [];
+                    if (!mapRows[py] || !mapRows[py][px]) {
+                        return null;
+                    }
+                    return mapRows[py][px];
+                };
+
+            $scope.getLocationCostBadgeForBrigade = function (brigade) {
+                    if (!brigade || !brigade.source) {
+                        return { code: '', tooltip: '' };
+                    }
+
+                    var sphere = $scope.getBrigadeSphere(brigade);
+                    if (sphere === 'Caribbean') {
+                        return { code: 'C', tooltip: 'C - 1x cost as brigade resides in Caribbean region.' };
+                    }
+                    if (sphere === 'India') {
+                        return { code: 'I', tooltip: 'I - 1x cost as brigade resides in India region.' };
+                    }
+                    if (sphere !== 'Europe') {
+                        return { code: '', tooltip: '' };
+                    }
+
+                    var homeState = $scope.normalizeStateCode($scope.getTurnStateCode());
+                    var mapCoord = $scope.getMapCoordinateAt(brigade.source.x_OrState, brigade.source.y_OrFleet);
+                    if (!homeState || !mapCoord) {
+                        return { code: '', tooltip: '' };
+                    }
+
+                    var regionState = $scope.normalizeStateCode(mapCoord.state);
+                    var ownerState = $scope.normalizeStateCode(mapCoord.owner);
+                    if (regionState && regionState === homeState) {
+                        return { code: 'H', tooltip: 'H - 1x cost as brigade resides in European Home region.' };
+                    }
+                    if (ownerState && ownerState === homeState) {
+                        return { code: 'P', tooltip: 'P - 1.5x cost as brigade resides in European Political sphere.' };
+                    }
+                    return { code: 'O', tooltip: 'O - 3x cost as brigade resides in European Outside region (not home or political sphere).' };
+                };
+
             $scope.getInitialSphereFilter = function () {
                     var stored = null;
                     try {
