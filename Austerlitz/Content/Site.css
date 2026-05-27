@@ -934,15 +934,15 @@ textarea {
 
 .landUnitsHeader {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 14px;
-    padding-bottom: 8px;
+    margin-bottom: 0;
+    padding-bottom: 0;
     border-bottom: 1px solid #ddd;
 }
 
 .landUnitsTitle {
-    margin: 0;
+    margin: 0 0 8px;
     font-size: 20px;
     font-weight: bold;
 }
@@ -976,15 +976,17 @@ textarea {
 
 .landUnitsTabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 0;
+    margin: 0;
 }
 
 .landUnitsTabButton {
     min-width: 130px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border: 1px solid #cfcfcf;
-    border-radius: 3px;
+    border-bottom: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+    margin: 0 4px -1px 0;
     background: #f2efe9;
     color: #555;
     font-size: 12px;
@@ -992,9 +994,25 @@ textarea {
 }
 
 .landUnitsTabButton.active {
-    border-color: #9d8f7b;
-    background: #e5e1d9;
+    border-color: #ddd #ddd #ffffff;
+    background: #ffffff;
     color: #222;
+}
+
+.landUnitsTabPane {
+    border: 1px solid #ddd;
+    border-top: none;
+    background: #fff;
+    padding: 10px 10px 12px;
+    margin-bottom: 10px;
+}
+
+.landUnitsTabPane .landUnitsTableWrap + .landUnitsTableWrap {
+    margin-top: 10px;
+}
+
+.landUnitsTabPane .landUnitsSetUpPickerWrap {
+    margin-top: 10px;
 }
 
 .landUnitsTableWrap {
@@ -1099,6 +1117,76 @@ textarea {
     min-width: 170px;
 }
 
+.landUnitsSetUpTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.landUnitsSetUpTable .landUnitsIdCol {
+    width: 42px;
+}
+
+.landUnitsSetUpTable .landUnitsSetUpDepotCol {
+    min-width: 120px;
+    width: 120px;
+}
+
+.landUnitsSetUpTable .landUnitsPositionCol {
+    width: 48px;
+}
+
+.landUnitsSetUpTable .landUnitsBattalionCol {
+    width: 92px;
+    text-align: center;
+}
+
+.landUnitsSetUpTable .landUnitsNameCol {
+    min-width: 150px;
+    width: 150px;
+}
+
+.landUnitsSetUpTable .landUnitsMenuCol {
+    width: 58px;
+}
+
+.landUnitsExistingArmyTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.landUnitsExistingArmyTable .landUnitsIdCol {
+    width: 42px;
+}
+
+.landUnitsExistingArmyTable .landUnitsNameCol {
+    width: 150px;
+}
+
+.landUnitsExistingArmyTable .landUnitsPositionCol,
+.landUnitsExistingArmyTable .landUnitsFedCol,
+.landUnitsExistingArmyTable .landUnitsMpCol {
+    width: 48px;
+}
+
+.landUnitsExistingArmyTable .landUnitsBattalionCol {
+    width: 90px;
+}
+
+.landUnitsExistingArmyTable .landUnitsToggleCol {
+    width: 46px;
+}
+
+.landUnitsExistingArmyTable .landUnitsMenuCol {
+    width: 30px;
+}
+
+.landUnitsExistingArmyTable .landUnitsBattalionChip {
+    min-width: 68px;
+    padding: 2px 5px;
+}
+
 .landUnitsSetUpTable > thead > tr > th {
     padding: 8px 8px;
 }
@@ -1106,11 +1194,6 @@ textarea {
 .landUnitsSetUpTable > tbody > tr > td {
     padding: 7px 8px;
     vertical-align: middle;
-}
-
-.landUnitsSetUpTable .landUnitsBattalionCol {
-    width: 105px;
-    text-align: center;
 }
 
 .landUnitsSetUpBrushBar {
@@ -1140,8 +1223,8 @@ textarea {
 
 .landUnitsSetUpPickerWrap {
     margin-top: 10px;
-    max-height: 414px;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
     border: 1px solid #e6e0d8;
     background: #fff;
 }
@@ -1408,10 +1491,11 @@ textarea {
 
 .landUnitsSetUpSummaryTable {
     margin: 10px 0 0;
-    background: #ffffff;
+    background: #fcfaf6;
     min-width: 0;
     width: 100%;
     table-layout: fixed;
+    border: 1px solid #d9d2c6;
 }
 
 .landUnitsSetUpSummaryTable th,
@@ -1419,6 +1503,11 @@ textarea {
     white-space: nowrap;
     width: 11.11%;
     text-align: center;
+}
+
+.landUnitsSetUpSummaryTable > thead > tr > th {
+    background: #f1eadf;
+    border-bottom: 1px solid #d9d2c6;
 }
 
 .landUnitsHeadcountPreviewGrid {
@@ -1446,6 +1535,8 @@ textarea {
 .landUnitsArmyListTable {
     margin-bottom: 0;
     font-size: 12px;
+    width: 100%;
+    table-layout: fixed;
 }
 
 .landUnitsArmyListTable > tbody > tr {

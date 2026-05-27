@@ -2,30 +2,17 @@
     <div class="landUnitsHeader">
         <div>
             <h2 class="landUnitsTitle">Army</h2>
-            <div class="landUnitsSubtitle">
-                Operations
-                <select class="form-control input-sm landUnitsSphereFilter" ng-options="sphere for sphere in sphereOptions" ng-model="selectedSphere" ng-change="onSphereChanged()"></select>
+            <div class="landUnitsTabs">
+                <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'setUpBrigades' }" ng-click="selectArmyTab('setUpBrigades')">Set-Up Brigades</button>
+                <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'existingArmy' }" ng-click="selectArmyTab('existingArmy')">Existing Army</button>
             </div>
         </div>
         <div class="landUnitsTurnInfo">
             <span>{{masterData.turnId}}</span>
         </div>
     </div>
-    <div class="landUnitsTabs">
-        <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'setUpBrigades' }" ng-click="selectArmyTab('setUpBrigades')">Set-Up Brigades</button>
-        <button type="button" class="landUnitsTabButton" ng-class="{ active: activeArmyTab === 'existingArmy' }" ng-click="selectArmyTab('existingArmy')">Existing Army</button>
-    </div>
 
-    <div ng-show="activeArmyTab === 'setUpBrigades'">
-        <div class="landUnitsSetUpBrushBar">
-            <strong>Selected unit:</strong>
-            <span ng-if="selectedSetUpArmyItem">
-                {{selectedSetUpArmyItem.itemNo}} / {{selectedSetUpArmyItem.shortName}} - {{selectedSetUpArmyItem.name}}
-            </span>
-            <span ng-if="!selectedSetUpArmyItem">None</span>
-            <button type="button" class="btn btn-default btn-xs" ng-click="pickSetUpArmyItem(null)" ng-disabled="!selectedSetUpArmyItem">Clear</button>
-        </div>
-
+    <div class="landUnitsTabPane" ng-show="activeArmyTab === 'setUpBrigades'">
         <div class="landUnitsTableWrap">
             <table class="table landUnitsTable landUnitsSetUpTable">
                 <thead>
@@ -61,7 +48,7 @@
                             <input class="form-control input-sm landUnitsRenameInput" ng-model="setUpRow.brigadeName" maxlength="15" ng-blur="updateSetUpBrigadeName(setUpRow)" />
                         </td>
                         <td class="landUnitsMenuCol">
-                            <button type="button" class="btn btn-link landUnitsActionButton" ng-click="clearSetUpBrigadesRow(setUpRow)" title="Clear row">-</button>
+                            <button type="button" class="btn btn-default btn-xs" ng-click="clearSetUpBrigadesRow(setUpRow)" title="Delete row">Delete</button>
                         </td>
                     </tr>
                 </tbody>
@@ -129,7 +116,7 @@
         </div>
     </div>
 
-    <div ng-show="activeArmyTab === 'existingArmy'">
+    <div class="landUnitsTabPane" ng-show="activeArmyTab === 'existingArmy'">
         <div class="alert alert-info landUnitsAlert" ng-show="isLoading">
             Loading brigades...
         </div>
@@ -148,7 +135,7 @@
         </div>
 
         <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
-            <table class="table landUnitsTable">
+            <table class="table landUnitsTable landUnitsExistingArmyTable">
                 <thead>
                     <tr>
                         <th class="landUnitsIdCol">ID</th>
@@ -159,10 +146,6 @@
                         <th class="landUnitsBattalionCol" ng-repeat="index in [1,2,3,4,5,6,7]">Battalion {{index}}</th>
                         <th class="landUnitsToggleCol">H/C</th>
                         <th class="landUnitsToggleCol">Train</th>
-                        <th class="landUnitsResourceCol">LD</th>
-                        <th class="landUnitsResourceCol">Citz</th>
-                        <th class="landUnitsResourceCol">EcPts</th>
-                        <th class="landUnitsResourceCol">Horse</th>
                         <th class="landUnitsMenuCol"></th>
                     </tr>
                 </thead>
@@ -199,10 +182,6 @@
                         <td class="landUnitsToggleCol">
                             <button type="button" class="landUnitsToggleButton" ng-class="{ landUnitsToggleButtonDisabled: !canUseBarracksAction(brigade) }" ng-style="getBrigadeToggleStyle(brigade.trainSelected)" ng-click="openTrainModal(brigade)" ng-disabled="!canUseBarracksAction(brigade)" title="{{getBarracksActionTooltip(brigade)}}">Train</button>
                         </td>
-                        <td class="landUnitsResourceCol">{{brigade.resources.ld}}</td>
-                        <td class="landUnitsResourceCol">{{brigade.resources.citizens}}</td>
-                        <td class="landUnitsResourceCol">{{brigade.resources.ecPts}}</td>
-                        <td class="landUnitsResourceCol">{{brigade.resources.horses}}</td>
                         <td class="landUnitsMenuCol">
                             <div class="dropdown landUnitsActionDropdown">
                                 <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">

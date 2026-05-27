@@ -39,6 +39,11 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
         return !!text && text !== '<Brigade Name>' && text.toLowerCase() !== 'temp brigade name';
     }
 
+    function hasPositiveInt(value) {
+        var parsed = parseInt(value, 10);
+        return !isNaN(parsed) && parsed > 0;
+    }
+
     function hasAnyGoods(goods) {
         if (!goods) return false;
         return toInt(goods.louisdore, 0) > 0
@@ -129,7 +134,6 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                 var bySphere = { Europe: [], Caribbean: [], India: [], Unknown: [] };
                 var turnReport = $scope.masterData && $scope.masterData.turnReport;
                 var barracks = (turnReport && turnReport.barracks) || [];
-                var ports = (turnReport && turnReport.tradingPortsAndCities) || [];
 
                 function mapDepot(raw, sourceType) {
                     var sphere = normalizeSphereName(ts01TransferGoodsUtilsFactory.getSphereFromCoordinate(raw.x, raw.y));
@@ -148,11 +152,6 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
 
                 angular.forEach(barracks, function (raw) {
                     var depot = mapDepot(raw, 'Barracks');
-                    if (!depot.itemNo) return;
-                    bySphere[depot.sphere] = (bySphere[depot.sphere] || []).concat([depot]);
-                });
-                angular.forEach(ports, function (raw) {
-                    var depot = mapDepot(raw, 'Shipyard');
                     if (!depot.itemNo) return;
                     bySphere[depot.sphere] = (bySphere[depot.sphere] || []).concat([depot]);
                 });
@@ -272,19 +271,8 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
             };
 
             $scope.refreshSetUpArmyListBySphere = function () {
-                var sphere = normalizeSphereName($scope.selectedSphere || SPHERE_ALL);
                 var allRows = $scope.setupArmyListAllRows || [];
-                if (sphere === SPHERE_ALL) {
-                    $scope.setupArmyListRows = allRows.slice();
-                } else {
-                    $scope.setupArmyListRows = allRows.filter(function (armyItem) {
-                        return $scope.canAddArmyItemToDepotSphere(armyItem.itemNo, sphere);
-                    });
-                }
-
-                if ($scope.selectedSetUpArmyItem && !$scope.canAddArmyItemToDepotSphere($scope.selectedSetUpArmyItem.itemNo, sphere)) {
-                    $scope.selectedSetUpArmyItem = null;
-                }
+                $scope.setupArmyListRows = allRows.slice();
             };
 
             $scope.calculateHeadcountEfDrop = function (missingMen, size) {
@@ -310,6 +298,44 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
             };
 
             $scope.setSetUpDepot = function (row) {
+                if (!row) return;
+                var currentOrderNo = toInt(row.orderNo, 0);
+                var selectedDepot = toInt(row.depot, 0);
+                if (currentOrderNo > 0 && selectedDepot > 0) {
+                    var previousActiveRow = null;
+                    angular.forEach($scope.tsSetUpBrigadesRows || [], function (candidate) {
+                        if (!candidate) return;
+                        var candidateOrderNo = toInt(candidate.orderNo, 0);
+                        if (!candidateOrderNo || candidateOrderNo >= currentOrderNo) return;
+                        var hasAnyData = hasPositiveInt(candidate.depot)
+                            || hasPositiveInt(candidate.batt1)
+                            || hasPositiveInt(candidate.batt2)
+                            || hasPositiveInt(candidate.batt3)
+                            || hasPositiveInt(candidate.batt4)
+                            || hasPositiveInt(candidate.batt5)
+                            || hasPositiveInt(candidate.batt6)
+                            || hasPositiveInt(candidate.batt7)
+                            || hasMeaningfulText(candidate.brigadeName);
+                        if (!hasAnyData) return;
+                        if (!previousActiveRow || candidateOrderNo > toInt(previousActiveRow.orderNo, 0)) {
+                            previousActiveRow = candidate;
+                        }
+                    });
+
+                    if (previousActiveRow) {
+                        var firstFiveComplete = hasPositiveInt(previousActiveRow.batt1)
+                            && hasPositiveInt(previousActiveRow.batt2)
+                            && hasPositiveInt(previousActiveRow.batt3)
+                            && hasPositiveInt(previousActiveRow.batt4)
+                            && hasPositiveInt(previousActiveRow.batt5);
+                        if (!firstFiveComplete) {
+                            row.depot = null;
+                            alert('cant add new brigade until first 5 batts are filled in');
+                            $scope.recalculateTransferGoodsForSetUpBrigades();
+                            return;
+                        }
+                    }
+                }
                 $scope.queueSetUpTsSave('SetUpBrigades');
                 $scope.recalculateTransferGoodsForSetUpBrigades();
             };
@@ -322,9 +348,11 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                 }
                 var itemNo = toInt($scope.selectedSetUpArmyItem.itemNo, 0);
                 var rowSphere = normalizeSphereName($scope.getSphereFromDepotItemNo(row.depot));
-                var selectedSphere = normalizeSphereName($scope.selectedSphere || SPHERE_ALL);
-                var activeSphere = rowSphere || (selectedSphere !== SPHERE_ALL ? selectedSphere : null);
-                if (activeSphere && !$scope.canAddArmyItemToDepotSphere(itemNo, activeSphere)) return;
+                if (rowSphere && !$scope.canAddArmyItemToDepotSphere(itemNo, rowSphere)) {
+                    var regionLabel = (rowSphere === SPHERE_EUROPE) ? 'Europe' : 'the Colonies';
+                    alert('This troop type cannot be built at the selected barracks in ' + regionLabel + '.');
+                    return;
+                }
                 row[battField] = itemNo;
                 if (!row.brigadeName || row.brigadeName === '<Brigade Name>') {
                     row.brigadeName = ($scope.selectedSetUpArmyItem.name || '').toString().trim();
@@ -516,25 +544,26 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
 
             $scope.buildTs01BarracksSummaryRows = function () {
                 var grouped = {};
-                angular.forEach($scope.tsTransferGoodsList || [], function (row) {
-                    if (!$scope.hasTransferGoodsData(row) || row.to == null) return;
-                    var toKey = toInt(row.to, 0);
+                angular.forEach($scope.latestTsCostTransferLines || [], function (line) {
+                    if (!line || !line.goods || line.to == null) return;
+                    if (!hasAnyGoods(line.goods)) return;
+                    var toKey = toInt(line.to, 0);
                     if (!toKey) return;
                     if (!grouped[toKey]) {
                         grouped[toKey] = {
-                            from: row.from,
-                            to: row.to,
-                            locationLabel: $scope.getLocationLabel(row.to),
+                            from: line.from,
+                            to: line.to,
+                            locationLabel: line.locationLabel || $scope.getLocationLabel(line.to),
                             goods: { louisdore: 0, citizens: 0, ecPts: 0, horses: 0, wood: 0, textiles: 0 }
                         };
                     }
-                    grouped[toKey].from = grouped[toKey].from || row.from;
-                    grouped[toKey].goods.louisdore += toInt(row.louisdore, 0);
-                    grouped[toKey].goods.citizens += toInt(row.citizens, 0);
-                    grouped[toKey].goods.ecPts += toInt(row.ecPts, 0);
-                    grouped[toKey].goods.horses += toInt(row.horses, 0);
-                    grouped[toKey].goods.wood += toInt(row.wood, 0);
-                    grouped[toKey].goods.textiles += toInt(row.textiles, 0);
+                    grouped[toKey].from = grouped[toKey].from || line.from;
+                    grouped[toKey].goods.louisdore += toInt(line.goods.louisdore, 0);
+                    grouped[toKey].goods.citizens += toInt(line.goods.citizens, 0);
+                    grouped[toKey].goods.ecPts += toInt(line.goods.ecPts, 0);
+                    grouped[toKey].goods.horses += toInt(line.goods.horses, 0);
+                    grouped[toKey].goods.wood += toInt(line.goods.wood, 0);
+                    grouped[toKey].goods.textiles += toInt(line.goods.textiles, 0);
                 });
 
                 $scope.ts01BarracksSummaryRows = Object.keys(grouped).map(function (key) {
@@ -649,15 +678,6 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                 });
             };
 
-            $scope.$watch('selectedSphere', function () {
-                var normalizedSphere = normalizeSphereName($scope.selectedSphere || SPHERE_ALL);
-                if (normalizedSphere !== ($scope.selectedSphere || SPHERE_ALL)) {
-                    $scope.selectedSphere = normalizedSphere;
-                    return;
-                }
-                $scope.refreshSetUpDepotSelectionOptions();
-                $scope.refreshSetUpArmyListBySphere();
-            });
         }
     };
 });

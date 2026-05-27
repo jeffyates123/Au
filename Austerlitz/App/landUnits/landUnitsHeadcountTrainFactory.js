@@ -11,6 +11,26 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
 
     return {
         attach: function ($scope, turnSheetFactory) {
+            $scope.refreshSetUpCostRowsFromTurnSheets = function () {
+                    if (!$scope.masterData || !$scope.masterData.turnId) {
+                        return $q.when(null);
+                    }
+
+                    var turnId = $scope.masterData.turnId;
+                    return $q.all([
+                        turnSheetFactory.getTSIncreaseHeadcount(turnId).then(function (rows) {
+                            $scope.tsIncreaseHeadcountList = rows || [];
+                        }),
+                        turnSheetFactory.getTSIncreaseBrigadeXP(turnId).then(function (rows) {
+                            $scope.tsIncreaseBrigadeXpList = rows || [];
+                        })
+                    ]).then(function () {
+                        if (typeof $scope.recalculateTransferGoodsForSetUpBrigades === 'function') {
+                            $scope.recalculateTransferGoodsForSetUpBrigades();
+                        }
+                    });
+                };
+
             $scope.getLandUnitsManagedTs01StorageKey = function () {
                     return ts01TransferGoodsUtilsFactory.buildManagedStorageKey(
                         LAND_UNITS_MANAGED_TS01_KEY_PREFIX,
@@ -350,6 +370,8 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
             
                     $scope.persistHeadcountOrder(brigade, scope, targetHeadcount).then(function () {
                         return $scope.syncTransferGoodsForLandUnitsPlans();
+                    }).then(function () {
+                        return $scope.refreshSetUpCostRowsFromTurnSheets();
                     }, $scope.showTurnSheetOrderError);
                     $scope.closeHeadcountModal();
                 };
@@ -366,6 +388,8 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
             
                     $scope.clearHeadcountOrder(brigade, scope).then(function () {
                         return $scope.syncTransferGoodsForLandUnitsPlans();
+                    }).then(function () {
+                        return $scope.refreshSetUpCostRowsFromTurnSheets();
                     }, $scope.showTurnSheetOrderError);
                     $scope.closeHeadcountModal();
                 };
@@ -438,6 +462,8 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
             
                     $scope.persistTrainOrder(brigade, scope).then(function () {
                         return $scope.syncTransferGoodsForLandUnitsPlans();
+                    }).then(function () {
+                        return $scope.refreshSetUpCostRowsFromTurnSheets();
                     }, $scope.showTurnSheetOrderError);
                     $scope.closeTrainModal();
                 };
@@ -454,6 +480,8 @@ austerlitzModule.factory('landUnitsHeadcountTrainFactory', function ($q, turnShe
             
                     $scope.clearTrainOrder(brigade, scope).then(function () {
                         return $scope.syncTransferGoodsForLandUnitsPlans();
+                    }).then(function () {
+                        return $scope.refreshSetUpCostRowsFromTurnSheets();
                     }, $scope.showTurnSheetOrderError);
                     $scope.closeTrainModal();
                 };

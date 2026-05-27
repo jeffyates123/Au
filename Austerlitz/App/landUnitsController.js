@@ -49,6 +49,8 @@ austerlitzModule.controller('landUnitsController', function (
                 if (tsType === 'SetUpBrigades') {
                     $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(savedRows);
                     $scope.refreshSetUpBrigadesRows();
+                    // Keep TS01 managed cost rows in sync with server-returned TS03 rows.
+                    $scope.recalculateTransferGoodsForSetUpBrigades();
                 }
                 if (tsType === 'TransferGoods') {
                     $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
