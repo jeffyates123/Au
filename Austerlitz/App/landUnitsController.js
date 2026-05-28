@@ -74,6 +74,7 @@ austerlitzModule.controller('landUnitsController', function (
             $scope.refreshBrigadeRows();
             $scope.buildSetUpDepotOptions();
             $q.all([
+                (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
                 $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
                 $scope.loadSetUpArmyListForTurnState()
             ]).finally(function () {
@@ -88,6 +89,7 @@ austerlitzModule.controller('landUnitsController', function (
             $scope.refreshBrigadeRows();
             $scope.buildSetUpDepotOptions();
             return $q.all([
+                (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
                 $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
                 $scope.loadSetUpArmyListForTurnState()
             ]).finally(function () {

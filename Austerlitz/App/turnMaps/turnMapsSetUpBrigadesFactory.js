@@ -47,6 +47,11 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
         return text ? text.substr(0, 1) : '';
     }
 
+    function normalizePoliticalSphereToken(value) {
+        var text = (value || '').toString().trim();
+        return text ? text.toUpperCase() : '';
+    }
+
     return {
         attach: function ($scope, rulesCatalogFactory) {
             $scope.pendingDepotSourceItemNo = null;
@@ -178,31 +183,57 @@ austerlitzModule.factory('turnMapsSetUpBrigadesFactory', function (
                 if (!mapRows[y] || !mapRows[y][x]) return null;
                 return mapRows[y][x];
             };
+            $scope.getPoliticalSphereTokenSetForState = function (stateCode) {
+                var homeState = normalizeStateCode(stateCode);
+                if (!homeState) return {};
+                var stateRow = null;
+                angular.forEach($scope.stateList || [], function (candidate) {
+                    if (stateRow) return;
+                    var candidateCode = normalizeStateCode(candidate && (candidate.State || candidate.state));
+                    if (candidateCode === homeState) stateRow = candidate;
+                });
+                if (!stateRow) return {};
+
+                var rawSphere = (stateRow.PoliticalSphere != null ? stateRow.PoliticalSphere : stateRow.politicalSphere);
+                var text = rawSphere == null ? '' : rawSphere.toString().trim();
+                if (!text || text.toLowerCase() === 'none') return {};
+
+                var tokenSet = {};
+                angular.forEach(text.split(','), function (token) {
+                    var normalized = normalizePoliticalSphereToken(token);
+                    if (!normalized) return;
+                    tokenSet[normalized] = true;
+                });
+                return tokenSet;
+            };
             $scope.getTs03EuropeCostRule = function (depotItemNo) {
                 var sphere = ($scope.getSphereFromDepotItemNo(depotItemNo) || '').toString().trim();
                 if (sphere.toUpperCase() !== 'EUROPE') {
-                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                    return { code: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
                 }
 
                 var homeState = normalizeStateCode($scope.getTurnStateCodeForArmyList());
                 if (!homeState) {
-                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                    return { code: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
                 }
 
                 var mapCoord = $scope.getMapCoordinateForDepotItemNo(depotItemNo);
                 if (!mapCoord) {
-                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                    return { code: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
                 }
 
                 var regionState = normalizeStateCode(mapCoord.state);
-                var ownerState = normalizeStateCode(mapCoord.owner);
-                if (regionState && regionState === homeState) {
-                    return { moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                var ownerCode = normalizePoliticalSphereToken(mapCoord.owner);
+                if (regionState === homeState && ownerCode === homeState) {
+                    return { code: 'H', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
                 }
-                if (ownerState && ownerState === homeState) {
-                    return { moneyMultiplier: 1.5, isForeignEuropeOutsideSphere: false };
+
+                var politicalSphereTokens = $scope.getPoliticalSphereTokenSetForState(homeState);
+                if (regionState === homeState && politicalSphereTokens[ownerCode]) {
+                    return { code: 'P', moneyMultiplier: 1.5, isForeignEuropeOutsideSphere: false };
                 }
-                return { moneyMultiplier: 3, isForeignEuropeOutsideSphere: true };
+
+                return { code: 'O', moneyMultiplier: 3, isForeignEuropeOutsideSphere: true };
             };
 
             $scope.getArmyListItemByItemNo = function (itemNo) { return itemNo == null ? null : ($scope.armyListCostByItemNo[toInt(itemNo, 0)] || null); };

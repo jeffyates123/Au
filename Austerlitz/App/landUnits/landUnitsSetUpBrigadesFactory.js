@@ -203,10 +203,17 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
             };
 
             $scope.getTurnStateCodeForSetUp = function () {
+                if (typeof $scope.getTurnStateCode === 'function') {
+                    var resolvedState = $scope.getTurnStateCode();
+                    if (resolvedState) return resolvedState;
+                }
+                if ($scope.masterData && $scope.masterData.selectedState) {
+                    return $scope.masterData.selectedState;
+                }
                 if ($scope.masterData && $scope.masterData.turnId && $scope.masterData.turnId.length >= 4) {
                     return $scope.masterData.turnId.substr(3, 1);
                 }
-                return ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : 'E');
+                return 'E';
             };
 
             $scope.loadSetUpArmyListForTurnState = function () {
@@ -410,6 +417,54 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                 return depot.x + '/' + depot.y;
             };
 
+            $scope.getMapCoordinateForSetUpDepot = function (depotItemNo) {
+                var depot = $scope.getDepotReferenceByItemNo(depotItemNo);
+                if (!depot) return null;
+                var mapRows = ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.mapCoordinates) || [];
+                var x = toInt(depot.x, 0);
+                var y = toInt(depot.y, 0);
+                return (mapRows[y] && mapRows[y][x]) ? mapRows[y][x] : null;
+            };
+
+            $scope.getTs03EuropeCostRule = function (depotItemNo) {
+                var sphere = normalizeSphereName($scope.getSphereFromDepotItemNo(depotItemNo));
+                if (sphere !== SPHERE_EUROPE) {
+                    return { code: '', tooltip: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+                var mapCoord = $scope.getMapCoordinateForSetUpDepot(depotItemNo);
+                if (typeof $scope.getEuropeLocationCostRule === 'function') {
+                    return $scope.getEuropeLocationCostRule(mapCoord, $scope.getTurnStateCodeForSetUp());
+                }
+                return { code: '', tooltip: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+            };
+
+            $scope.getLocationCostBadgeForSetUpRow = function (setUpRow) {
+                if (!setUpRow || !setUpRow.depot) {
+                    return { code: '', tooltip: '' };
+                }
+
+                var sphere = normalizeSphereName($scope.getSphereFromDepotItemNo(setUpRow.depot));
+                if (sphere === SPHERE_CARIBBEAN) {
+                    return { code: 'C', tooltip: 'C - 1x cost as brigade resides in Caribbean region.' };
+                }
+                if (sphere === SPHERE_INDIA) {
+                    return { code: 'I', tooltip: 'I - 1x cost as brigade resides in India region.' };
+                }
+                if (sphere !== SPHERE_EUROPE) {
+                    return { code: '', tooltip: '' };
+                }
+
+                var europeRule = $scope.getTs03EuropeCostRule(setUpRow.depot);
+                if (!europeRule || !europeRule.code) {
+                    return { code: '', tooltip: '' };
+                }
+                return { code: europeRule.code, tooltip: europeRule.tooltip };
+            };
+
+            $scope.getSetUpLocationBadge = function (setUpRow) {
+                return $scope.getLocationCostBadgeForSetUpRow(setUpRow);
+            };
+
             $scope.getSetUpBattalionDisplay = function (setUpRow, battField) {
                 var armyItem = $scope.getArmyListItemByItemNo(setUpRow && setUpRow[battField]);
                 if (!armyItem) return '- -- ---';
@@ -524,6 +579,7 @@ austerlitzModule.factory('landUnitsSetUpBrigadesFactory', function (
                     getArmyListItemByShortName: $scope.getArmyListItemByShortName,
                     getLocationLabel: $scope.getLocationLabel,
                     getLineLocationContext: $scope.getLineLocationContext,
+                    getTs03EuropeCostRule: $scope.getTs03EuropeCostRule,
                     getDepotForBrigadeState: function (brigadeState) {
                         return ts01TransferGoodsUtilsFactory.getDepotSourceItemNoAtCoordinate($scope.masterData && $scope.masterData.turnReport, brigadeState.x, brigadeState.y);
                     },

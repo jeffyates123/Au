@@ -425,6 +425,9 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         $scope.selectedState = selectedState || $scope.stateList[3];
+        if (typeof $scope.recalculateTransferGoodsForSetUpBrigades === 'function') {
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+        }
     });
 
     rulesCatalogFactory.getRefTerrain().then(function (terrainList) {

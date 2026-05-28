@@ -96,6 +96,7 @@
     <Property Name="StateName" Type="varchar" MaxLength="30" Nullable="false" />
     <Property Name="TaxRate" Type="int" Nullable="false" />
     <Property Name="FleetMorale" Type="int" Nullable="false" />
+    <Property Name="PoliticalSphere" Type="varchar" MaxLength="30" Nullable="true" />
   </EntityType>
   <EntityType Name="REF_Terrain">
     <Key>

@@ -38,7 +38,14 @@
 
 
                         </td>
-                        <td class="landUnitsPositionCol">{{getSetUpDepotPositionText(setUpRow)}}</td>
+                        <td class="landUnitsPositionCol">
+                            <span>{{getSetUpDepotPositionText(setUpRow)}}</span>
+                            <span class="landUnitsLocationCostLozenge"
+                                  ng-if="(setUpLocationBadge = getSetUpLocationBadge(setUpRow)).code"
+                                  title="{{setUpLocationBadge.tooltip}}">
+                                {{setUpLocationBadge.code}}
+                            </span>
+                        </td>
                         <td class="landUnitsBattalionCol" ng-repeat="field in ['batt1','batt2','batt3','batt4','batt5','batt6','batt7'] track by field">
                             <button type="button" class="landUnitsBattalionChip landUnitsBattalionChipButton landUnitsSetUpBattalionButton" ng-click="paintSetUpBattalion(setUpRow, field)">
                                 {{getSetUpBattalionDisplay(setUpRow, field)}}
@@ -156,7 +163,14 @@
                             <span ng-show="!brigade.isRenaming" title="Double-click to rename">{{brigade.name}}</span>
                             <input ng-show="brigade.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="brigade.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, brigade)" ng-blur="applyRenameBrigade(brigade)" />
                         </td>
-                        <td class="landUnitsPositionCol">{{brigade.position}}</td>
+                        <td class="landUnitsPositionCol">
+                            <span>{{brigade.position}}</span>
+                            <span class="landUnitsLocationCostLozenge"
+                                  ng-if="(existingArmyLocationBadge = getExistingArmyLocationBadge(brigade)).code"
+                                  title="{{existingArmyLocationBadge.tooltip}}">
+                                {{existingArmyLocationBadge.code}}
+                            </span>
+                        </td>
                         <td class="landUnitsFedCol">
                             <button type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: brigade.fedChanged }" ng-click="openFormFederationModal(brigade, $event)" title="Click to form or change federation">
                                 {{brigade.fed || '-'}}

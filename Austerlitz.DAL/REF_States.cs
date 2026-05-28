@@ -18,5 +18,6 @@ namespace Austerlitz.DAL
         public string StateName { get; set; }
         public int TaxRate { get; set; }
         public int FleetMorale { get; set; }
+        public string PoliticalSphere { get; set; }
     }
 }

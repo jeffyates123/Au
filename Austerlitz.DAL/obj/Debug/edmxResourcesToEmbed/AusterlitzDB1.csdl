@@ -85,6 +85,7 @@
     <Property Name="StateName" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="TaxRate" Type="Int32" Nullable="false" />
     <Property Name="FleetMorale" Type="Int32" Nullable="false" />
+    <Property Name="PoliticalSphere" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
   </EntityType>
   <EntityType Name="REF_Terrain">
     <Key>

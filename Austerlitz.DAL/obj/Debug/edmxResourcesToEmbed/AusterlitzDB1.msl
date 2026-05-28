@@ -85,6 +85,7 @@
           <ScalarProperty Name="StateName" ColumnName="StateName" />
           <ScalarProperty Name="TaxRate" ColumnName="TaxRate" />
           <ScalarProperty Name="FleetMorale" ColumnName="FleetMorale" />
+          <ScalarProperty Name="PoliticalSphere" ColumnName="PoliticalSphere" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>

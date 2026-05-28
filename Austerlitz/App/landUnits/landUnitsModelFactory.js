@@ -3,6 +3,8 @@
 austerlitzModule.factory('landUnitsModelFactory', function () {
     return {
         attach: function ($scope, rulesCatalogFactory) {
+            var refStatesLoadPromise = null;
+
             $scope.getBrigadesByFederation = function (federationNo) {
                     return ($scope.brigadeRows || []).filter(function (brigade) {
                         return $scope.sameNullableInt(brigade.fed, federationNo);
@@ -150,6 +152,83 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return text ? text.substr(0, 1) : '';
                 };
 
+            $scope.normalizePoliticalSphereToken = function (value) {
+                    var text = (value || '').toString().trim();
+                    return text ? text.toUpperCase() : '';
+                };
+
+            $scope.buildRefStatesByCode = function (stateList) {
+                    var byCode = {};
+                    angular.forEach(stateList || [], function (state) {
+                        if (!state) return;
+                        var code = $scope.normalizeStateCode(state.State || state.state);
+                        if (!code) return;
+                        byCode[code] = state;
+                    });
+                    return byCode;
+                };
+
+            $scope.setRefStatesForPoliticalSphere = function (stateList) {
+                    $scope.refStatesList = stateList || [];
+                    $scope.refStatesByCode = $scope.buildRefStatesByCode($scope.refStatesList);
+                };
+
+            $scope.loadRefStatesForPoliticalSphere = function () {
+                    if (refStatesLoadPromise) return refStatesLoadPromise;
+                    refStatesLoadPromise = rulesCatalogFactory.getRefStates().then(function (stateList) {
+                        $scope.setRefStatesForPoliticalSphere(stateList || []);
+                        return $scope.refStatesList;
+                    }, function () {
+                        $scope.setRefStatesForPoliticalSphere([]);
+                        return [];
+                    });
+                    return refStatesLoadPromise;
+                };
+
+            $scope.getPoliticalSphereTokenSetForState = function (stateCode) {
+                    var homeState = $scope.normalizeStateCode(stateCode);
+                    if (!homeState) return {};
+                    var stateRow = ($scope.refStatesByCode || {})[homeState];
+                    if (!stateRow) return {};
+
+                    var rawSphere = (stateRow.PoliticalSphere != null ? stateRow.PoliticalSphere : stateRow.politicalSphere);
+                    var text = rawSphere == null ? '' : rawSphere.toString().trim();
+                    if (!text || text.toLowerCase() === 'none') return {};
+
+                    var tokenSet = {};
+                    angular.forEach(text.split(','), function (token) {
+                        var normalized = $scope.normalizePoliticalSphereToken(token);
+                        if (!normalized) return;
+                        tokenSet[normalized] = true;
+                    });
+                    return tokenSet;
+                };
+
+            $scope.getEuropeLocationCostRule = function (mapCoord, loadedStateCode) {
+                    var homeState = $scope.normalizeStateCode(loadedStateCode);
+                    if (!homeState || !mapCoord  ) {
+                        return { code: '', tooltip: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                    }
+
+                    var regionState = $scope.normalizeStateCode(mapCoord.state);
+                    var ownerCode = $scope.normalizePoliticalSphereToken(mapCoord.owner);
+                    if (regionState === homeState && ownerCode === homeState) {
+                        return { code: 'H', tooltip: 'H - 1x cost as brigade resides in European Home region.', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                    }
+
+                var politicalSphereTokens = $scope.getPoliticalSphereTokenSetForState(homeState);
+
+                    if (regionState === homeState && politicalSphereTokens[ownerCode]) {
+                        return { code: 'P', tooltip: 'P - 1.5x cost as brigade resides in European Political sphere.', moneyMultiplier: 1.5, isForeignEuropeOutsideSphere: false };
+                    }
+
+                if (homeState != regionState) {
+                    return { code: '', tooltip: '', moneyMultiplier: 1, isForeignEuropeOutsideSphere: false };
+                }
+
+                    return { code: 'O', tooltip: 'O - 3x cost as brigade resides in European Outside region (not home or political sphere).', moneyMultiplier: 3, isForeignEuropeOutsideSphere: true };
+                };
+
             $scope.getMapCoordinateAt = function (x, y) {
                     var px = parseInt(x, 10);
                     var py = parseInt(y, 10);
@@ -180,21 +259,13 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                         return { code: '', tooltip: '' };
                     }
 
-                    var homeState = $scope.normalizeStateCode($scope.getTurnStateCode());
                     var mapCoord = $scope.getMapCoordinateAt(brigade.source.x_OrState, brigade.source.y_OrFleet);
-                    if (!homeState || !mapCoord) {
-                        return { code: '', tooltip: '' };
-                    }
+                    var rule = $scope.getEuropeLocationCostRule(mapCoord, $scope.getTurnStateCode());
+                    return { code: rule.code, tooltip: rule.tooltip };
+                };
 
-                    var regionState = $scope.normalizeStateCode(mapCoord.state);
-                    var ownerState = $scope.normalizeStateCode(mapCoord.owner);
-                    if (regionState && regionState === homeState) {
-                        return { code: 'H', tooltip: 'H - 1x cost as brigade resides in European Home region.' };
-                    }
-                    if (ownerState && ownerState === homeState) {
-                        return { code: 'P', tooltip: 'P - 1.5x cost as brigade resides in European Political sphere.' };
-                    }
-                    return { code: 'O', tooltip: 'O - 3x cost as brigade resides in European Outside region (not home or political sphere).' };
+            $scope.getExistingArmyLocationBadge = function (brigade) {
+                    return $scope.getLocationCostBadgeForBrigade(brigade);
                 };
 
             $scope.getInitialSphereFilter = function () {

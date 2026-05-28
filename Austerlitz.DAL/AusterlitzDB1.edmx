@@ -100,8 +100,9 @@
           <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="StateName" Type="varchar" MaxLength="30" Nullable="false" />
           <Property Name="TaxRate" Type="int" Nullable="false" />
-          <Property Name="FleetMorale" Type="int" Nullable="false" />
-        </EntityType>
+			<Property Name="FleetMorale" Type="int" Nullable="false" />
+			<Property Name="PoliticalSphere" Type="varchar" MaxLength="30" Nullable="true" />
+		</EntityType>
         <EntityType Name="REF_Terrain">
           <Key>
             <PropertyRef Name="TerrainId" />
@@ -737,6 +738,7 @@
           <Property Name="StateName" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="TaxRate" Type="Int32" Nullable="false" />
           <Property Name="FleetMorale" Type="Int32" Nullable="false" />
+          <Property Name="PoliticalSphere" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="REF_Terrain">
           <Key>
@@ -1385,6 +1387,7 @@
           <ScalarProperty Name="StateName" ColumnName="StateName" />
           <ScalarProperty Name="TaxRate" ColumnName="TaxRate" />
           <ScalarProperty Name="FleetMorale" ColumnName="FleetMorale" />
+          <ScalarProperty Name="PoliticalSphere" ColumnName="PoliticalSphere" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
