@@ -432,6 +432,47 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return !isNaN(parsed) && parsed > 0 ? 'Yes' : '';
                 };
 
+            $scope.getLandUnitPositionKey = function (unit) {
+                    if (!unit) {
+                        return '';
+                    }
+
+                    if (unit.position) {
+                        return $scope.trimValue(unit.position);
+                    }
+
+                    if (!unit.source) {
+                        return '';
+                    }
+
+                    var x = unit.source.x_OrState != null ? unit.source.x_OrState : unit.source.x;
+                    var y = unit.source.y_OrFleet != null ? unit.source.y_OrFleet : unit.source.y;
+                    return $scope.formatPosition({ x_OrState: x, y_OrFleet: y });
+                };
+
+            $scope.togglePositionFilter = function (unit) {
+                    var positionKey = $scope.getLandUnitPositionKey(unit);
+                    if (!positionKey) {
+                        return;
+                    }
+
+                    $scope.positionFilter = $scope.positionFilter === positionKey ? null : positionKey;
+                    $scope.refreshCommanderPairRows();
+                };
+
+            $scope.clearPositionFilter = function () {
+                    $scope.positionFilter = null;
+                    $scope.refreshCommanderPairRows();
+                };
+
+            $scope.matchesPositionFilter = function (unit) {
+                    if (!$scope.positionFilter) {
+                        return true;
+                    }
+
+                    return $scope.getLandUnitPositionKey(unit) === $scope.positionFilter;
+                };
+
             $scope.getStateColor = function () {
                     var stateCode = ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
                     var stateColors = {
@@ -531,21 +572,27 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
 
             $scope.filteredBrigadeRows = function () {
                     if (!$scope.selectedSphere || $scope.selectedSphere === 'All') {
-                        return $scope.brigadeRows;
+                        return ($scope.brigadeRows || []).filter(function (brigade) {
+                            return $scope.matchesPositionFilter(brigade);
+                        });
                     }
             
                     return $scope.brigadeRows.filter(function (brigade) {
-                        return $scope.getBrigadeSphere(brigade) === $scope.selectedSphere;
+                        return $scope.getBrigadeSphere(brigade) === $scope.selectedSphere
+                            && $scope.matchesPositionFilter(brigade);
                     });
                 };
 
             $scope.filteredCommanderRows = function () {
                     if (!$scope.selectedSphere || $scope.selectedSphere === 'All') {
-                        return $scope.commanderRows;
+                        return ($scope.commanderRows || []).filter(function (commander) {
+                            return $scope.matchesPositionFilter(commander);
+                        });
                     }
 
                     return ($scope.commanderRows || []).filter(function (commander) {
-                        return $scope.getCommanderSphere(commander) === $scope.selectedSphere;
+                        return $scope.getCommanderSphere(commander) === $scope.selectedSphere
+                            && $scope.matchesPositionFilter(commander);
                     });
                 };
 

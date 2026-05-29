@@ -102,6 +102,7 @@ austerlitzModule.factory('landUnitsStateFactory', function () {
                 },
                 sphereOptions: sphereOptions,
                 selectedSphere: getInitialSphereFilter(sphereOptions),
+                positionFilter: null,
                 activeArmyTab: 'setUpBrigades',
                 tsSetUpBrigadesList: [],
                 tsSetUpBrigadesRows: [],
