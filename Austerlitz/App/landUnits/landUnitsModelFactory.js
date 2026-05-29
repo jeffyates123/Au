@@ -4,11 +4,22 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
     return {
         attach: function ($scope, rulesCatalogFactory) {
             var refStatesLoadPromise = null;
+            var maxCommanderCount = 10;
 
             $scope.getBrigadesByFederation = function (federationNo) {
                     return ($scope.brigadeRows || []).filter(function (brigade) {
                         return $scope.sameNullableInt(brigade.fed, federationNo);
                     });
+                };
+
+            $scope.getCommandersByFederation = function (federationNo) {
+                    return ($scope.commanderRows || []).filter(function (commander) {
+                        return $scope.sameNullableInt(commander.fed, federationNo);
+                    });
+                };
+
+            $scope.getLandUnitsByFederation = function (federationNo) {
+                    return $scope.getBrigadesByFederation(federationNo).concat($scope.getCommandersByFederation(federationNo));
                 };
 
             $scope.getBrigadeById = function (id) {
@@ -19,6 +30,39 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     }
             
                     return null;
+                };
+
+            $scope.getCommanderById = function (id) {
+                    for (var i = 0; i < ($scope.commanderRows || []).length; i++) {
+                        if ($scope.sameNullableInt($scope.commanderRows[i].id, id)) {
+                            return $scope.commanderRows[i];
+                        }
+                    }
+
+                    return null;
+                };
+
+            $scope.getLandUnitById = function (id) {
+                    return $scope.getBrigadeById(id) || $scope.getCommanderById(id);
+                };
+
+            $scope.getLandUnitKey = function (unit) {
+                    if (!unit) {
+                        return '';
+                    }
+
+                    return (unit.kind || 'brigade') + ':' + (unit.id || '');
+                };
+
+            $scope.getLandFederationPartSummary = function (federationNo) {
+                    var parsedFederationNo = parseInt(federationNo, 10);
+                    if (isNaN(parsedFederationNo) || parsedFederationNo < 61 || parsedFederationNo > 90) {
+                        return '-';
+                    }
+
+                    var brigadesCount = $scope.getBrigadesByFederation(parsedFederationNo).length;
+                    var commandersCount = $scope.getCommandersByFederation(parsedFederationNo).length;
+                    return 'B:' + brigadesCount + ' C:' + commandersCount;
                 };
 
             $scope.sameNullableInt = function (left, right) {
@@ -296,6 +340,35 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return 'Unknown';
                 };
 
+            $scope.getCommanderSphere = function (commander) {
+                    if (!commander || !commander.source) {
+                        return 'Unknown';
+                    }
+
+                    if ((parseInt(commander.source.boarded, 10) || 0) > 0) {
+                        return 'Unknown';
+                    }
+
+                    var x = parseInt(commander.source.x, 10);
+                    var y = parseInt(commander.source.y, 10);
+                    if (isNaN(x) || isNaN(y)) {
+                        return 'Unknown';
+                    }
+
+                    if (x <= 80 && y <= 65) return 'Europe';
+                    if (x <= 40 && y <= 99) return 'Caribbean';
+                    if (x <= 90 && y <= 99) return 'India';
+                    return 'Unknown';
+                };
+
+            $scope.getLandUnitSphere = function (unit) {
+                    if (unit && unit.kind === 'commander') {
+                        return $scope.getCommanderSphere(unit);
+                    }
+
+                    return $scope.getBrigadeSphere(unit);
+                };
+
             $scope.compareBrigadeRowsForDisplay = function (left, right) {
                     var sphereCompare = $scope.getSphereSortOrder(left) - $scope.getSphereSortOrder(right);
                     if (sphereCompare !== 0) {
@@ -319,7 +392,7 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                 };
 
             $scope.getSphereSortOrder = function (brigade) {
-                    switch ($scope.getBrigadeSphere(brigade)) {
+                    switch ($scope.getLandUnitSphere(brigade)) {
                         case 'Europe': return 1;
                         case 'Caribbean': return 2;
                         case 'India': return 3;
@@ -337,6 +410,10 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     return isNaN(unitNo) ? 0 : unitNo;
                 };
 
+            $scope.compareCommanderRowsForDisplay = function (left, right) {
+                    return $scope.getUnitSortNo(left) - $scope.getUnitSortNo(right);
+                };
+
             $scope.formatPosition = function (brigade) {
                     var x = $scope.trimValue(brigade.x_OrState);
                     var y = $scope.trimValue(brigade.y_OrFleet);
@@ -348,6 +425,11 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
 
             $scope.formatFederation = function (federation) {
                     return federation && federation !== 0 ? federation : '';
+                };
+
+            $scope.formatCommanderBoarded = function (boardedValue) {
+                    var parsed = parseInt(boardedValue, 10);
+                    return !isNaN(parsed) && parsed > 0 ? 'Yes' : '';
                 };
 
             $scope.getStateColor = function () {
@@ -419,6 +501,34 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     }).sort($scope.compareBrigadeRowsForDisplay);
                 };
 
+            $scope.refreshCommanderRows = function () {
+                    var commanders = ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.commanders)
+                        ? $scope.masterData.turnReport.commanders
+                        : [];
+                    var boundedCommanders = commanders.slice(0, maxCommanderCount);
+                    $scope.commanderOverflowCount = Math.max(0, commanders.length - maxCommanderCount);
+
+                    $scope.commanderRows = boundedCommanders.map(function (commander, index) {
+                        var federationNo = $scope.formatFederation(commander.federation);
+                        return {
+                            kind: 'commander',
+                            id: commander.itemNo,
+                            loadedOrder: index,
+                            rank: $scope.trimValue(commander.rank),
+                            name: $scope.trimValue(commander.name),
+                            position: commander.boarded ? '' : $scope.formatPosition({ x_OrState: commander.x, y_OrFleet: commander.y }),
+                            fed: federationNo,
+                            originalFed: federationNo,
+                            fedChanged: false,
+                            mp: commander.mp,
+                            commandCapacity: commander.commandCapacity,
+                            boarded: $scope.formatCommanderBoarded(commander.boarded),
+                            source: commander
+                        };
+                    }).sort($scope.compareCommanderRowsForDisplay);
+                    $scope.refreshCommanderPairRows();
+                };
+
             $scope.filteredBrigadeRows = function () {
                     if (!$scope.selectedSphere || $scope.selectedSphere === 'All') {
                         return $scope.brigadeRows;
@@ -429,9 +539,42 @@ austerlitzModule.factory('landUnitsModelFactory', function () {
                     });
                 };
 
+            $scope.filteredCommanderRows = function () {
+                    if (!$scope.selectedSphere || $scope.selectedSphere === 'All') {
+                        return $scope.commanderRows;
+                    }
+
+                    return ($scope.commanderRows || []).filter(function (commander) {
+                        return $scope.getCommanderSphere(commander) === $scope.selectedSphere;
+                    });
+                };
+
+            $scope.refreshCommanderPairRows = function () {
+                    var commanders = $scope.filteredCommanderRows() || [];
+                    var pairRows = [];
+                    for (var i = 0; i < commanders.length; i += 2) {
+                        pairRows.push({
+                            left: commanders[i],
+                            right: commanders[i + 1] || null
+                        });
+                    }
+
+                    $scope.commanderPairRows = pairRows;
+                };
+
             $scope.onSphereChanged = function () {
                     try {
                         window.localStorage.setItem('austerlitz.landUnits.selectedSphere', $scope.selectedSphere || 'All');
+                    }
+                    catch (e) {
+                    }
+                    $scope.refreshCommanderPairRows();
+                };
+
+            $scope.toggleCommandersSection = function () {
+                    $scope.commandersSectionCollapsed = !$scope.commandersSectionCollapsed;
+                    try {
+                        window.localStorage.setItem('austerlitz.landUnits.commandersSectionCollapsed', $scope.commandersSectionCollapsed ? 'true' : 'false');
                     }
                     catch (e) {
                     }

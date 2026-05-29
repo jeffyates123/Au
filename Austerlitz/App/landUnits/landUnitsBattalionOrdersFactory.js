@@ -334,8 +334,8 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                         return false;
                     }
             
-                    return parseInt(leftBrigade.source.x_OrState, 10) === parseInt(rightBrigade.source.x_OrState, 10)
-                        && parseInt(leftBrigade.source.y_OrFleet, 10) === parseInt(rightBrigade.source.y_OrFleet, 10);
+                    return $scope.getLandUnitCoordinateX(leftBrigade) === $scope.getLandUnitCoordinateX(rightBrigade)
+                        && $scope.getLandUnitCoordinateY(leftBrigade) === $scope.getLandUnitCoordinateY(rightBrigade);
                 };
 
             $scope.hasNumericCoordinate = function (brigade) {
@@ -343,8 +343,24 @@ austerlitzModule.factory('landUnitsBattalionOrdersFactory', function () {
                         return false;
                     }
             
-                    return !isNaN(parseInt(brigade.source.x_OrState, 10))
-                        && !isNaN(parseInt(brigade.source.y_OrFleet, 10));
+                    return !isNaN($scope.getLandUnitCoordinateX(brigade))
+                        && !isNaN($scope.getLandUnitCoordinateY(brigade));
+                };
+
+            $scope.getLandUnitCoordinateX = function (unit) {
+                    if (!unit || !unit.source) {
+                        return NaN;
+                    }
+
+                    return parseInt(unit.source.x_OrState != null ? unit.source.x_OrState : unit.source.x, 10);
+                };
+
+            $scope.getLandUnitCoordinateY = function (unit) {
+                    if (!unit || !unit.source) {
+                        return NaN;
+                    }
+
+                    return parseInt(unit.source.y_OrFleet != null ? unit.source.y_OrFleet : unit.source.y, 10);
                 };
 
             $scope.exchangeBattalions = function (leftBrigade, leftBattalion, rightBrigade, rightBattalion) {

@@ -12,6 +12,17 @@ austerlitzModule.factory('landUnitsStateFactory', function () {
         return sphereOptions.indexOf(stored) >= 0 ? stored : 'All';
     }
 
+    function getInitialCommandersSectionCollapsed() {
+        var stored = null;
+        try {
+            stored = window.localStorage.getItem('austerlitz.landUnits.commandersSectionCollapsed');
+        }
+        catch (e) {
+        }
+
+        return stored === 'true';
+    }
+
     function emptyResources() {
         return {
             ld: '',
@@ -49,6 +60,9 @@ austerlitzModule.factory('landUnitsStateFactory', function () {
 
             return {
                 brigadeRows: [],
+                commanderRows: [],
+                commanderOverflowCount: 0,
+                commandersSectionCollapsed: getInitialCommandersSectionCollapsed(),
                 isLoading: false,
                 loadError: null,
                 replayWarnings: [],

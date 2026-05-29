@@ -3,67 +3,100 @@
 austerlitzModule.factory('landUnitsRenameFactory', function () {
     return {
         attach: function ($scope, turnSheetFactory) {
-            $scope.persistRenameOrder = function (brigade, newName) {
+            $scope.persistRenameOrder = function (unit, newName) {
+                    if (!unit) {
+                        return;
+                    }
+
                     turnSheetFactory.getTSChangeNames($scope.masterData.turnId).then(function (rows) {
-                        var targetRow = $scope.findMatchingRenameRow(rows, brigade.id)
+                        rows = rows || [];
+
+                        var targetRow = $scope.findMatchingRenameRow(rows, unit.id)
                             || $scope.findNextEmptyTurnSheetRow(rows, ['itemNo', 'name']);
             
                         if (!targetRow) {
-                            targetRow = { turnId: $scope.masterData.turnId, orderNo: (rows || []).length + 1 };
+                            targetRow = { turnId: $scope.masterData.turnId, orderNo: rows.length + 1 };
                             rows.push(targetRow);
                         }
             
                         targetRow.turnId = $scope.masterData.turnId;
-                        targetRow.itemNo = brigade.id;
+                        targetRow.itemNo = unit.id;
                         targetRow.name = newName;
             
                         return turnSheetFactory.postTSRecords(rows, 'ChangeNames').then(angular.noop, $scope.showTurnSheetOrderError);
                     }, $scope.showTurnSheetOrderError);
                 };
 
-            $scope.beginRenameBrigade = function (brigade) {
-                    if (!brigade) {
+            $scope.beginRenameUnit = function (unit) {
+                    if (!unit) {
                         return;
                     }
             
-                    brigade.isRenaming = true;
-                    brigade.pendingName = brigade.name;
+                    unit.isRenaming = true;
+                    unit.pendingName = unit.name;
                 };
 
-            $scope.onRenameKeydown = function ($event, brigade) {
+            $scope.onRenameKeydown = function ($event, unit) {
                     if ($event.keyCode === 13) {
                         $event.preventDefault();
-                        $scope.applyRenameBrigade(brigade);
+                        $scope.applyRenameUnit(unit);
                     }
                     else if ($event.keyCode === 27) {
                         $event.preventDefault();
-                        $scope.cancelRenameBrigade(brigade);
+                        $scope.cancelRenameUnit(unit);
                     }
+                };
+
+            $scope.applyRenameUnit = function (unit) {
+                    if (!unit || !unit.isRenaming) {
+                        return;
+                    }
+            
+                    var newName = $scope.trimValue(unit.pendingName).substr(0, 15);
+                    if (!newName) {
+                        newName = unit.name;
+                    }
+            
+                    unit.name = newName;
+                    unit.isRenaming = false;
+                    unit.pendingName = null;
+                    if (unit.source) {
+                        unit.source.name = newName;
+                    }
+                    $scope.persistRenameOrder(unit, newName);
+                };
+
+            $scope.cancelRenameUnit = function (unit) {
+                    if (!unit) {
+                        return;
+                    }
+            
+                    unit.isRenaming = false;
+                    unit.pendingName = null;
+                };
+
+            $scope.beginRenameBrigade = function (brigade) {
+                    $scope.beginRenameUnit(brigade);
                 };
 
             $scope.applyRenameBrigade = function (brigade) {
-                    if (!brigade || !brigade.isRenaming) {
-                        return;
-                    }
-            
-                    var newName = $scope.trimValue(brigade.pendingName).substr(0, 15);
-                    if (!newName) {
-                        newName = brigade.name;
-                    }
-            
-                    brigade.name = newName;
-                    brigade.isRenaming = false;
-                    brigade.pendingName = null;
-                    $scope.persistRenameOrder(brigade, newName);
+                    $scope.applyRenameUnit(brigade);
                 };
 
             $scope.cancelRenameBrigade = function (brigade) {
-                    if (!brigade) {
-                        return;
-                    }
-            
-                    brigade.isRenaming = false;
-                    brigade.pendingName = null;
+                    $scope.cancelRenameUnit(brigade);
+                };
+
+            $scope.beginRenameCommander = function (commander) {
+                    $scope.beginRenameUnit(commander);
+                };
+
+            $scope.applyRenameCommander = function (commander) {
+                    $scope.applyRenameUnit(commander);
+                };
+
+            $scope.cancelRenameCommander = function (commander) {
+                    $scope.cancelRenameUnit(commander);
                 };
 
         }

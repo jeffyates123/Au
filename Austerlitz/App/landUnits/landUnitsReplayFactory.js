@@ -113,20 +113,20 @@ austerlitzModule.factory('landUnitsReplayFactory', function () {
 
             $scope.replayFormFederations = function (rows, warnings) {
                     angular.forEach($scope.getFilledRowsInOrder(rows, ['itemNo', 'federation_Fleet']), function (row) {
-                        var brigade = $scope.getBrigadeById(row.itemNo);
+                        var brigade = $scope.getLandUnitById(row.itemNo);
                         if (brigade) {
-                            $scope.setBrigadeFederation(brigade, row.federation_Fleet);
+                            $scope.setLandUnitFederation(brigade, row.federation_Fleet);
                             return;
                         }
             
-                        var affectedBrigades = $scope.getBrigadesByFederation(row.itemNo);
+                        var affectedBrigades = $scope.getLandUnitsByFederation(row.itemNo);
                         if (!affectedBrigades.length) {
-                            $scope.addReplayWarning(warnings, 'TS14', row, 'brigade/federation not found: ' + row.itemNo);
+                            $scope.addReplayWarning(warnings, 'TS14', row, 'land unit/federation not found: ' + row.itemNo);
                             return;
                         }
             
                         angular.forEach(affectedBrigades, function (affectedBrigade) {
-                            $scope.setBrigadeFederation(affectedBrigade, row.federation_Fleet);
+                            $scope.setLandUnitFederation(affectedBrigade, row.federation_Fleet);
                         });
                     });
                 };

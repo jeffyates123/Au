@@ -1011,6 +1011,28 @@ textarea {
     margin-top: 10px;
 }
 
+.landUnitsSectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 6px 8px;
+    border: 1px solid #ded8ce;
+    background: #f2eee7;
+}
+
+.landUnitsSectionTitle {
+    color: #333;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.landUnitsSectionMeta {
+    margin-left: auto;
+    color: #666;
+    font-size: 11px;
+}
+
 .landUnitsTabPane .landUnitsSetUpPickerWrap {
     margin-top: 10px;
 }
@@ -1069,6 +1091,11 @@ textarea {
 .landUnitsFedCol,
 .landUnitsMpCol {
     width: 54px;
+    text-align: center;
+}
+
+.landUnitsCommanderCmdCol {
+    width: 180px;
     text-align: center;
 }
 
@@ -1185,6 +1212,48 @@ textarea {
 .landUnitsExistingArmyTable .landUnitsBattalionChip {
     min-width: 68px;
     padding: 2px 5px;
+}
+
+.landUnitsExistingArmyCommandersTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.landUnitsColId {
+    width: 42px;
+}
+
+.landUnitsColName {
+    width: 150px;
+}
+
+.landUnitsColPos,
+.landUnitsColFed,
+.landUnitsColMp {
+    width: 48px;
+}
+
+.landUnitsCommanderColCmd {
+    width: 200px;
+    text-align: left;
+}
+
+.landUnitsColBattalion {
+    width: 90px;
+}
+
+.landUnitsColToggle {
+    width: 46px;
+}
+
+.landUnitsColMenu {
+    width: 30px;
+}
+
+.landUnitsExistingArmyCommandersTable > thead > tr > th:nth-child(8),
+.landUnitsExistingArmyCommandersTable > tbody > tr > td:nth-child(8) {
+    border-left: 2px solid #d9d2c6;
 }
 
 .landUnitsSetUpTable > thead > tr > th {

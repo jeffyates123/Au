@@ -141,8 +141,142 @@
             No brigades are available for the selected turn.
         </div>
 
+        <div class="landUnitsSectionHeader" ng-show="commanderRows.length > 0">
+            <button type="button" class="btn btn-link btn-xs ts-collapse-button" ng-click="toggleCommandersSection()">
+                {{commandersSectionCollapsed ? '+' : '-'}}
+            </button>
+            <span class="landUnitsSectionTitle">Commanders</span>
+            <span class="landUnitsSectionMeta">{{commanderRows.length}} / 10</span>
+        </div>
+
+        <div class="alert alert-warning landUnitsAlert" ng-show="commanderOverflowCount > 0">
+            Only the first 10 commanders are shown ({{commanderOverflowCount}} additional commanders are hidden).
+        </div>
+
+        <div class="alert alert-info landUnitsAlert" ng-show="!isLoading && !loadError && commanderRows.length === 0">
+            No commanders are available for the selected turn.
+        </div>
+
+        <div class="landUnitsTableWrap" ng-show="commanderRows.length > 0 && !commandersSectionCollapsed">
+            <table class="table landUnitsTable landUnitsExistingArmyCommandersTable">
+                <colgroup>
+                    <col class="landUnitsColId" />
+                    <col class="landUnitsColName" />
+                    <col class="landUnitsColPos" />
+                    <col class="landUnitsColFed" />
+                    <col class="landUnitsColMp" />
+                    <col class="landUnitsCommanderColCmd" />
+                    <col class="landUnitsColMenu" />
+                    <col class="landUnitsColId" />
+                    <col class="landUnitsColName" />
+                    <col class="landUnitsColPos" />
+                    <col class="landUnitsColFed" />
+                    <col class="landUnitsColMp" />
+                    <col class="landUnitsCommanderColCmd" />
+                    <col class="landUnitsColMenu" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="landUnitsIdCol">ID</th>
+                        <th class="landUnitsNameCol">Name</th>
+                        <th class="landUnitsPositionCol">Pos</th>
+                        <th class="landUnitsFedCol">Fed</th>
+                        <th class="landUnitsMpCol">MP</th>
+                        <th class="landUnitsCommanderCmdCol">Cmd (Rank)</th>
+                        <th class="landUnitsMenuCol"></th>
+                        <th class="landUnitsIdCol">ID</th>
+                        <th class="landUnitsNameCol">Name</th>
+                        <th class="landUnitsPositionCol">Pos</th>
+                        <th class="landUnitsFedCol">Fed</th>
+                        <th class="landUnitsMpCol">MP</th>
+                        <th class="landUnitsCommanderCmdCol">Cmd (Rank)</th>
+                        <th class="landUnitsMenuCol"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="pair in commanderPairRows track by $index">
+                        <td class="landUnitsIdCol">{{pair.left.id}}</td>
+                        <td class="landUnitsNameCol" ng-dblclick="beginRenameCommander(pair.left)">
+                            <span ng-show="!pair.left.isRenaming" title="Double-click to rename">{{pair.left.name}}</span>
+                            <input ng-show="pair.left.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="pair.left.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, pair.left)" ng-blur="applyRenameCommander(pair.left)" />
+                        </td>
+                        <td class="landUnitsPositionCol">{{pair.left.position || '-'}}</td>
+                        <td class="landUnitsFedCol">
+                            <button type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: pair.left.fedChanged }" ng-click="openFormFederationModal(pair.left, $event)" title="Click to form or change federation">
+                                {{pair.left.fed || '-'}}
+                            </button>
+                        </td>
+                        <td class="landUnitsMpCol">{{pair.left.mp}}</td>
+                        <td class="landUnitsCommanderCmdCol">{{pair.left.commandCapacity}} <span ng-if="pair.left.rank">({{pair.left.rank}})</span></td>
+                        <td class="landUnitsMenuCol">
+                            <div class="dropdown landUnitsActionDropdown">
+                                <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">
+                                    ...
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right landUnitsActionMenu">
+                                    <li ng-repeat="action in brigadeActions">
+                                        <a href="" ng-click="selectBrigadeAction(action, pair.left)">{{action}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+
+                        <td class="landUnitsIdCol">{{pair.right ? pair.right.id : ''}}</td>
+                        <td class="landUnitsNameCol" ng-dblclick="pair.right && beginRenameCommander(pair.right)">
+                            <span ng-if="pair.right && !pair.right.isRenaming" title="Double-click to rename">{{pair.right.name}}</span>
+                            <input ng-if="pair.right && pair.right.isRenaming" class="form-control input-sm landUnitsRenameInput" ng-model="pair.right.pendingName" maxlength="15" ng-keydown="onRenameKeydown($event, pair.right)" ng-blur="applyRenameCommander(pair.right)" />
+                        </td>
+                        <td class="landUnitsPositionCol">{{pair.right ? (pair.right.position || '-') : ''}}</td>
+                        <td class="landUnitsFedCol">
+                            <button ng-if="pair.right" type="button" class="landUnitsFederationChip" ng-class="{ landUnitsFederationChipChanged: pair.right.fedChanged }" ng-click="openFormFederationModal(pair.right, $event)" title="Click to form or change federation">
+                                {{pair.right.fed || '-'}}
+                            </button>
+                        </td>
+                        <td class="landUnitsMpCol">{{pair.right ? pair.right.mp : ''}}</td>
+                        <td class="landUnitsCommanderCmdCol">
+                            <span ng-if="pair.right">{{pair.right.commandCapacity}} <span ng-if="pair.right.rank">({{pair.right.rank}})</span></span>
+                        </td>
+                        <td class="landUnitsMenuCol">
+                            <div ng-if="pair.right" class="dropdown landUnitsActionDropdown">
+                                <button class="btn btn-link landUnitsActionButton dropdown-toggle" type="button" data-toggle="dropdown">
+                                    ...
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right landUnitsActionMenu">
+                                    <li ng-repeat="action in brigadeActions">
+                                        <a href="" ng-click="selectBrigadeAction(action, pair.right)">{{action}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="landUnitsSectionHeader" ng-show="brigadeRows.length > 0">
+            <span class="landUnitsSectionTitle">Brigades</span>
+            <span class="landUnitsSectionMeta">{{filteredBrigadeRows().length}}</span>
+        </div>
+
         <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
             <table class="table landUnitsTable landUnitsExistingArmyTable">
+                <colgroup>
+                    <col class="landUnitsColId" />
+                    <col class="landUnitsColName" />
+                    <col class="landUnitsColPos" />
+                    <col class="landUnitsColFed" />
+                    <col class="landUnitsColMp" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColBattalion" />
+                    <col class="landUnitsColToggle" />
+                    <col class="landUnitsColToggle" />
+                    <col class="landUnitsColMenu" />
+                </colgroup>
                 <thead>
                     <tr>
                         <th class="landUnitsIdCol">ID</th>
@@ -321,7 +455,7 @@
             <div>
                 <h3>Form Federation</h3>
                 <div class="landUnitsModalSubtitle">
-                    {{formFederationModal.brigade.id}} {{formFederationModal.brigade.name}} - {{formFederationModal.brigade.position}}
+                    {{formFederationModal.brigade.id}} {{formFederationModal.brigade.name}} - {{formFederationModal.brigade.position || 'Boarded/Unknown'}}
                 </div>
             </div>
             <button type="button" class="close" ng-click="closeFormFederationModal()">&times;</button>
@@ -332,7 +466,7 @@
                 <label for="formFederationTarget">Federation</label>
                 <input id="formFederationTarget" type="number" min="0" max="90" class="form-control input-sm landUnitsFederationInput" ng-model="formFederationModal.targetFederationNo" ng-change="onFormFederationTargetChanged()" ng-disabled="isFormFederationTargetLocked()" />
                 <button type="button" class="btn btn-default btn-xs" ng-click="selectNextAvailableFederationNo()" ng-disabled="isFormFederationTargetLocked()">Next</button>
-                <span class="landUnitsFederationHint">Use 0 to remove federation</span>
+                <span class="landUnitsFederationHint">Use 0 to remove federation or 61-90 for land federations</span>
             </div>
 
             <div class="alert alert-warning landUnitsFormFederationError" ng-show="formFederationModal.validationError">
@@ -345,21 +479,25 @@
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
+                            <th>Type</th>
                             <th>Pos</th>
                             <th>Fed</th>
                             <th>MP</th>
+                            <th>Fed Part</th>
                             <th></th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="candidate in formFederationModal.coordinateBrigades track by candidate.id" ng-class="{ landUnitsFormFederationOriginal: isFormFederationOriginal(candidate), landUnitsFormFederationStaged: isFormFederationStaged(candidate) }">
+                        <tr ng-repeat="candidate in formFederationModal.coordinateBrigades track by getLandUnitKey(candidate)" ng-class="{ landUnitsFormFederationOriginal: isFormFederationOriginal(candidate), landUnitsFormFederationStaged: isFormFederationStaged(candidate) }">
                             <td>{{candidate.id}}</td>
                             <td>{{candidate.name}}</td>
+                            <td>{{candidate.kind === 'commander' ? 'Com' : 'Bde'}}</td>
                             <td>{{candidate.position}}</td>
                             <td>{{getFormFederationDisplayFed(candidate)}}</td>
                             <td>{{candidate.mp}}</td>
-                            <td><button type="button" class="landUnitsFederationActionButton" ng-click="stageFormFederationBrigade(candidate)" ng-disabled="!canStageFormFederationBrigade(candidate)">+Brigade</button></td>
+                            <td>{{getLandFederationPartSummary(getFormFederationDisplayFed(candidate))}}</td>
+                            <td><button type="button" class="landUnitsFederationActionButton" ng-click="stageFormFederationBrigade(candidate)" ng-disabled="!canStageFormFederationBrigade(candidate)">{{formFederationModal.brigade.kind === 'commander' ? '+Commander' : '+Brigade'}}</button></td>
                             <td><button type="button" class="landUnitsFederationActionButton" ng-click="stageFormFederationFed(candidate)" ng-disabled="!canStageFormFederationFed(candidate)">+Fed</button></td>
                         </tr>
                     </tbody>
@@ -368,8 +506,8 @@
 
             <div class="landUnitsHeadcountPreview">
                 <div><strong>Staged TS14 orders:</strong> {{formFederationModal.stagedOrders.length}}</div>
-                <div ng-repeat="order in formFederationModal.stagedOrders track by order.itemNo">
-                    {{order.itemNo}} / {{order.federation_Fleet}}
+                <div ng-repeat="order in formFederationModal.stagedOrders track by getFormFederationOrderKey(order)">
+                    {{getFormFederationOrderSummary(order)}}
                 </div>
             </div>
         </div>

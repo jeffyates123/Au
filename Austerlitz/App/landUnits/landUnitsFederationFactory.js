@@ -11,7 +11,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                             return !!$scope.findMatchingFormFederationRow(rows, order.itemNo);
                         });
             
-                        if (conflicts.length && !window.confirm('One or more TS14 orders already exist for these brigade/federation numbers. Overwrite them?')) {
+                        if (conflicts.length && !window.confirm('One or more TS14 orders already exist for these land unit/federation numbers. Overwrite them?')) {
                             return;
                         }
             
@@ -48,11 +48,11 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                     }
             
                     $scope.stageFormFederationOrder({
-                        type: 'brigade',
+                        type: brigade.kind === 'commander' ? 'commander' : 'brigade',
                         itemNo: brigadeId,
                         federation_Fleet: $scope.getFormFederationTargetNo(),
                         sourceBrigadeId: brigade.id,
-                        affectedBrigadeIds: [brigade.id],
+                        affectedUnitKeys: [$scope.getLandUnitKey(brigade)],
                         isOriginal: !!isOriginal
                     });
                 };
@@ -63,10 +63,11 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                     }
             
                     var stagedOrders = $scope.formFederationModal.stagedOrders || [];
+                    var orderKey = $scope.getFormFederationOrderKey(order);
                     for (var i = 0; i < stagedOrders.length; i++) {
-                        if ($scope.sameNullableInt(stagedOrders[i].itemNo, order.itemNo)) {
+                        if ($scope.getFormFederationOrderKey(stagedOrders[i]) === orderKey) {
                             stagedOrders[i].federation_Fleet = order.federation_Fleet;
-                            stagedOrders[i].affectedBrigadeIds = order.affectedBrigadeIds || stagedOrders[i].affectedBrigadeIds;
+                            stagedOrders[i].affectedUnitKeys = order.affectedUnitKeys || stagedOrders[i].affectedUnitKeys;
                             stagedOrders[i].type = order.type || stagedOrders[i].type;
                             stagedOrders[i].sourceFederationNo = order.sourceFederationNo;
                             stagedOrders[i].sourceBrigadeId = order.sourceBrigadeId || stagedOrders[i].sourceBrigadeId;
@@ -77,6 +78,14 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
             
                     stagedOrders.push(order);
                     $scope.formFederationModal.stagedOrders = stagedOrders;
+                };
+
+            $scope.getFormFederationOrderKey = function (order) {
+                    if (!order || order.itemNo == null) {
+                        return '';
+                    }
+
+                    return (order.type || 'brigade') + ':' + order.itemNo;
                 };
 
             $scope.removeNoOpFormFederationOrders = function () {
@@ -90,7 +99,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                             return parseInt(order.sourceFederationNo, 10) !== targetFederationNo;
                         }
             
-                        var brigade = $scope.getBrigadeById(order.itemNo);
+                        var brigade = $scope.getLandUnitById(order.itemNo);
                         return brigade && $scope.getCurrentFederationNo(brigade) !== targetFederationNo;
                     });
                 };
@@ -98,14 +107,14 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
             $scope.applyStagedFormFederationChanges = function (stagedOrders) {
                     angular.forEach(stagedOrders || [], function (order) {
                         if (order.type === 'federation') {
-                            angular.forEach($scope.getBrigadesByFederation(order.sourceFederationNo), function (brigade) {
-                                $scope.setBrigadeFederation(brigade, order.federation_Fleet);
+                            angular.forEach($scope.getLandUnitsByFederation(order.sourceFederationNo), function (brigade) {
+                                $scope.setLandUnitFederation(brigade, order.federation_Fleet);
                             });
                             return;
                         }
             
-                        var brigade = $scope.getBrigadeById(order.itemNo);
-                        $scope.setBrigadeFederation(brigade, order.federation_Fleet);
+                        var brigade = $scope.getLandUnitById(order.itemNo);
+                        $scope.setLandUnitFederation(brigade, order.federation_Fleet);
                     });
                 };
 
@@ -122,6 +131,34 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                     if (brigade.source) {
                         brigade.source.federation = formatted || 0;
                     }
+                };
+
+            $scope.setCommanderFederation = function (commander, federationNo) {
+                    if (!commander) {
+                        return;
+                    }
+
+                    var parsed = parseInt(federationNo, 10);
+                    var formatted = !isNaN(parsed) && parsed > 0 ? parsed : '';
+                    commander.fed = formatted;
+                    commander.fedChanged = true;
+
+                    if (commander.source) {
+                        commander.source.federation = formatted || 0;
+                    }
+                };
+
+            $scope.setLandUnitFederation = function (unit, federationNo) {
+                    if (!unit) {
+                        return;
+                    }
+
+                    if (unit.kind === 'commander') {
+                        $scope.setCommanderFederation(unit, federationNo);
+                        return;
+                    }
+
+                    $scope.setBrigadeFederation(unit, federationNo);
                 };
 
             $scope.getFormFederationTargetNo = function () {
@@ -149,7 +186,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                             continue;
                         }
             
-                        if (order.type === 'brigade' && $scope.sameNullableInt(order.itemNo, brigadeId)) {
+                        if ((order.type === 'brigade' || order.type === 'commander') && $scope.sameNullableInt(order.itemNo, brigadeId)) {
                             return parseInt(order.federation_Fleet, 10) || 0;
                         }
             
@@ -172,7 +209,10 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                         return true;
                     }
             
-                    if ($scope.isFederationNoOnModalCoordinate(targetFederationNo) && $scope.isFederationNoValidForModalCoordinate(targetFederationNo)) {
+                    if (targetFederationNo >= 61
+                        && targetFederationNo <= 90
+                        && $scope.isFederationNoOnModalCoordinate(targetFederationNo)
+                        && $scope.isFederationNoValidForModalCoordinate(targetFederationNo)) {
                         $scope.formFederationModal.validationError = '';
                         return true;
                     }
@@ -186,7 +226,11 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                         return [];
                     }
             
-                    return $scope.brigadeRows.filter(function (row) {
+                    var allRows = ($scope.brigadeRows || []).concat($scope.commanderRows || []);
+                    return allRows.filter(function (row) {
+                        if (row && row.kind === 'commander' && row.boarded) {
+                            return false;
+                        }
                         return $scope.isSameCoordinate(brigade, row);
                     });
                 };
@@ -195,6 +239,12 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                     var used = {};
                     angular.forEach($scope.brigadeRows || [], function (brigade) {
                         var federationNo = parseInt(brigade.fed, 10);
+                        if (!isNaN(federationNo)) {
+                            used[federationNo] = true;
+                        }
+                    });
+                    angular.forEach($scope.commanderRows || [], function (commander) {
+                        var federationNo = parseInt(commander.fed, 10);
                         if (!isNaN(federationNo)) {
                             used[federationNo] = true;
                         }
@@ -227,7 +277,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                 };
 
             $scope.isFederationNoValidForModalCoordinate = function (federationNo) {
-                    var existingBrigades = $scope.getBrigadesByFederation(federationNo);
+                    var existingBrigades = $scope.getLandUnitsByFederation(federationNo);
                     if (!existingBrigades.length) {
                         return true;
                     }
@@ -243,14 +293,14 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                         return false;
                     }
             
-                    return !!$scope.getFormFederationStagedBrigadeIds()[brigade.id];
+                    return !!$scope.getFormFederationStagedBrigadeIds()[$scope.getLandUnitKey(brigade)];
                 };
 
             $scope.getFormFederationStagedBrigadeIds = function () {
                     var staged = {};
                     angular.forEach($scope.formFederationModal.stagedOrders || [], function (order) {
-                        angular.forEach(order.affectedBrigadeIds || [], function (brigadeId) {
-                            staged[brigadeId] = true;
+                        angular.forEach(order.affectedUnitKeys || [], function (unitKey) {
+                            staged[unitKey] = true;
                         });
                     });
                     return staged;
@@ -333,7 +383,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
             $scope.stageFormFederationFed = function (brigade) {
                     if (!$scope.canStageFormFederationFed(brigade)) {
                         if (!brigade || !brigade.fed) {
-                            alert('This brigade is not currently in a federation.');
+                            alert('This land unit is not currently in a federation.');
                         }
                         return;
                     }
@@ -349,7 +399,7 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                         federation_Fleet: $scope.getFormFederationTargetNo(),
                         sourceFederationNo: sourceFederationNo,
                         sourceBrigadeId: brigade.id,
-                        affectedBrigadeIds: $scope.getBrigadesByFederation(sourceFederationNo).map(function (row) { return row.id; })
+                        affectedUnitKeys: $scope.getLandUnitsByFederation(sourceFederationNo).map(function (row) { return $scope.getLandUnitKey(row); })
                     });
                 };
 
@@ -367,7 +417,9 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                 };
 
             $scope.isFormFederationTargetLocked = function () {
-                    return ($scope.formFederationModal.stagedOrders || []).length > 0;
+                    return ($scope.formFederationModal.stagedOrders || []).some(function (order) {
+                        return !order || !order.isOriginal;
+                    });
                 };
 
             $scope.getFormFederationDisplayFed = function (brigade) {
@@ -376,7 +428,10 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                 };
 
             $scope.isFormFederationOriginal = function (brigade) {
-                    return !!($scope.formFederationModal.brigade && brigade && $scope.sameNullableInt($scope.formFederationModal.brigade.id, brigade.id));
+                    return !!($scope.formFederationModal.brigade
+                        && brigade
+                        && $scope.sameNullableInt($scope.formFederationModal.brigade.id, brigade.id)
+                        && (($scope.formFederationModal.brigade.kind || 'brigade') === (brigade.kind || 'brigade')));
                 };
 
             $scope.isFormFederationStaged = function (brigade) {
@@ -385,7 +440,24 @@ austerlitzModule.factory('landUnitsFederationFactory', function () {
                     }
             
                     var stagedIds = $scope.getFormFederationStagedBrigadeIds();
-                    return !!stagedIds[brigade.id];
+                    return !!stagedIds[$scope.getLandUnitKey(brigade)];
+                };
+
+            $scope.getFormFederationOrderSummary = function (order) {
+                    if (!order) {
+                        return '';
+                    }
+
+                    var sourceLabel = order.itemNo;
+                    var unit = $scope.getLandUnitById(order.itemNo);
+                    if (unit) {
+                        sourceLabel = (unit.kind === 'commander' ? 'Com ' : 'Bde ') + unit.id + ' ' + unit.name;
+                    }
+                    else if (order.type === 'federation') {
+                        sourceLabel = 'Fed ' + order.itemNo;
+                    }
+
+                    return sourceLabel + ' -> ' + order.federation_Fleet + ' (' + $scope.getLandFederationPartSummary(order.federation_Fleet) + ')';
                 };
 
             $scope.saveFormFederationModal = function () {

@@ -67,11 +67,13 @@ austerlitzModule.controller('landUnitsController', function (
     $scope.initLandUnits = function () {
         if (!$scope.masterData || !$scope.masterData.turnId || $scope.masterData.turnId === 'Unknown') {
             $scope.brigadeRows = [];
+            $scope.commanderRows = [];
             return;
         }
 
         if ($scope.masterData.turnReport && $scope.masterData.turnReport.brigades) {
             $scope.refreshBrigadeRows();
+            $scope.refreshCommanderRows();
             $scope.buildSetUpDepotOptions();
             $q.all([
                 (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
@@ -87,6 +89,7 @@ austerlitzModule.controller('landUnitsController', function (
         $scope.loadError = null;
         turnDataLoaderService.loadTR($scope.masterData, $scope.masterData.turnId).then(function () {
             $scope.refreshBrigadeRows();
+            $scope.refreshCommanderRows();
             $scope.buildSetUpDepotOptions();
             return $q.all([
                 (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
@@ -98,6 +101,7 @@ austerlitzModule.controller('landUnitsController', function (
         }, function (error) {
             $scope.loadError = (error && error.data) ? error.data : 'Unable to load turn report.';
             $scope.brigadeRows = [];
+            $scope.commanderRows = [];
         }).finally(function () {
             $scope.isLoading = false;
         });
