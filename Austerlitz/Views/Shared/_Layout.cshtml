@@ -17,7 +17,17 @@
     <script src="~/Scripts/angular-sanitize.js"></script>
     <script src="~/Scripts/angular.rangeSlider.js"></script>
 
-    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.11.0/ui-bootstrap-tpls.min.js"></script>
+    <script>
+        if (window.angular) {
+            try {
+                window.angular.module('ui.bootstrap');
+            } catch (e) {
+                // Keep app bootstrap alive if CDN is unavailable.
+                window.angular.module('ui.bootstrap', []);
+            }
+        }
+    </script>
     <script src="~/Scripts/bootstrap.min.js"></script>
     <script src="~/Scripts/ng-grid.js"></script>
     <script src="~/Scripts/libs/smart-table.debug.js"></script>

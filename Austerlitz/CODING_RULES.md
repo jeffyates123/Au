@@ -1,0 +1,46 @@
+# Project Coding Rules
+
+## Simplicity First
+
+- Prefer the simplest solution that works.
+- Avoid introducing new abstractions unless they solve an existing problem.
+- Do not create interfaces for classes with only one implementation.
+- Avoid generic frameworks when simple code is sufficient.
+
+## File Changes
+
+- Explain why each file is being modified before making changes.
+- Minimise the number of files changed.
+- Do not restructure unrelated code.
+
+## Methods
+
+- Prefer readable imperative code.
+- Avoid deep nesting.
+- Avoid clever LINQ if a simple loop is clearer.
+- Extract methods only when it improves readability.
+
+## Architecture
+
+- Follow existing project patterns.
+- Do not introduce new design patterns without justification.
+- Do not introduce new NuGet packages without approval.
+
+## AI Generated Code
+
+- Every new class must have a clear reason for existing.
+- Remove duplicate code where sensible.
+- Prefer maintainability over flexibility.
+- If unsure, choose the more boring implementation.
+
+## Output Format
+
+Before generating code:
+1. Explain approach.
+2. List files to be changed.
+3. Explain why each file needs changing.
+
+After generating code:
+1. Summarise changes.
+2. Identify any technical debt introduced.
+3. Suggest simplifications.
