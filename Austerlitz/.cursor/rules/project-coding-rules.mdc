@@ -7,10 +7,12 @@ alwaysApply: true
 
 ## Simplicity First
 
-- Prefer the simplest solution that works.
+- Prefer the simplest solution that works and is easy to read.
 - Avoid introducing new abstractions unless they solve an existing problem.
 - Do not create interfaces for classes with only one implementation.
 - Avoid generic frameworks when simple code is sufficient.
+- avoid unnecessary complexity, hidden coupling, over-engineering, and places where I will struggle to maintain it in 3 years time when I am tired
+- Keep methods short, but do not create pointless wrapper methods.
 
 ## File Changes
 
@@ -20,7 +22,7 @@ alwaysApply: true
 
 ## Methods
 
-- Prefer readable imperative code.
+- Prefer readable easy to undestand code.
 - Avoid deep nesting.
 - Avoid clever LINQ if a simple loop is clearer.
 - Extract methods only when it improves readability.
@@ -37,6 +39,7 @@ alwaysApply: true
 - Remove duplicate code where sensible.
 - Prefer maintainability over flexibility.
 - If unsure, choose the more boring implementation.
+- avoid unnecessary complexity, hidden coupling, over-engineering, and places where I will struggle to maintain it in 3 years time when I am tired
 
 ## Output Format
 

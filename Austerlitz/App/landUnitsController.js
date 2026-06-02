@@ -1,6 +1,8 @@
-'use strict';
+"use strict";
 
-austerlitzModule.controller('landUnitsController', function (
+austerlitzModule.controller(
+  "landUnitsController",
+  function (
     $scope,
     $q,
     $timeout,
@@ -18,8 +20,8 @@ austerlitzModule.controller('landUnitsController', function (
     landUnitsBattalionOrdersFactory,
     landUnitsRenameFactory,
     landUnitsUiFactory,
-    landUnitsSetUpBrigadesFactory) {
-
+    landUnitsSetUpBrigadesFactory,
+  ) {
     $scope.masterData = masterData;
     angular.extend($scope, landUnitsStateFactory.createInitialState());
 
@@ -32,78 +34,111 @@ austerlitzModule.controller('landUnitsController', function (
     landUnitsBattalionOrdersFactory.attach($scope, $q, turnSheetFactory);
     landUnitsRenameFactory.attach($scope, turnSheetFactory);
     landUnitsUiFactory.attach($scope);
-    landUnitsSetUpBrigadesFactory.attach($scope, rulesCatalogFactory, turnSheetFactory);
+    landUnitsSetUpBrigadesFactory.attach(
+      $scope,
+      rulesCatalogFactory,
+      turnSheetFactory,
+    );
 
     var setUpAutoSavePromises = {};
     $scope.queueSetUpTsSave = function (tsType) {
-        if (setUpAutoSavePromises[tsType]) {
-            $timeout.cancel(setUpAutoSavePromises[tsType]);
-        }
-        setUpAutoSavePromises[tsType] = $timeout(function () {
-            var records = null;
-            if (tsType === 'SetUpBrigades') records = $scope.tsSetUpBrigadesList;
-            if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
-            if (!records) return;
+      if (setUpAutoSavePromises[tsType]) {
+        $timeout.cancel(setUpAutoSavePromises[tsType]);
+      }
+      setUpAutoSavePromises[tsType] = $timeout(function () {
+        var records = null;
+        if (tsType === "SetUpBrigades") records = $scope.tsSetUpBrigadesList;
+        if (tsType === "TransferGoods") records = $scope.tsTransferGoodsList;
+        if (!records) return;
 
-            turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
-                if (tsType === 'SetUpBrigades') {
-                    $scope.tsSetUpBrigadesList = $scope.normalizeSetUpBrigadesRows(savedRows);
-                    $scope.refreshSetUpBrigadesRows();
-                    // Keep TS01 managed cost rows in sync with server-returned TS03 rows.
-                    $scope.recalculateTransferGoodsForSetUpBrigades();
-                }
-                if (tsType === 'TransferGoods') {
-                    $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
-                    $scope.refreshTransferGoodsCostRows();
-                }
-            });
-        }, 120);
+        turnSheetFactory
+          .postTSRecords(records, tsType)
+          .then(function (savedRows) {
+            if (tsType === "SetUpBrigades") {
+              $scope.tsSetUpBrigadesList =
+                $scope.normalizeSetUpBrigadesRows(savedRows);
+              $scope.refreshSetUpBrigadesRows();
+              // Keep TS01 managed cost rows in sync with server-returned TS03 rows.
+              $scope.recalculateTransferGoodsForSetUpBrigades();
+            }
+            if (tsType === "TransferGoods") {
+              $scope.tsTransferGoodsList =
+                $scope.normalizeTransferGoodsRows(savedRows);
+              $scope.refreshTransferGoodsCostRows();
+            }
+          });
+      }, 120);
     };
 
     $scope.selectArmyTab = function (tabKey) {
-        $scope.activeArmyTab = tabKey || 'setUpBrigades';
+      $scope.activeArmyTab = tabKey || "setUpBrigades";
     };
 
     $scope.initLandUnits = function () {
-        if (!$scope.masterData || !$scope.masterData.turnId || $scope.masterData.turnId === 'Unknown') {
-            $scope.brigadeRows = [];
-            $scope.commanderRows = [];
-            return;
-        }
+      if (
+        !$scope.masterData ||
+        !$scope.masterData.turnId ||
+        $scope.masterData.turnId === "Unknown"
+      ) {
+        $scope.brigadeRows = [];
+        $scope.commanderRows = [];
+        return;
+      }
 
-        if ($scope.masterData.turnReport && $scope.masterData.turnReport.brigades) {
+      if (
+        $scope.masterData.turnReport &&
+        $scope.masterData.turnReport.brigades
+      ) {
+        $scope.refreshBrigadeRows();
+        $scope.refreshCommanderRows();
+        $scope.buildSetUpDepotOptions();
+        $q.all([
+          typeof $scope.loadRefStatesForPoliticalSphere === "function"
+            ? $scope.loadRefStatesForPoliticalSphere()
+            : $q.when([]),
+          $scope
+            .loadArmyListForHeadcountCosts()
+            .then($scope.replayBrigadeTurnOrders),
+          $scope.loadSetUpArmyListForTurnState(),
+        ]).finally(function () {
+          $scope.loadSetUpBrigadesData();
+        });
+        return;
+      }
+
+      $scope.isLoading = true;
+      $scope.loadError = null;
+      turnDataLoaderService
+        .loadTR($scope.masterData, $scope.masterData.turnId)
+        .then(
+          function () {
             $scope.refreshBrigadeRows();
             $scope.refreshCommanderRows();
             $scope.buildSetUpDepotOptions();
-            $q.all([
-                (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
-                $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
-                $scope.loadSetUpArmyListForTurnState()
-            ]).finally(function () {
+            return $q
+              .all([
+                typeof $scope.loadRefStatesForPoliticalSphere === "function"
+                  ? $scope.loadRefStatesForPoliticalSphere()
+                  : $q.when([]),
+                $scope
+                  .loadArmyListForHeadcountCosts()
+                  .then($scope.replayBrigadeTurnOrders),
+                $scope.loadSetUpArmyListForTurnState(),
+              ])
+              .finally(function () {
                 $scope.loadSetUpBrigadesData();
-            });
-            return;
-        }
-
-        $scope.isLoading = true;
-        $scope.loadError = null;
-        turnDataLoaderService.loadTR($scope.masterData, $scope.masterData.turnId).then(function () {
-            $scope.refreshBrigadeRows();
-            $scope.refreshCommanderRows();
-            $scope.buildSetUpDepotOptions();
-            return $q.all([
-                (typeof $scope.loadRefStatesForPoliticalSphere === 'function' ? $scope.loadRefStatesForPoliticalSphere() : $q.when([])),
-                $scope.loadArmyListForHeadcountCosts().then($scope.replayBrigadeTurnOrders),
-                $scope.loadSetUpArmyListForTurnState()
-            ]).finally(function () {
-                $scope.loadSetUpBrigadesData();
-            });
-        }, function (error) {
-            $scope.loadError = (error && error.data) ? error.data : 'Unable to load turn report.';
+              });
+          },
+          function (error) {
+            $scope.loadError =
+              error && error.data ? error.data : "Unable to load turn report.";
             $scope.brigadeRows = [];
             $scope.commanderRows = [];
-        }).finally(function () {
-            $scope.isLoading = false;
+          },
+        )
+        .finally(function () {
+          $scope.isLoading = false;
         });
     };
-});
+  },
+);
