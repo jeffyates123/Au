@@ -40,6 +40,67 @@ namespace Austerlitz.Models.TurnReport
         Unknown
     }
 
+    public class MathBattlePhaseMetrics
+    {
+        public int StateAMen { get; set; }
+        public int StateABattlePoints { get; set; }
+        public int StateALosses { get; set; }
+        public int StateBMen { get; set; }
+        public int StateBBattlePoints { get; set; }
+        public int StateBLosses { get; set; }
+    }
+
+    public class MathBattleBrigade
+    {
+        public string State { get; set; }
+        public string Phase { get; set; }
+        public string Name { get; set; }
+        public string Batt1Type { get; set; }
+        public int? Batt1EF { get; set; }
+        public int? Batt1Size { get; set; }
+        public string Batt2Type { get; set; }
+        public int? Batt2EF { get; set; }
+        public int? Batt2Size { get; set; }
+        public string Batt3Type { get; set; }
+        public int? Batt3EF { get; set; }
+        public int? Batt3Size { get; set; }
+        public string Batt4Type { get; set; }
+        public int? Batt4EF { get; set; }
+        public int? Batt4Size { get; set; }
+        public string Batt5Type { get; set; }
+        public int? Batt5EF { get; set; }
+        public int? Batt5Size { get; set; }
+        public string Batt6Type { get; set; }
+        public int? Batt6EF { get; set; }
+        public int? Batt6Size { get; set; }
+        public string Batt7Type { get; set; }
+        public int? Batt7EF { get; set; }
+        public int? Batt7Size { get; set; }
+    }
+
+    public class MathBattleDetails
+    {
+        public int MathBattleNo { get; set; }
+        public string StateA { get; set; }
+        public string StateB { get; set; }
+        public string Winner { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string Terrain { get; set; }
+        public int StateAMenTotal { get; set; }
+        public int StateALossesTotal { get; set; }
+        public int StateABattleRate { get; set; }
+        public int StateBMenTotal { get; set; }
+        public int StateBLossesTotal { get; set; }
+        public int StateBBattleRate { get; set; }
+        public MathBattlePhaseMetrics Art { get; set; }
+        public MathBattlePhaseMetrics LR1 { get; set; }
+        public MathBattlePhaseMetrics H2H1 { get; set; }
+        public MathBattlePhaseMetrics H2H2 { get; set; }
+        public MathBattlePhaseMetrics LR2 { get; set; }
+        public MathBattleBrigade[] Brigades { get; set; }
+    }
+
     public class TurnReport
     {
         public TR_StateRelationships[] StateRelationships;
@@ -54,5 +115,6 @@ namespace Austerlitz.Models.TurnReport
         public TR_TradingPortsAndCities[] TradingPortsAndCities;
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;
+        public MathBattleDetails[] MathBattles;
     }
 }

@@ -1,6 +1,6 @@
 namespace Austerlitz.DAL
 {
-    public partial class TR_MathBattleResult
+    public partial class TR_MathBattleResultActual
     {
         public string TurnId { get; set; }
         public int MathBattleNo { get; set; }

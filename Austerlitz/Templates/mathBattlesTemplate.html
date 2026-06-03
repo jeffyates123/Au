@@ -1,0 +1,117 @@
+<section class="mathBattlesPage">
+  <h2>Mathematical Battles</h2>
+
+  <div class="alert alert-info landUnitsAlert" ng-show="mathBattleLoading">
+    Loading mathematical battles...
+  </div>
+  <div class="alert alert-danger landUnitsAlert" ng-show="mathBattleLoadError">
+    {{mathBattleLoadError}}
+  </div>
+  <div class="alert alert-warning landUnitsAlert" ng-show="!mathBattleLoading && !mathBattleLoadError && !mathBattles.length">
+    No mathematical battles found for this turn.
+  </div>
+
+  <div ng-if="mathBattles.length">
+    <div class="mathBattleSelector">
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-repeat="battle in mathBattles track by battle.mathBattleNo"
+        ng-class="{ active: selectedBattleNo === battle.mathBattleNo }"
+        ng-click="selectBattle(battle.mathBattleNo)"
+      >
+        {{battle.mathBattleNo}}
+      </button>
+    </div>
+
+    <div class="landUnitsTabs">
+      <button type="button" class="landUnitsTabButton" ng-class="{ active: activeBattleTab === 'initial' }" ng-click="selectBattleTab('initial')">Initial</button>
+      <button type="button" class="landUnitsTabButton" ng-class="{ active: activeBattleTab === 'result' }" ng-click="selectBattleTab('result')">Result</button>
+      <button type="button" class="landUnitsTabButton" ng-class="{ active: activeBattleTab === 'final' }" ng-click="selectBattleTab('final')">Final</button>
+    </div>
+
+    <div class="landUnitsTabPane" ng-show="activeBattleTab === 'initial' || activeBattleTab === 'final'">
+      <div class="mathBattleStatePicker">
+        <label ng-repeat="state in getBattleSides() track by state" class="radio-inline">
+          <input type="radio" name="mathBattleSide" ng-checked="normalizeStateCode(selectedState) === normalizeStateCode(state)" ng-click="setSelectedState(state)" /> {{state}}
+        </label>
+        <button
+          type="button"
+          class="btn btn-default btn-xs mathBattleCalcButton"
+          ng-if="activeBattleTab === 'initial'"
+          ng-click="calculateInitialBrigadeValues()"
+          ng-disabled="mathBattleCalcBusy"
+        >
+          {{mathBattleCalcBusy ? 'Calculating...' : 'Calc'}}
+        </button>
+      </div>
+      <div class="text-danger" ng-if="mathBattleCalcError">{{mathBattleCalcError}}</div>
+
+      <div class="landUnitsTableWrap">
+        <table class="table landUnitsTable">
+          <thead>
+            <tr>
+              <th class="landUnitsNameCol">Brigade</th>
+              <th class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">Batt {{slot}}</th>
+              <th
+                class="mathBattleCalcCol"
+                ng-if="activeBattleTab === 'initial'"
+                title="Long-range calc includes all firing battalions, including artillery."
+              >
+                LR Calc
+              </th>
+              <th
+                class="mathBattleCalcCol"
+                ng-if="activeBattleTab === 'initial'"
+                title="Artillery-only long-range calc (REF_ArmyList item numbers 41-45)."
+              >
+                Art Calc
+              </th>
+              <th class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">HC Calc</th>
+              <th class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="brigade in getVisibleBrigades() track by (brigade.phase + ':' + brigade.state + ':' + brigade.name + ':' + $index)">
+              <td class="landUnitsNameCol">{{brigade.name}}</td>
+              <td class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">
+                <span class="landUnitsBattalionChip">{{formatBattalionDisplay(brigade, slot)}}</span>
+              </td>
+              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcLR != null ? brigade.calcLR : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcArtillery != null ? brigade.calcArtillery : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcHC != null ? brigade.calcHC : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcTotal != null ? brigade.calcTotal : '-'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="landUnitsTabPane" ng-show="activeBattleTab === 'result'">
+      <div class="mathBattleResultBlock" ng-if="getSelectedBattle()">
+        <div><strong>Mathematical battle No. {{getSelectedBattle().mathBattleNo}}</strong></div>
+        <div>Battle-Field: {{getSelectedBattle().x}} / {{getSelectedBattle().y}} Terrain: {{getSelectedBattle().terrain}}</div>
+        <div>Between the nations of: {{getSelectedBattle().stateA}} - {{getSelectedBattle().stateB}}</div>
+
+        <hr />
+
+        <div>Artillery fire: {{getSelectedBattle().stateA}} {{getSelectedBattlePhase('art').stateAMen}} Men, {{getSelectedBattlePhase('art').stateABattlePoints}} Battle points, {{getSelectedBattlePhase('art').stateALosses}} own losses</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;{{getSelectedBattle().stateB}} {{getSelectedBattlePhase('art').stateBMen}} Men, {{getSelectedBattlePhase('art').stateBBattlePoints}} Battle points, {{getSelectedBattlePhase('art').stateBLosses}} own losses</div>
+        <div>Long-range fighting: {{getSelectedBattle().stateA}} {{getSelectedBattlePhase('lr1').stateAMen}} Men, {{getSelectedBattlePhase('lr1').stateABattlePoints}} Battle points, {{getSelectedBattlePhase('lr1').stateALosses}} own losses</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;{{getSelectedBattle().stateB}} {{getSelectedBattlePhase('lr1').stateBMen}} Men, {{getSelectedBattlePhase('lr1').stateBBattlePoints}} Battle points, {{getSelectedBattlePhase('lr1').stateBLosses}} own losses</div>
+        <div>Hand-to-hand fighting: {{getSelectedBattle().stateA}} {{getSelectedBattlePhase('h2h1').stateAMen}} Men, {{getSelectedBattlePhase('h2h1').stateABattlePoints}} Battle points, {{getSelectedBattlePhase('h2h1').stateALosses}} own losses</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;{{getSelectedBattle().stateB}} {{getSelectedBattlePhase('h2h1').stateBMen}} Men, {{getSelectedBattlePhase('h2h1').stateBBattlePoints}} Battle points, {{getSelectedBattlePhase('h2h1').stateBLosses}} own losses</div>
+        <div>Hand-to-hand fighting: {{getSelectedBattle().stateA}} {{getSelectedBattlePhase('h2h2').stateAMen}} Men, {{getSelectedBattlePhase('h2h2').stateABattlePoints}} Battle points, {{getSelectedBattlePhase('h2h2').stateALosses}} own losses</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;{{getSelectedBattle().stateB}} {{getSelectedBattlePhase('h2h2').stateBMen}} Men, {{getSelectedBattlePhase('h2h2').stateBBattlePoints}} Battle points, {{getSelectedBattlePhase('h2h2').stateBLosses}} own losses</div>
+        <div>Long-range fighting: {{getSelectedBattle().stateA}} {{getSelectedBattlePhase('lr2').stateAMen}} Men, {{getSelectedBattlePhase('lr2').stateABattlePoints}} Battle points, {{getSelectedBattlePhase('lr2').stateALosses}} own losses</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;{{getSelectedBattle().stateB}} {{getSelectedBattlePhase('lr2').stateBMen}} Men, {{getSelectedBattlePhase('lr2').stateBBattlePoints}} Battle points, {{getSelectedBattlePhase('lr2').stateBLosses}} own losses</div>
+
+        <hr />
+
+        <div>Battle-rate of {{getSelectedBattle().stateA}}: {{getSelectedBattle().stateAMenTotal}} Men : {{getSelectedBattle().stateALossesTotal}} own losses = {{getSelectedBattle().stateABattleRate}}</div>
+        <div>Battle-rate of {{getSelectedBattle().stateB}}: {{getSelectedBattle().stateBMenTotal}} Men : {{getSelectedBattle().stateBLossesTotal}} own losses = {{getSelectedBattle().stateBBattleRate}}</div>
+        <div><strong>Winner of the battle: {{getSelectedBattle().winner}}</strong></div>
+      </div>
+    </div>
+  </div>
+</section>

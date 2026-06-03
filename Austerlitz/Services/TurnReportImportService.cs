@@ -356,7 +356,7 @@ namespace Austerlitz.Services
             try
             {
                 auDB.Database.ExecuteSqlCommand("DELETE FROM dbo.TR_MathBattleBrigades WHERE TurnId = @p0", turnId);
-                auDB.Database.ExecuteSqlCommand("DELETE FROM dbo.TR_MathBattleResult WHERE TurnId = @p0", turnId);
+                auDB.Database.ExecuteSqlCommand("DELETE FROM dbo.TR_MathBattleResultActual WHERE TurnId = @p0", turnId);
 
                 for (var i = 1; i < lineList.Count; i++)
                 {
@@ -374,7 +374,7 @@ namespace Austerlitz.Services
                         continue;
                     }
 
-                    var result = new TR_MathBattleResult
+                    var result = new TR_MathBattleResultActual
                     {
                         TurnId = turnId,
                         MathBattleNo = mathBattleNo
@@ -430,6 +430,11 @@ namespace Austerlitz.Services
 
         private static int FindPostBattleStart(ArrayList lineList, int cursor, int mathBattleNo)
         {
+            if (cursor >= 0 && cursor < lineList.Count && lineList[cursor].ToString().StartsWith("Army of ", StringComparison.Ordinal))
+            {
+                return cursor;
+            }
+
             for (var i = cursor; i < lineList.Count; i++)
             {
                 var line = lineList[i].ToString();
@@ -452,7 +457,7 @@ namespace Austerlitz.Services
             return -1;
         }
 
-        private static int ParseMathBattlePhases(ArrayList lineList, int cursor, TR_MathBattleResult result)
+        private static int ParseMathBattlePhases(ArrayList lineList, int cursor, TR_MathBattleResultActual result)
         {
             var longRangeCounter = 0;
             var handToHandCounter = 0;
@@ -542,7 +547,7 @@ namespace Austerlitz.Services
             return cursor;
         }
 
-        private static int ParseMathBattleRatesAndWinner(ArrayList lineList, int cursor, TR_MathBattleResult result)
+        private static int ParseMathBattleRatesAndWinner(ArrayList lineList, int cursor, TR_MathBattleResultActual result)
         {
             for (var i = cursor; i < lineList.Count; i++)
             {
@@ -681,7 +686,7 @@ namespace Austerlitz.Services
             assign(type, ParseDigitsToInt(m.Groups["ef"].Value), ParseDigitsToInt(m.Groups["size"].Value));
         }
 
-        private static void ParseStatesLine(TR_MathBattleResult result, string betweenLine)
+        private static void ParseStatesLine(TR_MathBattleResultActual result, string betweenLine)
         {
             var nationText = betweenLine.Replace("Between the nations of:", "").Trim();
             var nationParts = nationText.Split(new[] { " - " }, StringSplitOptions.None);
@@ -694,7 +699,7 @@ namespace Austerlitz.Services
             result.StateB = TurnReportImportParsingUtils.GetStateLetter(nationParts[1].Trim());
         }
 
-        private static void ParseBattleFieldLine(TR_MathBattleResult result, string battleFieldLine)
+        private static void ParseBattleFieldLine(TR_MathBattleResultActual result, string battleFieldLine)
         {
             var match = Regex.Match(battleFieldLine, @"Battle-Field:\s*(?<x>\d+)\s*/\s*(?<y>\d+)\s+Terrain:\s*(?<terrain>\S)");
             if (!match.Success)
@@ -739,10 +744,10 @@ namespace Austerlitz.Services
             };
         }
 
-        private static void InsertMathBattleResult(DbContext auDB, TR_MathBattleResult item)
+        private static void InsertMathBattleResult(DbContext auDB, TR_MathBattleResultActual item)
         {
             auDB.Database.ExecuteSqlCommand(@"
-INSERT INTO dbo.TR_MathBattleResult (
+INSERT INTO dbo.TR_MathBattleResultActual (
 TurnId, MathBattleNo, StateA, StateB, Name, X, Y, Terrain,
 StateAMenTotal, StateALossesTotal, StateABattleRate, StateBMenTotal, StateBLossesTotal, StateBBattleRate,
 ArtStateAMen, ArtStateABattlePoints, ArtStateALosses, ArtStateBMen, ArtStateBBattlePoints, ArtStateBLosses,

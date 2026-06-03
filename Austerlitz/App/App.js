@@ -21,6 +21,10 @@
             controller: 'landUnitsController',
             templateUrl: '/Templates/landUnitsTemplate.html'
         })
+        .when('/Military/MathBattles', {
+            controller: 'mathBattlesController',
+            templateUrl: '/Templates/mathBattlesTemplate.html'
+        })
         .when('/Section/:sectionName', {
             controller: 'sectionPlaceholderController',
             templateUrl: '/Templates/sectionPlaceholderTemplate.html'

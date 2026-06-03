@@ -1665,3 +1665,33 @@ textarea {
     color: #aaaaaa;
     cursor: not-allowed;
 }
+
+.mathBattlesPage {
+    max-width: 100%;
+}
+
+.mathBattleSelector {
+    margin: 12px 0;
+}
+
+.mathBattleSelector .btn {
+    margin-right: 6px;
+}
+
+.mathBattleStatePicker {
+    margin: 8px 0 14px;
+}
+
+.mathBattleCalcButton {
+    margin-left: 10px;
+}
+
+.mathBattleCalcCol {
+    text-align: right;
+    min-width: 72px;
+}
+
+.mathBattleResultBlock {
+    font-family: "Courier New", monospace;
+    line-height: 1.45;
+}

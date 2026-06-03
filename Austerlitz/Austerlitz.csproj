@@ -260,6 +260,7 @@
     <Content Include="App\landUnits\landUnitsRenameFactory.js" />
     <Content Include="App\landUnits\landUnitsUiFactory.js" />
     <Content Include="App\landUnitsController.js" />
+    <Content Include="App\mathBattlesController.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\menuController.js" />
     <Content Include="App\simBattleFactory.js" />
@@ -668,6 +669,7 @@
     <Content Include="Templates\homeTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />
+    <Content Include="Templates\mathBattlesTemplate.html" />
     <Content Include="Templates\sectionPlaceholderTemplate.html" />
     <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />

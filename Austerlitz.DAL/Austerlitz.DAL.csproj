@@ -116,7 +116,7 @@
     <Compile Include="TR_MathBattleBrigades.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
-    <Compile Include="TR_MathBattleResult.cs">
+    <Compile Include="TR_MathBattleResultActual.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
     <Compile Include="TR_MerchantShips.cs">

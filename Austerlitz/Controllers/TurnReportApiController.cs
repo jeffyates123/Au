@@ -3,6 +3,7 @@ using Austerlitz.DAL.Management;
 using Austerlitz.Models.TurnReport;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -154,9 +155,188 @@ namespace Austerlitz.Controllers
 
                 turnReport.MovementItemList = normalizedMovementItems.ToArray();
                 turnReport.MapCoordinates = GetMapCoordinates(turnId, normalizedMovementItems);
+                turnReport.MathBattles = getTRMathBattles(turnId);
 
                 return turnReport;
             }
+        }
+
+        public MathBattleDetails[] getTRMathBattles(string turnId)
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                var results = dataContext.Database.SqlQuery<MathBattleResultRow>(@"
+SELECT
+    TurnId, MathBattleNo, StateA, StateB, Name, X, Y, Terrain,
+    StateAMenTotal, StateALossesTotal, StateABattleRate, StateBMenTotal, StateBLossesTotal, StateBBattleRate,
+    ArtStateAMen, ArtStateABattlePoints, ArtStateALosses, ArtStateBMen, ArtStateBBattlePoints, ArtStateBLosses,
+    LR1StateAMen, LR1StateABattlePoints, LR1StateALosses, LR1StateBMen, LR1StateBBattlePoints, LR1StateBLosses,
+    H2H1StateAMen, H2H1StateABattlePoints, H2H1StateALosses, H2H1StateBMen, H2H1StateBBattlePoints, H2H1StateBLosses,
+    H2H2StateAMen, H2H2StateABattlePoints, H2H2StateALosses, H2H2StateBMen, H2H2StateBBattlePoints, H2H2StateBLosses,
+    LR2StateAMen, LR2StateABattlePoints, LR2StateALosses, LR2StateBMen, LR2StateBBattlePoints, LR2StateBLosses
+FROM dbo.TR_MathBattleResultActual
+WHERE TurnId = @turnId
+ORDER BY MathBattleNo", new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();
+
+                var brigades = dataContext.Database.SqlQuery<MathBattleBrigadeRow>(@"
+SELECT
+    TurnId, MathBattleNo, State, Name, Phase,
+    Batt1Type, Batt1EF, Batt1Size, Batt2Type, Batt2EF, Batt2Size,
+    Batt3Type, Batt3EF, Batt3Size, Batt4Type, Batt4EF, Batt4Size,
+    Batt5Type, Batt5EF, Batt5Size, Batt6Type, Batt6EF, Batt6Size,
+    Batt7Type, Batt7EF, Batt7Size
+FROM dbo.TR_MathBattleBrigades
+WHERE TurnId = @turnId
+ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();
+
+                return results.Select(result => new MathBattleDetails
+                {
+                    MathBattleNo = result.MathBattleNo,
+                    StateA = result.StateA,
+                    StateB = result.StateB,
+                    Winner = result.Name,
+                    X = result.X,
+                    Y = result.Y,
+                    Terrain = result.Terrain,
+                    StateAMenTotal = result.StateAMenTotal,
+                    StateALossesTotal = result.StateALossesTotal,
+                    StateABattleRate = result.StateABattleRate,
+                    StateBMenTotal = result.StateBMenTotal,
+                    StateBLossesTotal = result.StateBLossesTotal,
+                    StateBBattleRate = result.StateBBattleRate,
+                    Art = MapPhase(result.ArtStateAMen, result.ArtStateABattlePoints, result.ArtStateALosses, result.ArtStateBMen, result.ArtStateBBattlePoints, result.ArtStateBLosses),
+                    LR1 = MapPhase(result.LR1StateAMen, result.LR1StateABattlePoints, result.LR1StateALosses, result.LR1StateBMen, result.LR1StateBBattlePoints, result.LR1StateBLosses),
+                    H2H1 = MapPhase(result.H2H1StateAMen, result.H2H1StateABattlePoints, result.H2H1StateALosses, result.H2H1StateBMen, result.H2H1StateBBattlePoints, result.H2H1StateBLosses),
+                    H2H2 = MapPhase(result.H2H2StateAMen, result.H2H2StateABattlePoints, result.H2H2StateALosses, result.H2H2StateBMen, result.H2H2StateBBattlePoints, result.H2H2StateBLosses),
+                    LR2 = MapPhase(result.LR2StateAMen, result.LR2StateABattlePoints, result.LR2StateALosses, result.LR2StateBMen, result.LR2StateBBattlePoints, result.LR2StateBLosses),
+                    Brigades = brigades
+                        .Where(x => x.MathBattleNo == result.MathBattleNo)
+                        .Select(MapBrigade)
+                        .ToArray()
+                }).ToArray();
+            }
+        }
+
+        private static MathBattlePhaseMetrics MapPhase(int stateAMen, int stateABattlePoints, int stateALosses, int stateBMen, int stateBBattlePoints, int stateBLosses)
+        {
+            return new MathBattlePhaseMetrics
+            {
+                StateAMen = stateAMen,
+                StateABattlePoints = stateABattlePoints,
+                StateALosses = stateALosses,
+                StateBMen = stateBMen,
+                StateBBattlePoints = stateBBattlePoints,
+                StateBLosses = stateBLosses
+            };
+        }
+
+        private static MathBattleBrigade MapBrigade(MathBattleBrigadeRow brigade)
+        {
+            return new MathBattleBrigade
+            {
+                State = brigade.State,
+                Phase = brigade.Phase,
+                Name = brigade.Name,
+                Batt1Type = brigade.Batt1Type,
+                Batt1EF = brigade.Batt1EF,
+                Batt1Size = brigade.Batt1Size,
+                Batt2Type = brigade.Batt2Type,
+                Batt2EF = brigade.Batt2EF,
+                Batt2Size = brigade.Batt2Size,
+                Batt3Type = brigade.Batt3Type,
+                Batt3EF = brigade.Batt3EF,
+                Batt3Size = brigade.Batt3Size,
+                Batt4Type = brigade.Batt4Type,
+                Batt4EF = brigade.Batt4EF,
+                Batt4Size = brigade.Batt4Size,
+                Batt5Type = brigade.Batt5Type,
+                Batt5EF = brigade.Batt5EF,
+                Batt5Size = brigade.Batt5Size,
+                Batt6Type = brigade.Batt6Type,
+                Batt6EF = brigade.Batt6EF,
+                Batt6Size = brigade.Batt6Size,
+                Batt7Type = brigade.Batt7Type,
+                Batt7EF = brigade.Batt7EF,
+                Batt7Size = brigade.Batt7Size
+            };
+        }
+
+        private class MathBattleResultRow
+        {
+            public string TurnId { get; set; }
+            public int MathBattleNo { get; set; }
+            public string StateA { get; set; }
+            public string StateB { get; set; }
+            public string Name { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public string Terrain { get; set; }
+            public int StateAMenTotal { get; set; }
+            public int StateALossesTotal { get; set; }
+            public int StateABattleRate { get; set; }
+            public int StateBMenTotal { get; set; }
+            public int StateBLossesTotal { get; set; }
+            public int StateBBattleRate { get; set; }
+            public int ArtStateAMen { get; set; }
+            public int ArtStateABattlePoints { get; set; }
+            public int ArtStateALosses { get; set; }
+            public int ArtStateBMen { get; set; }
+            public int ArtStateBBattlePoints { get; set; }
+            public int ArtStateBLosses { get; set; }
+            public int LR1StateAMen { get; set; }
+            public int LR1StateABattlePoints { get; set; }
+            public int LR1StateALosses { get; set; }
+            public int LR1StateBMen { get; set; }
+            public int LR1StateBBattlePoints { get; set; }
+            public int LR1StateBLosses { get; set; }
+            public int H2H1StateAMen { get; set; }
+            public int H2H1StateABattlePoints { get; set; }
+            public int H2H1StateALosses { get; set; }
+            public int H2H1StateBMen { get; set; }
+            public int H2H1StateBBattlePoints { get; set; }
+            public int H2H1StateBLosses { get; set; }
+            public int H2H2StateAMen { get; set; }
+            public int H2H2StateABattlePoints { get; set; }
+            public int H2H2StateALosses { get; set; }
+            public int H2H2StateBMen { get; set; }
+            public int H2H2StateBBattlePoints { get; set; }
+            public int H2H2StateBLosses { get; set; }
+            public int LR2StateAMen { get; set; }
+            public int LR2StateABattlePoints { get; set; }
+            public int LR2StateALosses { get; set; }
+            public int LR2StateBMen { get; set; }
+            public int LR2StateBBattlePoints { get; set; }
+            public int LR2StateBLosses { get; set; }
+        }
+
+        private class MathBattleBrigadeRow
+        {
+            public string TurnId { get; set; }
+            public int MathBattleNo { get; set; }
+            public string State { get; set; }
+            public string Name { get; set; }
+            public string Phase { get; set; }
+            public string Batt1Type { get; set; }
+            public int? Batt1EF { get; set; }
+            public int? Batt1Size { get; set; }
+            public string Batt2Type { get; set; }
+            public int? Batt2EF { get; set; }
+            public int? Batt2Size { get; set; }
+            public string Batt3Type { get; set; }
+            public int? Batt3EF { get; set; }
+            public int? Batt3Size { get; set; }
+            public string Batt4Type { get; set; }
+            public int? Batt4EF { get; set; }
+            public int? Batt4Size { get; set; }
+            public string Batt5Type { get; set; }
+            public int? Batt5EF { get; set; }
+            public int? Batt5Size { get; set; }
+            public string Batt6Type { get; set; }
+            public int? Batt6EF { get; set; }
+            public int? Batt6Size { get; set; }
+            public string Batt7Type { get; set; }
+            public int? Batt7EF { get; set; }
+            public int? Batt7Size { get; set; }
         }
 
         public int AxisValue(string axisValue)

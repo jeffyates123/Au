@@ -10,5 +10,10 @@
             $http.get('/Api/TurnReportApi/getMapCoordinates?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
+        getTRMathBattles: function (turnId) {
+            var deferred = $q.defer();
+            $http.get('/Api/TurnReportApi/getTRMathBattles?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        }
     }
 });
