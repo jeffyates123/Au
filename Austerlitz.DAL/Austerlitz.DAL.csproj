@@ -113,6 +113,12 @@
     <Compile Include="TR_MapCoordinates.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_MathBattleBrigades.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_MathBattleResult.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_MerchantShips.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>

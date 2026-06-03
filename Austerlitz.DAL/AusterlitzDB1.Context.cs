@@ -36,6 +36,8 @@ namespace Austerlitz.DAL
         public virtual DbSet<TR_Commanders> TR_Commanders { get; set; }
         public virtual DbSet<TR_MapCoordinates> TR_MapCoordinates { get; set; }
         public virtual DbSet<TR_MerchantShips> TR_MerchantShips { get; set; }
+        public virtual DbSet<TR_MathBattleBrigades> TR_MathBattleBrigades { get; set; }
+        public virtual DbSet<TR_MathBattleResult> TR_MathBattleResult { get; set; }
         public virtual DbSet<TR_Spies> TR_Spies { get; set; }
         public virtual DbSet<TR_StateRelationships> TR_StateRelationships { get; set; }
         public virtual DbSet<TR_TradingPortsAndCities> TR_TradingPortsAndCities { get; set; }
