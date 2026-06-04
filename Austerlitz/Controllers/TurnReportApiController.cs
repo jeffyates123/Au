@@ -180,7 +180,8 @@ ORDER BY MathBattleNo", new SqlParameter("@turnId", turnId ?? string.Empty)).ToA
 
                 var brigades = dataContext.Database.SqlQuery<MathBattleBrigadeRow>(@"
 SELECT
-    TurnId, MathBattleNo, State, Name, Phase,
+    MathBattleBrigadeId, TurnId, MathBattleNo, State, Name, Phase,
+    CalclLR AS CalcLR, CalcArtillery AS CalcArtileery, CalclHC AS CalcHC, CalcTotal,
     Batt1Type, Batt1EF, Batt1Size, Batt2Type, Batt2EF, Batt2Size,
     Batt3Type, Batt3EF, Batt3Size, Batt4Type, Batt4EF, Batt4Size,
     Batt5Type, Batt5EF, Batt5Size, Batt6Type, Batt6EF, Batt6Size,
@@ -230,13 +231,56 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
             };
         }
 
+        [HttpPost]
+        public IHttpActionResult saveTRMathBattleBrigadeCalcs(MathBattleBrigadeCalcSaveRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.TurnId) || request.Rows == null || request.Rows.Length == 0)
+            {
+                return Ok();
+            }
+
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                foreach (var row in request.Rows)
+                {
+                    if (row == null || row.MathBattleBrigadeId <= 0)
+                    {
+                        continue;
+                    }
+
+                    dataContext.Database.ExecuteSqlCommand(@"
+UPDATE dbo.TR_MathBattleBrigades
+SET CalclLR = @p0,
+    CalcArtillery = @p1,
+    CalclHC = @p2,
+    CalcTotal = @p3
+WHERE TurnId = @p4
+  AND MathBattleBrigadeId = @p5",
+                        row.CalcLR,
+                        row.CalcArtileery,
+                        row.CalcHC,
+                        row.CalcTotal,
+                        request.TurnId,
+                        row.MathBattleBrigadeId);
+                }
+            }
+
+            return Ok();
+        }
+
         private static MathBattleBrigade MapBrigade(MathBattleBrigadeRow brigade)
         {
             return new MathBattleBrigade
             {
+                MathBattleBrigadeId = brigade.MathBattleBrigadeId,
+                MathBattleNo = brigade.MathBattleNo,
                 State = brigade.State,
                 Phase = brigade.Phase,
                 Name = brigade.Name,
+                CalcLR = brigade.CalcLR,
+                CalcArtileery = brigade.CalcArtileery,
+                CalcHC = brigade.CalcHC,
+                CalcTotal = brigade.CalcTotal,
                 Batt1Type = brigade.Batt1Type,
                 Batt1EF = brigade.Batt1EF,
                 Batt1Size = brigade.Batt1Size,
@@ -311,11 +355,16 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
 
         private class MathBattleBrigadeRow
         {
+            public int MathBattleBrigadeId { get; set; }
             public string TurnId { get; set; }
             public int MathBattleNo { get; set; }
             public string State { get; set; }
             public string Name { get; set; }
             public string Phase { get; set; }
+            public int? CalcLR { get; set; }
+            public int? CalcArtileery { get; set; }
+            public int? CalcHC { get; set; }
+            public int? CalcTotal { get; set; }
             public string Batt1Type { get; set; }
             public int? Batt1EF { get; set; }
             public int? Batt1Size { get; set; }
@@ -337,6 +386,21 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
             public string Batt7Type { get; set; }
             public int? Batt7EF { get; set; }
             public int? Batt7Size { get; set; }
+        }
+
+        public class MathBattleBrigadeCalcSaveRequest
+        {
+            public string TurnId { get; set; }
+            public MathBattleBrigadeCalcSaveRow[] Rows { get; set; }
+        }
+
+        public class MathBattleBrigadeCalcSaveRow
+        {
+            public int MathBattleBrigadeId { get; set; }
+            public int? CalcLR { get; set; }
+            public int? CalcArtileery { get; set; }
+            public int? CalcHC { get; set; }
+            public int? CalcTotal { get; set; }
         }
 
         public int AxisValue(string axisValue)

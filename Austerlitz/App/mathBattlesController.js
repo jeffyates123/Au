@@ -266,6 +266,7 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
         brigade.calcLR = calcLR;
         brigade.calcArtillery = calcArtillery;
+        brigade.calcArtileery = calcArtillery;
         brigade.calcHC = calcHC;
         brigade.calcTotal = calcTotal;
     };
@@ -286,10 +287,38 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             angular.forEach(brigades, function (brigade) {
                 $scope.calculateBrigadeMathValues(brigade, armyLookup || {});
             });
+
+            var calcRows = brigades.map(function (brigade) {
+                return {
+                    mathBattleBrigadeId: brigade.mathBattleBrigadeId,
+                    calcLR: brigade.calcLR,
+                    calcArtileery: brigade.calcArtillery,
+                    calcHC: brigade.calcHC,
+                    calcTotal: brigade.calcTotal
+                };
+            });
+
+            return turnReportFactory.saveTRMathBattleBrigadeCalcs($scope.masterData.turnId, calcRows);
         }, function () {
             $scope.mathBattleCalcError = "Could not calculate brigade values right now.";
+        }).then(null, function () {
+            $scope.mathBattleCalcError = "Calculated values shown, but could not save to database.";
         }).finally(function () {
             $scope.mathBattleCalcBusy = false;
+        });
+    };
+
+    $scope.normalizeLoadedCalcFields = function (battles) {
+        angular.forEach(battles || [], function (battle) {
+            angular.forEach((battle && battle.brigades) || [], function (brigade) {
+                if (!brigade) {
+                    return;
+                }
+
+                if (brigade.calcArtillery == null && brigade.calcArtileery != null) {
+                    brigade.calcArtillery = brigade.calcArtileery;
+                }
+            });
         });
     };
 
@@ -304,6 +333,7 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         $scope.mathBattleLoadError = "";
         turnReportFactory.getTRMathBattles($scope.masterData.turnId).then(function (battles) {
             $scope.mathBattles = battles || [];
+            $scope.normalizeLoadedCalcFields($scope.mathBattles);
             $scope.armyListLookupByState = {};
             if ($scope.mathBattles.length > 0) {
                 $scope.selectBattle($scope.mathBattles[0].mathBattleNo);

@@ -4,11 +4,16 @@ namespace Austerlitz.DAL
 
     public partial class TR_MathBattleBrigades
     {
+        public int MathBattleBrigadeId { get; set; }
         public string TurnId { get; set; }
         public int MathBattleNo { get; set; }
         public string State { get; set; }
         public string Name { get; set; }
         public string Phase { get; set; }
+        public Nullable<int> CalcLR { get; set; }
+        public Nullable<int> CalcArtileery { get; set; }
+        public Nullable<int> CalcHC { get; set; }
+        public Nullable<int> CalcTotal { get; set; }
         public string Batt1Type { get; set; }
         public Nullable<int> Batt1EF { get; set; }
         public Nullable<int> Batt1Size { get; set; }

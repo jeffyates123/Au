@@ -37,9 +37,15 @@ namespace Austerlitz.Models.TurnReport
 
     public class MathBattleBrigade
     {
+        public int MathBattleBrigadeId { get; set; }
+        public int MathBattleNo { get; set; }
         public string State { get; set; }
         public string Phase { get; set; }
         public string Name { get; set; }
+        public int? CalcLR { get; set; }
+        public int? CalcArtileery { get; set; }
+        public int? CalcHC { get; set; }
+        public int? CalcTotal { get; set; }
         public string Batt1Type { get; set; }
         public int? Batt1EF { get; set; }
         public int? Batt1Size { get; set; }
