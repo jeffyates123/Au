@@ -173,7 +173,8 @@ SELECT
     LR1StateAMen, LR1StateABattlePoints, LR1StateALosses, LR1StateBMen, LR1StateBBattlePoints, LR1StateBLosses,
     H2H1StateAMen, H2H1StateABattlePoints, H2H1StateALosses, H2H1StateBMen, H2H1StateBBattlePoints, H2H1StateBLosses,
     H2H2StateAMen, H2H2StateABattlePoints, H2H2StateALosses, H2H2StateBMen, H2H2StateBBattlePoints, H2H2StateBLosses,
-    LR2StateAMen, LR2StateABattlePoints, LR2StateALosses, LR2StateBMen, LR2StateBBattlePoints, LR2StateBLosses
+    LR2StateAMen, LR2StateABattlePoints, LR2StateALosses, LR2StateBMen, LR2StateBBattlePoints, LR2StateBLosses,
+    IsEstimated
 FROM dbo.TR_MathBattleResultActual
 WHERE TurnId = @turnId
 ORDER BY MathBattleNo", new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();
@@ -193,6 +194,7 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
                 return results.Select(result => new MathBattleDetails
                 {
                     MathBattleNo = result.MathBattleNo,
+                    IsEstimated = result.IsEstimated,
                     StateA = result.StateA,
                     StateB = result.StateB,
                     Winner = result.Name,
@@ -232,6 +234,140 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
         }
 
         [HttpPost]
+        public IHttpActionResult createTREstimatedMathBattle(CreateEstimatedMathBattleRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.TurnId) || request.SourceMathBattleNo <= 0)
+            {
+                return BadRequest("A valid turn and source battle are required.");
+            }
+
+            var sourcePhase = ((request.SourcePhase ?? string.Empty) + string.Empty).Trim().ToUpperInvariant();
+            if (sourcePhase != "PRE" && sourcePhase != "POST")
+            {
+                return BadRequest("Source phase must be PRE or POST.");
+            }
+
+            using (var dataContext = new AusterlitzDbContext())
+            using (var transaction = dataContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    var hasTwoSides = dataContext.Database.SqlQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.TR_MathBattleResultActual
+WHERE TurnId = @turnId
+  AND MathBattleNo = @sourceMathBattleNo
+  AND ISNULL(LTRIM(RTRIM(StateA)), '') <> ''
+  AND ISNULL(LTRIM(RTRIM(StateB)), '') <> ''",
+                        new SqlParameter("@turnId", request.TurnId),
+                        new SqlParameter("@sourceMathBattleNo", request.SourceMathBattleNo)).SingleOrDefault() > 0;
+                    if (!hasTwoSides)
+                    {
+                        transaction.Rollback();
+                        return BadRequest("Source battle must have two armies present.");
+                    }
+
+                    var sourceBrigadeCount = dataContext.Database.SqlQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.TR_MathBattleBrigades
+WHERE TurnId = @turnId
+  AND MathBattleNo = @sourceMathBattleNo
+  AND UPPER(LTRIM(RTRIM(Phase))) = @sourcePhase",
+                        new SqlParameter("@turnId", request.TurnId),
+                        new SqlParameter("@sourceMathBattleNo", request.SourceMathBattleNo),
+                        new SqlParameter("@sourcePhase", sourcePhase)).SingleOrDefault();
+                    if (sourceBrigadeCount <= 0)
+                    {
+                        transaction.Rollback();
+                        return BadRequest("No source brigades found for the selected phase.");
+                    }
+
+                    var nextMathBattleNo = dataContext.Database.SqlQuery<int>(@"
+SELECT CASE
+    WHEN ISNULL(MAX(MathBattleNo), 9999) < 10000 THEN 10000
+    ELSE ISNULL(MAX(MathBattleNo), 9999) + 1
+END
+FROM dbo.TR_MathBattleResultActual
+WHERE TurnId = @turnId", new SqlParameter("@turnId", request.TurnId)).Single();
+
+                    var insertedResults = dataContext.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.TR_MathBattleResultActual (
+    TurnId, MathBattleNo, StateA, StateB, Name, X, Y, Terrain,
+    StateAMenTotal, StateALossesTotal, StateABattleRate, StateBMenTotal, StateBLossesTotal, StateBBattleRate,
+    ArtStateAMen, ArtStateABattlePoints, ArtStateALosses, ArtStateBMen, ArtStateBBattlePoints, ArtStateBLosses,
+    LR1StateAMen, LR1StateABattlePoints, LR1StateALosses, LR1StateBMen, LR1StateBBattlePoints, LR1StateBLosses,
+    H2H1StateAMen, H2H1StateABattlePoints, H2H1StateALosses, H2H1StateBMen, H2H1StateBBattlePoints, H2H1StateBLosses,
+    H2H2StateAMen, H2H2StateABattlePoints, H2H2StateALosses, H2H2StateBMen, H2H2StateBBattlePoints, H2H2StateBLosses,
+    LR2StateAMen, LR2StateABattlePoints, LR2StateALosses, LR2StateBMen, LR2StateBBattlePoints, LR2StateBLosses,
+    IsEstimated
+)
+SELECT
+    TurnId, @nextMathBattleNo, StateA, StateB, @estimatedName, X, Y, Terrain,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    1
+FROM dbo.TR_MathBattleResultActual
+WHERE TurnId = @turnId
+  AND MathBattleNo = @sourceMathBattleNo",
+                        new SqlParameter("@nextMathBattleNo", nextMathBattleNo),
+                        new SqlParameter("@estimatedName", "ESTIMATED"),
+                        new SqlParameter("@turnId", request.TurnId),
+                        new SqlParameter("@sourceMathBattleNo", request.SourceMathBattleNo));
+                    if (insertedResults <= 0)
+                    {
+                        transaction.Rollback();
+                        return BadRequest("Source battle result was not found.");
+                    }
+
+                    var insertedBrigades = dataContext.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.TR_MathBattleBrigades (
+    TurnId, MathBattleNo, State, Name, Phase,
+    CalclLR, CalcArtillery, CalclHC, CalcTotal,
+    Batt1Type, Batt1EF, Batt1Size, Batt2Type, Batt2EF, Batt2Size,
+    Batt3Type, Batt3EF, Batt3Size, Batt4Type, Batt4EF, Batt4Size,
+    Batt5Type, Batt5EF, Batt5Size, Batt6Type, Batt6EF, Batt6Size,
+    Batt7Type, Batt7EF, Batt7Size
+)
+SELECT
+    TurnId, @nextMathBattleNo, State, Name, 'PRE',
+    CalclLR, CalcArtillery, CalclHC, CalcTotal,
+    Batt1Type, Batt1EF, Batt1Size, Batt2Type, Batt2EF, Batt2Size,
+    Batt3Type, Batt3EF, Batt3Size, Batt4Type, Batt4EF, Batt4Size,
+    Batt5Type, Batt5EF, Batt5Size, Batt6Type, Batt6EF, Batt6Size,
+    Batt7Type, Batt7EF, Batt7Size
+FROM dbo.TR_MathBattleBrigades
+WHERE TurnId = @turnId
+  AND MathBattleNo = @sourceMathBattleNo
+  AND UPPER(LTRIM(RTRIM(Phase))) = @sourcePhase",
+                        new SqlParameter("@nextMathBattleNo", nextMathBattleNo),
+                        new SqlParameter("@turnId", request.TurnId),
+                        new SqlParameter("@sourceMathBattleNo", request.SourceMathBattleNo),
+                        new SqlParameter("@sourcePhase", sourcePhase));
+                    if (insertedBrigades <= 0)
+                    {
+                        transaction.Rollback();
+                        return BadRequest("No brigades were copied.");
+                    }
+
+                    transaction.Commit();
+                    return Ok(new CreateEstimatedMathBattleResponse
+                    {
+                        MathBattleNo = nextMathBattleNo
+                    });
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        [HttpPost]
         public IHttpActionResult saveTRMathBattleBrigadeCalcs(MathBattleBrigadeCalcSaveRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.TurnId) || request.Rows == null || request.Rows.Length == 0)
@@ -240,15 +376,18 @@ ORDER BY MathBattleNo, State, Phase, Name", new SqlParameter("@turnId", turnId ?
             }
 
             using (var dataContext = new AusterlitzDbContext())
+            using (var transaction = dataContext.Database.BeginTransaction())
             {
-                foreach (var row in request.Rows)
+                try
                 {
-                    if (row == null || row.MathBattleBrigadeId <= 0)
+                    foreach (var row in request.Rows)
                     {
-                        continue;
-                    }
+                        if (row == null || row.MathBattleBrigadeId <= 0)
+                        {
+                            continue;
+                        }
 
-                    dataContext.Database.ExecuteSqlCommand(@"
+                        dataContext.Database.ExecuteSqlCommand(@"
 UPDATE dbo.TR_MathBattleBrigades
 SET CalclLR = @p0,
     CalcArtillery = @p1,
@@ -256,12 +395,100 @@ SET CalclLR = @p0,
     CalcTotal = @p3
 WHERE TurnId = @p4
   AND MathBattleBrigadeId = @p5",
-                        row.CalcLR,
-                        row.CalcArtileery,
-                        row.CalcHC,
-                        row.CalcTotal,
-                        request.TurnId,
-                        row.MathBattleBrigadeId);
+                            row.CalcLR,
+                            row.CalcArtileery,
+                            row.CalcHC,
+                            row.CalcTotal,
+                            request.TurnId,
+                            row.MathBattleBrigadeId);
+                    }
+
+                    if (request.MathBattleNo.HasValue && request.MathBattleNo.Value > 0)
+                    {
+                        dataContext.Database.ExecuteSqlCommand(@"
+UPDATE R
+SET
+    Name = '',
+    StateAMenTotal = ISNULL(AggA.Men, 0),
+    StateALossesTotal = 0,
+    StateABattleRate = 0,
+    StateBMenTotal = ISNULL(AggB.Men, 0),
+    StateBLossesTotal = 0,
+    StateBBattleRate = 0,
+    ArtStateAMen = ISNULL(AggA.Men, 0),
+    ArtStateABattlePoints = ISNULL(AggA.Art, 0),
+    ArtStateALosses = 0,
+    ArtStateBMen = ISNULL(AggB.Men, 0),
+    ArtStateBBattlePoints = ISNULL(AggB.Art, 0),
+    ArtStateBLosses = 0,
+    LR1StateAMen = ISNULL(AggA.Men, 0),
+    LR1StateABattlePoints = ISNULL(AggA.LR, 0),
+    LR1StateALosses = 0,
+    LR1StateBMen = ISNULL(AggB.Men, 0),
+    LR1StateBBattlePoints = ISNULL(AggB.LR, 0),
+    LR1StateBLosses = 0,
+    H2H1StateAMen = ISNULL(AggA.Men, 0),
+    H2H1StateABattlePoints = ISNULL(AggA.HC, 0),
+    H2H1StateALosses = 0,
+    H2H1StateBMen = ISNULL(AggB.Men, 0),
+    H2H1StateBBattlePoints = ISNULL(AggB.HC, 0),
+    H2H1StateBLosses = 0,
+    H2H2StateAMen = ISNULL(AggA.Men, 0),
+    H2H2StateABattlePoints = ISNULL(AggA.HC, 0),
+    H2H2StateALosses = 0,
+    H2H2StateBMen = ISNULL(AggB.Men, 0),
+    H2H2StateBBattlePoints = ISNULL(AggB.HC, 0),
+    H2H2StateBLosses = 0,
+    LR2StateAMen = ISNULL(AggA.Men, 0),
+    LR2StateABattlePoints = ISNULL(AggA.LR, 0),
+    LR2StateALosses = 0,
+    LR2StateBMen = ISNULL(AggB.Men, 0),
+    LR2StateBBattlePoints = ISNULL(AggB.LR, 0),
+    LR2StateBLosses = 0
+FROM dbo.TR_MathBattleResultActual R
+OUTER APPLY (
+    SELECT
+        SUM(
+            ISNULL(B.Batt1Size, 0) + ISNULL(B.Batt2Size, 0) + ISNULL(B.Batt3Size, 0) +
+            ISNULL(B.Batt4Size, 0) + ISNULL(B.Batt5Size, 0) + ISNULL(B.Batt6Size, 0) + ISNULL(B.Batt7Size, 0)
+        ) AS Men,
+        SUM(ISNULL(B.CalcArtillery, 0)) AS Art,
+        SUM(ISNULL(B.CalclLR, 0)) AS LR,
+        SUM(ISNULL(B.CalclHC, 0)) AS HC
+    FROM dbo.TR_MathBattleBrigades B
+    WHERE B.TurnId = R.TurnId
+      AND B.MathBattleNo = R.MathBattleNo
+      AND UPPER(LTRIM(RTRIM(B.Phase))) = 'PRE'
+      AND B.State = R.StateA
+) AggA
+OUTER APPLY (
+    SELECT
+        SUM(
+            ISNULL(B.Batt1Size, 0) + ISNULL(B.Batt2Size, 0) + ISNULL(B.Batt3Size, 0) +
+            ISNULL(B.Batt4Size, 0) + ISNULL(B.Batt5Size, 0) + ISNULL(B.Batt6Size, 0) + ISNULL(B.Batt7Size, 0)
+        ) AS Men,
+        SUM(ISNULL(B.CalcArtillery, 0)) AS Art,
+        SUM(ISNULL(B.CalclLR, 0)) AS LR,
+        SUM(ISNULL(B.CalclHC, 0)) AS HC
+    FROM dbo.TR_MathBattleBrigades B
+    WHERE B.TurnId = R.TurnId
+      AND B.MathBattleNo = R.MathBattleNo
+      AND UPPER(LTRIM(RTRIM(B.Phase))) = 'PRE'
+      AND B.State = R.StateB
+) AggB
+WHERE R.TurnId = @p0
+  AND R.MathBattleNo = @p1
+  AND R.IsEstimated = 1",
+                            request.TurnId,
+                            request.MathBattleNo.Value);
+                    }
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
             }
 
@@ -351,6 +578,7 @@ WHERE TurnId = @p4
             public int LR2StateBMen { get; set; }
             public int LR2StateBBattlePoints { get; set; }
             public int LR2StateBLosses { get; set; }
+            public bool IsEstimated { get; set; }
         }
 
         private class MathBattleBrigadeRow
@@ -391,7 +619,20 @@ WHERE TurnId = @p4
         public class MathBattleBrigadeCalcSaveRequest
         {
             public string TurnId { get; set; }
+            public int? MathBattleNo { get; set; }
             public MathBattleBrigadeCalcSaveRow[] Rows { get; set; }
+        }
+
+        public class CreateEstimatedMathBattleRequest
+        {
+            public string TurnId { get; set; }
+            public int SourceMathBattleNo { get; set; }
+            public string SourcePhase { get; set; }
+        }
+
+        public class CreateEstimatedMathBattleResponse
+        {
+            public int MathBattleNo { get; set; }
         }
 
         public class MathBattleBrigadeCalcSaveRow

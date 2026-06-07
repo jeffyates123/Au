@@ -25,6 +25,10 @@
             controller: 'mathBattlesController',
             templateUrl: '/Templates/mathBattlesTemplate.html'
         })
+        .when('/Military/MathBattles/Stats', {
+            controller: 'mathBattlesStatsController',
+            templateUrl: '/Templates/mathBattlesStatsTemplate.html'
+        })
         .when('/Section/:sectionName', {
             controller: 'sectionPlaceholderController',
             templateUrl: '/Templates/sectionPlaceholderTemplate.html'

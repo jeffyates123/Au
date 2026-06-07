@@ -46,5 +46,6 @@ namespace Austerlitz.DAL
         public int LR2StateBMen { get; set; }
         public int LR2StateBBattlePoints { get; set; }
         public int LR2StateBLosses { get; set; }
+        public bool IsEstimated { get; set; }
     }
 }

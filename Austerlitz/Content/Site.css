@@ -1678,6 +1678,26 @@ textarea {
     margin-right: 6px;
 }
 
+.mathBattleSelector .btn.mathBattleEstimatedButton {
+    background-color: #fff3cd;
+    border-color: #d5b96c;
+    color: #6b4f00;
+}
+
+.mathBattleSelector .btn.mathBattleEstimatedButton:hover,
+.mathBattleSelector .btn.mathBattleEstimatedButton:focus {
+    background-color: #fbe7ad;
+    border-color: #cfa84d;
+    color: #523d00;
+}
+
+.mathBattleSelector .btn.mathBattleEstimatedButton.active,
+.mathBattleSelector .btn.mathBattleEstimatedButton:active {
+    background-color: #f6d87d;
+    border-color: #c49b35;
+    color: #3f2f00;
+}
+
 .mathBattleStatePicker {
     margin: 8px 0 14px;
 }
@@ -1694,4 +1714,13 @@ textarea {
 .mathBattleResultBlock {
     font-family: "Courier New", monospace;
     line-height: 1.45;
+}
+
+.mathBattlesStatsSubtitle {
+    margin: 8px 0 14px;
+}
+
+.mathBattlesStatsTable > thead > tr > th,
+.mathBattlesStatsTable > tbody > tr > td {
+    white-space: nowrap;
 }

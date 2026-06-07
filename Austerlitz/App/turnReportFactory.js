@@ -15,11 +15,21 @@
             $http.get('/Api/TurnReportApi/getTRMathBattles?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
-        saveTRMathBattleBrigadeCalcs: function (turnId, rows) {
+        saveTRMathBattleBrigadeCalcs: function (turnId, rows, mathBattleNo) {
             var deferred = $q.defer();
             $http.post('/Api/TurnReportApi/saveTRMathBattleBrigadeCalcs', {
                 turnId: turnId,
-                rows: rows || []
+                rows: rows || [],
+                mathBattleNo: mathBattleNo
+            }).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        createTREstimatedMathBattle: function (turnId, sourceMathBattleNo, sourcePhase) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/createTREstimatedMathBattle', {
+                turnId: turnId,
+                sourceMathBattleNo: sourceMathBattleNo,
+                sourcePhase: sourcePhase
             }).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         }

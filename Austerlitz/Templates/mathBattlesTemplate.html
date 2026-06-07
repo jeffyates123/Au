@@ -17,7 +17,7 @@
         type="button"
         class="btn btn-default btn-sm"
         ng-repeat="battle in mathBattles track by battle.mathBattleNo"
-        ng-class="{ active: selectedBattleNo === battle.mathBattleNo }"
+        ng-class="{ active: selectedBattleNo === battle.mathBattleNo, mathBattleEstimatedButton: battle.isEstimated }"
         ng-click="selectBattle(battle.mathBattleNo)"
       >
         {{battle.mathBattleNo}}
@@ -38,14 +38,24 @@
         <button
           type="button"
           class="btn btn-default btn-xs mathBattleCalcButton"
-          ng-if="activeBattleTab === 'initial'"
+          ng-if="shouldShowCalculateBattle()"
           ng-click="calculateInitialBrigadeValues()"
           ng-disabled="mathBattleCalcBusy"
         >
-          {{mathBattleCalcBusy ? 'Calculating...' : 'Calc'}}
+          {{mathBattleCalcBusy ? 'Calculating Battle...' : 'Calculate Battle'}}
+        </button>
+        <button
+          type="button"
+          class="btn btn-default btn-xs mathBattleCalcButton"
+          ng-if="(activeBattleTab === 'initial' || activeBattleTab === 'final') && !isSelectedBattleEstimated()"
+          ng-click="createEstimatedBattle()"
+          ng-disabled="mathBattleEstimateBusy || !canCreateEstimatedBattle()"
+        >
+          {{mathBattleEstimateBusy ? 'Estimating...' : 'Estimate Battle'}}
         </button>
       </div>
       <div class="text-danger" ng-if="mathBattleCalcError">{{mathBattleCalcError}}</div>
+      <div class="text-danger" ng-if="mathBattleEstimateError">{{mathBattleEstimateError}}</div>
 
       <div class="landUnitsTableWrap">
         <table class="table landUnitsTable">
@@ -55,20 +65,20 @@
               <th class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">Batt {{slot}}</th>
               <th
                 class="mathBattleCalcCol"
-                ng-if="activeBattleTab === 'initial'"
+                ng-if="shouldShowCalculateBattle()"
                 title="Long-range calc includes all firing battalions, including artillery."
               >
                 LR Calc
               </th>
               <th
                 class="mathBattleCalcCol"
-                ng-if="activeBattleTab === 'initial'"
+                ng-if="shouldShowCalculateBattle()"
                 title="Artillery-only long-range calc (REF_ArmyList item numbers 41-45)."
               >
                 Art Calc
               </th>
-              <th class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">HC Calc</th>
-              <th class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">Total</th>
+              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">HC Calc</th>
+              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -77,10 +87,10 @@
               <td class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">
                 <span class="landUnitsBattalionChip">{{formatBattalionDisplay(brigade, slot)}}</span>
               </td>
-              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcLR != null ? brigade.calcLR : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcArtillery != null ? brigade.calcArtillery : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcHC != null ? brigade.calcHC : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="activeBattleTab === 'initial'">{{brigade.calcTotal != null ? brigade.calcTotal : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcLR != null ? brigade.calcLR : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcArtillery != null ? brigade.calcArtillery : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcHC != null ? brigade.calcHC : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcTotal != null ? brigade.calcTotal : '-'}}</td>
             </tr>
           </tbody>
         </table>

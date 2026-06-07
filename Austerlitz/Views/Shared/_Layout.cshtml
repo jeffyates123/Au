@@ -59,6 +59,7 @@
     <script src="~/App/landUnits/landUnitsSetUpBrigadesFactory.js"></script>
     <script src="~/App/landUnitsController.js"></script>
     <script src="~/App/mathBattlesController.js"></script>
+    <script src="~/App/mathBattlesStatsController.js"></script>
     <script src="~/App/sectionPlaceholderController.js"></script>
 
     <script src="~/App/turnMaps/turnMapsConfigFactory.js"></script>
@@ -121,7 +122,8 @@
                 <a href="/home" ng-class="{ active: isActive('/home') }">Overview</a>
                 <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
                 <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Army</a>
-                <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') }">Math Battles</a>
+                <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') && !isActive('/Military/MathBattles/Stats') }">Math Battles</a>
+                <a href="/Military/MathBattles/Stats" ng-class="{ active: isActive('/Military/MathBattles/Stats') }">-Stats</a>
                 <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Navy</a>
                 <a href="/Section/Diplomacy" ng-class="{ active: isActive('/Section/Diplomacy') }">Diplomacy</a>
                 <a href="/Section/Battles" ng-class="{ active: isActive('/Section/Battles') }">Battles</a>

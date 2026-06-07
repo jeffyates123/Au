@@ -72,6 +72,7 @@ namespace Austerlitz.Models.TurnReport
     public class MathBattleDetails
     {
         public int MathBattleNo { get; set; }
+        public bool IsEstimated { get; set; }
         public string StateA { get; set; }
         public string StateB { get; set; }
         public string Winner { get; set; }

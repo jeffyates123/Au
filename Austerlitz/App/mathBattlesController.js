@@ -8,6 +8,8 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     $scope.mathBattleLoading = false;
     $scope.mathBattleCalcBusy = false;
     $scope.mathBattleCalcError = "";
+    $scope.mathBattleEstimateBusy = false;
+    $scope.mathBattleEstimateError = "";
     $scope.armyListLookupByState = {};
     $scope.mathBattleCalcConfig = {
         terrainFactor: 1,
@@ -56,6 +58,27 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             sides.push(battle.stateB);
         }
         return sides;
+    };
+
+    $scope.isSelectedBattleEstimated = function () {
+        var battle = $scope.getSelectedBattle();
+        return !!(battle && battle.isEstimated);
+    };
+
+    $scope.shouldShowCalculateBattle = function () {
+        return $scope.activeBattleTab === "initial" && $scope.isSelectedBattleEstimated();
+    };
+
+    $scope.canCreateEstimatedBattle = function () {
+        if ($scope.activeBattleTab !== "initial" && $scope.activeBattleTab !== "final") {
+            return false;
+        }
+
+        if ($scope.isSelectedBattleEstimated()) {
+            return false;
+        }
+
+        return $scope.getBattleSides().length >= 2;
     };
 
     $scope.ensureSelectedState = function () {
@@ -273,10 +296,12 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
     $scope.calculateInitialBrigadeValues = function () {
         $scope.mathBattleCalcError = "";
-        if ($scope.activeBattleTab !== "initial") {
+        if (!$scope.shouldShowCalculateBattle()) {
             return;
         }
 
+        var battle = $scope.getSelectedBattle();
+        var selectedBattleNo = battle && battle.mathBattleNo;
         var brigades = $scope.getVisibleBrigades();
         if (!brigades.length) {
             return;
@@ -298,13 +323,42 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
                 };
             });
 
-            return turnReportFactory.saveTRMathBattleBrigadeCalcs($scope.masterData.turnId, calcRows);
+            return turnReportFactory.saveTRMathBattleBrigadeCalcs($scope.masterData.turnId, calcRows, selectedBattleNo).then(function () {
+                return $scope.loadMathBattles(selectedBattleNo);
+            });
         }, function () {
             $scope.mathBattleCalcError = "Could not calculate brigade values right now.";
         }).then(null, function () {
             $scope.mathBattleCalcError = "Calculated values shown, but could not save to database.";
         }).finally(function () {
             $scope.mathBattleCalcBusy = false;
+        });
+    };
+
+    $scope.createEstimatedBattle = function () {
+        $scope.mathBattleEstimateError = "";
+
+        var battle = $scope.getSelectedBattle();
+        if (!battle || !battle.mathBattleNo) {
+            $scope.mathBattleEstimateError = "Select a battle first.";
+            return;
+        }
+
+        if (!$scope.canCreateEstimatedBattle()) {
+            $scope.mathBattleEstimateError = "Estimated battles require two armies on the Initial or Final tab.";
+            return;
+        }
+
+        var sourcePhase = $scope.activeBattleTab === "final" ? "POST" : "PRE";
+        $scope.mathBattleEstimateBusy = true;
+
+        turnReportFactory.createTREstimatedMathBattle($scope.masterData.turnId, battle.mathBattleNo, sourcePhase).then(function (response) {
+            var createdBattleNo = response && response.mathBattleNo;
+            return $scope.loadMathBattles(createdBattleNo);
+        }, function () {
+            $scope.mathBattleEstimateError = "Could not create estimated battle.";
+        }).finally(function () {
+            $scope.mathBattleEstimateBusy = false;
         });
     };
 
@@ -322,21 +376,31 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         });
     };
 
-    $scope.loadMathBattles = function () {
+    $scope.loadMathBattles = function (preferredBattleNo) {
         if (!$scope.masterData.turnId || $scope.masterData.turnId === "Unknown") {
             $scope.mathBattles = [];
             $scope.selectedBattleNo = null;
-            return;
+            return $q.when([]);
         }
 
         $scope.mathBattleLoading = true;
         $scope.mathBattleLoadError = "";
-        turnReportFactory.getTRMathBattles($scope.masterData.turnId).then(function (battles) {
+        $scope.mathBattleEstimateError = "";
+        return turnReportFactory.getTRMathBattles($scope.masterData.turnId).then(function (battles) {
             $scope.mathBattles = battles || [];
             $scope.normalizeLoadedCalcFields($scope.mathBattles);
             $scope.armyListLookupByState = {};
             if ($scope.mathBattles.length > 0) {
-                $scope.selectBattle($scope.mathBattles[0].mathBattleNo);
+                var selectedNo = preferredBattleNo;
+                if (selectedNo == null) {
+                    selectedNo = $scope.mathBattles[0].mathBattleNo;
+                }
+
+                var hasSelectedNo = $scope.mathBattles.some(function (item) {
+                    return item.mathBattleNo === selectedNo;
+                });
+
+                $scope.selectBattle(hasSelectedNo ? selectedNo : $scope.mathBattles[0].mathBattleNo);
             } else {
                 $scope.selectedBattleNo = null;
                 $scope.selectedState = "";

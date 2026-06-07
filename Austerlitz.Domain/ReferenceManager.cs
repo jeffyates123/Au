@@ -31,7 +31,7 @@ namespace Austerlitz.Domain
 
             using (var dataContext = new AusterlitzDbContext())
             {
-                rtn.ArmyList = dataContext.REF_ArmyList.ToArray();
+                 rtn.ArmyList = dataContext.REF_ArmyList.ToArray();
                 rtn.Population = dataContext.REF_Population.ToArray();
                 rtn.ProductionSites = dataContext.REF_ProductionSites.ToArray();
                 rtn.Ships = dataContext.REF_Ships.ToArray();
