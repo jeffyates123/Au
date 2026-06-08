@@ -364,7 +364,7 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             if (battalion.isArtillery) {
                 artilleryTotal += battalionLR;
             }
-            totalPoints += battalionTotal * 1.5;
+            totalPoints += battalionTotal;
         }
 
         var calcLR = Math.round(lrTotal);
