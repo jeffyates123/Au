@@ -21,6 +21,11 @@
             $http.get('/Api/RulesCatalogApi/getRefTerrain').success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
+        getRefTerrainFactor: function () {
+            var deferred = $q.defer();
+            $http.get('/Api/RulesCatalogApi/getRefTerrainFactor').success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
         getRulesCatalog: function () {
             var deferred = $q.defer();
             $http.get('/Api/RulesCatalogApi/getRulesCatalog').success(deferred.resolve).error(deferred.reject);

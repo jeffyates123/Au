@@ -31,29 +31,33 @@
     </div>
 
     <div class="landUnitsTabPane" ng-show="activeBattleTab === 'initial' || activeBattleTab === 'final'">
-      <div class="mathBattleStatePicker">
-        <label ng-repeat="state in getBattleSides() track by state" class="radio-inline">
-          <input type="radio" name="mathBattleSide" ng-checked="normalizeStateCode(selectedState) === normalizeStateCode(state)" ng-click="setSelectedState(state)" /> {{state}}
-        </label>
-        <button
-          type="button"
-          class="btn btn-default btn-xs mathBattleCalcButton"
-          ng-if="shouldShowCalculateBattle()"
-          ng-click="calculateInitialBrigadeValues()"
-          ng-disabled="mathBattleCalcBusy"
-        >
-          {{mathBattleCalcBusy ? 'Calculating Battle...' : 'Calculate Battle'}}
-        </button>
-        <button
-          type="button"
-          class="btn btn-default btn-xs mathBattleCalcButton"
-          ng-if="(activeBattleTab === 'initial' || activeBattleTab === 'final') && !isSelectedBattleEstimated()"
-          ng-click="createEstimatedBattle()"
-          ng-disabled="mathBattleEstimateBusy || !canCreateEstimatedBattle()"
-        >
-          {{mathBattleEstimateBusy ? 'Estimating...' : 'Estimate Battle'}}
-        </button>
-      </div>
+        <div class="mathBattleStatePicker">
+            <label ng-repeat="state in getBattleSides() track by state" class="radio-inline">
+                <input type="radio" name="mathBattleSide" ng-checked="normalizeStateCode(selectedState) === normalizeStateCode(state)" ng-click="setSelectedState(state)" /> {{state}}
+            </label>
+            <select id="mathBattleTerrainSelectId" class="form-control input-sm mathBattleTerrainSelect"
+                    ng-if="shouldShowCalculateBattle()"
+                    ng-model="selectedCalcTerrainId"
+                    ng-change="onCalcTerrainSelectionChanged(selectedCalcTerrainId)"
+                    ng-options="terrainId as terrainId for terrainId in availableTerrainIds"
+                    ng-disabled="mathBattleCalcBusy">
+                <option value="">-</option>
+            </select>
+            <button type="button"
+                    class="btn btn-default btn-xs mathBattleCalcButton"
+                    ng-if="shouldShowCalculateBattle()"
+                    ng-click="calculateInitialBrigadeValues()"
+                    ng-disabled="mathBattleCalcBusy || !selectedCalcTerrainId">
+                {{mathBattleCalcBusy ? 'Calculating Battle...' : 'Calculate Battle'}}
+            </button>
+            <button type="button"
+                    class="btn btn-default btn-xs mathBattleCalcButton"
+                    ng-if="(activeBattleTab === 'initial' || activeBattleTab === 'final') && !isSelectedBattleEstimated()"
+                    ng-click="createEstimatedBattle()"
+                    ng-disabled="mathBattleEstimateBusy || !canCreateEstimatedBattle()">
+                {{mathBattleEstimateBusy ? 'Estimating...' : 'Estimate Battle'}}
+            </button>
+        </div>
       <div class="text-danger" ng-if="mathBattleCalcError">{{mathBattleCalcError}}</div>
       <div class="text-danger" ng-if="mathBattleEstimateError">{{mathBattleEstimateError}}</div>
 

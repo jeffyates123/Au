@@ -1,16 +1,8 @@
 "use strict";
 
-austerlitzModule.controller("mathBattlesStatsController", function ($scope, rulesCatalogFactory) {
+austerlitzModule.controller("mathBattlesStatsController", function ($scope, rulesCatalogFactory, mathBattlesCombatHelperFactory) {
     var RECRUITS_PER_BATTALION = 800;
     var RECRUITS_PER_EC_BLOCK = 25;
-    var calcConfig = {
-        terrainFactor: 1,
-        randomFactor: 1.5,
-        longRangeDivisor: 333,
-        handToHandDivisor: 250,
-        artilleryItemNoMin: 41,
-        artilleryItemNoMax: 45
-    };
 
     $scope.armyStatsRows = [];
     $scope.armyStatsLoading = false;
@@ -31,6 +23,21 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
         return isNaN(parsed) || parsed <= 0 ? 0 : parsed;
     };
 
+    $scope.getArmyItemPointValue = function (armyItem, propertyNames) {
+        if (!armyItem || !propertyNames || !propertyNames.length) {
+            return 0;
+        }
+
+        for (var i = 0; i < propertyNames.length; i++) {
+            var value = $scope.toPositiveNumber(armyItem[propertyNames[i]]);
+            if (value > 0) {
+                return value;
+            }
+        }
+
+        return 0;
+    };
+
     $scope.resolveLoadedStateCode = function () {
         var selectedState = $scope.normalizeStateCode($scope.masterData && $scope.masterData.selectedState);
         if (selectedState) {
@@ -42,15 +49,7 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
     };
 
     $scope.isArtilleryItemNo = function (itemNo) {
-        return itemNo >= calcConfig.artilleryItemNoMin && itemNo <= calcConfig.artilleryItemNoMax;
-    };
-
-    $scope.calculateLongRangePoints = function (ef, lr, rg, men) {
-        return (ef * Math.sqrt(lr * rg) * men * calcConfig.terrainFactor * calcConfig.randomFactor) / calcConfig.longRangeDivisor;
-    };
-
-    $scope.calculateHandToHandPoints = function (ef, hc, men) {
-        return (ef * Math.sqrt(hc) * men * calcConfig.terrainFactor * calcConfig.randomFactor) / calcConfig.handToHandDivisor;
+        return mathBattlesCombatHelperFactory.isArtilleryArmyItem({ itemNo: itemNo });
     };
 
     $scope.mapArmyItemToStatsRow = function (armyItem) {
@@ -61,15 +60,11 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
         var itemNo = $scope.toPositiveInt(armyItem.itemNo != null ? armyItem.itemNo : armyItem.ItemNo);
         var cost = $scope.toPositiveNumber(armyItem.cost != null ? armyItem.cost : armyItem.Cost);
         var ecPtsPer25 = $scope.toPositiveNumber(armyItem.ecPtsPer25 != null ? armyItem.ecPtsPer25 : armyItem.EcPtsPer25);
+        var calcLR = Math.round($scope.getArmyItemPointValue(armyItem, ["LR_Points", "lR_Points", "lr_Points", "lrPoints", "LRPoints"]));
+        var calcHC = Math.round($scope.getArmyItemPointValue(armyItem, ["HC_Points", "hC_Points", "hc_Points", "hcPoints", "HCPoints"]));
+        var calcTotal = Math.round($scope.getArmyItemPointValue(armyItem, ["Total_Points", "total_Points", "totalPoints", "TotalPoints"]));
 
-        var calcLR = (ef > 0 && lr > 0 && rg > 0)
-            ? Math.round($scope.calculateLongRangePoints(ef, lr, rg, RECRUITS_PER_BATTALION))
-            : 0;
-        var calcHC = (ef > 0 && hc > 0)
-            ? Math.round($scope.calculateHandToHandPoints(ef, hc, RECRUITS_PER_BATTALION))
-            : 0;
         var calcArtillery = $scope.isArtilleryItemNo(itemNo) ? calcLR : 0;
-        var calcTotal = (calcLR * 2) + (calcHC * 2) + calcArtillery;
 
         var louisdorePerBattalion = Math.round(RECRUITS_PER_BATTALION * cost);
         var ectsPerBattalion = Math.round(

@@ -1,4 +1,6 @@
-austerlitzModule.controller("mathBattlesController", function ($scope, $q, masterData, turnReportFactory, rulesCatalogFactory) {
+austerlitzModule.controller("mathBattlesController", function ($scope, $q, masterData, turnReportFactory, rulesCatalogFactory, mathBattlesCombatHelperFactory) {
+    var RECRUITS_PER_BATTALION = 800;
+
     $scope.masterData = masterData;
     $scope.mathBattles = [];
     $scope.selectedBattleNo = null;
@@ -11,15 +13,10 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     $scope.mathBattleEstimateBusy = false;
     $scope.mathBattleEstimateError = "";
     $scope.armyListLookupByState = {};
-    $scope.mathBattleCalcConfig = {
-        terrainFactor: 1,
-        randomFactor: 1.5,
-        longRangeDivisor: 333,
-        handToHandDivisor: 250,
-        artilleryItemNoMin: 41,
-        artilleryItemNoMax: 45
-    };
-
+    $scope.availableTerrainIds = ['B', 'Q', 'H', 'K', 'T', 'W', 'G', 'D', 'S'];
+    $scope.selectedCalcTerrainId = "";
+    $scope.terrainFactorLookup = {};
+    $scope.terrainFactorLoaded = false;
     $scope.getSelectedBattle = function () {
         for (var i = 0; i < $scope.mathBattles.length; i++) {
             if ($scope.mathBattles[i].mathBattleNo === $scope.selectedBattleNo) {
@@ -30,14 +27,11 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         return null;
     };
 
-    $scope.normalizeStateCode = function (value) {
-        return ((value || "") + "").trim().toUpperCase();
-    };
-
     $scope.selectBattle = function (battleNo) {
         $scope.selectedBattleNo = battleNo;
         $scope.ensureSelectedState();
         $scope.activeBattleTab = "initial";
+        $scope.ensureSelectedCalcTerrain();
     };
 
     $scope.selectBattleTab = function (tabName) {
@@ -88,8 +82,8 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             return;
         }
 
-        var normalizedSelectedState = $scope.normalizeStateCode($scope.selectedState);
-        var normalizedSides = sides.map(function (side) { return $scope.normalizeStateCode(side); });
+        var normalizedSelectedState = $scope.selectedState || "";
+        var normalizedSides = sides.map(function (side) { return side || ""; });
         if (normalizedSides.indexOf(normalizedSelectedState) === -1) {
             $scope.selectedState = sides[0];
         }
@@ -97,6 +91,66 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
     $scope.setSelectedState = function (stateCode) {
         $scope.selectedState = stateCode;
+    };
+
+    $scope.onCalcTerrainSelectionChanged = function (selectedCalcTerrainId) {
+        $scope.selectedCalcTerrainId = selectedCalcTerrainId || "";
+    };
+
+    $scope.ensureSelectedCalcTerrain = function () {
+        var selectedTerrain = $scope.selectedCalcTerrainId || "";
+        if (selectedTerrain && selectedTerrain !== "." && ($scope.availableTerrainIds || []).indexOf(selectedTerrain) >= 0) {
+            return;
+        }
+
+        $scope.selectedCalcTerrainId = ($scope.availableTerrainIds && $scope.availableTerrainIds.length > 0)
+            ? $scope.availableTerrainIds[0]
+            : "";
+    };
+
+    $scope.getTerrainFactorLookupKey = function (terrainId, troopType) {
+        return (terrainId || "") + "|" + (troopType || "");
+    };
+
+    $scope.getTerrainFactorLookup = function () {
+        if ($scope.terrainFactorLoaded) {
+            return $q.when($scope.terrainFactorLookup || {});
+        }
+
+        return rulesCatalogFactory.getRefTerrainFactor().then(function (rows) {
+            var lookup = {};
+            angular.forEach(rows || [], function (row) {
+                var terrainId = (row && (row.terrainId != null ? row.terrainId : row.TerrainId)) || "";
+                var troopType = (row && (row.troopType != null ? row.troopType : row.TroopType)) || "";
+                if (!terrainId || !troopType) {
+                    return;
+                }
+
+                var tf = $scope.toPositiveNumber(row && (row.tf != null ? row.tf : row.TF));
+                if (!tf) {
+                    return;
+                }
+
+                lookup[$scope.getTerrainFactorLookupKey(terrainId, troopType)] = tf;
+            });
+
+            $scope.terrainFactorLookup = lookup;
+            $scope.terrainFactorLoaded = true;
+            return lookup;
+        }, function () {
+            $scope.terrainFactorLookup = {};
+            $scope.terrainFactorLoaded = true;
+            return {};
+        });
+    };
+
+    $scope.getTerrainFactorMultiplier = function (terrainId, troopType) {
+        var tf = $scope.toPositiveNumber(($scope.terrainFactorLookup || {})[$scope.getTerrainFactorLookupKey(terrainId, troopType)]);
+        if (!tf) {
+            return 1;
+        }
+
+        return tf > 2 ? (tf / 100) : tf;
     };
 
     $scope.getActivePhase = function () {
@@ -118,9 +172,8 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         }
 
         var phase = $scope.getActivePhase();
-        var selectedState = $scope.normalizeStateCode($scope.selectedState);
         return battle.brigades.filter(function (brigade) {
-            return $scope.normalizeStateCode(brigade.state) === selectedState && ((brigade.phase || "") + "").trim().toUpperCase() === phase;
+            return brigade.state === $scope.selectedState && ((brigade.phase || "") + "").trim().toUpperCase() === phase;
         });
     };
 
@@ -170,10 +223,16 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     $scope.buildArmyLookup = function (armyList) {
         var lookup = {};
         angular.forEach(armyList || [], function (armyItem) {
-            if (!armyItem || armyItem.shortName == null) {
+            if (!armyItem) {
                 return;
             }
-            var key = armyItem.shortName.toString().trim().toUpperCase();
+
+            var shortName = armyItem.shortName != null ? armyItem.shortName : armyItem.ShortName;
+            if (shortName == null) {
+                return;
+            }
+
+            var key = shortName.toString().trim().toUpperCase();
             if (key && !lookup[key]) {
                 lookup[key] = armyItem;
             }
@@ -182,7 +241,7 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     };
 
     $scope.getArmyLookupForState = function (stateCode) {
-        var normalized = $scope.normalizeStateCode(stateCode);
+        var normalized = stateCode || "";
         if (!normalized) {
             return $q.when({});
         }
@@ -207,22 +266,49 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     };
 
     $scope.isArtilleryArmyItem = function (armyItem) {
-        if (!armyItem) {
-            return false;
+        return mathBattlesCombatHelperFactory.isArtilleryArmyItem(armyItem);
+    };
+
+    $scope.getArmyItemPointValue = function (armyItem, propertyNames) {
+        if (!armyItem || !propertyNames || !propertyNames.length) {
+            return 0;
         }
 
-        var itemNo = parseInt(armyItem.itemNo != null ? armyItem.itemNo : armyItem.ItemNo, 10);
-        return itemNo >= $scope.mathBattleCalcConfig.artilleryItemNoMin && itemNo <= $scope.mathBattleCalcConfig.artilleryItemNoMax;
+        for (var i = 0; i < propertyNames.length; i++) {
+            var value = armyItem[propertyNames[i]];
+            var parsed = $scope.toPositiveNumber(value);
+            if (parsed > 0) {
+                return parsed;
+            }
+        }
+
+        return 0;
     };
 
-    $scope.calculateLongRangePoints = function (ef, lr, rg, men) {
-        var cfg = $scope.mathBattleCalcConfig;
-        return (ef * Math.sqrt(lr * rg) * men * cfg.terrainFactor * cfg.randomFactor) / cfg.longRangeDivisor;
+    $scope.scalePointsForBattalionSize = function (basePointsFor800, men) {
+        var basePoints = $scope.toPositiveNumber(basePointsFor800);
+        var battalionMen = $scope.toPositiveNumber(men);
+        if (!basePoints || !battalionMen || !RECRUITS_PER_BATTALION) {
+            return 0;
+        }
+
+        return basePoints * (battalionMen / RECRUITS_PER_BATTALION);
     };
 
-    $scope.calculateHandToHandPoints = function (ef, hc, men) {
-        var cfg = $scope.mathBattleCalcConfig;
-        return (ef * Math.sqrt(hc) * men * cfg.terrainFactor * cfg.randomFactor) / cfg.handToHandDivisor;
+    $scope.getBattalionEfFactor = function (brigade, battalionNo, armyItem) {
+        var EF_MIN_FALLBACK = 3;
+        var actualEf = $scope.toPositiveNumber(brigade["batt" + battalionNo + "EF"]);
+        var armyTableEf = $scope.toPositiveNumber(armyItem ? (armyItem.ef != null ? armyItem.ef : armyItem.EF) : 0);
+
+        if (!actualEf) {
+            actualEf = EF_MIN_FALLBACK;
+        }
+
+        if (!armyTableEf) {
+            armyTableEf = EF_MIN_FALLBACK;
+        }
+
+        return actualEf / armyTableEf;
     };
 
     $scope.getBattalionStats = function (brigade, battalionNo, armyLookup) {
@@ -233,34 +319,34 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
         var lookupKey = type.toUpperCase();
         var armyItem = armyLookup[lookupKey];
-        var ef = $scope.toPositiveNumber(brigade["batt" + battalionNo + "EF"]);
-        if (!ef && armyItem) {
-            ef = $scope.toPositiveNumber(armyItem.ef != null ? armyItem.ef : armyItem.EF);
-        }
         var men = $scope.toPositiveNumber(brigade["batt" + battalionNo + "Size"]);
-        if (!ef || !men) {
+        if (!men) {
             return null;
         }
 
-        var lr = armyItem ? $scope.toPositiveNumber(armyItem.lr != null ? armyItem.lr : armyItem.LR) : 0;
-        var rg = armyItem ? $scope.toPositiveNumber(armyItem.rg != null ? armyItem.rg : armyItem.RG) : 0;
-        var hc = armyItem ? $scope.toPositiveNumber(armyItem.hc != null ? armyItem.hc : armyItem.HC) : 0;
+        var lrPoints = $scope.getArmyItemPointValue(armyItem, ["LR_Points", "lR_Points", "lr_Points", "lrPoints", "LRPoints"]);
+        var hcPoints = $scope.getArmyItemPointValue(armyItem, ["HC_Points", "hC_Points", "hc_Points", "hcPoints", "HCPoints"]);
+        var totalPoints = $scope.getArmyItemPointValue(armyItem, ["Total_Points", "total_Points", "totalPoints", "TotalPoints"]);
         var isArtillery = $scope.isArtilleryArmyItem(armyItem);
+        var efFactor = $scope.getBattalionEfFactor(brigade, battalionNo, armyItem);
+        var terrainTroopType = mathBattlesCombatHelperFactory.resolveTerrainTroopType(armyItem);
 
         return {
-            ef: ef,
             men: men,
-            lr: lr,
-            rg: rg,
-            hc: hc,
+            lrPoints: lrPoints,
+            hcPoints: hcPoints,
+            totalPoints: totalPoints,
+            efFactor: efFactor,
+            terrainTroopType: terrainTroopType,
             isArtillery: isArtillery
         };
     };
 
-    $scope.calculateBrigadeMathValues = function (brigade, armyLookup) {
+    $scope.calculateBrigadeMathValues = function (brigade, armyLookup, selectedTerrainId) {
         var lrTotal = 0;
         var artilleryTotal = 0;
         var hcTotal = 0;
+        var totalPoints = 0;
 
         for (var i = 1; i <= 7; i++) {
             var battalion = $scope.getBattalionStats(brigade, i, armyLookup);
@@ -268,28 +354,26 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
                 continue;
             }
 
-            if (battalion.lr > 0 && battalion.rg > 0) {
-                var longRangePoints = $scope.calculateLongRangePoints(battalion.ef, battalion.lr, battalion.rg, battalion.men);
-                lrTotal += longRangePoints;
-                if (battalion.isArtillery) {
-                    artilleryTotal += longRangePoints;
-                }
-            }
+            var terrainMultiplier = $scope.getTerrainFactorMultiplier(selectedTerrainId, battalion.terrainTroopType);
+            var battalionLR = $scope.scalePointsForBattalionSize(battalion.lrPoints, battalion.men) * battalion.efFactor * terrainMultiplier;
+            var battalionHC = $scope.scalePointsForBattalionSize(battalion.hcPoints, battalion.men) * battalion.efFactor * terrainMultiplier;
+            var battalionTotal = $scope.scalePointsForBattalionSize(battalion.totalPoints, battalion.men) * battalion.efFactor * terrainMultiplier;
 
-            if (battalion.hc > 0) {
-                var handToHandPoints = $scope.calculateHandToHandPoints(battalion.ef, battalion.hc, battalion.men);
-                hcTotal += handToHandPoints;
+            lrTotal += battalionLR;
+            hcTotal += battalionHC;
+            if (battalion.isArtillery) {
+                artilleryTotal += battalionLR;
             }
+            totalPoints += battalionTotal * 1.5;
         }
 
         var calcLR = Math.round(lrTotal);
         var calcArtillery = Math.round(artilleryTotal);
         var calcHC = Math.round(hcTotal);
-        var calcTotal = (calcLR * 2) + (calcHC * 2) + calcArtillery;
+        var calcTotal = Math.round(totalPoints);
 
         brigade.calcLR = calcLR;
         brigade.calcArtillery = calcArtillery;
-        brigade.calcArtileery = calcArtillery;
         brigade.calcHC = calcHC;
         brigade.calcTotal = calcTotal;
     };
@@ -307,10 +391,20 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             return;
         }
 
+        var selectedTerrainId = $scope.selectedCalcTerrainId || "";
+        if (!selectedTerrainId || selectedTerrainId === ".") {
+            $scope.mathBattleCalcError = "Select a terrain before calculating battle points.";
+            return;
+        }
+
         $scope.mathBattleCalcBusy = true;
-        $scope.getArmyLookupForState($scope.selectedState).then(function (armyLookup) {
+        $q.all([
+            $scope.getArmyLookupForState($scope.selectedState),
+            $scope.getTerrainFactorLookup()
+        ]).then(function (results) {
+            var armyLookup = results[0] || {};
             angular.forEach(brigades, function (brigade) {
-                $scope.calculateBrigadeMathValues(brigade, armyLookup || {});
+                $scope.calculateBrigadeMathValues(brigade, armyLookup, selectedTerrainId);
             });
 
             var calcRows = brigades.map(function (brigade) {

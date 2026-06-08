@@ -1700,10 +1700,24 @@ textarea {
 
 .mathBattleStatePicker {
     margin: 8px 0 14px;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
 }
 
 .mathBattleCalcButton {
-    margin-left: 10px;
+    margin-left: 0;
+}
+
+.mathBattleStatePicker .radio-inline {
+    margin: 0 6px 0 0;
+    white-space: nowrap;
+}
+
+.mathBattleTerrainSelect {
+    width: 3.6em !important;
+    text-align: center;
 }
 
 .mathBattleCalcCol {

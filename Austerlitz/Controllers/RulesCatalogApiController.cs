@@ -10,11 +10,47 @@ using System.Net.Http;
 using System.Web;
 using System.Web.Http;
 using Austerlitz.Domain.Models;
+using System.Data.SqlClient;
 
 namespace Austerlitz.Controllers
 {
     public class RulesCatalogApiController : ApiController
     {
+        public class ArmyListApiRow
+        {
+            public int ItemNo { get; set; }
+            public string State { get; set; }
+            public string Name { get; set; }
+            public string ShortName { get; set; }
+            public int Cost { get; set; }
+            public int EcPtsPer25 { get; set; }
+            public int EF { get; set; }
+            public int HC { get; set; }
+            public int LR { get; set; }
+            public int RG { get; set; }
+            public int LR_Points { get; set; }
+            public int HC_Points { get; set; }
+            public int Total_Points { get; set; }
+            public int SimMP { get; set; }
+            public int MP { get; set; }
+            public string Formation { get; set; }
+            public bool Allow_Co { get; set; }
+            public bool Allow_Li { get; set; }
+            public bool Allow_Sk { get; set; }
+            public bool Allow_Sq { get; set; }
+            public bool IsColonial { get; set; }
+            public string TroopSpecification { get; set; }
+            public bool IsCavalry { get; set; }
+            public string TerrainTroopType { get; set; }
+        }
+
+        public class TerrainFactorRow
+        {
+            public string TerrainId { get; set; }
+            public string TroopType { get; set; }
+            public decimal TF { get; set; }
+        }
+
         public class RuleCatalogItem
         {
             public int ItemNo { get; set; }
@@ -28,17 +64,40 @@ namespace Austerlitz.Controllers
             return refManager.GetRulesCatalog();
         }
 
-        public REF_ArmyList[] GetArmyList(string state = "E")
+        public ArmyListApiRow[] GetArmyList(string state = "E")
         {
             using (var dataContext = new AusterlitzDbContext())
             {
-                var listRepository = new GenericRepository<REF_ArmyList>(dataContext);
-
-                IEnumerable<REF_ArmyList> armyList = listRepository
-                    .GetItems(x => x.State == state)
-                    .OrderBy(y => y.ItemNo);
-
-                return armyList.ToArray();
+                var normalizedState = (state ?? "E").Trim().ToUpperInvariant();
+                return dataContext.Database.SqlQuery<ArmyListApiRow>(@"
+SELECT
+    ItemNo,
+    State,
+    Name,
+    ShortName,
+    Cost,
+    EcPtsPer25,
+    EF,
+    HC,
+    LR,
+    RG,
+    LR_Points,
+    HC_Points,
+    Total_Points,
+    SimMP,
+    MP,
+    Formation,
+    Allow_Co,
+    Allow_Li,
+    Allow_Sk,
+    Allow_Sq,
+    IsColonial,
+    TroopSpecification,
+    IsCavalry,
+    TerrainTroopType
+FROM dbo.REF_ArmyList
+WHERE State = @state
+ORDER BY ItemNo", new SqlParameter("@state", normalizedState)).ToArray();
             }
         }
 
@@ -66,6 +125,20 @@ namespace Austerlitz.Controllers
                     .Get();
 
                 return rtnList.ToArray();
+            }
+        }
+
+        public TerrainFactorRow[] GetRefTerrainFactor()
+        {
+            using (var dataContext = new AusterlitzDbContext())
+            {
+                return dataContext.Database.SqlQuery<TerrainFactorRow>(@"
+SELECT
+    TerrainId,
+    TroopType,
+    CAST(TF AS decimal(10,2)) AS TF
+FROM dbo.REF_Terrain_Factor
+ORDER BY TerrainId, TroopType").ToArray();
             }
         }
 

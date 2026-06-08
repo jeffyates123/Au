@@ -260,6 +260,7 @@
     <Content Include="App\landUnits\landUnitsRenameFactory.js" />
     <Content Include="App\landUnits\landUnitsUiFactory.js" />
     <Content Include="App\landUnitsController.js" />
+    <Content Include="App\mathBattlesCombatHelperFactory.js" />
     <Content Include="App\mathBattlesController.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\menuController.js" />
