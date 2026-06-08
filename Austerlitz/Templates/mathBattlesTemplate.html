@@ -33,7 +33,7 @@
     <div class="landUnitsTabPane" ng-show="activeBattleTab === 'initial' || activeBattleTab === 'final'">
         <div class="mathBattleStatePicker">
             <label ng-repeat="state in getBattleSides() track by state" class="radio-inline">
-                <input type="radio" name="mathBattleSide" ng-checked="normalizeStateCode(selectedState) === normalizeStateCode(state)" ng-click="setSelectedState(state)" /> {{state}}
+                <input id="selectedStateMathId" type="radio" name="mathBattleSide" ng-checked="selectedState === state" ng-click="setSelectedState(state)" /> {{state}}
             </label>
             <select id="mathBattleTerrainSelectId" class="form-control input-sm mathBattleTerrainSelect"
                     ng-if="shouldShowCalculateBattle()"
