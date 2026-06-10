@@ -111,7 +111,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                     return '';
                 }
 
-                var coordState = (coord.state || '').toString();
+                var coordStateCode = (coord.state || '').toString().trim().toUpperCase();
                 var coordTerrain = (coord.terrain || '').toString();
                 var coordProdSite = (coord.productionSite || '').toString();
                 var coordBonus = (coord.bonus || '').toString();
@@ -119,14 +119,24 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 var minPopulation = parseInt($scope.selectedProductionSite.minPopulation, 10);
                 var maxPopulation = parseInt($scope.selectedProductionSite.maxPopulation, 10);
                 var selectedSiteTypeNo = ($scope.selectedProductionSite.siteTypeNo || $scope.selectedProductionSite.sitezTypeNo || '').toString();
-                var selectedStateCode = $scope.selectedState ? ($scope.selectedState.state || '') : '';
+                var activeStateCode = ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
+
+                if (!activeStateCode) {
+                    activeStateCode = $scope.selectedState
+                        ? (($scope.selectedState.state || $scope.selectedState.State || '').toString().trim().toUpperCase())
+                        : '';
+                }
 
                 if (isNaN(coordPopulation)) coordPopulation = 0;
                 if (isNaN(minPopulation)) minPopulation = 0;
                 if (isNaN(maxPopulation)) maxPopulation = 0;
 
-                if ($scope.selectedState != null && coordState != selectedStateCode) {
-                    return '';
+                if (activeStateCode && coordStateCode !== activeStateCode) {
+                    if ('.+*'.indexOf(coordTerrain) > -1) {
+                        return 'terrain_sea';
+                    }
+
+                    return 'state_R';
                 }
 
                 if ('.+*'.indexOf(coordTerrain) > -1) {

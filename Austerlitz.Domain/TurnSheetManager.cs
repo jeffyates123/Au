@@ -944,6 +944,18 @@ namespace Austerlitz.Domain
 
         public TS_10BuildShips[] PostTSBuildShips(TS_10BuildShips[] tsPostedRecords)
         {
+            // Warships: type <= 25. Merchants: type >= 31 must not have a name.
+            if (tsPostedRecords != null)
+            {
+                foreach (var row in tsPostedRecords)
+                {
+                    if (row != null && row.ShipType.HasValue && row.ShipType.Value >= 31)
+                    {
+                        row.Name_WarshipOnly = null;
+                    }
+                }
+            }
+
             return SaveSectionRows(tsPostedRecords, Ts10MaxRows, "TS_10");
         }
 

@@ -1,0 +1,670 @@
+<div class="landUnitsPage" ng-init="initNavyUnits()">
+  <div class="landUnitsHeader">
+    <div>
+      <h2 class="landUnitsTitle">Navy</h2>
+      <div class="landUnitsTabs">
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeNavyTab === 'setUpNavy' }"
+          ng-click="selectNavyTab('setUpNavy')"
+        >
+          Set-Up Navy
+        </button>
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeNavyTab === 'existingNavy' }"
+          ng-click="selectNavyTab('existingNavy')"
+        >
+          Existing Navy
+        </button>
+      </div>
+    </div>
+    <div class="landUnitsTurnInfo">
+      <span>{{masterData.turnId}}</span>
+    </div>
+  </div>
+
+  <div class="alert alert-info landUnitsAlert" ng-show="isLoading">
+    Loading navy data&hellip;
+  </div>
+  <div class="alert alert-danger landUnitsAlert" ng-show="loadError">
+    {{loadError}}
+  </div>
+
+  <!-- ====== TAB 1: SET-UP NAVY ====== -->
+  <div class="landUnitsTabPane" ng-show="activeNavyTab === 'setUpNavy'">
+
+    <!-- TS_10 Build Ships -->
+    <div class="landUnitsSectionHeader">
+      <span class="landUnitsSectionTitle">TS_10 Build Ships</span>
+      <span class="landUnitsSectionMeta">max 8 rows</span>
+    </div>
+
+    <div class="landUnitsTableWrap">
+      <table class="table landUnitsTable">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="min-width:140px">Shipyard</th>
+            <th style="width:70px">X/Y</th>
+            <th style="min-width:180px">Ship Type</th>
+            <th style="min-width:160px">Name (warships only)</th>
+            <th style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="row in tsNavyBuildRows track by row.orderNo"
+            ng-class="{ landUnitsSetUpRowInvalid: isBuildRowIncomplete(row) }"
+          >
+            <td>{{row.orderNo}}</td>
+            <td>
+              <select
+                class="form-control input-sm"
+                ng-model="row.shipyard"
+                ng-change="onBuildShipyardChanged(row)"
+                ng-options="yard.itemNo as yard.label for yard in eligibleShipyards"
+              >
+                <option value="">-- pick shipyard --</option>
+              </select>
+            </td>
+            <td>{{getShipyardBuildPositionText(row)}}</td>
+            <td>
+              <select
+                class="form-control input-sm"
+                ng-model="row.shipType"
+                ng-change="onBuildShipTypeChanged(row)"
+                ng-options="opt.type as opt.label for opt in shipTypeOptions"
+                ng-disabled="!row.shipyard"
+              >
+                <option value="">-- pick type --</option>
+              </select>
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                ng-model="row.name_WarshipOnly"
+                maxlength="15"
+                ng-blur="onBuildShipNameChanged(row)"
+                ng-disabled="!isWarshipBuildRow(row)"
+                placeholder="{{isWarshipBuildRow(row) ? 'Required for warships' : ''}}"
+              />
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-default btn-xs"
+                ng-click="clearNavyBuildRow(row)"
+              >Clear</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TS_01 Transfer Goods -->
+    <div class="landUnitsSectionHeader">
+      <span class="landUnitsSectionTitle">TS_01 Transfer Goods</span>
+      <span class="landUnitsSectionMeta">max 10 rows &mdash; shared with Army</span>
+    </div>
+
+    <div class="landUnitsTableWrap">
+      <table class="table landUnitsTable" style="font-size:12px">
+        <thead>
+          <tr>
+            <th style="width:30px">#</th>
+            <th style="width:80px">From</th>
+            <th style="width:80px">To</th>
+            <th style="width:70px">LD</th>
+            <th style="width:70px">Citizens</th>
+            <th style="width:70px">EcPts</th>
+            <th style="width:70px">Wood</th>
+            <th style="width:70px">Horses</th>
+            <th style="width:70px">Textiles</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in tsNavyTransferGoodsRows track by row.orderNo">
+            <td>{{row.orderNo}}</td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.from"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.to"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.louisdore"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.citizens"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.ecPts"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.wood"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.horses"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+            <td>
+              <input
+                class="form-control input-sm"
+                type="number"
+                ng-model="row.textiles"
+                ng-blur="onNavyTransferGoodsChanged()"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- REF_Ships reference table (read-only) -->
+    <div class="landUnitsSectionHeader">
+      <span class="landUnitsSectionTitle">REF_Ships Reference</span>
+    </div>
+
+    <div class="landUnitsTableWrap">
+      <table class="table table-condensed landUnitsTable" style="font-size:11px">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Cost (LD)</th>
+            <th>Maint.</th>
+            <th>Wood</th>
+            <th>EcPts</th>
+            <th>Textiles</th>
+            <th>Citizens</th>
+            <th>Load Cap.</th>
+            <th>Move Factor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="ship in refShips | orderBy:'type || Type'">
+            <td>{{ship.type || ship.Type}}</td>
+            <td>{{ship.name || ship.Name}}</td>
+            <td>{{ship.shipClass != null ? ship.shipClass : (ship.ShipClass != null ? ship.ShipClass : '')}}</td>
+            <td>{{ship.cost || ship.Cost}}</td>
+            <td>{{ship.maintenance || ship.Maintenance}}</td>
+            <td>{{ship.wood || ship.Wood}}</td>
+            <td>{{ship.ecPts || ship.EcPts}}</td>
+            <td>{{ship.textiles || ship.Textiles}}</td>
+            <td>{{ship.citizens || ship.Citizens}}</td>
+            <td>{{ship.loadCapacity || ship.LoadCapacity}}</td>
+            <td>{{ship.movementFactor || ship.MovementFactor}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- END TAB 1 -->
+
+  <!-- ====== TAB 2: EXISTING NAVY ====== -->
+  <div class="landUnitsTabPane" ng-show="activeNavyTab === 'existingNavy'">
+
+    <div class="landUnitsAlert" style="margin-bottom:8px" ng-show="!isLoading && !loadError">
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="openNavyFederationModal(warshipRows[0] || merchantRows[0])"
+        ng-disabled="!warshipRows.length && !merchantRows.length"
+      >Form Fleet (11&ndash;30)</button>
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="openNavyRepairModal()"
+        ng-disabled="!getEligibleRepairShips().length"
+        style="margin-left:6px"
+      >Repair Ships</button>
+    </div>
+
+    <!-- Warships section -->
+    <div class="landUnitsSectionHeader" ng-show="warshipRows.length > 0">
+      <button
+        type="button"
+        class="btn btn-link btn-xs ts-collapse-button"
+        ng-click="toggleWarshipsSection()"
+      >{{warshipsSectionCollapsed ? '+' : '-'}}</button>
+      <span class="landUnitsSectionTitle">Warships</span>
+      <span class="landUnitsSectionMeta">{{warshipRows.length}}</span>
+    </div>
+
+    <div
+      class="alert alert-info landUnitsAlert"
+      ng-show="!isLoading && !loadError && warshipRows.length === 0"
+    >
+      No warships found for the selected turn.
+    </div>
+
+    <div
+      class="landUnitsTableWrap"
+      ng-show="warshipRows.length > 0 && !warshipsSectionCollapsed"
+    >
+      <table class="table landUnitsTable" style="font-size:11px">
+        <colgroup>
+          <col style="width:45px" /><col style="width:40px" /><col style="width:110px" />
+          <col style="width:55px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:50px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:55px" /><col style="width:30px" />
+          <col style="width:45px" /><col style="width:40px" /><col style="width:110px" />
+          <col style="width:55px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:50px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:55px" /><col style="width:30px" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>No</th><th>Type</th><th>Name</th>
+            <th>x/y</th><th>Flt</th><th>MP</th>
+            <th>Cond</th><th>Age</th><th>Mar</th>
+            <th>Brigade</th><th></th>
+            <th>No</th><th>Type</th><th>Name</th>
+            <th>x/y</th><th>Flt</th><th>MP</th>
+            <th>Cond</th><th>Age</th><th>Mar</th>
+            <th>Brigade</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="pair in warshipPairRows track by $index">
+            <td>{{pair.left.id}}</td>
+            <td>{{pair.left.type}}</td>
+            <td>{{pair.left.name}}</td>
+            <td>{{pair.left.position}}</td>
+            <td>
+              <button
+                type="button"
+                class="landUnitsFederationChip"
+                ng-class="{ landUnitsFederationChipChanged: pair.left.fleetChanged }"
+                ng-click="openNavyFederationModal(pair.left)"
+                title="Click to assign fleet"
+              >{{pair.left.fleet || '-'}}</button>
+            </td>
+            <td>{{pair.left.mp}}</td>
+            <td>{{pair.left.condition}}</td>
+            <td>{{pair.left.age}}</td>
+            <td>{{pair.left.marines}}</td>
+            <td>{{(pair.left.brigade1 || 0) + ' ' + (pair.left.brigade2 || 0)}}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-link btn-xs"
+                ng-click="openNavyRepairModal()"
+                ng-show="isShipEligibleForRepair(pair.left)"
+                title="Repair this ship"
+              >R</button>
+            </td>
+
+            <td>{{pair.right ? pair.right.id : ''}}</td>
+            <td>{{pair.right ? pair.right.type : ''}}</td>
+            <td>{{pair.right ? pair.right.name : ''}}</td>
+            <td>{{pair.right ? pair.right.position : ''}}</td>
+            <td>
+              <button
+                ng-if="pair.right"
+                type="button"
+                class="landUnitsFederationChip"
+                ng-class="{ landUnitsFederationChipChanged: pair.right.fleetChanged }"
+                ng-click="openNavyFederationModal(pair.right)"
+                title="Click to assign fleet"
+              >{{pair.right.fleet || '-'}}</button>
+            </td>
+            <td>{{pair.right ? pair.right.mp : ''}}</td>
+            <td>{{pair.right ? pair.right.condition : ''}}</td>
+            <td>{{pair.right ? pair.right.age : ''}}</td>
+            <td>{{pair.right ? pair.right.marines : ''}}</td>
+            <td>{{pair.right ? ((pair.right.brigade1 || 0) + ' ' + (pair.right.brigade2 || 0)) : ''}}</td>
+            <td>
+              <button
+                ng-if="pair.right"
+                type="button"
+                class="btn btn-link btn-xs"
+                ng-click="openNavyRepairModal()"
+                ng-show="isShipEligibleForRepair(pair.right)"
+                title="Repair this ship"
+              >R</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Merchant Ships section -->
+    <div class="landUnitsSectionHeader" ng-show="merchantRows.length > 0">
+      <button
+        type="button"
+        class="btn btn-link btn-xs ts-collapse-button"
+        ng-click="toggleMerchantsSection()"
+      >{{merchantsSectionCollapsed ? '+' : '-'}}</button>
+      <span class="landUnitsSectionTitle">Merchant Ships</span>
+      <span class="landUnitsSectionMeta">{{merchantRows.length}}</span>
+    </div>
+
+    <div
+      class="alert alert-info landUnitsAlert"
+      ng-show="!isLoading && !loadError && merchantRows.length === 0"
+    >
+      No merchant ships found for the selected turn.
+    </div>
+
+    <div
+      class="landUnitsTableWrap"
+      ng-show="merchantRows.length > 0 && !merchantsSectionCollapsed"
+    >
+      <table class="table landUnitsTable" style="font-size:11px">
+        <colgroup>
+          <col style="width:45px" /><col style="width:40px" />
+          <col style="width:55px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:50px" /><col style="width:35px" /><col style="width:40px" />
+          <col style="width:35px" /><col style="width:40px" /><col style="width:35px" />
+          <col style="width:60px" /><col style="width:30px" />
+          <col style="width:45px" /><col style="width:40px" />
+          <col style="width:55px" /><col style="width:35px" /><col style="width:35px" />
+          <col style="width:50px" /><col style="width:35px" /><col style="width:40px" />
+          <col style="width:35px" /><col style="width:40px" /><col style="width:35px" />
+          <col style="width:60px" /><col style="width:30px" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>No</th><th>Type</th>
+            <th>x/y</th><th>Flt</th><th>MP</th>
+            <th>Cond</th><th>Age</th><th>Gds1</th>
+            <th>Qty1</th><th>Gds2</th><th>Qty2</th>
+            <th>Money</th><th></th>
+            <th>No</th><th>Type</th>
+            <th>x/y</th><th>Flt</th><th>MP</th>
+            <th>Cond</th><th>Age</th><th>Gds1</th>
+            <th>Qty1</th><th>Gds2</th><th>Qty2</th>
+            <th>Money</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="pair in merchantPairRows track by $index">
+            <td>{{pair.left.id}}</td>
+            <td>{{pair.left.type}}</td>
+            <td>{{pair.left.position}}</td>
+            <td>
+              <button
+                type="button"
+                class="landUnitsFederationChip"
+                ng-class="{ landUnitsFederationChipChanged: pair.left.fleetChanged }"
+                ng-click="openNavyFederationModal(pair.left)"
+                title="Click to assign fleet"
+              >{{pair.left.fleet || '-'}}</button>
+            </td>
+            <td>{{pair.left.mp}}</td>
+            <td>{{pair.left.condition}}</td>
+            <td>{{pair.left.age}}</td>
+            <td>{{pair.left.goods1}}</td>
+            <td>{{pair.left.qty1}}</td>
+            <td>{{pair.left.goods2}}</td>
+            <td>{{pair.left.qty2}}</td>
+            <td>{{pair.left.money}}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-link btn-xs"
+                ng-click="openNavyRepairModal()"
+                ng-show="isShipEligibleForRepair(pair.left)"
+                title="Repair"
+              >R</button>
+            </td>
+
+            <td>{{pair.right ? pair.right.id : ''}}</td>
+            <td>{{pair.right ? pair.right.type : ''}}</td>
+            <td>{{pair.right ? pair.right.position : ''}}</td>
+            <td>
+              <button
+                ng-if="pair.right"
+                type="button"
+                class="landUnitsFederationChip"
+                ng-class="{ landUnitsFederationChipChanged: pair.right.fleetChanged }"
+                ng-click="openNavyFederationModal(pair.right)"
+                title="Click to assign fleet"
+              >{{pair.right.fleet || '-'}}</button>
+            </td>
+            <td>{{pair.right ? pair.right.mp : ''}}</td>
+            <td>{{pair.right ? pair.right.condition : ''}}</td>
+            <td>{{pair.right ? pair.right.age : ''}}</td>
+            <td>{{pair.right ? pair.right.goods1 : ''}}</td>
+            <td>{{pair.right ? pair.right.qty1 : ''}}</td>
+            <td>{{pair.right ? pair.right.goods2 : ''}}</td>
+            <td>{{pair.right ? pair.right.qty2 : ''}}</td>
+            <td>{{pair.right ? pair.right.money : ''}}</td>
+            <td>
+              <button
+                ng-if="pair.right"
+                type="button"
+                class="btn btn-link btn-xs"
+                ng-click="openNavyRepairModal()"
+                ng-show="isShipEligibleForRepair(pair.right)"
+                title="Repair"
+              >R</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- END TAB 2 -->
+
+  <!-- ====== FEDERATION MODAL ====== -->
+  <div
+    class="landUnitsModalBackdrop"
+    ng-show="navyFormFederationModal.isOpen"
+    ng-click="closeNavyFederationModal()"
+  ></div>
+  <div class="landUnitsModal" ng-show="navyFormFederationModal.isOpen">
+    <div class="landUnitsModalHeader">
+      <h4>Assign Fleet Number (11&ndash;30)</h4>
+      <button
+        type="button"
+        class="btn btn-link btn-xs"
+        ng-click="closeNavyFederationModal()"
+      >&times;</button>
+    </div>
+    <div class="landUnitsModalBody">
+      <div style="margin-bottom:8px">
+        <label>Fleet No:</label>
+        <input
+          type="number"
+          class="form-control input-sm"
+          style="display:inline-block;width:80px;margin-left:8px"
+          ng-model="navyFormFederationModal.targetFleetNo"
+          ng-change="onNavyFleetTargetChanged()"
+          min="0"
+          max="30"
+        />
+        <button
+          type="button"
+          class="btn btn-default btn-xs"
+          ng-click="selectNextAvailableFleetNo()"
+          style="margin-left:6px"
+        >Next available</button>
+        <span
+          class="text-danger"
+          style="margin-left:8px"
+          ng-show="navyFormFederationModal.validationError"
+        >{{navyFormFederationModal.validationError}}</span>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <strong>Stage ships to fleet {{navyFormFederationModal.targetFleetNo}}:</strong>
+      </div>
+
+      <div style="max-height:260px;overflow-y:auto">
+        <table class="table table-condensed" style="font-size:11px">
+          <thead>
+            <tr>
+              <th></th><th>No</th><th>Type</th><th>Name</th><th>x/y</th><th>Fleet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="ship in warshipRows">
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-xs"
+                  ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
+                  ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
+                >{{isNavyShipStaged(ship) ? '&#10003;' : '+'}}</button>
+              </td>
+              <td>{{ship.id}}</td>
+              <td>{{ship.type}}</td>
+              <td>{{ship.name}}</td>
+              <td>{{ship.position}}</td>
+              <td>{{ship.fleet || '-'}}</td>
+            </tr>
+            <tr ng-repeat="ship in merchantRows">
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-xs"
+                  ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
+                  ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
+                >{{isNavyShipStaged(ship) ? '&#10003;' : '+'}}</button>
+              </td>
+              <td>{{ship.id}}</td>
+              <td>{{ship.type}}</td>
+              <td>(merchant)</td>
+              <td>{{ship.position}}</td>
+              <td>{{ship.fleet || '-'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:8px" ng-show="navyFormFederationModal.stagedOrders.length">
+        <strong>Staged orders:</strong>
+        <ul style="font-size:11px;margin:4px 0 0">
+          <li ng-repeat="o in navyFormFederationModal.stagedOrders">
+            Ship {{o.shipId || o.itemNo}} &rarr; Fleet {{o.federation_Fleet}}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        ng-click="saveNavyFederationModal()"
+        ng-disabled="!navyFormFederationModal.stagedOrders.length"
+      >Save</button>
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="closeNavyFederationModal()"
+        style="margin-left:6px"
+      >Cancel</button>
+    </div>
+  </div>
+
+  <!-- ====== REPAIR MODAL ====== -->
+  <div
+    class="landUnitsModalBackdrop"
+    ng-show="navyRepairModal.isOpen"
+    ng-click="closeNavyRepairModal()"
+  ></div>
+  <div class="landUnitsModal" ng-show="navyRepairModal.isOpen">
+    <div class="landUnitsModalHeader">
+      <h4>Repair Ships (TS_09)</h4>
+      <button
+        type="button"
+        class="btn btn-link btn-xs"
+        ng-click="closeNavyRepairModal()"
+      >&times;</button>
+    </div>
+    <div class="landUnitsModalBody">
+      <p style="font-size:11px;color:#666">
+        Only ships with Condition &lt; 100% at an eligible shipyard (sea access) are shown.
+      </p>
+      <div ng-show="getEligibleRepairShips().length === 0" class="alert alert-info">
+        No eligible ships for repair at this time.
+      </div>
+      <table
+        class="table table-condensed"
+        style="font-size:11px"
+        ng-show="getEligibleRepairShips().length > 0"
+      >
+        <thead>
+          <tr>
+            <th></th><th>No</th><th>Type</th><th>Name</th>
+            <th>x/y</th><th>Cond</th><th>Age</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="ship in getEligibleRepairShips()">
+            <td>
+              <button
+                type="button"
+                class="btn btn-xs"
+                ng-class="isRepairShipStaged(ship) ? 'btn-primary' : 'btn-default'"
+                ng-click="toggleRepairShipStaged(ship)"
+              >{{isRepairShipStaged(ship) ? '&#10003;' : '+'}}</button>
+            </td>
+            <td>{{ship.id}}</td>
+            <td>{{ship.type}}</td>
+            <td>{{ship.name || '(merchant)'}}</td>
+            <td>{{ship.position}}</td>
+            <td>{{ship.condition}}</td>
+            <td>{{ship.age}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        ng-click="saveNavyRepairModal()"
+      >Save</button>
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="closeNavyRepairModal()"
+        style="margin-left:6px"
+      >Cancel</button>
+    </div>
+  </div>
+
+</div>
