@@ -118,8 +118,24 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
         $scope.refreshMerchantPairRows();
       };
 
+      $scope.toggleNavyPositionFilter = function (ship) {
+        var pos = ship && ship.position;
+        if (!pos) return;
+        $scope.navyPositionFilter = $scope.navyPositionFilter === pos ? null : pos;
+        $scope.refreshWarshipPairRows();
+        $scope.refreshMerchantPairRows();
+      };
+
+      $scope.clearNavyPositionFilter = function () {
+        $scope.navyPositionFilter = null;
+        $scope.refreshWarshipPairRows();
+        $scope.refreshMerchantPairRows();
+      };
+
       $scope.refreshWarshipPairRows = function () {
-        var ships = $scope.warshipRows || [];
+        var ships = $scope.navyPositionFilter
+          ? ($scope.warshipRows || []).filter(function (s) { return s.position === $scope.navyPositionFilter; })
+          : ($scope.warshipRows || []);
         var pairs = [];
         for (var i = 0; i < ships.length; i += 2) {
           pairs.push({ left: ships[i], right: ships[i + 1] || null });
@@ -128,7 +144,9 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
       };
 
       $scope.refreshMerchantPairRows = function () {
-        var ships = $scope.merchantRows || [];
+        var ships = $scope.navyPositionFilter
+          ? ($scope.merchantRows || []).filter(function (s) { return s.position === $scope.navyPositionFilter; })
+          : ($scope.merchantRows || []);
         var pairs = [];
         for (var i = 0; i < ships.length; i += 2) {
           pairs.push({ left: ships[i], right: ships[i + 1] || null });

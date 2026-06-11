@@ -59,6 +59,15 @@ austerlitzModule.factory("setUpTransferPipelineFactory", function () {
   }
 
   function writeManagedTransferGoodsRows(config) {
+    var managedSectionNo =
+      config.managedSectionNo != null ? config.managedSectionNo : null;
+    var isManagedRowOwned =
+      typeof config.isManagedRowOwned === "function"
+        ? config.isManagedRowOwned
+        : function () {
+            return true;
+          };
+
     var lines = config.lines || [];
     var previousManaged = (config.previousManagedOrderNos || []).slice();
     var existingManagedRows = previousManaged
@@ -68,6 +77,9 @@ austerlitzModule.factory("setUpTransferPipelineFactory", function () {
           orderNo,
           config.toInt,
         );
+      })
+      .filter(function (row) {
+        return isManagedRowOwned(row);
       })
       .filter(Boolean)
       .sort(function (left, right) {
@@ -106,6 +118,9 @@ austerlitzModule.factory("setUpTransferPipelineFactory", function () {
     angular.forEach(targetRows, function (row, idx) {
       var line = lines[idx];
       var before = config.getRowSignature(row);
+      if (managedSectionNo != null) {
+        row.turnSheetSectionNo = managedSectionNo;
+      }
       row.from = line.from;
       row.to = line.to;
       row.louisdore = config.toInt(line.goods.louisdore, 0) || null;

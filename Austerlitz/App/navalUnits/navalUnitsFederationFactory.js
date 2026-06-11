@@ -42,6 +42,22 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
         return null;
       }
 
+      $scope.getNavyFederationWarships = function () {
+        var ship = $scope.navyFormFederationModal.ship;
+        if (!ship || !ship.position) return $scope.warshipRows || [];
+        return ($scope.warshipRows || []).filter(function (s) {
+          return s.position === ship.position;
+        });
+      };
+
+      $scope.getNavyFederationMerchants = function () {
+        var ship = $scope.navyFormFederationModal.ship;
+        if (!ship || !ship.position) return $scope.merchantRows || [];
+        return ($scope.merchantRows || []).filter(function (s) {
+          return s.position === ship.position;
+        });
+      };
+
       $scope.isValidNavyFleetNo = function (fleetNo) {
         if (fleetNo === 0 || fleetNo === "0") {
           $scope.navyFormFederationModal.validationError = "";

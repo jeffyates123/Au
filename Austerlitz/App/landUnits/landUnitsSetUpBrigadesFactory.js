@@ -24,6 +24,7 @@ austerlitzModule.factory(
       setUpBrigadesSharedFactory.MANAGED_TS01_ROW_LIMIT;
     var MANAGED_TS01_STORAGE_KEY_PREFIX =
       "austerlitz.landUnits.managedTs01Rows.";
+    var ARMY_MANAGED_TS01_SECTION = 3;
     var SPHERE_ALL = "All";
     var SPHERE_EUROPE = "Europe";
     var SPHERE_CARIBBEAN = "Caribbean";
@@ -66,6 +67,14 @@ austerlitzModule.factory(
 
     function hasPositiveIntValue(value) {
       return turnSheetValueRulesFactory.hasPositiveIntValue(value);
+    }
+
+    function getSectionNumber(sectionNo) {
+      var text = (sectionNo || "").toString().trim().toUpperCase();
+      if (!text) return null;
+      if (text.indexOf("TS") === 0) text = text.substring(2);
+      var parsed = parseInt(text, 10);
+      return isNaN(parsed) ? null : parsed;
     }
 
     function hasAnySetUpBattalion(row) {
@@ -757,7 +766,8 @@ austerlitzModule.factory(
           return {
             tsCostLabels: TS_COST_LABELS,
             masterData: $scope.masterData,
-            tsSetUpBrigadesList: $scope.tsSetUpBrigadesList,
+            // Use visible/capped TS03 rows only; hidden legacy rows can duplicate costs.
+            tsSetUpBrigadesList: $scope.tsSetUpBrigadesRows,
             tsSetUpAdditionalBrigadesList: $scope.tsSetUpAdditionalBrigadesList,
             tsIncreaseHeadcountList: $scope.tsIncreaseHeadcountList,
             tsIncreaseBrigadeXpList: $scope.tsIncreaseBrigadeXpList,
@@ -828,16 +838,36 @@ austerlitzModule.factory(
         $scope.writeManagedTransferGoodsRows = function (lines) {
           if (!$scope.tsTransferGoodsList) return;
           $scope.economyTsCostWarnings = [];
+          var previousManagedOrderNos = (
+            $scope.managedTransferGoodsRowOrderNos || []
+          ).slice();
+          angular.forEach($scope.tsTransferGoodsList || [], function (row) {
+            var orderNo = toInt(row && row.orderNo, 0);
+            if (orderNo <= 0) return;
+            if (
+              getSectionNumber(row && row.turnSheetSectionNo) ===
+                ARMY_MANAGED_TS01_SECTION &&
+              previousManagedOrderNos.indexOf(orderNo) < 0
+            ) {
+              previousManagedOrderNos.push(orderNo);
+            }
+          });
 
           var result =
             setUpTransferPipelineFactory.writeManagedTransferGoodsRows({
               lines: lines,
               transferGoodsRows: $scope.tsTransferGoodsList,
-              previousManagedOrderNos: $scope.managedTransferGoodsRowOrderNos,
+              previousManagedOrderNos: previousManagedOrderNos,
               rowLimit: MANAGED_TS01_ROW_LIMIT,
               isTransferGoodsRowEmpty: $scope.isTransferGoodsRowEmpty,
               getRowSignature: $scope.getTransferGoodsRowSignature,
               clearTransferGoodsRowValues: $scope.clearTransferGoodsRowValues,
+              managedSectionNo: ARMY_MANAGED_TS01_SECTION,
+              isManagedRowOwned: function (row) {
+                // Own section 3 rows; allow blank/legacy section rows to migrate.
+                var sectionNo = getSectionNumber(row && row.turnSheetSectionNo);
+                return sectionNo == null || sectionNo === ARMY_MANAGED_TS01_SECTION;
+              },
               toInt: toInt,
             });
 

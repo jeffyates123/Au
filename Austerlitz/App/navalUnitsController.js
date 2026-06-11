@@ -42,6 +42,7 @@ austerlitzModule.controller(
               $scope.tsNavyBuildList =
                 $scope.normalizeBuildShipsRows(savedRows);
               $scope.refreshNavyBuildRows();
+              $scope.recalculateNavyBuildCostRows();
             }
             if (tsType === "TransferGoods") {
               $scope.tsNavyTransferGoodsList = savedRows || [];

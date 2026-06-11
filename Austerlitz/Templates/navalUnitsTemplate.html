@@ -104,13 +104,20 @@
       </table>
     </div>
 
-    <!-- TS_01 Transfer Goods -->
+    <!-- Navy Costs (auto-generated TS_01 rows) -->
     <div class="landUnitsSectionHeader">
-      <span class="landUnitsSectionTitle">TS_01 Transfer Goods</span>
-      <span class="landUnitsSectionMeta">max 10 rows &mdash; shared with Army</span>
+      <span class="landUnitsSectionTitle">Navy Costs</span>
+      <span class="landUnitsSectionMeta" ng-show="tsNavyTransferGoodsRows.length > 0">{{tsNavyTransferGoodsRows.length}} row(s)</span>
     </div>
 
-    <div class="landUnitsTableWrap">
+    <div
+      class="alert alert-info landUnitsAlert"
+      ng-show="!tsNavyTransferGoodsRows.length"
+    >
+      No navy build costs generated yet.
+    </div>
+
+    <div class="landUnitsTableWrap" ng-show="tsNavyTransferGoodsRows.length > 0">
       <table class="table landUnitsTable" style="font-size:12px">
         <thead>
           <tr>
@@ -121,77 +128,19 @@
             <th style="width:70px">Citizens</th>
             <th style="width:70px">EcPts</th>
             <th style="width:70px">Wood</th>
-            <th style="width:70px">Horses</th>
             <th style="width:70px">Textiles</th>
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="row in tsNavyTransferGoodsRows track by row.orderNo">
             <td>{{row.orderNo}}</td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.from"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.to"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.louisdore"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.citizens"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.ecPts"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.wood"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.horses"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
-            <td>
-              <input
-                class="form-control input-sm"
-                type="number"
-                ng-model="row.textiles"
-                ng-blur="onNavyTransferGoodsChanged()"
-              />
-            </td>
+            <td>{{row.from || '-'}}</td>
+            <td>{{row.to || '-'}}</td>
+            <td>{{row.louisdore || 0}}</td>
+            <td>{{row.citizens || 0}}</td>
+            <td>{{row.ecPts || 0}}</td>
+            <td>{{row.wood || 0}}</td>
+            <td>{{row.textiles || 0}}</td>
           </tr>
         </tbody>
       </table>
@@ -247,16 +196,14 @@
       <button
         type="button"
         class="btn btn-default btn-sm"
-        ng-click="openNavyFederationModal(warshipRows[0] || merchantRows[0])"
-        ng-disabled="!warshipRows.length && !merchantRows.length"
-      >Form Fleet (11&ndash;30)</button>
-      <button
-        type="button"
-        class="btn btn-default btn-sm"
         ng-click="openNavyRepairModal()"
         ng-disabled="!getEligibleRepairShips().length"
-        style="margin-left:6px"
       >Repair Ships</button>
+    </div>
+
+    <div class="alert alert-info landUnitsAlert" ng-show="navyPositionFilter">
+      Showing only ships at position {{navyPositionFilter}}.
+      <a href="" ng-click="$event.preventDefault(); clearNavyPositionFilter()">Show all ships</a>
     </div>
 
     <!-- Warships section -->
@@ -309,7 +256,11 @@
             <td>{{pair.left.id}}</td>
             <td>{{pair.left.type}}</td>
             <td>{{pair.left.name}}</td>
-            <td>{{pair.left.position}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="toggleNavyPositionFilter(pair.left)"
+              title="Double-click to filter ships by this position"
+            >{{pair.left.position}}</td>
             <td>
               <button
                 type="button"
@@ -337,7 +288,11 @@
             <td>{{pair.right ? pair.right.id : ''}}</td>
             <td>{{pair.right ? pair.right.type : ''}}</td>
             <td>{{pair.right ? pair.right.name : ''}}</td>
-            <td>{{pair.right ? pair.right.position : ''}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="pair.right && toggleNavyPositionFilter(pair.right)"
+              title="Double-click to filter ships by this position"
+            >{{pair.right ? pair.right.position : ''}}</td>
             <td>
               <button
                 ng-if="pair.right"
@@ -421,7 +376,11 @@
           <tr ng-repeat="pair in merchantPairRows track by $index">
             <td>{{pair.left.id}}</td>
             <td>{{pair.left.type}}</td>
-            <td>{{pair.left.position}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="toggleNavyPositionFilter(pair.left)"
+              title="Double-click to filter ships by this position"
+            >{{pair.left.position}}</td>
             <td>
               <button
                 type="button"
@@ -451,7 +410,11 @@
 
             <td>{{pair.right ? pair.right.id : ''}}</td>
             <td>{{pair.right ? pair.right.type : ''}}</td>
-            <td>{{pair.right ? pair.right.position : ''}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="pair.right && toggleNavyPositionFilter(pair.right)"
+              title="Double-click to filter ships by this position"
+            >{{pair.right ? pair.right.position : ''}}</td>
             <td>
               <button
                 ng-if="pair.right"
@@ -540,7 +503,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="ship in warshipRows">
+            <tr ng-repeat="ship in getNavyFederationWarships()">
               <td>
                 <button
                   type="button"
@@ -555,7 +518,7 @@
               <td>{{ship.position}}</td>
               <td>{{ship.fleet || '-'}}</td>
             </tr>
-            <tr ng-repeat="ship in merchantRows">
+            <tr ng-repeat="ship in getNavyFederationMerchants()">
               <td>
                 <button
                   type="button"

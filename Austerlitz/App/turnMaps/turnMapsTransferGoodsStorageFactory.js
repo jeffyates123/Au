@@ -4,6 +4,7 @@ austerlitzModule.factory('turnMapsTransferGoodsStorageFactory', function (ts01Tr
     function getTransferGoodsRowSignature(row, toInt) {
         return [
             toInt(row && row.orderNo, 0),
+            row && row.turnSheetSectionNo != null ? row.turnSheetSectionNo : '',
             row && row.from != null ? row.from : '',
             row && row.to != null ? row.to : '',
             row && row.louisdore != null ? row.louisdore : '',

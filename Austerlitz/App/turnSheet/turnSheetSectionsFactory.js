@@ -11,6 +11,7 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
             postType: 'TransferGoods',
             columns: [
                 { field: 'orderNo', displayName: 'No' },
+                { field: 'turnSheetSectionNo', displayName: 'Section' },
                 { field: 'from', displayName: 'From' },
                 { field: 'to', displayName: 'To' },
                 { field: 'louisdore', displayName: 'Louisdore' },
