@@ -100,6 +100,7 @@ austerlitzModule.controller(
       ) {
         $scope.buildWarshipRows();
         $scope.buildMerchantRows();
+        $scope.replayNavyFormFederations();
         $scope.buildEligibleShipyardOptions();
         refShipsPromise.then(function () {
           $scope.loadNavySetUpData();
@@ -115,6 +116,7 @@ austerlitzModule.controller(
           function () {
             $scope.buildWarshipRows();
             $scope.buildMerchantRows();
+            $scope.replayNavyFormFederations();
             $scope.buildEligibleShipyardOptions();
             refShipsPromise.then(function () {
               $scope.loadNavySetUpData();

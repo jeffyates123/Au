@@ -3,6 +3,45 @@
 austerlitzModule.factory("landUnitsFederationFactory", function () {
   return {
     attach: function ($scope, turnSheetFactory) {
+      function toInt(value) {
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+      }
+
+      function findLatestTs14RowByItemNo(rows, itemNo) {
+        var latest = null;
+        for (var i = 0; i < (rows || []).length; i++) {
+          if (!$scope.sameNullableInt(rows[i].itemNo, itemNo)) {
+            continue;
+          }
+
+          if (!latest) {
+            latest = rows[i];
+            continue;
+          }
+
+          var latestOrderNo = toInt(latest.orderNo) || 0;
+          var rowOrderNo = toInt(rows[i].orderNo) || 0;
+          if (rowOrderNo >= latestOrderNo) {
+            latest = rows[i];
+          }
+        }
+
+        return latest;
+      }
+
+      function clearDuplicateTs14RowsForItemNo(rows, itemNo, keepRow) {
+        angular.forEach(rows || [], function (row) {
+          if (!$scope.sameNullableInt(row.itemNo, itemNo) || row === keepRow) {
+            return;
+          }
+
+          row.turnId = $scope.masterData.turnId;
+          row.itemNo = null;
+          row.federation_Fleet = null;
+        });
+      }
+
       $scope.persistFormFederationOrders = function (stagedOrders) {
         turnSheetFactory
           .getTSFormFederations($scope.masterData.turnId)
@@ -25,7 +64,7 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
             for (var i = 0; i < stagedOrders.length; i++) {
               var order = stagedOrders[i];
               var targetRow =
-                $scope.findMatchingFormFederationRow(rows, order.itemNo) ||
+                findLatestTs14RowByItemNo(rows, order.itemNo) ||
                 $scope.findNextEmptyTurnSheetRowWithinLimit(
                   rows,
                   ["itemNo", "federation_Fleet"],
@@ -40,6 +79,7 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
               targetRow.turnId = $scope.masterData.turnId;
               targetRow.itemNo = order.itemNo;
               targetRow.federation_Fleet = order.federation_Fleet;
+              clearDuplicateTs14RowsForItemNo(rows, order.itemNo, targetRow);
             }
 
             return turnSheetFactory
@@ -190,6 +230,60 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
         }
 
         $scope.setBrigadeFederation(unit, federationNo);
+      };
+
+      $scope.restoreLandUnitOriginalFederation = function (unit) {
+        if (!unit) {
+          return;
+        }
+
+        var original = toInt(unit.originalFed);
+        var formatted = original != null && original > 0 ? original : "";
+        unit.fed = formatted;
+        unit.fedChanged = false;
+        if (unit.source) {
+          unit.source.federation = formatted || 0;
+        }
+      };
+
+      $scope.clearLandUnitFederationOrder = function (unit) {
+        if (!unit) {
+          return;
+        }
+
+        var unitId = toInt(unit.id);
+        if (unitId == null) {
+          return;
+        }
+
+        turnSheetFactory
+          .getTSFormFederations($scope.masterData.turnId)
+          .then(function (rows) {
+            rows = rows || [];
+            var touched = false;
+
+            angular.forEach(rows, function (row) {
+              if (!$scope.sameNullableInt(row.itemNo, unitId)) {
+                return;
+              }
+
+              row.turnId = $scope.masterData.turnId;
+              row.itemNo = null;
+              row.federation_Fleet = null;
+              touched = true;
+            });
+
+            if (!touched) {
+              $scope.restoreLandUnitOriginalFederation(unit);
+              return null;
+            }
+
+            return turnSheetFactory
+              .postTSRecords(rows, "FormFederations")
+              .then(function () {
+                $scope.restoreLandUnitOriginalFederation(unit);
+              }, $scope.showTurnSheetOrderError);
+          }, $scope.showTurnSheetOrderError);
       };
 
       $scope.getFormFederationTargetNo = function () {
@@ -376,6 +470,10 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
         if (!brigade) {
           return;
         }
+        if (brigade.fedChanged) {
+          $scope.clearLandUnitFederationOrder(brigade);
+          return;
+        }
 
         var targetFederationNo = parseInt(brigade.fed, 10);
         if (isNaN(targetFederationNo)) {
@@ -546,10 +644,7 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
         return (
           sourceLabel +
           " -> " +
-          order.federation_Fleet +
-          " (" +
-          $scope.getLandFederationPartSummary(order.federation_Fleet) +
-          ")"
+          order.federation_Fleet
         );
       };
 

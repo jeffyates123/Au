@@ -266,7 +266,7 @@
                 type="button"
                 class="landUnitsFederationChip"
                 ng-class="{ landUnitsFederationChipChanged: pair.left.fleetChanged }"
-                ng-click="openNavyFederationModal(pair.left)"
+                ng-click="openNavyFederationModal(pair.left, $event)"
                 title="Click to assign fleet"
               >{{pair.left.fleet || '-'}}</button>
             </td>
@@ -299,7 +299,7 @@
                 type="button"
                 class="landUnitsFederationChip"
                 ng-class="{ landUnitsFederationChipChanged: pair.right.fleetChanged }"
-                ng-click="openNavyFederationModal(pair.right)"
+                ng-click="openNavyFederationModal(pair.right, $event)"
                 title="Click to assign fleet"
               >{{pair.right.fleet || '-'}}</button>
             </td>
@@ -386,7 +386,7 @@
                 type="button"
                 class="landUnitsFederationChip"
                 ng-class="{ landUnitsFederationChipChanged: pair.left.fleetChanged }"
-                ng-click="openNavyFederationModal(pair.left)"
+                ng-click="openNavyFederationModal(pair.left, $event)"
                 title="Click to assign fleet"
               >{{pair.left.fleet || '-'}}</button>
             </td>
@@ -421,7 +421,7 @@
                 type="button"
                 class="landUnitsFederationChip"
                 ng-class="{ landUnitsFederationChipChanged: pair.right.fleetChanged }"
-                ng-click="openNavyFederationModal(pair.right)"
+                ng-click="openNavyFederationModal(pair.right, $event)"
                 title="Click to assign fleet"
               >{{pair.right.fleet || '-'}}</button>
             </td>
@@ -510,7 +510,7 @@
                   class="btn btn-xs"
                   ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
                   ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
-                >{{isNavyShipStaged(ship) ? '&#10003;' : '+'}}</button>
+                >{{isNavyShipStaged(ship) ? 'Added' : 'Add Ship'}}</button>
               </td>
               <td>{{ship.id}}</td>
               <td>{{ship.type}}</td>
@@ -525,7 +525,7 @@
                   class="btn btn-xs"
                   ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
                   ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
-                >{{isNavyShipStaged(ship) ? '&#10003;' : '+'}}</button>
+                >{{isNavyShipStaged(ship) ? 'Added' : 'Add Ship'}}</button>
               </td>
               <td>{{ship.id}}</td>
               <td>{{ship.type}}</td>

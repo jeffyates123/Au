@@ -17,6 +17,7 @@ austerlitzModule.controller(
     landUnitsReplayFactory,
     landUnitsFederationFactory,
     landUnitsHeadcountTrainFactory,
+    landUnitsBoardingFactory,
     landUnitsBattalionOrdersFactory,
     landUnitsRenameFactory,
     landUnitsUiFactory,
@@ -31,6 +32,7 @@ austerlitzModule.controller(
     landUnitsReplayFactory.attach($scope, $q, turnSheetFactory);
     landUnitsFederationFactory.attach($scope, turnSheetFactory);
     landUnitsHeadcountTrainFactory.attach($scope, turnSheetFactory);
+    landUnitsBoardingFactory.attach($scope, turnSheetFactory);
     landUnitsBattalionOrdersFactory.attach($scope, $q, turnSheetFactory);
     landUnitsRenameFactory.attach($scope, turnSheetFactory);
     landUnitsUiFactory.attach($scope);

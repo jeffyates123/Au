@@ -426,6 +426,7 @@
           <col class="landUnitsColBattalion" />
           <col class="landUnitsColToggle" />
           <col class="landUnitsColToggle" />
+          <col class="landUnitsColToggle" />
           <col class="landUnitsColMenu" />
         </colgroup>
         <thead>
@@ -443,6 +444,7 @@
             </th>
             <th class="landUnitsToggleCol">H/C</th>
             <th class="landUnitsToggleCol">Train</th>
+            <th class="landUnitsToggleCol">Board</th>
             <th class="landUnitsMenuCol"></th>
           </tr>
         </thead>
@@ -562,6 +564,16 @@
                 title="{{getBarracksActionTooltip(brigade)}}"
               >
                 Train
+              </button>
+            </td>
+            <td class="landUnitsToggleCol">
+              <button
+                type="button"
+                class="landUnitsToggleButton"
+                ng-style="getBrigadeToggleStyle(brigade.boardingSelected)"
+                ng-click="openBoardingModal(brigade)"
+              >
+                Board
               </button>
             </td>
             <td class="landUnitsMenuCol">
@@ -812,6 +824,86 @@
 
   <div
     class="landUnitsModalBackdrop"
+    ng-show="boardingModal.isOpen"
+    ng-click="closeBoardingModal()"
+  ></div>
+  <div class="landUnitsModal" ng-show="boardingModal.isOpen">
+    <div class="landUnitsModalHeader">
+      <div>
+        <h3>Board Brigade</h3>
+        <div class="landUnitsModalSubtitle">
+          {{boardingModal.brigade.id}} {{boardingModal.brigade.name}} -
+          {{boardingModal.brigade.position}}
+        </div>
+      </div>
+      <button type="button" class="close" ng-click="closeBoardingModal()">
+        &times;
+      </button>
+    </div>
+
+    <div class="landUnitsModalBody">
+      <div
+        class="alert alert-info"
+        ng-show="!boardingModal.fleets || boardingModal.fleets.length === 0"
+      >
+        No fleets found in the same sphere.
+      </div>
+      <table
+        class="table table-condensed landUnitsTable"
+        ng-show="boardingModal.fleets && boardingModal.fleets.length > 0"
+      >
+        <thead>
+          <tr>
+            <th>Fleet</th>
+            <th>Warships</th>
+            <th>Merchants</th>
+            <th>Total ships</th>
+            <th>Total loading capacity</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="fleet in boardingModal.fleets track by fleet.fleetNo">
+            <td>{{fleet.fleetNo}}</td>
+            <td>{{fleet.warshipCount}}</td>
+            <td>{{fleet.merchantCount}}</td>
+            <td>{{fleet.totalShips}}</td>
+            <td>{{fleet.totalCapacity | number}}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-default btn-xs"
+                ng-click="applyBoardingFleet(fleet.fleetNo)"
+              >
+                +Board
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        ng-show="boardingModal.brigade.boardingSelected"
+        ng-click="removeBoardingFromModal()"
+      >
+        Remove
+      </button>
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="closeBoardingModal()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="landUnitsModalBackdrop"
     ng-show="formFederationModal.isOpen"
     ng-click="closeFormFederationModal()"
   ></div>
@@ -876,7 +968,6 @@
               <th>Pos</th>
               <th>Fed</th>
               <th>MP</th>
-              <th>Fed Part</th>
               <th></th>
               <th></th>
             </tr>
@@ -893,17 +984,13 @@
               <td>{{getFormFederationDisplayFed(candidate)}}</td>
               <td>{{candidate.mp}}</td>
               <td>
-                {{getLandFederationPartSummary(getFormFederationDisplayFed(candidate))}}
-              </td>
-              <td>
                 <button
                   type="button"
                   class="landUnitsFederationActionButton"
                   ng-click="stageFormFederationBrigade(candidate)"
                   ng-disabled="!canStageFormFederationBrigade(candidate)"
                 >
-                  {{formFederationModal.brigade.kind === 'commander' ?
-                  '+Commander' : '+Brigade'}}
+                  Add Unit
                 </button>
               </td>
               <td>
@@ -923,8 +1010,7 @@
 
       <div class="landUnitsHeadcountPreview">
         <div>
-          <strong>Staged TS14 orders:</strong>
-          {{formFederationModal.stagedOrders.length}}
+          <strong>14 .Form Federation - {{formFederationModal.stagedOrders.length}} Orders</strong>
         </div>
         <div
           ng-repeat="order in formFederationModal.stagedOrders track by getFormFederationOrderKey(order)"
