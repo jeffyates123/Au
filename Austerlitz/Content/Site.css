@@ -1265,8 +1265,8 @@ textarea {
     border-left: 2px solid #d9d2c6;
 }
 
-.navyFleetSummaryTable > thead > tr > th:nth-child(5),
-.navyFleetSummaryTable > tbody > tr > td:nth-child(5) {
+.navyFleetSummaryTable > thead > tr > th:nth-child(7),
+.navyFleetSummaryTable > tbody > tr > td:nth-child(7) {
     border-left: 2px solid #d9d2c6;
 }
 
@@ -1529,6 +1529,11 @@ textarea {
     margin-left: -380px;
 }
 
+.landUnitsBoardingModal {
+    width: 900px;
+    margin-left: -450px;
+}
+
 .landUnitsModalHeader {
     display: flex;
     align-items: flex-start;
@@ -1660,6 +1665,16 @@ textarea {
     max-height: 300px;
     overflow-y: auto;
     border: 1px solid #e6e0d8;
+}
+
+.landUnitsBoardingTableWrap {
+    max-height: 300px;
+    overflow-x: auto;
+}
+
+.landUnitsBoardingTableWrap .landUnitsTable {
+    margin-bottom: 0;
+    min-width: 760px;
 }
 
 .landUnitsFormFederationTable {

@@ -567,7 +567,7 @@
           </Key>
           <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
           <Property Name="OrderNo" Type="int" Nullable="false" />
-          <Property Name="Command" Type="int" />
+          <Property Name="Command" Type="varchar" MaxLength="1" />
           <Property Name="ItemNo" Type="int" />
           <Property Name="FleetNo" Type="int" />
           <Property Name="FleetOwner" Type="int" />
@@ -1168,7 +1168,7 @@
           </Key>
           <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="OrderNo" Type="Int32" Nullable="false" />
-          <Property Name="Command" Type="Int32" />
+          <Property Name="Command" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
           <Property Name="ItemNo" Type="Int32" />
           <Property Name="FleetNo" Type="Int32" />
           <Property Name="FleetOwner" Type="Int32" />

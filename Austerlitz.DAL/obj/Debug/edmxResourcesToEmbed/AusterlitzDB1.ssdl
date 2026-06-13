@@ -562,7 +562,7 @@
     </Key>
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
-    <Property Name="Command" Type="int" />
+    <Property Name="Command" Type="varchar" MaxLength="1" />
     <Property Name="ItemNo" Type="int" />
     <Property Name="FleetNo" Type="int" />
     <Property Name="FleetOwner" Type="int" />

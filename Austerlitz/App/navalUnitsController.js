@@ -81,6 +81,19 @@ austerlitzModule.controller(
       );
     }
 
+    function loadTsBoardingRows() {
+      return turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+        function (rows) {
+          $scope.tsBoardingList = rows || [];
+          $scope.buildFleetSummaryRows();
+        },
+        function () {
+          $scope.tsBoardingList = [];
+          $scope.buildFleetSummaryRows();
+        },
+      );
+    }
+
     $scope.initNavyUnits = function () {
       if (
         !$scope.masterData ||
@@ -93,6 +106,7 @@ austerlitzModule.controller(
       }
 
       var refShipsPromise = loadRefShips();
+      var tsBoardingPromise = loadTsBoardingRows();
 
       if (
         $scope.masterData.turnReport &&
@@ -102,7 +116,7 @@ austerlitzModule.controller(
         $scope.buildMerchantRows();
         $scope.replayNavyFormFederations();
         $scope.buildEligibleShipyardOptions();
-        refShipsPromise.then(function () {
+        $q.all([refShipsPromise, tsBoardingPromise]).then(function () {
           $scope.loadNavySetUpData();
         });
         return;
@@ -118,7 +132,7 @@ austerlitzModule.controller(
             $scope.buildMerchantRows();
             $scope.replayNavyFormFederations();
             $scope.buildEligibleShipyardOptions();
-            refShipsPromise.then(function () {
+            $q.all([refShipsPromise, tsBoardingPromise]).then(function () {
               $scope.loadNavySetUpData();
             });
           },

@@ -827,7 +827,7 @@
     ng-show="boardingModal.isOpen"
     ng-click="closeBoardingModal()"
   ></div>
-  <div class="landUnitsModal" ng-show="boardingModal.isOpen">
+  <div class="landUnitsModal landUnitsBoardingModal" ng-show="boardingModal.isOpen">
     <div class="landUnitsModalHeader">
       <div>
         <h3>Board Brigade</h3>
@@ -842,45 +842,53 @@
     </div>
 
     <div class="landUnitsModalBody">
+      <div class="alert alert-info" ng-show="boardingModal.isLoading">
+        Loading fleet boarding usage...
+      </div>
       <div
         class="alert alert-info"
-        ng-show="!boardingModal.fleets || boardingModal.fleets.length === 0"
+        ng-show="!boardingModal.isLoading && (!boardingModal.fleets || boardingModal.fleets.length === 0)"
       >
         No fleets found in the same sphere.
       </div>
-      <table
-        class="table table-condensed landUnitsTable"
-        ng-show="boardingModal.fleets && boardingModal.fleets.length > 0"
-      >
-        <thead>
-          <tr>
-            <th>Fleet</th>
-            <th>Warships</th>
-            <th>Merchants</th>
-            <th>Total ships</th>
-            <th>Total loading capacity</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="fleet in boardingModal.fleets track by fleet.fleetNo">
-            <td>{{fleet.fleetNo}}</td>
-            <td>{{fleet.warshipCount}}</td>
-            <td>{{fleet.merchantCount}}</td>
-            <td>{{fleet.totalShips}}</td>
-            <td>{{fleet.totalCapacity | number}}</td>
-            <td>
-              <button
-                type="button"
-                class="btn btn-default btn-xs"
-                ng-click="applyBoardingFleet(fleet.fleetNo)"
-              >
-                +Board
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="landUnitsBoardingTableWrap" ng-show="boardingModal.fleets && boardingModal.fleets.length > 0">
+        <table class="table table-condensed landUnitsTable">
+          <thead>
+            <tr>
+              <th>Fleet</th>
+              <th>Warships</th>
+              <th>Merchants</th>
+              <th>Total ships</th>
+              <th>Total loading capacity</th>
+              <th>Loaded</th>
+              <th>Available Cap.</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="fleet in boardingModal.fleets track by fleet.fleetNo">
+              <td>{{fleet.fleetNo}}</td>
+              <td>{{fleet.warshipCount}}</td>
+              <td>{{fleet.merchantCount}}</td>
+              <td>{{fleet.totalShips}}</td>
+              <td>{{fleet.totalCapacity | number}}</td>
+              <td>{{fleet.usedCapacityWhole}}</td>
+              <td>{{fleet.availableCapacity}}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs"
+                  ng-click="applyBoardingFleet(fleet.fleetNo)"
+                  ng-disabled="fleet.wouldExceedForCurrentBrigade"
+                  title="{{fleet.wouldExceedForCurrentBrigade ? 'Not enough remaining capacity for this brigade' : ''}}"
+                >
+                  +Board
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="landUnitsModalFooter">

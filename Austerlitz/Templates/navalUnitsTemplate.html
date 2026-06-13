@@ -199,15 +199,17 @@
     <div class="landUnitsTableWrap" ng-show="fleetSummaryPairRows.length > 0">
       <table class="table landUnitsTable navyFleetSummaryTable" style="font-size:11px">
         <colgroup>
-          <col style="width:12.5%" /><col style="width:12.5%" />
-          <col style="width:12.5%" /><col style="width:12.5%" />
-          <col style="width:12.5%" /><col style="width:12.5%" />
-          <col style="width:12.5%" /><col style="width:12.5%" />
+          <col style="width:8.33%" /><col style="width:8.33%" />
+          <col style="width:8.33%" /><col style="width:8.33%" /><col style="width:8.33%" />
+          <col style="width:8.33%" />
+          <col style="width:8.33%" /><col style="width:8.33%" />
+          <col style="width:8.33%" /><col style="width:8.33%" /><col style="width:8.33%" />
+          <col style="width:8.33%" />
         </colgroup>
         <thead>
           <tr>
-            <th>Fleet No</th><th>Warships</th><th>Merchants</th><th>Loading Cap</th>
-            <th>Fleet No</th><th>Warships</th><th>Merchants</th><th>Loading Cap</th>
+            <th>Fleet No</th><th>Warships</th><th>Merchants</th><th>Loading Cap</th><th>Loaded</th><th>Available Cap.</th>
+            <th>Fleet No</th><th>Warships</th><th>Merchants</th><th>Loading Cap</th><th>Loaded</th><th>Available Cap.</th>
           </tr>
         </thead>
         <tbody>
@@ -216,10 +218,14 @@
             <td>{{pair.left.warships}}</td>
             <td>{{pair.left.merchants}}</td>
             <td>{{pair.left.loadingCap}}</td>
+            <td>{{pair.left.boardedCap}}</td>
+            <td>{{pair.left.availableCap}}</td>
             <td>{{pair.right ? pair.right.fleetNo : ''}}</td>
             <td>{{pair.right ? pair.right.warships : ''}}</td>
             <td>{{pair.right ? pair.right.merchants : ''}}</td>
             <td>{{pair.right ? pair.right.loadingCap : ''}}</td>
+            <td>{{pair.right ? pair.right.boardedCap : ''}}</td>
+            <td>{{pair.right ? pair.right.availableCap : ''}}</td>
           </tr>
         </tbody>
       </table>
