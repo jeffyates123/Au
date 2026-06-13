@@ -152,6 +152,7 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
 
             $scope.refreshWarshipPairRows();
             $scope.refreshMerchantPairRows();
+            $scope.buildFleetSummaryRows();
           });
       };
 
@@ -203,6 +204,7 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
                 $scope.restoreNavyShipOriginalFleet(ship);
                 $scope.refreshWarshipPairRows();
                 $scope.refreshMerchantPairRows();
+                $scope.buildFleetSummaryRows();
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
       };
@@ -439,6 +441,7 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
                     ship.fleetChanged = true;
                   }
                 });
+                $scope.buildFleetSummaryRows();
                 $scope.closeNavyFederationModal();
               });
           });

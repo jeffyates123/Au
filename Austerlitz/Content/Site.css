@@ -603,6 +603,15 @@ textarea {
     text-decoration: none;
 }
 
+.appBannerHomeLink {
+    display: inline-flex;
+    align-items: center;
+}
+
+.appBannerHomeIcon {
+    font-size: 13px;
+}
+
 .appBannerDivider {
     opacity: 0.45;
 }
@@ -1256,6 +1265,21 @@ textarea {
     border-left: 2px solid #d9d2c6;
 }
 
+.navyFleetSummaryTable > thead > tr > th:nth-child(5),
+.navyFleetSummaryTable > tbody > tr > td:nth-child(5) {
+    border-left: 2px solid #d9d2c6;
+}
+
+.navyWarshipsTable > thead > tr > th:nth-child(12),
+.navyWarshipsTable > tbody > tr > td:nth-child(12) {
+    border-left: 2px solid #d9d2c6;
+}
+
+.navyMerchantsTable > thead > tr > th:nth-child(14),
+.navyMerchantsTable > tbody > tr > td:nth-child(14) {
+    border-left: 2px solid #d9d2c6;
+}
+
 .landUnitsSetUpTable > thead > tr > th {
     padding: 8px 8px;
 }
@@ -1345,6 +1369,18 @@ textarea {
     background: #fff0c2;
     color: #6a4b00;
     font-weight: bold;
+}
+
+.navyRepairChip {
+    min-width: 24px;
+    padding: 2px 6px;
+}
+
+.navyRepairChip:disabled {
+    border-color: #d3d3d3;
+    background: #f4f4f4;
+    color: #aaaaaa;
+    cursor: not-allowed;
 }
 
 .landUnitsBattalionDropdown {

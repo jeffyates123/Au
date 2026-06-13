@@ -80,6 +80,7 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
             };
           })
           .sort($scope.compareShipsForDisplay);
+        $scope.buildFleetSummaryRows();
         $scope.refreshWarshipPairRows();
       };
 
@@ -115,7 +116,63 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
             };
           })
           .sort($scope.compareShipsForDisplay);
+        $scope.buildFleetSummaryRows();
         $scope.refreshMerchantPairRows();
+      };
+
+      $scope.buildFleetSummaryRows = function () {
+        var allShips = (($scope.warshipRows || []).concat($scope.merchantRows || []))
+          .slice()
+          .sort($scope.compareShipsForDisplay);
+        var summariesByFleet = {};
+
+        function toInt(value, fallback) {
+          var parsed = parseInt(value, 10);
+          return isNaN(parsed) ? fallback : parsed;
+        }
+
+        angular.forEach(allShips, function (ship) {
+          var fleetNo = toInt(ship && ship.fleet, null);
+          if (fleetNo == null || fleetNo <= 0) return;
+
+          var summary = summariesByFleet[fleetNo];
+          if (!summary) {
+            summary = {
+              fleetNo: fleetNo,
+              warships: 0,
+              merchants: 0,
+              loadingCap: 0,
+              x: toInt(ship.x, 0),
+              y: toInt(ship.y, 0),
+            };
+            summariesByFleet[fleetNo] = summary;
+          }
+
+          if ($scope.isWarshipType(ship.type)) {
+            summary.warships += 1;
+          } else {
+            summary.merchants += 1;
+          }
+
+          var shipDef = $scope.getRefShipByType(ship.type);
+          summary.loadingCap += toInt(shipDef && shipDef.loadCapacity, 0);
+        });
+
+        var summaries = Object.keys(summariesByFleet)
+          .map(function (fleetKey) {
+            return summariesByFleet[fleetKey];
+          })
+          .sort(function (a, b) {
+            if (a.x !== b.x) return a.x - b.x;
+            if (a.y !== b.y) return a.y - b.y;
+            return a.fleetNo - b.fleetNo;
+          });
+
+        var pairRows = [];
+        for (var i = 0; i < summaries.length; i += 2) {
+          pairRows.push({ left: summaries[i], right: summaries[i + 1] || null });
+        }
+        $scope.fleetSummaryPairRows = pairRows;
       };
 
       $scope.toggleNavyPositionFilter = function (ship) {
@@ -223,6 +280,7 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
           }
         });
         $scope.refShipsByType = byType;
+        $scope.buildFleetSummaryRows();
       };
 
       $scope.getRefShipByType = function (typeNo) {

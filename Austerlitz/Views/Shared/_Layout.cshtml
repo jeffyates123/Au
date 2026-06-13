@@ -92,7 +92,10 @@
     <div class="appShell" ng-init="init();">
         <header class="appTopBanner" ng-style="getMenuBarStyle()">
             <div class="appBannerLeft">
-                <a href="/" class="appBannerCountry appBannerCountryLink">{{getSelectedStateName()}}</a>
+                <a href="/" class="appBannerCountry appBannerCountryLink appBannerHomeLink" title="Home">
+                    <span class="glyphicon glyphicon-home appBannerHomeIcon" aria-hidden="true"></span>
+                    <span class="sr-only">Home</span>
+                </a>
                 <span class="appBannerDivider">|</span>
                 <span>AU-{{masterData.selectedGameNo || '--'}}</span>
                 <span class="appBannerDivider">|</span>

@@ -19,6 +19,7 @@ austerlitzModule.factory("navalUnitsStateFactory", function () {
         warshipPairRows: [],
         merchantRows: [],
         merchantPairRows: [],
+        fleetSummaryPairRows: [],
         warshipsSectionCollapsed: getStoredBool(
           "austerlitz.navy.warshipsSectionCollapsed",
         ),
