@@ -34,6 +34,7 @@ austerlitzModule.factory("navalUnitsStateFactory", function () {
         tsNavyBuildRows: [],
         tsNavyTransferGoodsList: [],
         tsBoardingList: [],
+        navyFormFederationRows: [],
         navyFormFederationModal: {
           isOpen: false,
           ship: null,

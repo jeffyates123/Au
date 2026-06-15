@@ -1,6 +1,6 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsFederationFactory", function () {
+austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentResolverFactory) {
   return {
     attach: function ($scope, turnSheetFactory) {
       function toInt(value) {
@@ -300,39 +300,11 @@ austerlitzModule.factory("landUnitsFederationFactory", function () {
       };
 
       $scope.getEffectiveFederationNo = function (brigade) {
-        if (!brigade) {
-          return 0;
-        }
-
-        var brigadeId = parseInt(brigade.id, 10);
-        var currentFederationNo = $scope.getCurrentFederationNo(brigade);
-        var stagedOrders = $scope.formFederationModal.stagedOrders || [];
-
-        for (var i = stagedOrders.length - 1; i >= 0; i--) {
-          var order = stagedOrders[i];
-          if (!order) {
-            continue;
-          }
-
-          if (
-            (order.type === "brigade" || order.type === "commander") &&
-            $scope.sameNullableInt(order.itemNo, brigadeId)
-          ) {
-            return parseInt(order.federation_Fleet, 10) || 0;
-          }
-
-          if (
-            order.type === "federation" &&
-            $scope.sameNullableInt(
-              order.sourceFederationNo,
-              currentFederationNo,
-            )
-          ) {
-            return parseInt(order.federation_Fleet, 10) || 0;
-          }
-        }
-
-        return currentFederationNo;
+        return turnAssignmentResolverFactory.resolveEffectiveLandFederationNo(
+          brigade,
+          ($scope.formFederationModal && $scope.formFederationModal.stagedOrders) ||
+            [],
+        );
       };
 
       $scope.isValidTargetFederationNo = function (targetFederationNo) {

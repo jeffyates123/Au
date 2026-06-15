@@ -249,6 +249,22 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                 return fleetNo;
             };
 
+            $scope.getSelectedBoardingShips = function () {
+                return ($scope.boardingItemRows || []).filter(function (item) {
+                    return item && item.isSelected && ($scope.isWarshipBoardingItem(item) || $scope.isMerchantBoardingItem(item));
+                });
+            };
+
+            $scope.isCommanderBoardingItem = function (item) {
+                if (!item) return false;
+
+                var itemType = parseInt(item.itemType, 10);
+                if (!isNaN(itemType)) return itemType === 0;
+
+                var typeName = (item.itemTypeName || '').toString().trim().toUpperCase();
+                return typeName === 'COM' || typeName === 'COMMANDER';
+            };
+
             $scope.getBoardingUnitsToLoad = function () {
                 return ($scope.boardingItemRows || []).filter(function (item) {
                     return item && item.isSelected && item.load && !$scope.isWarshipBoardingItem(item) && !$scope.isMerchantBoardingItem(item);
@@ -270,7 +286,30 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
                     return;
                 }
 
+                var selectedShips = $scope.getSelectedBoardingShips();
+                if (!selectedShips.length) {
+                    alert('Select at least one ship before loading units.');
+                    return;
+                }
+
                 var fleetNo = $scope.getFirstSelectedShipFleetNo();
+                var hasCommander = unitsToLoad.some(function (unit) {
+                    return $scope.isCommanderBoardingItem(unit);
+                });
+                var commanderShipNo = null;
+
+                if (hasCommander) {
+                    if (selectedShips.length !== 1) {
+                        alert('Commanders can only load onto one individual ship. Select exactly one ship.');
+                        return;
+                    }
+
+                    commanderShipNo = parseInt(selectedShips[0].itemNo, 10);
+                    if (isNaN(commanderShipNo) || commanderShipNo <= 0) {
+                        alert('Selected ship is invalid for commander boarding.');
+                        return;
+                    }
+                }
 
                 for (var i = 0; i < unitsToLoad.length; i++) {
                     var row = emptyRows[i];
@@ -279,7 +318,9 @@ austerlitzModule.factory('turnMapsBoardingFactory', function () {
 
                     row.command = null;
                     row.itemNo = unitNo;
-                    row.fleetNo = fleetNo != null ? fleetNo : null;
+                    row.fleetNo = $scope.isCommanderBoardingItem(unit)
+                        ? commanderShipNo
+                        : (fleetNo != null ? fleetNo : null);
                     row.fleetOwner = null;
                 }
 

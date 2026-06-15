@@ -1,6 +1,6 @@
 "use strict";
 
-austerlitzModule.factory("navalUnitsModelFactory", function () {
+austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResolverFactory) {
   var WARSHIP_MAX_TYPE = 25;
   var SEA_TERRAIN_CHARS = { "*": true, "+": true, ".": true };
   var SHIPYARD_PROD_SITE_CHARS = { "&": true, $: true };
@@ -124,6 +124,7 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
         var allShips = (($scope.warshipRows || []).concat($scope.merchantRows || []))
           .slice()
           .sort($scope.compareShipsForDisplay);
+        var formFederationRows = $scope.navyFormFederationRows || [];
         var summariesByFleet = {};
 
         function toInt(value, fallback) {
@@ -218,7 +219,11 @@ austerlitzModule.factory("navalUnitsModelFactory", function () {
         var loadedCapacityByFleet = getLoadedCapacityByFleet();
 
         angular.forEach(allShips, function (ship) {
-          var fleetNo = toInt(ship && ship.fleet, null);
+          var fleetNo =
+            turnAssignmentResolverFactory.resolveEffectiveShipFleetNoForShip(
+              ship,
+              formFederationRows,
+            );
           if (fleetNo == null || fleetNo <= 0) return;
 
           var summary = summariesByFleet[fleetNo];

@@ -1,8 +1,8 @@
 "use strict";
 
-austerlitzModule.factory("navalUnitsFederationFactory", function () {
-  var FLEET_MIN = 11;
-  var FLEET_MAX = 30;
+austerlitzModule.factory(
+  "navalUnitsFederationFactory",
+  function (navyFleetValidationFactory, turnAssignmentResolverFactory) {
   var TS14_MAX_ROWS = 21;
 
   return {
@@ -120,34 +120,15 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
         return turnSheetFactory
           .getTSFormFederations($scope.masterData.turnId)
           .then(function (rows) {
-            angular.forEach(rows || [], function (row) {
-              if (
-                row.itemNo == null ||
-                row.itemNo === "" ||
-                row.federation_Fleet == null ||
-                row.federation_Fleet === ""
-              ) {
-                return;
-              }
-
-              var targetFleetNo = parseInt(row.federation_Fleet, 10);
-              var isClearFleet = targetFleetNo === 0;
-              var isPlayableFleetNo =
-                targetFleetNo >= FLEET_MIN && targetFleetNo <= FLEET_MAX;
-              if (isNaN(targetFleetNo) || (!isClearFleet && !isPlayableFleetNo)) {
-                return;
-              }
-
-              var ship = $scope.getShipById(row.itemNo);
-              if (ship) {
-                applyFleetToShips([ship], targetFleetNo);
-                return;
-              }
-
-              var shipsInFleet = getShipsByOriginalFleetNo(row.itemNo);
-              if (shipsInFleet.length) {
-                applyFleetToShips(shipsInFleet, targetFleetNo);
-              }
+            var formFederationRows = rows || [];
+            $scope.navyFormFederationRows = formFederationRows;
+            angular.forEach(getAllShips(), function (ship) {
+              var targetFleetNo =
+                turnAssignmentResolverFactory.resolveEffectiveShipFleetNoForShip(
+                  ship,
+                  formFederationRows,
+                );
+              applyFleetToShips([ship], targetFleetNo);
             });
 
             $scope.refreshWarshipPairRows();
@@ -201,6 +182,7 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
             return turnSheetFactory
               .postTSRecords(rows, "FormFederations")
               .then(function () {
+                $scope.navyFormFederationRows = rows;
                 $scope.restoreNavyShipOriginalFleet(ship);
                 $scope.refreshWarshipPairRows();
                 $scope.refreshMerchantPairRows();
@@ -226,52 +208,49 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
       };
 
       $scope.isValidNavyFleetNo = function (fleetNo) {
-        if (fleetNo === 0 || fleetNo === "0") {
-          $scope.navyFormFederationModal.validationError = "";
-          return true;
-        }
-        var n = parseInt(fleetNo, 10);
-        if (!isNaN(n) && n >= FLEET_MIN && n <= FLEET_MAX) {
+        if (navyFleetValidationFactory.isValidOrderFleetNo(fleetNo)) {
           $scope.navyFormFederationModal.validationError = "";
           return true;
         }
         $scope.navyFormFederationModal.validationError =
           "Enter 0 to clear, or a fleet number from " +
-          FLEET_MIN +
+          navyFleetValidationFactory.min +
           " to " +
-          FLEET_MAX +
+          navyFleetValidationFactory.max +
           ".";
         return false;
       };
 
       $scope.getNavyFederationTargetNo = function () {
-        var n = parseInt(
+        return navyFleetValidationFactory.toInt(
           $scope.navyFormFederationModal.targetFleetNo,
-          10,
         );
-        return isNaN(n) ? null : n;
       };
 
       $scope.getNextAvailableFleetNo = function () {
         var used = {};
         angular.forEach($scope.warshipRows || [], function (s) {
-          var n = parseInt(s.fleet, 10);
-          if (!isNaN(n) && n > 0) used[n] = true;
+          var n = navyFleetValidationFactory.toInt(s.fleet);
+          if (navyFleetValidationFactory.isAssignedFleetNo(n)) used[n] = true;
         });
         angular.forEach($scope.merchantRows || [], function (s) {
-          var n = parseInt(s.fleet, 10);
-          if (!isNaN(n) && n > 0) used[n] = true;
+          var n = navyFleetValidationFactory.toInt(s.fleet);
+          if (navyFleetValidationFactory.isAssignedFleetNo(n)) used[n] = true;
         });
         angular.forEach(
           ($scope.navyFormFederationModal &&
             $scope.navyFormFederationModal.stagedOrders) ||
             [],
           function (o) {
-            var n = parseInt(o.federation_Fleet, 10);
-            if (!isNaN(n) && n > 0) used[n] = true;
+            var n = navyFleetValidationFactory.toInt(o.federation_Fleet);
+            if (navyFleetValidationFactory.isAssignedFleetNo(n)) used[n] = true;
           },
         );
-        for (var n = FLEET_MIN; n <= FLEET_MAX; n++) {
+        for (
+          var n = navyFleetValidationFactory.min;
+          n <= navyFleetValidationFactory.max;
+          n++
+        ) {
           if (!used[n]) return n;
         }
         return null;
@@ -286,15 +265,15 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
           return;
         }
 
-        var targetFleetNo = parseInt(ship.fleet, 10);
-        if (isNaN(targetFleetNo) || targetFleetNo <= 0) {
+        var targetFleetNo = navyFleetValidationFactory.toInt(ship.fleet);
+        if (!navyFleetValidationFactory.isAssignedFleetNo(targetFleetNo)) {
           targetFleetNo = $scope.getNextAvailableFleetNo();
           if (targetFleetNo == null) {
             alert(
               "No available fleet numbers (" +
-                FLEET_MIN +
+                navyFleetValidationFactory.min +
                 "-" +
-                FLEET_MAX +
+                navyFleetValidationFactory.max +
                 ").",
             );
             targetFleetNo = "";
@@ -373,7 +352,11 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
         var next = $scope.getNextAvailableFleetNo();
         if (next == null) {
           alert(
-            "No available fleet numbers (" + FLEET_MIN + "-" + FLEET_MAX + ").",
+            "No available fleet numbers (" +
+              navyFleetValidationFactory.min +
+              "-" +
+              navyFleetValidationFactory.max +
+              ").",
           );
           return;
         }
@@ -429,13 +412,13 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
             return turnSheetFactory
               .postTSRecords(rows, "FormFederations")
               .then(function () {
+                $scope.navyFormFederationRows = rows;
                 angular.forEach(stagedOrders, function (order) {
                   var ship = $scope.getShipById(order.itemNo);
                   if (ship) {
                     var formatted =
-                      !isNaN(parseInt(order.federation_Fleet, 10)) &&
-                      parseInt(order.federation_Fleet, 10) > 0
-                        ? parseInt(order.federation_Fleet, 10)
+                      navyFleetValidationFactory.isAssignedFleetNo(order.federation_Fleet)
+                        ? turnAssignmentResolverFactory.toInt(order.federation_Fleet)
                         : "";
                     ship.fleet = formatted;
                     ship.fleetChanged = true;
@@ -448,4 +431,5 @@ austerlitzModule.factory("navalUnitsFederationFactory", function () {
       };
     },
   };
-});
+},
+);

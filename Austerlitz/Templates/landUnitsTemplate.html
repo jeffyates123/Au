@@ -243,6 +243,7 @@
           <col class="landUnitsColFed" />
           <col class="landUnitsColMp" />
           <col class="landUnitsCommanderColCmd" />
+          <col class="landUnitsColToggle" />
           <col class="landUnitsColMenu" />
           <col class="landUnitsColId" />
           <col class="landUnitsColName" />
@@ -250,6 +251,7 @@
           <col class="landUnitsColFed" />
           <col class="landUnitsColMp" />
           <col class="landUnitsCommanderColCmd" />
+          <col class="landUnitsColToggle" />
           <col class="landUnitsColMenu" />
         </colgroup>
         <thead>
@@ -260,6 +262,7 @@
             <th class="landUnitsFedCol">Fed</th>
             <th class="landUnitsMpCol">MP</th>
             <th class="landUnitsCommanderCmdCol">Cmd (Rank)</th>
+            <th class="landUnitsToggleCol">Board</th>
             <th class="landUnitsMenuCol"></th>
             <th class="landUnitsIdCol">ID</th>
             <th class="landUnitsNameCol">Name</th>
@@ -267,6 +270,7 @@
             <th class="landUnitsFedCol">Fed</th>
             <th class="landUnitsMpCol">MP</th>
             <th class="landUnitsCommanderCmdCol">Cmd (Rank)</th>
+            <th class="landUnitsToggleCol">Board</th>
             <th class="landUnitsMenuCol"></th>
           </tr>
         </thead>
@@ -310,6 +314,16 @@
             <td class="landUnitsCommanderCmdCol">
               {{pair.left.commandCapacity}}
               <span ng-if="pair.left.rank">({{pair.left.rank}})</span>
+            </td>
+            <td class="landUnitsToggleCol">
+              <button
+                type="button"
+                class="landUnitsToggleButton"
+                ng-style="getBrigadeToggleStyle(pair.left.boardingSelected)"
+                ng-click="openBoardingModal(pair.left)"
+              >
+                Board
+              </button>
             </td>
             <td class="landUnitsMenuCol">
               <div class="dropdown landUnitsActionDropdown">
@@ -376,6 +390,17 @@
                 >{{pair.right.commandCapacity}}
                 <span ng-if="pair.right.rank">({{pair.right.rank}})</span></span
               >
+            </td>
+            <td class="landUnitsToggleCol">
+              <button
+                ng-if="pair.right"
+                type="button"
+                class="landUnitsToggleButton"
+                ng-style="getBrigadeToggleStyle(pair.right.boardingSelected)"
+                ng-click="openBoardingModal(pair.right)"
+              >
+                Board
+              </button>
             </td>
             <td class="landUnitsMenuCol">
               <div ng-if="pair.right" class="dropdown landUnitsActionDropdown">
@@ -855,35 +880,73 @@
         <table class="table table-condensed landUnitsTable">
           <thead>
             <tr>
-              <th>Fleet</th>
-              <th>Warships</th>
-              <th>Merchants</th>
-              <th>Total ships</th>
+              <th>
+                {{isCommanderBoardingUnit(boardingModal.brigade) ? 'Ship' : 'Fleet'}}
+              </th>
+              <th>X/Y</th>
+              <th ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                Warships
+              </th>
+              <th ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                Merchants
+              </th>
+              <th ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                Total ships
+              </th>
+              <th ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                Type
+              </th>
+              <th ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                Condition
+              </th>
               <th>Total loading capacity</th>
-              <th>Loaded</th>
-              <th>Available Cap.</th>
+              <th ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                Loaded
+              </th>
+              <th ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                Available Cap.
+              </th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="fleet in boardingModal.fleets track by fleet.fleetNo">
               <td>{{fleet.fleetNo}}</td>
-              <td>{{fleet.warshipCount}}</td>
-              <td>{{fleet.merchantCount}}</td>
-              <td>{{fleet.totalShips}}</td>
+              <td>{{fleet.position}}</td>
+              <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.warshipCount}}
+              </td>
+              <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.merchantCount}}
+              </td>
+              <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.totalShips}}
+              </td>
+              <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.typeLabel}}
+              </td>
+              <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.conditionLabel}}
+              </td>
               <td>{{fleet.totalCapacity | number}}</td>
-              <td>{{fleet.usedCapacityWhole}}</td>
-              <td>{{fleet.availableCapacity}}</td>
+              <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.usedCapacityWhole}}
+              </td>
+              <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.availableCapacity}}
+              </td>
               <td>
                 <button
                   type="button"
                   class="btn btn-default btn-xs"
                   ng-click="applyBoardingFleet(fleet.fleetNo)"
-                  ng-disabled="fleet.wouldExceedForCurrentBrigade"
                   title="{{fleet.wouldExceedForCurrentBrigade ? 'Not enough remaining capacity for this brigade' : ''}}"
                 >
                   +Board
                 </button>
+                <span class="text-muted">
+                  (Load: {{fleet.currentBrigadeCapacityWholeUp}})
+                </span>
               </td>
             </tr>
           </tbody>

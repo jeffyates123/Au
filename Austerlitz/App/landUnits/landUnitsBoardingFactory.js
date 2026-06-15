@@ -1,6 +1,8 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
+austerlitzModule.factory(
+  "landUnitsBoardingFactory",
+  function ($q, navyFleetValidationFactory, turnAssignmentResolverFactory) {
   function toInt(value, fallback) {
     var parsed = parseInt(value, 10);
     return isNaN(parsed) ? fallback || 0 : parsed;
@@ -8,11 +10,6 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
 
   function toKey(value) {
     return value == null ? "" : value.toString().trim();
-  }
-
-  function isValidFleetNo(value) {
-    var parsed = parseInt(value, 10);
-    return !isNaN(parsed) && parsed > 0;
   }
 
   return {
@@ -124,6 +121,17 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
         return getBoardedItemLoadCapacity(brigade.id);
       };
 
+      $scope.isCommanderBoardingUnit = function (unit) {
+        return !!(unit && unit.kind === "commander");
+      };
+
+      $scope.getBoardingUnitSphere = function (unit) {
+        if (typeof $scope.getLandUnitSphere === "function") {
+          return $scope.getLandUnitSphere(unit);
+        }
+        return $scope.getBrigadeSphere(unit);
+      };
+
       $scope.ensureBoardingModalState = function () {
         if (!$scope.boardingModal) {
           $scope.boardingModal = {
@@ -171,33 +179,110 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
         return Math.floor(baseCapacity * (condition / 100));
       };
 
-      $scope.buildBoardingFleetOptions = function (brigade, boardingRows) {
+      $scope.buildBoardingFleetOptions = function (
+        brigade,
+        boardingRows,
+        formFederationRows,
+      ) {
         if (!brigade) {
           return [];
         }
 
-        var brigadeSphere = $scope.getBrigadeSphere(brigade);
+        var brigadeSphere = $scope.getBoardingUnitSphere(brigade);
         if (!brigadeSphere) {
           return [];
         }
 
         var shipLookupByType = $scope.getShipCapacityLookupByType();
         var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+        var currentBrigadeCapacity =
+          $scope.getBoardingBrigadeRequiredCapacity(brigade);
+
+        if ($scope.isCommanderBoardingUnit(brigade)) {
+          var shipOptions = [];
+
+          function pushShipOption(ship, kind) {
+            if (!ship) {
+              return;
+            }
+
+            var shipSphere = $scope.getSphereFromCoordinates(ship.x, ship.y);
+            if (shipSphere !== brigadeSphere) {
+              return;
+            }
+
+            var shipItemNo = turnAssignmentResolverFactory.getShipItemNo(ship);
+            if (shipItemNo == null || shipItemNo <= 0) {
+              return;
+            }
+
+            var totalCapacity = $scope.getConditionAdjustedShipCapacity(
+              ship,
+              shipLookupByType,
+            );
+            shipOptions.push({
+              fleetNo: shipItemNo,
+              warshipCount: kind === "warship" ? 1 : 0,
+              merchantCount: kind === "merchant" ? 1 : 0,
+              totalShips: 1,
+              totalCapacity: totalCapacity,
+              usedCapacity: 0,
+              usedCapacityWhole: 0,
+              availableCapacity: totalCapacity,
+              remainingCapacity: totalCapacity,
+              currentBrigadeCapacity: currentBrigadeCapacity,
+              currentBrigadeCapacityWholeUp: Math.ceil(
+                currentBrigadeCapacity || 0,
+              ),
+              wouldExceedForCurrentBrigade: false,
+              position: toInt(ship.x, 0) + "/" + toInt(ship.y, 0),
+              typeLabel: kind === "warship" ? "Warship" : "Merchant",
+              conditionLabel:
+                (parseInt(ship.condition, 10) || 100).toString() + "%",
+              isIndividualShip: true,
+            });
+          }
+
+          angular.forEach(turnReport.warships || [], function (warship) {
+            pushShipOption(warship, "warship");
+          });
+          angular.forEach(turnReport.merchantShips || [], function (merchant) {
+            pushShipOption(merchant, "merchant");
+          });
+
+          return shipOptions.sort(function (left, right) {
+            return toInt(left.fleetNo, 0) - toInt(right.fleetNo, 0);
+          });
+        }
+
         var fleetsByNo = {};
         var usedByFleet = $scope.getFleetUsedCapacityLookup(
           boardingRows,
           brigade && brigade.id,
         );
-        var currentBrigadeCapacity =
-          $scope.getBoardingBrigadeRequiredCapacity(brigade);
+        var shipFleetLookup =
+          turnAssignmentResolverFactory.buildEffectiveShipFleetLookup(
+            (turnReport.warships || []).concat(turnReport.merchantShips || []),
+            formFederationRows,
+          );
 
         function addShipToFleet(ship, kind) {
           if (!ship) {
             return;
           }
 
-          var fleetNo = toKey(ship.fleetNo);
-          if (!isValidFleetNo(fleetNo)) {
+          var shipItemNo = turnAssignmentResolverFactory.getShipItemNo(ship);
+          var effectiveFleetNo =
+            shipItemNo != null &&
+            Object.prototype.hasOwnProperty.call(shipFleetLookup, shipItemNo)
+              ? shipFleetLookup[shipItemNo]
+              : turnAssignmentResolverFactory.resolveEffectiveShipFleetNoForShip(
+                  ship,
+                  formFederationRows,
+                );
+
+          var fleetNo = toKey(effectiveFleetNo);
+          if (!navyFleetValidationFactory.isAssignedFleetNo(fleetNo)) {
             return;
           }
 
@@ -213,10 +298,19 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
               merchantCount: 0,
               totalShips: 0,
               totalCapacity: 0,
+              x: ship.x,
+              y: ship.y,
+              hasMixedPosition: false,
             };
           }
 
           var fleet = fleetsByNo[fleetNo];
+          if (
+            !$scope.sameNullableInt(fleet.x, ship.x) ||
+            !$scope.sameNullableInt(fleet.y, ship.y)
+          ) {
+            fleet.hasMixedPosition = true;
+          }
           if (kind === "warship") {
             fleet.warshipCount += 1;
           } else {
@@ -248,7 +342,14 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
             fleet.usedCapacityWhole = usedCapacityWhole;
             fleet.availableCapacity = fleet.totalCapacity - usedCapacityWhole;
             fleet.remainingCapacity = availableCapacity;
+            fleet.position =
+              fleet.hasMixedPosition || fleet.x == null || fleet.y == null
+                ? "Mixed"
+                : toInt(fleet.x, 0) + "/" + toInt(fleet.y, 0);
             fleet.currentBrigadeCapacity = currentBrigadeCapacity;
+            fleet.currentBrigadeCapacityWholeUp = Math.ceil(
+              currentBrigadeCapacity || 0,
+            );
             fleet.wouldExceedForCurrentBrigade =
               currentBrigadeCapacity > availableCapacity;
             return fleet;
@@ -273,16 +374,25 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
         $scope.boardingModal.selectedFleetNo =
           brigade.boardingFleetNo != null ? toKey(brigade.boardingFleetNo) : null;
 
-        turnSheetFactory
-          .getTSBoarding($scope.masterData.turnId)
-          .then(function (rows) {
+        $q.all([
+          turnSheetFactory.getTSBoarding($scope.masterData.turnId),
+          turnSheetFactory.getTSFormFederations($scope.masterData.turnId),
+        ])
+          .then(function (results) {
+            var rows = results[0] || [];
+            var formFederationRows = results[1] || [];
             $scope.boardingModal.fleets = $scope.buildBoardingFleetOptions(
               brigade,
-              rows || [],
+              rows,
+              formFederationRows,
             );
             if (!$scope.boardingModal.fleets.length) {
               $scope.boardingModal.isOpen = false;
-              alert("No available fleets in the same sphere for this brigade.");
+              alert(
+                $scope.isCommanderBoardingUnit(brigade)
+                  ? "No individual ships in the same sphere for this commander."
+                  : "No available fleets in the same sphere for this brigade.",
+              );
             }
           }, $scope.showTurnSheetOrderError)
           .finally(function () {
@@ -311,13 +421,18 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
       };
 
       $scope.persistBoardingOrder = function (brigade, fleetNo) {
-        if (!brigade || !isValidFleetNo(fleetNo)) {
+        if (!brigade || !navyFleetValidationFactory.isAssignedFleetNo(fleetNo)) {
           return $q.when(null);
         }
 
-        return turnSheetFactory
-          .getTSBoarding($scope.masterData.turnId)
-          .then(function (rows) {
+        return $q
+          .all([
+            turnSheetFactory.getTSBoarding($scope.masterData.turnId),
+            turnSheetFactory.getTSFormFederations($scope.masterData.turnId),
+          ])
+          .then(function (results) {
+            var rows = results[0] || [];
+            var formFederationRows = results[1] || [];
             rows = rows || [];
             var targetRow =
               $scope.findMatchingBoardingRow(rows, brigade.id) ||
@@ -332,13 +447,21 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
               return null;
             }
 
-            var fleetOptions = $scope.buildBoardingFleetOptions(brigade, rows);
+            var fleetOptions = $scope.buildBoardingFleetOptions(
+              brigade,
+              rows,
+              formFederationRows,
+            );
             var selectedFleet = null;
             for (var i = 0; i < fleetOptions.length; i++) {
               if ($scope.sameNullableInt(fleetOptions[i].fleetNo, fleetNo)) {
                 selectedFleet = fleetOptions[i];
                 break;
               }
+            }
+            if (!selectedFleet) {
+              alert("Selected transport is no longer available.");
+              return null;
             }
             if (selectedFleet && selectedFleet.wouldExceedForCurrentBrigade) {
               alert("Boarding exceeds fleet loading capacity.");
@@ -429,4 +552,5 @@ austerlitzModule.factory("landUnitsBoardingFactory", function ($q) {
       $scope.ensureBoardingModalState();
     },
   };
-});
+},
+);

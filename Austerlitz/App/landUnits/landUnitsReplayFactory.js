@@ -119,19 +119,19 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
         angular.forEach(
           $scope.getFilledRowsInOrder(rows, ["itemNo", "fleetNo"]),
           function (row) {
-            var brigade = $scope.getBrigadeById(row.itemNo);
-            if (!brigade) {
+            var unit = $scope.getLandUnitById(row.itemNo);
+            if (!unit) {
               $scope.addReplayWarning(
                 warnings,
                 "TS20",
                 row,
-                "brigade not found: " + row.itemNo,
+                "unit not found: " + row.itemNo,
               );
               return;
             }
 
-            brigade.boardingSelected = true;
-            brigade.boardingFleetNo = row.fleetNo;
+            unit.boardingSelected = true;
+            unit.boardingFleetNo = row.fleetNo;
           },
         );
       };

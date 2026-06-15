@@ -663,6 +663,11 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
               mp: commander.mp,
               commandCapacity: commander.commandCapacity,
               boarded: $scope.formatCommanderBoarded(commander.boarded),
+              boardingSelected: (parseInt(commander.boarded, 10) || 0) > 0,
+              boardingFleetNo:
+                (parseInt(commander.boarded, 10) || 0) > 0
+                  ? parseInt(commander.boarded, 10)
+                  : null,
               source: commander,
             };
           })
