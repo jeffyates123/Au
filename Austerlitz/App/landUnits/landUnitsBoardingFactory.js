@@ -100,13 +100,21 @@ austerlitzModule.factory(
         );
       }
 
-      $scope.getFleetUsedCapacityLookup = function (boardingRows, excludedItemNo) {
+      $scope.getFleetUsedCapacityLookup = function (
+        boardingRows,
+        excludedItemNo,
+        includeExcludedItem,
+      ) {
         var lookup = {};
         angular.forEach(boardingRows || [], function (row) {
           var fleetNo = parseInt(row && row.fleetNo, 10);
           var itemNo = parseInt(row && row.itemNo, 10);
           if (isNaN(fleetNo) || fleetNo <= 0 || isNaN(itemNo)) return;
-          if (excludedItemNo != null && $scope.sameNullableInt(itemNo, excludedItemNo)) {
+          if (
+            excludedItemNo != null &&
+            !includeExcludedItem &&
+            $scope.sameNullableInt(itemNo, excludedItemNo)
+          ) {
             return;
           }
           lookup[fleetNo] = roundTo2(
@@ -141,8 +149,20 @@ austerlitzModule.factory(
             fleets: [],
             selectedFleetNo: null,
             currentBrigadeCapacity: 0,
+            currentAssignedFleetNo: null,
+            hasExistingBoardingOrder: false,
           };
         }
+      };
+
+      $scope.setBoardingModalAssignmentState = function (unit, boardingRows) {
+        $scope.ensureBoardingModalState();
+        var currentRow = $scope.findMatchingBoardingRow(boardingRows, unit && unit.id);
+        var assignedFleetNo = parseInt(currentRow && currentRow.fleetNo, 10);
+        $scope.boardingModal.currentAssignedFleetNo =
+          !isNaN(assignedFleetNo) && assignedFleetNo > 0 ? assignedFleetNo : null;
+        $scope.boardingModal.hasExistingBoardingOrder =
+          $scope.boardingModal.currentAssignedFleetNo != null;
       };
 
       $scope.getShipCapacityLookupByType = function () {
@@ -183,6 +203,7 @@ austerlitzModule.factory(
         brigade,
         boardingRows,
         formFederationRows,
+        includeCurrentUnitInUsage,
       ) {
         if (!brigade) {
           return [];
@@ -197,8 +218,17 @@ austerlitzModule.factory(
         var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
         var currentBrigadeCapacity =
           $scope.getBoardingBrigadeRequiredCapacity(brigade);
+        var currentAssignedFleetNo = parseInt(
+          $scope.boardingModal && $scope.boardingModal.currentAssignedFleetNo,
+          10,
+        );
 
         if ($scope.isCommanderBoardingUnit(brigade)) {
+          var usedByShip = $scope.getFleetUsedCapacityLookup(
+            boardingRows,
+            brigade && brigade.id,
+            includeCurrentUnitInUsage,
+          );
           var shipOptions = [];
 
           function pushShipOption(ship, kind) {
@@ -207,7 +237,10 @@ austerlitzModule.factory(
             }
 
             var shipSphere = $scope.getSphereFromCoordinates(ship.x, ship.y);
-            if (shipSphere !== brigadeSphere) {
+            var isAssignedShip =
+              !isNaN(currentAssignedFleetNo) &&
+              $scope.sameNullableInt(shipItemNo, currentAssignedFleetNo);
+            if (shipSphere !== brigadeSphere && !isAssignedShip) {
               return;
             }
 
@@ -220,26 +253,34 @@ austerlitzModule.factory(
               ship,
               shipLookupByType,
             );
+            var usedCapacity = roundTo2(usedByShip[shipItemNo] || 0);
+            var usedCapacityWhole = floorToWhole(usedCapacity);
+            var availableCapacity = totalCapacity - usedCapacityWhole;
+            var isCurrentlyAssigned =
+              !isNaN(currentAssignedFleetNo) &&
+              $scope.sameNullableInt(shipItemNo, currentAssignedFleetNo);
+
             shipOptions.push({
               fleetNo: shipItemNo,
               warshipCount: kind === "warship" ? 1 : 0,
               merchantCount: kind === "merchant" ? 1 : 0,
               totalShips: 1,
               totalCapacity: totalCapacity,
-              usedCapacity: 0,
-              usedCapacityWhole: 0,
-              availableCapacity: totalCapacity,
-              remainingCapacity: totalCapacity,
+              usedCapacity: usedCapacity,
+              usedCapacityWhole: usedCapacityWhole,
+              availableCapacity: availableCapacity,
+              remainingCapacity: availableCapacity,
               currentBrigadeCapacity: currentBrigadeCapacity,
               currentBrigadeCapacityWholeUp: Math.ceil(
                 currentBrigadeCapacity || 0,
               ),
-              wouldExceedForCurrentBrigade: false,
+              wouldExceedForCurrentBrigade: currentBrigadeCapacity > availableCapacity,
               position: toInt(ship.x, 0) + "/" + toInt(ship.y, 0),
               typeLabel: kind === "warship" ? "Warship" : "Merchant",
               conditionLabel:
                 (parseInt(ship.condition, 10) || 100).toString() + "%",
               isIndividualShip: true,
+              isCurrentlyAssigned: isCurrentlyAssigned,
             });
           }
 
@@ -259,6 +300,7 @@ austerlitzModule.factory(
         var usedByFleet = $scope.getFleetUsedCapacityLookup(
           boardingRows,
           brigade && brigade.id,
+          includeCurrentUnitInUsage,
         );
         var shipFleetLookup =
           turnAssignmentResolverFactory.buildEffectiveShipFleetLookup(
@@ -287,7 +329,10 @@ austerlitzModule.factory(
           }
 
           var shipSphere = $scope.getSphereFromCoordinates(ship.x, ship.y);
-          if (shipSphere !== brigadeSphere) {
+          var isAssignedFleet =
+            !isNaN(currentAssignedFleetNo) &&
+            $scope.sameNullableInt(effectiveFleetNo, currentAssignedFleetNo);
+          if (shipSphere !== brigadeSphere && !isAssignedFleet) {
             return;
           }
 
@@ -352,11 +397,44 @@ austerlitzModule.factory(
             );
             fleet.wouldExceedForCurrentBrigade =
               currentBrigadeCapacity > availableCapacity;
+            fleet.isCurrentlyAssigned =
+              !isNaN(currentAssignedFleetNo) &&
+              $scope.sameNullableInt(fleet.fleetNo, currentAssignedFleetNo);
             return fleet;
           })
           .sort(function (left, right) {
             return toInt(left.fleetNo, 0) - toInt(right.fleetNo, 0);
           });
+      };
+
+      $scope.refreshBoardingModalOptions = function (unit, closeWhenEmpty) {
+        return $q
+          .all([
+            turnSheetFactory.getTSBoarding($scope.masterData.turnId),
+            turnSheetFactory.getTSFormFederations($scope.masterData.turnId),
+          ])
+          .then(function (results) {
+            var rows = results[0] || [];
+            var formFederationRows = results[1] || [];
+            $scope.setBoardingModalAssignmentState(unit, rows);
+            $scope.boardingModal.fleets = $scope.buildBoardingFleetOptions(
+              unit,
+              rows,
+              formFederationRows,
+              true,
+            );
+            if (
+              closeWhenEmpty !== false &&
+              (!$scope.boardingModal.fleets || !$scope.boardingModal.fleets.length)
+            ) {
+              $scope.boardingModal.isOpen = false;
+              alert(
+                $scope.isCommanderBoardingUnit(unit)
+                  ? "No individual ships in the same sphere for this commander."
+                  : "No available fleets in the same sphere for this brigade.",
+              );
+            }
+          }, $scope.showTurnSheetOrderError);
       };
 
       $scope.openBoardingModal = function (brigade) {
@@ -373,28 +451,10 @@ austerlitzModule.factory(
         $scope.boardingModal.fleets = [];
         $scope.boardingModal.selectedFleetNo =
           brigade.boardingFleetNo != null ? toKey(brigade.boardingFleetNo) : null;
+        $scope.boardingModal.currentAssignedFleetNo = null;
+        $scope.boardingModal.hasExistingBoardingOrder = false;
 
-        $q.all([
-          turnSheetFactory.getTSBoarding($scope.masterData.turnId),
-          turnSheetFactory.getTSFormFederations($scope.masterData.turnId),
-        ])
-          .then(function (results) {
-            var rows = results[0] || [];
-            var formFederationRows = results[1] || [];
-            $scope.boardingModal.fleets = $scope.buildBoardingFleetOptions(
-              brigade,
-              rows,
-              formFederationRows,
-            );
-            if (!$scope.boardingModal.fleets.length) {
-              $scope.boardingModal.isOpen = false;
-              alert(
-                $scope.isCommanderBoardingUnit(brigade)
-                  ? "No individual ships in the same sphere for this commander."
-                  : "No available fleets in the same sphere for this brigade.",
-              );
-            }
-          }, $scope.showTurnSheetOrderError)
+        $scope.refreshBoardingModalOptions(brigade, true)
           .finally(function () {
             $scope.boardingModal.isLoading = false;
           });
@@ -408,6 +468,8 @@ austerlitzModule.factory(
         $scope.boardingModal.fleets = [];
         $scope.boardingModal.selectedFleetNo = null;
         $scope.boardingModal.currentBrigadeCapacity = 0;
+        $scope.boardingModal.currentAssignedFleetNo = null;
+        $scope.boardingModal.hasExistingBoardingOrder = false;
       };
 
       $scope.findMatchingBoardingRow = function (rows, brigadeId) {
@@ -451,6 +513,7 @@ austerlitzModule.factory(
               brigade,
               rows,
               formFederationRows,
+              false,
             );
             var selectedFleet = null;
             for (var i = 0; i < fleetOptions.length; i++) {
@@ -533,20 +596,38 @@ austerlitzModule.factory(
           return;
         }
 
-        $scope.persistBoardingOrder(brigade, fleetNo).then(function () {
+        $scope.persistBoardingOrder(brigade, fleetNo).then(function (result) {
+          if (result == null) {
+            return;
+          }
           $scope.closeBoardingModal();
         });
       };
 
-      $scope.removeBoardingFromModal = function () {
+      $scope.removeBoardingFromModal = function (keepOpenAndRefresh) {
         var brigade = $scope.boardingModal && $scope.boardingModal.brigade;
         if (!brigade) {
           return;
         }
 
         $scope.clearBoardingOrder(brigade).then(function () {
+          if (keepOpenAndRefresh) {
+            $scope.refreshBoardingModalOptions(brigade, false);
+            return;
+          }
           $scope.closeBoardingModal();
         });
+      };
+
+      $scope.handleBoardingRowAction = function (fleet) {
+        if (!fleet) {
+          return;
+        }
+        if (fleet.isCurrentlyAssigned) {
+          $scope.removeBoardingFromModal(true);
+          return;
+        }
+        $scope.applyBoardingFleet(fleet.fleetNo);
       };
 
       $scope.ensureBoardingModalState();

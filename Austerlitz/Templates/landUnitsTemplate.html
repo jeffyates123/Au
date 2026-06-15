@@ -938,11 +938,12 @@
               <td>
                 <button
                   type="button"
-                  class="btn btn-default btn-xs"
-                  ng-click="applyBoardingFleet(fleet.fleetNo)"
-                  title="{{fleet.wouldExceedForCurrentBrigade ? 'Not enough remaining capacity for this brigade' : ''}}"
+                  class="landUnitsToggleButton"
+                  ng-click="handleBoardingRowAction(fleet)"
+                  ng-style="getBrigadeToggleStyle(fleet.isCurrentlyAssigned)"
+                  title="{{fleet.isCurrentlyAssigned ? 'Unboard this unit from selected transport' : (fleet.wouldExceedForCurrentBrigade ? 'Not enough remaining capacity for this brigade' : '')}}"
                 >
-                  +Board
+                  {{fleet.isCurrentlyAssigned ? 'Unboard' : '+Board'}}
                 </button>
                 <span class="text-muted">
                   (Load: {{fleet.currentBrigadeCapacityWholeUp}})
