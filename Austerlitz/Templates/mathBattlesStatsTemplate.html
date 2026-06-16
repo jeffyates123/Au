@@ -1,7 +1,17 @@
 <section class="mathBattlesPage mathBattlesStatsPage">
   <h2>Mathematical Battles -Stats</h2>
+  <div class="form-inline mathBattleStatePicker">
+    <label for="mathBattlesStatsNationSelectId">Nation:&nbsp;</label>
+    <select id="mathBattlesStatsNationSelectId"
+            class="form-control input-sm"
+            ng-model="selectedStatsNation"
+            ng-change="onSelectedStatsNationChanged()"
+            ng-options="nation.code as nation.label for nation in availableStatsNations"
+            ng-disabled="!availableStatsNations.length || armyStatsLoading">
+    </select>
+  </div>
   <div class="mathBattlesStatsSubtitle">
-    Loaded state: <strong>{{statsStateCode || '-'}}</strong>
+    Loaded nation: <strong>{{statsStateCode || '-'}}</strong>
   </div>
 
   <div class="alert alert-info landUnitsAlert" ng-show="armyStatsLoading">
@@ -11,10 +21,10 @@
     {{armyStatsLoadError}}
   </div>
   <div class="alert alert-warning landUnitsAlert" ng-show="!armyStatsLoading && !armyStatsLoadError && !statsStateCode">
-    No state is currently loaded.
+    No nation is currently selected.
   </div>
   <div class="alert alert-warning landUnitsAlert" ng-show="!armyStatsLoading && !armyStatsLoadError && statsStateCode && !armyStatsRows.length">
-    No army table rows found for state {{statsStateCode}}.
+    No army table rows found for nation {{statsStateCode}}.
   </div>
 
   <div class="landUnitsTableWrap" ng-if="armyStatsRows.length">

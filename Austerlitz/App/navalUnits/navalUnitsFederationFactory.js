@@ -31,12 +31,35 @@ austerlitzModule.factory(
         });
       }
 
-      function applyFleetToShips(ships, targetFleetNo) {
+      function applyFleetToShips(ships, targetFleetNo, isChangedThisTurn) {
         var formatted = formatReplayFleetNo(targetFleetNo);
         angular.forEach(ships, function (ship) {
           ship.fleet = formatted;
-          ship.fleetChanged = true;
+          ship.fleetChanged = !!isChangedThisTurn;
         });
+      }
+
+      function hasFleetOrderForShip(formFederationRows, ship) {
+        var shipId = toInt(ship && ship.id);
+        if (shipId == null) {
+          return false;
+        }
+
+        for (var i = 0; i < (formFederationRows || []).length; i++) {
+          var row = formFederationRows[i];
+          if (!$scope.sameNullableInt(row && row.itemNo, shipId)) {
+            continue;
+          }
+          if (
+            navyFleetValidationFactory.isValidOrderFleetNo(
+              navyFleetValidationFactory.toInt(row && row.federation_Fleet),
+            )
+          ) {
+            return true;
+          }
+        }
+
+        return false;
       }
 
       function findLatestTs14RowByItemNo(rows, itemNo) {
@@ -128,7 +151,11 @@ austerlitzModule.factory(
                   ship,
                   formFederationRows,
                 );
-              applyFleetToShips([ship], targetFleetNo);
+              applyFleetToShips(
+                [ship],
+                targetFleetNo,
+                hasFleetOrderForShip(formFederationRows, ship),
+              );
             });
 
             $scope.refreshWarshipPairRows();

@@ -128,4 +128,79 @@
       </div>
     </div>
   </div>
+
+  <div class="landUnitsModalBackdrop"
+       ng-show="estimateFederationModal.isOpen"
+       ng-click="!estimateFederationModal.isCreating && closeEstimateFederationModal()"></div>
+  <div class="landUnitsModal landUnitsBoardingModal" ng-show="estimateFederationModal.isOpen">
+    <div class="landUnitsModalHeader">
+      <div>
+        <h3>Estimate Battle: Choose Federation</h3>
+        <div class="landUnitsModalSubtitle">
+          Replace {{estimateFederationModal.replaceState || '-'}} against {{estimateFederationModal.opponentState || '-'}}
+        </div>
+      </div>
+      <button type="button"
+              class="close"
+              ng-click="closeEstimateFederationModal()"
+              ng-disabled="estimateFederationModal.isCreating">
+        &times;
+      </button>
+    </div>
+
+    <div class="landUnitsModalBody">
+      <div class="alert alert-info" ng-show="estimateFederationModal.isLoading">
+        Loading federation candidates...
+      </div>
+      <div class="alert alert-danger" ng-show="estimateFederationModal.error">
+        {{estimateFederationModal.error}}
+      </div>
+      <div class="landUnitsBoardingTableWrap"
+           ng-show="!estimateFederationModal.isLoading && estimateFederationModal.candidates.length > 0">
+        <table class="table table-condensed landUnitsTable">
+          <thead>
+            <tr>
+              <th>Federation</th>
+              <th>Position</th>
+              <th>Brigades</th>
+              <th>Men</th>
+              <th>LR</th>
+              <th>Art</th>
+              <th>HC</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="candidate in estimateFederationModal.candidates track by candidate.federationNo"
+                ng-class="{ active: estimateFederationModal.selectedFederationNo === candidate.federationNo }"
+                ng-click="selectEstimateFederationCandidate(candidate)">
+              <td>{{candidate.federationNo}}</td>
+              <td>{{candidate.position}}</td>
+              <td>{{candidate.brigadeCount}}</td>
+              <td>{{candidate.totalMen}}</td>
+              <td>{{candidate.estimatedLR}}</td>
+              <td>{{candidate.estimatedArtillery}}</td>
+              <td>{{candidate.estimatedHC}}</td>
+              <td>{{candidate.estimatedTotal}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="landUnitsModalFooter">
+      <button type="button"
+              class="btn btn-default btn-sm"
+              ng-click="closeEstimateFederationModal()"
+              ng-disabled="estimateFederationModal.isCreating">
+        Cancel
+      </button>
+      <button type="button"
+              class="btn btn-primary btn-sm"
+              ng-click="confirmEstimateFederationSelection()"
+              ng-disabled="estimateFederationModal.isLoading || estimateFederationModal.isCreating || !estimateFederationModal.selectedFederationNo">
+        {{estimateFederationModal.isCreating ? 'Creating...' : 'Create Estimate'}}
+      </button>
+    </div>
+  </div>
 </section>

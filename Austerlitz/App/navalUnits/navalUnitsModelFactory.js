@@ -122,6 +122,9 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
 
       $scope.buildFleetSummaryRows = function () {
         var allShips = (($scope.warshipRows || []).concat($scope.merchantRows || []))
+          .filter(function (ship) {
+            return !$scope.navyPositionFilter || ship.position === $scope.navyPositionFilter;
+          })
           .slice()
           .sort($scope.compareShipsForDisplay);
         var formFederationRows = $scope.navyFormFederationRows || [];
@@ -230,12 +233,14 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
           if (!summary) {
             summary = {
               fleetNo: fleetNo,
+              maxMp: null,
               warships: 0,
               merchants: 0,
               loadingCap: 0,
               boardedCapRaw: roundTo2(loadedCapacityByFleet[fleetNo] || 0),
               boardedCap: 0,
               availableCap: 0,
+              position: ship.position || "",
               x: toInt(ship.x, 0),
               y: toInt(ship.y, 0),
             };
@@ -248,11 +253,18 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
             summary.merchants += 1;
           }
 
+          var shipMp = toInt(ship.mp, null);
+          if (shipMp != null) {
+            summary.maxMp =
+              summary.maxMp == null ? shipMp : Math.min(summary.maxMp, shipMp);
+          }
+
           var shipDef = $scope.getRefShipByType(ship.type);
           summary.loadingCap += toInt(shipDef && shipDef.loadCapacity, 0);
         });
 
         angular.forEach(summariesByFleet, function (summary) {
+          summary.maxMp = summary.maxMp == null ? "" : summary.maxMp;
           summary.boardedCap = Math.floor(summary.boardedCapRaw || 0);
           summary.availableCap = summary.loadingCap - summary.boardedCap;
         });
@@ -278,12 +290,14 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
         var pos = ship && ship.position;
         if (!pos) return;
         $scope.navyPositionFilter = $scope.navyPositionFilter === pos ? null : pos;
+        $scope.buildFleetSummaryRows();
         $scope.refreshWarshipPairRows();
         $scope.refreshMerchantPairRows();
       };
 
       $scope.clearNavyPositionFilter = function () {
         $scope.navyPositionFilter = null;
+        $scope.buildFleetSummaryRows();
         $scope.refreshWarshipPairRows();
         $scope.refreshMerchantPairRows();
       };

@@ -32,6 +32,26 @@
                 sourcePhase: sourcePhase
             }).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
+        },
+        getTRMathBattleFederationCandidates: function (turnId, sourceMathBattleNo, replaceState) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/getTRMathBattleFederationCandidates', {
+                turnId: turnId,
+                sourceMathBattleNo: sourceMathBattleNo,
+                replaceState: replaceState
+            }).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        createTRFederationEstimatedMathBattle: function (turnId, sourceMathBattleNo, sourcePhase, replaceState, federationNo) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/createTRFederationEstimatedMathBattle', {
+                turnId: turnId,
+                sourceMathBattleNo: sourceMathBattleNo,
+                sourcePhase: sourcePhase,
+                replaceState: replaceState,
+                federationNo: federationNo
+            }).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
         }
     }
 });

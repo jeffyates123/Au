@@ -17,6 +17,18 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     $scope.selectedCalcTerrainId = "";
     $scope.terrainFactorLookup = {};
     $scope.terrainFactorLoaded = false;
+    $scope.estimateFederationModal = {
+        isOpen: false,
+        isLoading: false,
+        isCreating: false,
+        error: "",
+        candidates: [],
+        selectedFederationNo: null,
+        sourceMathBattleNo: null,
+        sourcePhase: "PRE",
+        replaceState: "",
+        opponentState: ""
+    };
     $scope.getSelectedBattle = function () {
         for (var i = 0; i < $scope.mathBattles.length; i++) {
             if ($scope.mathBattles[i].mathBattleNo === $scope.selectedBattleNo) {
@@ -174,6 +186,19 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         var phase = $scope.getActivePhase();
         return battle.brigades.filter(function (brigade) {
             return brigade.state === $scope.selectedState && ((brigade.phase || "") + "").trim().toUpperCase() === phase;
+        });
+    };
+
+    $scope.getBattleBrigadesByStateAndPhase = function (battle, stateCode, phase) {
+        if (!battle || !battle.brigades || !stateCode || !phase) {
+            return [];
+        }
+
+        var normalizedPhase = ((phase || "") + "").trim().toUpperCase();
+        return (battle.brigades || []).filter(function (brigade) {
+            return brigade
+                && brigade.state === stateCode
+                && ((brigade.phase || "") + "").trim().toUpperCase() === normalizedPhase;
         });
     };
 
@@ -386,8 +411,16 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
         var battle = $scope.getSelectedBattle();
         var selectedBattleNo = battle && battle.mathBattleNo;
-        var brigades = $scope.getVisibleBrigades();
+        var sides = $scope.getBattleSides();
+        if (!battle || !sides.length) {
+            return;
+        }
+        var brigades = [];
+        angular.forEach(sides, function (sideCode) {
+            brigades = brigades.concat($scope.getBattleBrigadesByStateAndPhase(battle, sideCode, "PRE"));
+        });
         if (!brigades.length) {
+            $scope.mathBattleCalcError = "No initial brigades found to calculate.";
             return;
         }
 
@@ -398,12 +431,19 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         }
 
         $scope.mathBattleCalcBusy = true;
-        $q.all([
-            $scope.getArmyLookupForState($scope.selectedState),
+        var lookupPromises = [
             $scope.getTerrainFactorLookup()
-        ]).then(function (results) {
-            var armyLookup = results[0] || {};
+        ].concat(sides.map(function (sideCode) {
+            return $scope.getArmyLookupForState(sideCode);
+        }));
+        $q.all(lookupPromises).then(function (results) {
+            var armyLookupByState = {};
+            for (var i = 0; i < sides.length; i++) {
+                armyLookupByState[sides[i]] = results[i + 1] || {};
+            }
+
             angular.forEach(brigades, function (brigade) {
+                var armyLookup = armyLookupByState[brigade.state] || {};
                 $scope.calculateBrigadeMathValues(brigade, armyLookup, selectedTerrainId);
             });
 
@@ -429,6 +469,114 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         });
     };
 
+    $scope.resetEstimateFederationModal = function () {
+        $scope.estimateFederationModal.isOpen = false;
+        $scope.estimateFederationModal.isLoading = false;
+        $scope.estimateFederationModal.isCreating = false;
+        $scope.estimateFederationModal.error = "";
+        $scope.estimateFederationModal.candidates = [];
+        $scope.estimateFederationModal.selectedFederationNo = null;
+        $scope.estimateFederationModal.sourceMathBattleNo = null;
+        $scope.estimateFederationModal.sourcePhase = "PRE";
+        $scope.estimateFederationModal.replaceState = "";
+        $scope.estimateFederationModal.opponentState = "";
+    };
+
+    $scope.closeEstimateFederationModal = function () {
+        $scope.resetEstimateFederationModal();
+    };
+
+    $scope.selectEstimateFederationCandidate = function (candidate) {
+        if (!candidate || candidate.federationNo == null || $scope.estimateFederationModal.isCreating) {
+            return;
+        }
+
+        $scope.estimateFederationModal.selectedFederationNo = candidate.federationNo;
+    };
+
+    $scope.openEstimateFederationModal = function (battle, sourcePhase) {
+        var preferredState = (($scope.masterData && $scope.masterData.selectedState) || "").toString().trim().toUpperCase();
+        var replaceState = $scope.selectedState || "";
+        if (battle && preferredState && (preferredState === battle.stateA || preferredState === battle.stateB)) {
+            replaceState = preferredState;
+        }
+        var opponentState = "";
+        if (battle) {
+            if (battle.stateA === replaceState) {
+                opponentState = battle.stateB || "";
+            } else if (battle.stateB === replaceState) {
+                opponentState = battle.stateA || "";
+            } else if (battle.stateA) {
+                replaceState = battle.stateA;
+                opponentState = battle.stateB || "";
+            }
+        }
+
+        $scope.estimateFederationModal.isOpen = true;
+        $scope.estimateFederationModal.isLoading = true;
+        $scope.estimateFederationModal.isCreating = false;
+        $scope.estimateFederationModal.error = "";
+        $scope.estimateFederationModal.candidates = [];
+        $scope.estimateFederationModal.selectedFederationNo = null;
+        $scope.estimateFederationModal.sourceMathBattleNo = battle.mathBattleNo;
+        $scope.estimateFederationModal.sourcePhase = sourcePhase;
+        $scope.estimateFederationModal.replaceState = replaceState;
+        $scope.estimateFederationModal.opponentState = opponentState;
+
+        turnReportFactory.getTRMathBattleFederationCandidates(
+            $scope.masterData.turnId,
+            battle.mathBattleNo,
+            replaceState
+        ).then(function (candidates) {
+            $scope.estimateFederationModal.candidates = candidates || [];
+            if ($scope.estimateFederationModal.candidates.length > 0) {
+                $scope.estimateFederationModal.selectedFederationNo = $scope.estimateFederationModal.candidates[0].federationNo;
+            } else {
+                $scope.estimateFederationModal.error = "No federation candidates were found in this sphere.";
+            }
+        }, function () {
+            $scope.estimateFederationModal.error = "Could not load federation candidates.";
+        }).finally(function () {
+            $scope.estimateFederationModal.isLoading = false;
+        });
+    };
+
+    $scope.confirmEstimateFederationSelection = function () {
+        $scope.mathBattleEstimateError = "";
+        $scope.estimateFederationModal.error = "";
+
+        var federationNo = parseInt($scope.estimateFederationModal.selectedFederationNo, 10);
+        if (isNaN(federationNo) || federationNo <= 0) {
+            $scope.estimateFederationModal.error = "Select a federation to continue.";
+            return;
+        }
+
+        $scope.estimateFederationModal.isCreating = true;
+        $scope.mathBattleEstimateBusy = true;
+
+        turnReportFactory.createTRFederationEstimatedMathBattle(
+            $scope.masterData.turnId,
+            $scope.estimateFederationModal.sourceMathBattleNo,
+            $scope.estimateFederationModal.sourcePhase,
+            $scope.estimateFederationModal.replaceState,
+            federationNo
+        ).then(function (response) {
+            var createdBattleNo = response && response.mathBattleNo;
+            return $scope.loadMathBattles(createdBattleNo).then(function () {
+                $scope.activeBattleTab = "initial";
+                $scope.calculateInitialBrigadeValues();
+                $scope.closeEstimateFederationModal();
+            });
+        }, function (error) {
+            var message = (error && error.data) ? error.data : "Could not create estimated battle.";
+            $scope.estimateFederationModal.error = message;
+            $scope.mathBattleEstimateError = message;
+        }).finally(function () {
+            $scope.estimateFederationModal.isCreating = false;
+            $scope.mathBattleEstimateBusy = false;
+        });
+    };
+
     $scope.createEstimatedBattle = function () {
         $scope.mathBattleEstimateError = "";
 
@@ -444,16 +592,7 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         }
 
         var sourcePhase = $scope.activeBattleTab === "final" ? "POST" : "PRE";
-        $scope.mathBattleEstimateBusy = true;
-
-        turnReportFactory.createTREstimatedMathBattle($scope.masterData.turnId, battle.mathBattleNo, sourcePhase).then(function (response) {
-            var createdBattleNo = response && response.mathBattleNo;
-            return $scope.loadMathBattles(createdBattleNo);
-        }, function () {
-            $scope.mathBattleEstimateError = "Could not create estimated battle.";
-        }).finally(function () {
-            $scope.mathBattleEstimateBusy = false;
-        });
+        $scope.openEstimateFederationModal(battle, sourcePhase);
     };
 
     $scope.normalizeLoadedCalcFields = function (battles) {
@@ -518,4 +657,5 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     });
 
     $scope.loadMathBattles();
+    $scope.resetEstimateFederationModal();
 });

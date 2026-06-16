@@ -8,6 +8,9 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
     $scope.armyStatsLoading = false;
     $scope.armyStatsLoadError = "";
     $scope.statsStateCode = "";
+    $scope.availableStatsNations = [];
+    $scope.selectedStatsNation = "";
+    $scope.hasUserSelectedStatsNation = false;
 
     $scope.normalizeStateCode = function (value) {
         return ((value || "") + "").trim().toUpperCase();
@@ -46,6 +49,75 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
 
         var turnId = ($scope.masterData && $scope.masterData.turnId) || "";
         return turnId.length >= 4 ? $scope.normalizeStateCode(turnId.substr(3, 1)) : "";
+    };
+
+    $scope.getStateField = function (stateItem, lowerName, upperName) {
+        if (!stateItem) {
+            return "";
+        }
+
+        var value = stateItem[lowerName] != null ? stateItem[lowerName] : stateItem[upperName];
+        return ((value || "") + "").trim();
+    };
+
+    $scope.extractStateCatalogRows = function () {
+        var rulesCatalog = $scope.masterData ? $scope.masterData.rulesCatalog : null;
+        return rulesCatalog ? (rulesCatalog.States || rulesCatalog.states || []) : [];
+    };
+
+    $scope.mapStateCatalogToNationOptions = function (states) {
+        var seen = {};
+        var options = [];
+
+        for (var i = 0; i < (states || []).length; i++) {
+            var state = states[i] || {};
+            var code = $scope.normalizeStateCode($scope.getStateField(state, "state", "State"));
+            if (!code || seen[code]) {
+                continue;
+            }
+
+            seen[code] = true;
+            var stateName = $scope.getStateField(state, "stateName", "StateName");
+            options.push({
+                code: code,
+                label: stateName ? (code + " - " + stateName) : code
+            });
+        }
+
+        options.sort(function (left, right) {
+            return left.label.localeCompare(right.label);
+        });
+
+        return options;
+    };
+
+    $scope.hasNationOption = function (stateCode) {
+        var normalized = $scope.normalizeStateCode(stateCode);
+        if (!normalized || !$scope.availableStatsNations.length) {
+            return false;
+        }
+
+        for (var i = 0; i < $scope.availableStatsNations.length; i++) {
+            if ($scope.availableStatsNations[i].code === normalized) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.resolveInitialSelectedNation = function () {
+        var currentSelected = $scope.normalizeStateCode($scope.selectedStatsNation);
+        if ($scope.hasNationOption(currentSelected)) {
+            return currentSelected;
+        }
+
+        var preferredLoaded = $scope.resolveLoadedStateCode();
+        if ($scope.hasNationOption(preferredLoaded)) {
+            return preferredLoaded;
+        }
+
+        return $scope.availableStatsNations.length ? $scope.availableStatsNations[0].code : "";
     };
 
     $scope.isArtilleryItemNo = function (itemNo) {
@@ -96,27 +168,78 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
         };
     };
 
-    $scope.loadStatsRows = function () {
-        var stateCode = $scope.resolveLoadedStateCode();
-        $scope.statsStateCode = stateCode;
+    $scope.loadStatsRows = function (stateCode) {
+        var normalizedStateCode = $scope.normalizeStateCode(stateCode);
+        $scope.statsStateCode = normalizedStateCode;
         $scope.armyStatsLoadError = "";
 
-        if (!stateCode) {
+        if (!normalizedStateCode) {
             $scope.armyStatsRows = [];
             return;
         }
 
         $scope.armyStatsLoading = true;
-        rulesCatalogFactory.getArmyList(stateCode).then(function (armyList) {
+        rulesCatalogFactory.getArmyList(normalizedStateCode).then(function (armyList) {
             $scope.armyStatsRows = (armyList || []).map(function (item) {
                 return $scope.mapArmyItemToStatsRow(item || {});
             });
         }, function () {
             $scope.armyStatsRows = [];
-            $scope.armyStatsLoadError = "Could not load army stats for the selected state.";
+            $scope.armyStatsLoadError = "Could not load army stats for the selected nation.";
         }).finally(function () {
             $scope.armyStatsLoading = false;
         });
+    };
+
+    $scope.applyNationOptions = function (options) {
+        $scope.availableStatsNations = options || [];
+
+        var selectedNation = $scope.resolveInitialSelectedNation();
+        if (!selectedNation) {
+            $scope.selectedStatsNation = "";
+            $scope.loadStatsRows("");
+            return;
+        }
+
+        $scope.selectedStatsNation = selectedNation;
+        $scope.loadStatsRows(selectedNation);
+    };
+
+    $scope.loadNationOptions = function () {
+        var existingStateCatalogRows = $scope.extractStateCatalogRows();
+        if (existingStateCatalogRows.length) {
+            $scope.applyNationOptions($scope.mapStateCatalogToNationOptions(existingStateCatalogRows));
+            return;
+        }
+
+        rulesCatalogFactory.getRefStates().then(function (states) {
+            $scope.applyNationOptions($scope.mapStateCatalogToNationOptions(states || []));
+        }, function () {
+            var fallbackStateCode = $scope.resolveLoadedStateCode();
+            $scope.availableStatsNations = fallbackStateCode ? [{ code: fallbackStateCode, label: fallbackStateCode }] : [];
+            $scope.selectedStatsNation = fallbackStateCode;
+            $scope.loadStatsRows(fallbackStateCode);
+        });
+    };
+
+    $scope.onSelectedStatsNationChanged = function () {
+        $scope.hasUserSelectedStatsNation = true;
+        $scope.selectedStatsNation = $scope.normalizeStateCode($scope.selectedStatsNation);
+        $scope.loadStatsRows($scope.selectedStatsNation);
+    };
+
+    $scope.trySetPreferredNationFromLoadedState = function () {
+        if ($scope.hasUserSelectedStatsNation || !$scope.availableStatsNations.length) {
+            return;
+        }
+
+        var preferredLoaded = $scope.resolveLoadedStateCode();
+        if (!preferredLoaded || preferredLoaded === $scope.selectedStatsNation || !$scope.hasNationOption(preferredLoaded)) {
+            return;
+        }
+
+        $scope.selectedStatsNation = preferredLoaded;
+        $scope.loadStatsRows(preferredLoaded);
     };
 
     $scope.$watch(function () {
@@ -125,9 +248,17 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
         return $scope.normalizeStateCode(state) + "|" + (turnId || "");
     }, function (newValue, oldValue) {
         if (newValue !== oldValue) {
-            $scope.loadStatsRows();
+            $scope.trySetPreferredNationFromLoadedState();
         }
     });
 
-    $scope.loadStatsRows();
+    $scope.$watch(function () {
+        return $scope.extractStateCatalogRows().length;
+    }, function (newValue, oldValue) {
+        if (newValue > 0 && newValue !== oldValue && !$scope.availableStatsNations.length) {
+            $scope.applyNationOptions($scope.mapStateCatalogToNationOptions($scope.extractStateCatalogRows()));
+        }
+    });
+
+    $scope.loadNationOptions();
 });
