@@ -8,10 +8,8 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
             $scope.getVisibleRowsForDeleteAll = function (deleteAllType) {
                 if (deleteAllType === 'Movement') return $scope.tsMovementList || [];
                 if (deleteAllType === 'BuildProductionSites') return $scope.tsBuildProductionSitesList || [];
-                if (deleteAllType === 'FormFederations') return $scope.tsFormFederationsList || [];
                 if (deleteAllType === 'SetUpBrigades') return $scope.tsSetUpBrigadesRows || [];
                 if (deleteAllType === 'TransferGoods') return $scope.tsTransferGoodsCostRows || [];
-                if (deleteAllType === 'Boarding') return $scope.tsBoardingList || [];
 
                 return [];
             };
@@ -22,10 +20,8 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 return rows.some(function (row) {
                     if (deleteAllType === 'Movement') return $scope.hasMovementItemNo(row);
                     if (deleteAllType === 'BuildProductionSites') return $scope.hasProductionSiteData(row);
-                    if (deleteAllType === 'FormFederations') return $scope.hasFormFederationItemNo(row);
                     if (deleteAllType === 'SetUpBrigades') return $scope.hasSetUpBrigadesData(row);
                     if (deleteAllType === 'TransferGoods') return $scope.hasTransferGoodsData(row);
-                    if (deleteAllType === 'Boarding') return $scope.hasBoardingData(row);
 
                     return false;
                 });
@@ -38,10 +34,8 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 angular.forEach($scope.getVisibleRowsForDeleteAll(deleteAllType), function (row) {
                     if (deleteAllType === 'Movement' && $scope.hasMovementItemNo(row)) $scope.removeMovementRow({ entity: row });
                     if (deleteAllType === 'BuildProductionSites' && $scope.hasProductionSiteData(row)) $scope.removeProductionSiteRow({ entity: row });
-                    if (deleteAllType === 'FormFederations' && $scope.hasFormFederationItemNo(row)) $scope.removeFormFederationRow({ entity: row });
                     if (deleteAllType === 'SetUpBrigades' && $scope.hasSetUpBrigadesData(row)) $scope.removeSetUpBrigadesRow({ entity: row });
                     if (deleteAllType === 'TransferGoods' && $scope.hasTransferGoodsData(row)) $scope.removeTransferGoodsRow({ entity: row });
-                    if (deleteAllType === 'Boarding' && $scope.hasBoardingData(row)) $scope.removeBoardingRow({ entity: row });
                 });
             };
 
@@ -83,18 +77,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 rowTemplate: '<div ng-click="selectProductionSiteRow(row.entity)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{getProductionSiteRowClass(row.entity)}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
             };
 
-            $scope.formFederationGridOptions = {
-                data: 'tsFormFederationsList',
-                headerRowHeight: 30,
-                rowHeight: 25,
-                columnDefs: 'formFederationColumnDefsMap',
-                enableCellSelection: true,
-                enableRowSelection: true,
-                enableCellEdit: true,
-                enabledCellEditOnFocus: true,
-                multiSelect: false
-            };
-
             $scope.setUpBrigadesGridOptions = {
                 data: 'tsSetUpBrigadesRows',
                 headerRowHeight: 30,
@@ -132,30 +114,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 rowTemplate: '<div ng-click="armyListClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isArmyListItemSelected(row.entity) ? \"itemGridRowSelected\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
             };
 
-            $scope.boardingGridOptions = {
-                data: 'tsBoardingList',
-                headerRowHeight: 30,
-                rowHeight: 25,
-                columnDefs: 'boardingColumnDefsMap',
-                enableCellSelection: true,
-                enableRowSelection: true,
-                enableCellEdit: true,
-                enabledCellEditOnFocus: true,
-                multiSelect: false
-            };
-
-            $scope.boardingItemGridOptions = {
-                data: 'boardingItemRows',
-                headerRowHeight: 30,
-                rowHeight: 25,
-                columnDefs: 'boardingItemColumnDefsMap',
-                enableCellSelection: false,
-                enableRowSelection: true,
-                enableCellEdit: false,
-                multiSelect: false,
-                rowTemplate: '<div ng-click="boardingItemGridClickRow(row)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
-            };
-
             $scope.movementColumnDefsMap = [
                 { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
                 { field: 'itemNo', displayName: 'Item No', width: '60px', cellClass: 'grid-center-align', enableFocusedCellEdit: true, editableCellTemplate: '/Templates/itemSelectTemplate.html' },
@@ -188,13 +146,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 { field: 'y', displayName: 'Y', width: '48px', cellClass: 'grid-center-align' },
                 { field: 'description', displayName: 'Description', width: '110px', cellClass: 'grid-left-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText">{{getProductionSiteDescription(row.entity)}}</div>' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'BuildProductionSites', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasProductionSiteData(row.entity)" ng-click="removeProductionSiteRow(row)"></span></div>' }
-            ];
-
-            $scope.formFederationColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
-                { field: 'itemNo', displayName: 'Item No', width: '65px', cellClass: 'grid-center-align' },
-                { field: 'federation_Fleet', displayName: 'Federation', width: '90px', cellClass: 'grid-center-align' },
-                { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'FormFederations', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasFormFederationItemNo(row.entity)" ng-click="removeFormFederationRow(row)"></span></div>' }
             ];
 
             $scope.setUpBrigadesColumnDefsMap = [
@@ -238,26 +189,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 { field: 'troopSpecification', displayName: 'Spec', cellClass: 'grid-left-align' }
             ];
 
-            $scope.boardingColumnDefsMap = [
-                { field: 'orderNo', displayName: 'No', width: '28px', cellClass: 'grid-center-align' },
-                { field: 'command', displayName: 'Order', width: '65px', cellClass: 'grid-center-align' },
-                { field: 'itemNo', displayName: 'Item No', width: '62px', cellClass: 'grid-center-align' },
-                { field: 'fleetNo', displayName: 'Fleet No', width: '62px', cellClass: 'grid-center-align' },
-                { field: 'fleetOwner', displayName: 'Fl.Owner', width: '72px', cellClass: 'grid-center-align' },
-                { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'Boarding', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasBoardingData(row.entity)" ng-click="removeBoardingRow(row)"></span></div>' }
-            ];
-
-            $scope.boardingItemColumnDefsMap = [
-                { field: 'itemNo', displayName: 'Item', width: '48px', cellClass: 'grid-center-align' },
-                { field: 'fed', displayName: 'Fed', width: '38px', cellClass: 'grid-center-align' },
-                { field: 'itemTypeName', displayName: 'Type', width: '34px', cellClass: 'grid-center-align' },
-                { field: 'capacity', displayName: 'Capacity', width: '58px', cellClass: 'grid-center-align' },
-                { field: 'cond', displayName: 'Cond%', width: '50px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '28px', cellClass: 'grid-center-align' },
-                { field: 'xy', displayName: 'X/Y', width: '52px', cellClass: 'grid-center-align' },
-                { field: 'description', displayName: 'Description', width: '130px', cellClass: 'grid-left-align' },
-                { field: 'load', displayName: 'Load?', width: '44px', cellClass: 'grid-center-align', enableCellEdit: false, sortable: false, cellTemplate: '<div class="ngCellText grid-center-align"><input type="checkbox" ng-checked="row.entity.load" ng-click="$event.stopPropagation(); onBoardingLoadChanged(row.entity);" /></div>' }
-            ];
         }
     };
 });

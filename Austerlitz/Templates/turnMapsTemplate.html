@@ -1,65 +1,15 @@
 <div class="turn-maps-page">
-    <div class="window" ng-class="{'window-boarding': isBoardingMode()}">
-
-        <!-- Left panel: TS grids -->
-        <div class="master" style="flex-direction:column;">
-
-            <div class="movementGridStyle" ng-if="!isProductionSiteMode() && !isFormFederationMode() && !isBoardingMode()" ng-grid="movementGridOptions">
-            </div>
-
-            <div class="boardingGridTitle" ng-if="isBoardingMode()">Boarding</div>
-            <div class="movementGridStyle" ng-if="isBoardingMode()" ng-grid="boardingGridOptions">
-            </div>
-
-            <div class="boardingSummaryStyle" ng-if="isBoardingMode()">
-                <table class="table table-bordered table-condensed boardingSummaryTable">
-                    <thead>
-                        <tr>
-                            <th>War</th>
-                            <th>Merchant</th>
-                            <th>Load Cap.</th>
-                            <th>Brigades</th>
-                            <th>Other Units</th>
-                            <th>Weight</th>
-                            <th>Load</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{{boardingSummary.war}}</td>
-                            <td>{{boardingSummary.merchant}}</td>
-                            <td>{{boardingSummary.loadCapacity}}</td>
-                            <td>{{boardingSummary.brigades}}</td>
-                            <td>{{boardingSummary.otherUnits}}</td>
-                            <td>{{boardingSummary.weight}}</td>
-                            <td><button type="button" class="btn btn-default btn-xs" ng-click="loadSelectedBoardingUnits()">Load</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="movementGridStyle" ng-if="isProductionSiteMode()" ng-grid="productionSiteGridOptions">
-            </div>
-
-            <div class="movementGridStyle" ng-if="isFormFederationMode()" ng-grid="formFederationGridOptions">
-            </div>
-
-            <div class="itemGridStyle" ng-if="!isProductionSiteMode() && !isBoardingMode()" ng-grid="itemGridOptions">
-            </div>
-
-            <div class="itemGridStyle" ng-if="isBoardingMode()" ng-grid="boardingItemGridOptions">
-            </div>
-
-        </div>
-
-        <!-- Right panel: map and controls -->
+    <div class="window">
+        <!-- Map and controls -->
         <div class="detail">
 
-            <!-- Row 1: Mode controls -->
             <div class="map-toolbar-row">
                 <span class="map-control-item">
                     <label class="control-label-sm">Mode</label>
-                    <select ng-options="do.name for do in displayOptions" ng-model="selectedDisplayOption" ng-change="changeDisplayOption()">
+                    <select ng-class="{ 'map-mode-movement-highlight': selectedDisplayOption && selectedDisplayOption.name === 'Movement' }"
+                            ng-options="(do.name === 'ProductionSite' ? 'Prod.Site' : do.name) for do in displayOptions"
+                            ng-model="selectedDisplayOption"
+                            ng-change="changeDisplayOption()">
                         <option value="">-- select --</option>
                     </select>
                 </span>
@@ -69,42 +19,104 @@
                 </span>
                 <span class="map-control-item">
                     <label class="control-label-sm">State</label>
-                    <select ng-options="(st.state + ' \u2014 ' + st.stateName + ' (Tax:' + st.taxRate + ')') for st in stateList" ng-model="selectedState">
+                    <select ng-options="(st.stateName + ' (' + st.state + ')') for st in stateList" ng-model="selectedState">
                         <option value="">-- all states --</option>
                     </select>
                 </span>
                 <span class="map-control-item" ng-show="isProductionSiteMode()">
-                    <label class="control-label-sm">Site</label>
+                    <label class="control-label-sm">Prod.Site</label>
                     <select ng-options="(ps.sitezTypeNo + ': ' + ps.siteType) for ps in productionSiteList" ng-model="selectedProductionSite"></select>
                 </span>
-            </div>
-
-            <!-- Row 2: Overlay toggles + coordinate detail -->
-            <div class="map-toolbar-row map-toolbar-row-overlays">
-                <span class="control-label-sm">Show:&nbsp;</span>
+                <span class="control-label-sm">Show:</span>
                 <label ng-repeat="mapOption in mapOptions" class="map-overlay-toggle">
                     <input type="checkbox"
                            name="selectedMapOptions[]"
                            value="{{mapOption}}"
                            ng-checked="selectedMapOptions.indexOf(mapOption) > -1"
-                           ng-click="toggleSelection(mapOption)" /> {{mapOption}}
+                           ng-click="toggleSelection(mapOption)" /> {{mapOption === 'ProductionSite' ? 'Prod.Site' : mapOption}}
                 </label>
                 <span class="coordinate-details" ng-show="selectedCoordinateDetails">
                     &nbsp;&nbsp;<strong>{{selectedCoordinateDetails}}</strong>
                 </span>
             </div>
 
+            <div class="map-orders-row" ng-if="!isProductionSiteMode() && currentMovementOrderRow">
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(-1)">&lt;</button>
+                <span class="map-orders-label">Order</span>
+                <span class="map-orders-index">#{{(getCurrentOrderIndexForMode('movement') || 0) + 1}}</span>
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(1)">&gt;</button>
+
+                <label>No</label>
+                <select class="map-order-input map-order-input-md"
+                        ng-model="movementOrderPickerIndex"
+                        ng-change="pickMovementOrderByIndex()"
+                        ng-options="$index as (row.orderNo || ($index + 1)) for row in tsMovementList track by $index">
+                </select>
+                <button type="button" class="btn btn-default btn-xs" ng-click="openAllOrdersModal()">Show All</button>
+
+                <label>Item</label>
+                <span class="map-order-value map-order-value-item">{{currentMovementOrderRow.itemNo || '-'}}</span>
+                <button type="button" class="btn btn-default btn-xs" ng-click="openMovementPickerModal()">Pick</button>
+
+                <label>Type</label>
+                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.type || '-'}}</span>
+
+                <label>MP</label>
+                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.mp != null ? currentMovementOrderRow.mp : '-'}}</span>
+
+                <label>Used</label>
+                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.mpUsed != null ? currentMovementOrderRow.mpUsed : '-'}}</span>
+
+                <label>X/Y</label>
+                <span class="map-order-value map-order-value-xy">{{(currentMovementOrderRow.xy || '-') | limitTo:5}}</span>
+
+                <label>D1</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction1" ng-change="handleCurrentMovementFieldChange()" />
+                <label>Ds1</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance1" ng-change="handleCurrentMovementFieldChange()" />
+                <label>D2</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction2" ng-change="handleCurrentMovementFieldChange()" />
+                <label>Ds2</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance2" ng-change="handleCurrentMovementFieldChange()" />
+                <label>D3</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction3" ng-change="handleCurrentMovementFieldChange()" />
+                <label>Ds3</label>
+                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance3" ng-change="handleCurrentMovementFieldChange()" />
+
+                <button type="button" class="btn btn-danger btn-xs" ng-click="clearCurrentMovementOrder()">Clear</button>
+            </div>
+
+            <div class="map-orders-row" ng-if="isProductionSiteMode() && currentProductionOrderRow">
+                <span class="map-orders-label">Production Order</span>
+                <span class="map-orders-index">#{{(getCurrentOrderIndexForMode('production') || 0) + 1}}</span>
+
+                <label>No</label>
+                <select class="map-order-input map-order-input-md"
+                        ng-model="productionOrderPickerIndex"
+                        ng-change="pickProductionOrderByIndex()"
+                        ng-options="$index as (row.orderNo || ($index + 1)) for row in tsBuildProductionSitesList track by $index">
+                </select>
+
+                <label>Type</label>
+                <input class="map-order-input map-order-input-sm" type="number" ng-model="currentProductionOrderRow.prodSiteType" ng-change="handleCurrentProductionFieldChange()" />
+
+                <label>X</label>
+                <input class="map-order-input map-order-input-sm" type="number" ng-model="currentProductionOrderRow.x" ng-change="handleCurrentProductionFieldChange()" />
+
+                <label>Y</label>
+                <input class="map-order-input map-order-input-sm" type="number" ng-model="currentProductionOrderRow.y" ng-change="handleCurrentProductionFieldChange()" />
+
+                <label>Description</label>
+                <input class="map-order-input map-order-input-lg" type="text" ng-value="getProductionSiteDescription(currentProductionOrderRow)" readonly />
+
+                <button type="button" class="btn btn-danger btn-xs" ng-click="clearCurrentProductionOrder()">Clear</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="openAllOrdersModal()">Show All</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(-1)">&lt;</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(1)">&gt;</button>
+            </div>
+
             <!-- Map sliders and grid -->
             <div class="map-panel-area">
-                <div class="map-x-slider">
-                    <div range-slider
-                         min="selectedMapChoice.rangeMinX" max="selectedMapChoice.rangeMaxX"
-                         model-min="selectedMapChoice.minX" model-max="selectedMapChoice.maxX"
-                         step="1"
-                         style="width:400px">
-                    </div>
-                </div>
-
                 <div class="map-grid-row">
                     <div>
                         <table class="turnMapTable" id="mapPanel">
@@ -137,8 +149,94 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="map-x-slider">
+                    <div range-slider
+                         min="selectedMapChoice.rangeMinX" max="selectedMapChoice.rangeMaxX"
+                         model-min="selectedMapChoice.minX" model-max="selectedMapChoice.maxX"
+                         step="1"
+                         style="width:400px">
+                    </div>
+                </div>
             </div>
 
+        </div>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="orderUi.allOrdersModal.isOpen" ng-click="closeAllOrdersModal()"></div>
+    <div class="landUnitsModal mapOrdersModal" ng-show="orderUi.allOrdersModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>All {{orderUi.allOrdersModal.mode === 'production' ? 'Production' : 'Movement'}} Orders</h3>
+                <div class="landUnitsModalSubtitle">Select order slot to show in single-order line.</div>
+            </div>
+            <button type="button" class="close" ng-click="closeAllOrdersModal()"><span>&times;</span></button>
+        </div>
+        <div class="landUnitsModalBody">
+            <div class="table-responsive mapOrdersModalBody">
+                <table class="table table-condensed table-hover mapOrdersTable">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="orderRow in getAllOrdersModalRows() track by $index"
+                            ng-class="{ 'itemGridRowSelected': isAllOrdersModalCurrentSelection($index) }"
+                            ng-click="selectOrderFromAllOrdersModal($index)">
+                            <td>{{orderRow.orderNo || ($index + 1)}}</td>
+                            <td>{{getOrderSummaryText(orderUi.allOrdersModal.mode, orderRow)}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="landUnitsModalBackdrop" ng-show="orderUi.movementPickerModal.isOpen" ng-click="closeMovementPickerModal()"></div>
+    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="orderUi.movementPickerModal.isOpen">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Movement Picker (Fed/Fleet)</h3>
+                <div class="landUnitsModalSubtitle">Fed/Fleet pick enabled. Item and Fed/Fleet chips are selectable.</div>
+            </div>
+            <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
+        </div>
+        <div class="landUnitsModalBody">
+            <div class="table-responsive mapOrdersModalBody">
+                <table class="table table-condensed table-hover mapOrdersTable">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Fed/Fleet</th>
+                            <th>Type</th>
+                            <th>MP</th>
+                            <th>X/Y</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
+                            ng-class="{ 'itemGridRowAlreadyAdded': isItemAlreadyInMovementGrid(itemRow.itemNo) }">
+                            <td>
+                                <button type="button" class="landUnitsFederationChip mapOrdersPickChip" ng-click="selectMovementOrderItem(itemRow, 'item'); closeMovementPickerModal()">{{itemRow.itemNo}}</button>
+                            </td>
+                            <td>
+                                <button type="button"
+                                        class="landUnitsFederationChip mapOrdersPickChip"
+                                        ng-class="{ 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
+                                        ng-disabled="itemRow.fed == null || itemRow.fed === ''"
+                                        ng-click="selectMovementOrderItem(itemRow, 'fed'); closeMovementPickerModal()">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
+                            </td>
+                            <td>{{itemRow.itemTypeName}}</td>
+                            <td>{{itemRow.mp}}</td>
+                            <td>{{itemRow.xy}}</td>
+                            <td>{{itemRow.description}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

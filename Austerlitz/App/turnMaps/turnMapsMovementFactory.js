@@ -10,7 +10,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 $scope.selectedMovementItemCoordinate = null;
 
                 if (row.entity.itemNo != null) {
-                    var selectedItem = $scope.getItemFromItemNo(row.entity.itemNo);
+                    var selectedItem = $scope.getItemFromItemNo(row.entity.itemNo, row.entity.type === 'Fed');
                     var item = {
                         itemNo: selectedItem.itemNo,
                         mpUsed: 0,
@@ -26,6 +26,9 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
 
                     if (initialCoord != null) {
                         $scope.selectedMovementRow = row.entity;
+                        if (typeof $scope.syncMovementOrderIndexToRow === 'function') {
+                            $scope.syncMovementOrderIndexToRow(row.entity);
+                        }
                         $scope.selectedMovementItemCoordinate = { x: item.x, y: item.y };
                         row.entity.type = $scope.getItemTypeAbbrev(selectedItem);
                         row.entity.mp = item.mp;
@@ -234,9 +237,16 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 return moveCost;
             };
 
-            $scope.getItemFromItemNo = function (itemNo) {
+            $scope.getItemFromItemNo = function (itemNo, preferFederation) {
                 var rtnItem = {};
                 var parsedItemNo = parseInt(itemNo, 10);
+
+                if (preferFederation) {
+                    rtnItem = $scope.getFederationMovementSummary(parsedItemNo);
+                    if (rtnItem && rtnItem.itemNo != null) {
+                        return rtnItem;
+                    }
+                }
 
                 angular.forEach($scope.masterData.turnReport.movementItemList, function (item) {
                     if (item.originalItemNo == parsedItemNo) {
@@ -333,7 +343,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
 
                 angular.forEach($scope.tsMovementList, function (movementRow) {
                     if (movementRow.itemNo != null) {
-                        var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo);
+                        var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo, movementRow.type === 'Fed');
                         if (selectedItem && selectedItem.itemNo != null) {
                             movementRow.type = $scope.getItemTypeAbbrev(selectedItem);
                             movementRow.mp = selectedItem.originalMP != null ? selectedItem.originalMP : selectedItem.mp;
@@ -357,11 +367,8 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                 if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
                     $scope.filteredMovementItemsForMap = [];
                     $scope.itemGridRows = [];
-                    $scope.boardingItemRows = [];
                     return;
                 }
-
-                var shipCatalogByType = $scope.getShipCatalogByType();
 
                 $scope.filteredMovementItemsForMap = $scope.masterData.turnReport.movementItemList
                     .filter(function (item) {
@@ -369,34 +376,21 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                     })
                     .map(function (item) {
                         var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
-                        var shipDef = shipCatalogByType[item.shipTypeNo];
-                        var isShip = parseInt(item.itemType, 10) === 2 || parseInt(item.itemType, 10) === 3;
-                        var baseCapacity = parseInt(shipDef && shipDef.loadCapacity, 10) || 0;
-                        var condition = isShip ? $scope.getShipConditionByItemNo(itemNo) : null;
-                        var actualCapacity = null;
-
-                        if (isShip) {
-                            var condPct = parseFloat(condition);
-                            if (isNaN(condPct)) condPct = 100;
-                            actualCapacity = Math.floor(baseCapacity * (condPct / 100));
-                        }
+                        var itemTypeName = $scope.getItemTypeName(item.itemType);
+                        if (itemTypeName === 'BaggageTrain') itemTypeName = 'Bagagge';
 
                         return {
                             itemNo: itemNo,
                             originalItemNo: itemNo,
-                            fed: $scope.getSelectionFedValue(item, itemNo, item.itemType),
+                            fed: item.federationNo,
                             itemType: item.itemType,
                             shipTypeNo: item.shipTypeNo,
-                            itemTypeName: $scope.getItemTypeAbbrev(item),
+                            itemTypeName: itemTypeName,
                             description: item.description,
                             mp: item.originalMP != null ? item.originalMP : item.mp,
-                            capacity: actualCapacity,
-                            cond: condition,
                             x: item.x,
                             y: item.y,
-                            xy: item.x + '/' + item.y,
-                            isSelected: !!$scope.boardingSelectedLookup[itemNo],
-                            load: !!$scope.boardingLoadLookup[itemNo]
+                            xy: item.x + '/' + item.y
                         };
                     })
                     .sort(function (a, b) {
@@ -408,7 +402,6 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                     });
 
                 $scope.refreshItemGridRows();
-                $scope.recalculateBoardingSummary();
             };
 
             $scope.hasMovementItemNo = function (movementRow) {

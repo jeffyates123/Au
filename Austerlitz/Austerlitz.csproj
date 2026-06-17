@@ -270,10 +270,8 @@
     <Content Include="App\simBattleController.js" />
     <Content Include="App\turnDataLoaderService.js" />
     <Content Include="App\ts01TransferGoodsUtilsFactory.js" />
-    <Content Include="App\turnMaps\turnMapsBoardingFactory.js" />
     <Content Include="App\turnMaps\turnMapsConfigFactory.js" />
     <Content Include="App\turnMaps\turnMapsDepotLookupFactory.js" />
-    <Content Include="App\turnMaps\turnMapsFormFederationsFactory.js" />
     <Content Include="App\turnMaps\turnMapsGridConfigFactory.js" />
     <Content Include="App\turnMaps\turnMapsMovementFactory.js" />
     <Content Include="App\turnMaps\turnMapsProductionSitesFactory.js" />

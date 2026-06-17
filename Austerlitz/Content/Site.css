@@ -308,9 +308,11 @@ textarea {
 .map-toolbar-row {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
     margin-bottom: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .map-toolbar-row-overlays {
@@ -344,12 +346,106 @@ textarea {
     color: #333;
 }
 
+.map-orders-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 6px 4px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    border: 1px solid #ddd7ce;
+    border-radius: 3px;
+    background: #fffdf9;
+}
+
+.map-orders-row label {
+    margin: 0 0 0 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+}
+
+.map-orders-label {
+    margin-left: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.map-orders-index {
+    font-size: 11px;
+    color: #666;
+    margin-right: 5px;
+}
+
+.map-order-input {
+    height: 22px;
+    padding: 2px 4px;
+    font-size: 11px;
+}
+
+.map-order-value {
+    display: inline-block;
+    min-height: 22px;
+    line-height: 22px;
+    padding: 0 4px;
+    font-size: 11px;
+    border-radius: 2px;
+    background: #f5f2eb;
+    color: #333;
+    border: 1px solid transparent;
+}
+
+.map-order-value-xs {
+    width: 24px;
+    text-align: center;
+}
+
+.map-order-value-sm {
+    width: 58px;
+    text-align: center;
+}
+
+.map-order-value-item {
+    width: 46px;
+    text-align: center;
+}
+
+.map-order-value-xy {
+    width: 44px;
+    text-align: center;
+}
+
+.map-order-input-xs {
+    width: 28px;
+}
+
+.map-order-input-sm {
+    width: 58px;
+}
+
+.map-order-input-md {
+    width: 72px;
+}
+
+.map-order-input-lg {
+    width: 180px;
+}
+
+.map-mode-movement-highlight {
+    border-color: #b88900;
+    box-shadow: 0 0 0 1px #f3d98a inset;
+    background: #fff9e8;
+}
+
 .map-panel-area {
     display: inline-block;
 }
 
 .map-x-slider {
-    margin-bottom: 4px;
+    margin-top: 4px;
 }
 
 .map-grid-row {
@@ -449,6 +545,51 @@ textarea {
 
 .itemGridRowAlreadyAdded {
     background-color: #d9edf7;
+}
+
+.mapOrdersModal {
+    width: 760px;
+    margin-left: -380px;
+}
+
+.mapOrdersMovementPickerModal {
+    width: 980px;
+    margin-left: -490px;
+}
+
+.mapOrdersModalBody {
+    max-height: 430px;
+    overflow-y: auto;
+}
+
+.mapOrdersTable {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.mapOrdersTable > tbody > tr {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mapOrdersPickChip {
+    min-width: 42px;
+    border: 1px solid #bcbcbc;
+    background: #f3f3f3;
+    color: #333;
+    font-weight: 700;
+}
+
+.mapOrdersPickChip:hover,
+.mapOrdersPickChip:focus {
+    border-color: #8b8b8b;
+    background: #ececec;
+}
+
+.mapOrdersPickChipDisabled,
+.mapOrdersPickChip:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .saveButton {
