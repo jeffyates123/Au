@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.controller('turnSheetAllSectionsController', function ($scope, masterData, turnSheetSectionsFactory) {
+austerlitzModule.controller('turnSheetAllSectionsController', function ($scope, masterData, turnSheetFactory, turnSheetSectionsFactory) {
     var loadedTurnId = null;
 
     $scope.masterData = masterData;
@@ -26,6 +26,56 @@ austerlitzModule.controller('turnSheetAllSectionsController', function ($scope, 
         section.collapsed = !section.collapsed;
     };
 
+    $scope.isRowEmpty = function (section, row) {
+        if (!row || !section || !section.columns) {
+            return true;
+        }
+
+        var hasValue = false;
+        angular.forEach(section.columns, function (column) {
+            if (column.field === 'orderNo') {
+                return;
+            }
+
+            var value = row[column.field];
+            if (!(value === null || angular.isUndefined(value) || value === '')) {
+                hasValue = true;
+            }
+        });
+
+        return !hasValue;
+    };
+
+    $scope.canRemoveRow = function (section, row) {
+        return !section.isSaving && !$scope.isRowEmpty(section, row);
+    };
+
+    $scope.removeRow = function (sectionView, row, rowIndex) {
+        if (!$scope.canRemoveRow(sectionView, row)) {
+            return;
+        }
+
+        var orderNo = row && (row.orderNo || row.OrderNo);
+        if (!window.confirm('Remove all data from row ' + orderNo + '?')) {
+            return;
+        }
+
+        var config = turnSheetSectionsFactory.getByKey(sectionView.key);
+        var previousRow = angular.copy(row);
+        sectionView.actionError = '';
+        sectionView.isSaving = true;
+        sectionView.rows[rowIndex] = turnSheetSectionsFactory.clearRow(config, row, masterData && masterData.turnId);
+
+        turnSheetFactory.postTSRecords(sectionView.rows, config.postType).then(function (savedRows) {
+            sectionView.rows = turnSheetSectionsFactory.normalizeRows(config, savedRows, masterData && masterData.turnId);
+            sectionView.isSaving = false;
+        }, function () {
+            sectionView.rows[rowIndex] = previousRow;
+            sectionView.actionError = 'Failed to remove row. Changes were reverted.';
+            sectionView.isSaving = false;
+        });
+    };
+
     $scope.loadAll = function () {
         var turnId = masterData && masterData.turnId;
         if (!turnId || turnId === 'Unknown') {
@@ -46,7 +96,9 @@ austerlitzModule.controller('turnSheetAllSectionsController', function ($scope, 
                 columns: config.columns,
                 rows: turnSheetSectionsFactory.normalizeRows(config, [], turnId),
                 isLoading: true,
+                isSaving: false,
                 loadError: '',
+                actionError: '',
                 collapsed: false
             };
         });

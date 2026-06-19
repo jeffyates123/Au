@@ -6,40 +6,11 @@
             <span ng-class="fileLoading ? 'glyphicon glyphicon-remove':'glyphicon glyphicon-ok'">
         </div>
         <div>
-            <h3>Load Turn From Database</h3> 
-
-            <div class="turnSelectorRow">
-                <label>Game No</label>
-                <select id="selectedGameNo" ng-options="gameNo for gameNo in gameNoOptions" ng-model="selectedGameNo" ng-change="onGameNoChanged()">
-                    <option value="">--select game--</option>
-                </select>
-            </div>
-
-            <div class="turnSelectorRow">
-                <label>State</label>
-                <select id="selectedState" ng-options="state for state in stateOptions" ng-model="selectedState" ng-change="onStateChanged()">
-                    <option value="">--select state--</option>
-                </select>
-            </div>
-
-            <div class="turnSelectorRow">
-                <label>Month/Year</label>
-                <select id="selectedMonthYear" ng-options="monthYear for monthYear in monthYearOptions" ng-model="selectedMonthYear" ng-change="onMonthYearChanged()">
-                    <option value="">--select month/year--</option>
-                </select>
-            </div>
-
-            <select id="selectedTurn" ng-options="tsTurn.turnId for tsTurn in masterData.turnsList" ng-model="selectedTurnDetails" ng-change="loadTurnFromDataBase()" style="display:none;">
-                <option value="">--select turn--</option>
-            </select>
-            <h4>Selected: {{masterData.turnId}}</h4>
+            <h3>Import Turnsheet Spreadsheet</h3>
+            <p>Uploads an edited turnsheet template for the selected turn (TS01-TS23). Existing orders are replaced before import.</p>
+            <input type="file" id="turnsheetImportFileInput" accept=".xlsx" onchange="sendTurnsheetImportFile(this.files[0]);" />
+            <span ng-class="turnsheetImportLoading ? 'glyphicon glyphicon-remove':'glyphicon glyphicon-ok'"></span>
         </div>
-
-        <div>
-            <h3>Load Regional Map File</h3>
-            <input type="file" id="fileInput" onchange="sendRegionalMapFile(this.files[0]);" />
-        </div>
-
         <div >
             <div><label>Turn Sheet Loaded?</label><span ng-class="masterData.turnSheet ? 'glyphicon glyphicon-ok':'glyphicon glyphicon-remove'"></span></div>
 

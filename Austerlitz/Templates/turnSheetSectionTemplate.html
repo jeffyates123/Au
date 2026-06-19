@@ -8,12 +8,14 @@
 
     <div ng-show="loadError" class="alert alert-warning ts-section-alert">{{loadError}}</div>
     <div ng-show="isLoading" class="alert alert-info ts-section-alert">Loading...</div>
+    <div ng-show="actionError" class="alert alert-warning ts-section-alert">{{actionError}}</div>
 
     <div class="ts-table-wrap" ng-show="!loadError && !isLoading">
         <table class="table table-condensed table-bordered ts-html-table">
             <thead>
                 <tr>
                     <th ng-repeat="column in columns">{{column.displayName}}</th>
+                    <th class="ts-row-action-header"></th>
                 </tr>
             </thead>
             <tbody>
@@ -21,9 +23,17 @@
                     <td ng-repeat="column in columns" ng-class="{ 'ts-empty-cell': isEmptyValue(row, column) }">
                         {{getCellValue(row, column)}}
                     </td>
+                    <td class="ts-row-action-cell">
+                        <button type="button"
+                                class="btn btn-default btn-xs ts-remove-row-btn"
+                                ng-click="removeRow(row, $index)"
+                                ng-disabled="!canRemoveRow(row)">
+                            Remove
+                        </button>
+                    </td>
                 </tr>
                 <tr ng-show="!rows.length">
-                    <td colspan="{{columns.length}}" class="ts-empty-table">No rows for this turn.</td>
+                    <td colspan="{{columns.length + 1}}" class="ts-empty-table">No rows for this turn.</td>
                 </tr>
             </tbody>
         </table>

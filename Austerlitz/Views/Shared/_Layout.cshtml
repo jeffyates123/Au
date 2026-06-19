@@ -127,10 +127,11 @@
                 <select id="sidebarSelectedMonthYear" class="form-control input-sm" ng-options="monthYear for monthYear in sidebarMonthYearOptions" ng-model="sidebarSelectedMonthYear" ng-change="onSidebarMonthYearChanged()">
                     <option value="">-- turn --</option>
                 </select>
+                <div class="text-muted small" ng-show="sidebarTurnLoading">Loading selected turn...</div>
             </div>
 
             <nav class="appSidebarNav">
-                <a href="/home" ng-class="{ active: isActive('/home') }">Overview</a>
+                <a href="/home" ng-class="{ active: isActive('/home') }">Load/Import</a>
                 <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
                 <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Army</a>
                 <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') && !isActive('/Military/MathBattles/Stats') }">Math Battles</a>

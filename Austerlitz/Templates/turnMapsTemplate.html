@@ -19,7 +19,9 @@
                 </span>
                 <span class="map-control-item">
                     <label class="control-label-sm">State</label>
-                    <select ng-options="(st.stateName + ' (' + st.state + ')') for st in stateList" ng-model="selectedState">
+                    <select ng-options="(st.stateName + ' (' + st.state + ')') for st in stateList"
+                            ng-model="selectedState"
+                            ng-change="handleSelectedStateChange()">
                         <option value="">-- all states --</option>
                     </select>
                 </span>
@@ -36,54 +38,54 @@
                            ng-click="toggleSelection(mapOption)" /> {{mapOption === 'ProductionSite' ? 'Prod.Site' : mapOption}}
                 </label>
                 <span class="coordinate-details" ng-show="selectedCoordinateDetails">
-                    &nbsp;&nbsp;<strong>{{selectedCoordinateDetails}}</strong>
+                    {{selectedCoordinateDetails}}
                 </span>
             </div>
 
             <div class="map-orders-row" ng-if="!isProductionSiteMode() && currentMovementOrderRow">
-                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(-1)">&lt;</button>
-                <span class="map-orders-label">Order</span>
-                <span class="map-orders-index">#{{(getCurrentOrderIndexForMode('movement') || 0) + 1}}</span>
-                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(1)">&gt;</button>
+                <span class="map-orders-group map-orders-group-order">
+                    <button type="button" class="btn btn-default btn-xs map-orders-nav-btn" ng-click="navigateCurrentOrder(-1)">&lt;</button>
+                    <button type="button" class="btn btn-default btn-xs map-orders-order-picker-btn" ng-click="openAllOrdersModal()">Order #{{(getCurrentOrderIndexForMode('movement') || 0) + 1}}</button>
+                    <button type="button" class="btn btn-default btn-xs map-orders-nav-btn" ng-click="navigateCurrentOrder(1)">&gt;</button>
+                    <button type="button" class="btn btn-default btn-xs" ng-click="findNextEmptyMovementOrder()">Next Empty</button>
+                </span>
 
-                <label>No</label>
-                <select class="map-order-input map-order-input-md"
-                        ng-model="movementOrderPickerIndex"
-                        ng-change="pickMovementOrderByIndex()"
-                        ng-options="$index as (row.orderNo || ($index + 1)) for row in tsMovementList track by $index">
-                </select>
-                <button type="button" class="btn btn-default btn-xs" ng-click="openAllOrdersModal()">Show All</button>
+                <span class="map-orders-group map-orders-group-unit">
+                    <label>Item</label>
+                    <button type="button"
+                            class="map-order-value map-order-value-item map-order-value-action"
+                            ng-click="openMovementPickerModal()">{{currentMovementOrderRow.itemNo || '-'}}</button>
+                </span>
 
-                <label>Item</label>
-                <span class="map-order-value map-order-value-item">{{currentMovementOrderRow.itemNo || '-'}}</span>
-                <button type="button" class="btn btn-default btn-xs" ng-click="openMovementPickerModal()">Pick</button>
+                <span class="map-orders-group map-orders-group-meta">
+                    <label>Type</label>
+                    <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.type || '-'}}</span>
 
-                <label>Type</label>
-                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.type || '-'}}</span>
+                    <label>MP</label>
+                    <span class="map-order-value map-order-value-sm">{{(currentMovementOrderRow.mpUsed != null ? currentMovementOrderRow.mpUsed : '-') + '/' + (currentMovementOrderRow.mp != null ? currentMovementOrderRow.mp : '-')}}</span>
 
-                <label>MP</label>
-                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.mp != null ? currentMovementOrderRow.mp : '-'}}</span>
+                    <label>X/Y</label>
+                    <span class="map-order-value map-order-value-xy">{{(currentMovementOrderRow.xy || '-') | limitTo:5}}</span>
+                </span>
 
-                <label>Used</label>
-                <span class="map-order-value map-order-value-xs">{{currentMovementOrderRow.mpUsed != null ? currentMovementOrderRow.mpUsed : '-'}}</span>
+                <span class="map-orders-group map-orders-group-route">
+                    <label>D1</label>
+                    <input class="map-order-input map-order-input-xs map-order-input-direction" type="text" inputmode="numeric" maxlength="1" ng-model="currentMovementOrderRow.direction1" ng-change="handleCurrentMovementFieldChange()" />
+                    <label>Ds1</label>
+                    <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance1" ng-change="handleCurrentMovementFieldChange()" />
+                    <label>D2</label>
+                    <input class="map-order-input map-order-input-xs map-order-input-direction" type="text" inputmode="numeric" maxlength="1" ng-model="currentMovementOrderRow.direction2" ng-change="handleCurrentMovementFieldChange()" />
+                    <label>Ds2</label>
+                    <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance2" ng-change="handleCurrentMovementFieldChange()" />
+                    <label>D3</label>
+                    <input class="map-order-input map-order-input-xs map-order-input-direction" type="text" inputmode="numeric" maxlength="1" ng-model="currentMovementOrderRow.direction3" ng-change="handleCurrentMovementFieldChange()" />
+                    <label>Ds3</label>
+                    <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance3" ng-change="handleCurrentMovementFieldChange()" />
+                </span>
 
-                <label>X/Y</label>
-                <span class="map-order-value map-order-value-xy">{{(currentMovementOrderRow.xy || '-') | limitTo:5}}</span>
-
-                <label>D1</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction1" ng-change="handleCurrentMovementFieldChange()" />
-                <label>Ds1</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance1" ng-change="handleCurrentMovementFieldChange()" />
-                <label>D2</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction2" ng-change="handleCurrentMovementFieldChange()" />
-                <label>Ds2</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance2" ng-change="handleCurrentMovementFieldChange()" />
-                <label>D3</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.direction3" ng-change="handleCurrentMovementFieldChange()" />
-                <label>Ds3</label>
-                <input class="map-order-input map-order-input-xs" type="text" inputmode="numeric" maxlength="2" ng-model="currentMovementOrderRow.distance3" ng-change="handleCurrentMovementFieldChange()" />
-
-                <button type="button" class="btn btn-danger btn-xs" ng-click="clearCurrentMovementOrder()">Clear</button>
+                <span class="map-orders-group map-orders-group-actions">
+                    <button type="button" class="btn btn-danger btn-xs" ng-click="clearCurrentMovementOrder()">Clear</button>
+                </span>
             </div>
 
             <div class="map-orders-row" ng-if="isProductionSiteMode() && currentProductionOrderRow">
@@ -218,21 +220,27 @@
                     </thead>
                     <tbody>
                         <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
-                            ng-class="{ 'itemGridRowAlreadyAdded': isItemAlreadyInMovementGrid(itemRow.itemNo) }">
+                            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }">
                             <td>
-                                <button type="button" class="landUnitsFederationChip mapOrdersPickChip" ng-click="selectMovementOrderItem(itemRow, 'item'); closeMovementPickerModal()">{{itemRow.itemNo}}</button>
+                                <button type="button"
+                                        class="landUnitsFederationChip mapOrdersPickChip"
+                                        ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow) }"
+                                        ng-click="selectMovementOrderItem(itemRow, 'item'); closeMovementPickerModal()">{{itemRow.itemNo}}</button>
                             </td>
                             <td>
                                 <button type="button"
                                         class="landUnitsFederationChip mapOrdersPickChip"
-                                        ng-class="{ 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
+                                        ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
                                         ng-disabled="itemRow.fed == null || itemRow.fed === ''"
                                         ng-click="selectMovementOrderItem(itemRow, 'fed'); closeMovementPickerModal()">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
                             </td>
                             <td>{{itemRow.itemTypeName}}</td>
                             <td>{{itemRow.mp}}</td>
                             <td>{{itemRow.xy}}</td>
-                            <td>{{itemRow.description}}</td>
+                            <td>
+                                {{itemRow.description}}
+                                <span class="mapOrdersMovedBadge" ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)">Moved</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

@@ -182,20 +182,20 @@ textarea {
 }
 
 .terrain_B {
-    background-color: rgb(160, 220, 160);
+    background-color: #7FBF7F;
 }
 
 .terrain_H {
-    background-color: rgb(0, 255, 0);
+    background-color: #C49A6C;
 }
 .terrain_D {
     background-color: rgb(255, 255, 153);
 }
 .terrain_G {
-    background-color: rgb(128, 128, 128);
+    background-color: #6E7681;
 }
 .terrain_K {
-    background-color: rgb(166, 166, 166);
+    background-color: #6E7681;
 }
 .terrain_Q {
     background-color: rgb(102, 153, 153);
@@ -341,24 +341,47 @@ textarea {
 }
 
 .coordinate-details {
-    font-size: 11px;
-    font-weight: 600;
-    color: #333;
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    flex: 0 0 auto;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    border: 1px solid #d9c485;
+    background: #fff7d8;
+    font-size: 12px;
+    font-weight: 700;
+    color: #3f330f;
+    line-height: 1;
 }
 
 .map-orders-row {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     flex-wrap: nowrap;
     overflow-x: auto;
     white-space: nowrap;
-    padding: 6px 4px;
+    padding: 4px;
     margin-top: 6px;
     margin-bottom: 6px;
     border: 1px solid #ddd7ce;
     border-radius: 3px;
     background: #fffdf9;
+}
+
+.map-orders-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 22px;
+}
+
+.map-orders-group + .map-orders-group {
+    margin-left: 5px;
+    padding-left: 6px;
+    border-left: 1px solid #e8e0d6;
 }
 
 .map-orders-row label {
@@ -380,6 +403,19 @@ textarea {
     margin-right: 5px;
 }
 
+.map-orders-order-picker-btn {
+    font-weight: 700;
+    color: #5d4813;
+    background: #fff5d7;
+    border-color: #d9c485;
+}
+
+.map-orders-nav-btn {
+    font-size: 14px;
+    line-height: 1;
+    padding: 3px 7px;
+}
+
 .map-order-input {
     height: 22px;
     padding: 2px 4px;
@@ -398,6 +434,21 @@ textarea {
     border: 1px solid transparent;
 }
 
+.map-order-value-action {
+    cursor: pointer;
+    font-weight: 700;
+    color: #5d4813;
+    background: #fff5d7;
+    border-color: #d9c485;
+}
+
+.map-order-value-action:hover,
+.map-order-value-action:focus {
+    background: #fff0c4;
+    border-color: #cdb16c;
+    outline: none;
+}
+
 .map-order-value-xs {
     width: 24px;
     text-align: center;
@@ -411,6 +462,7 @@ textarea {
 .map-order-value-item {
     width: 46px;
     text-align: center;
+    font-weight: 700;
 }
 
 .map-order-value-xy {
@@ -420,6 +472,12 @@ textarea {
 
 .map-order-input-xs {
     width: 28px;
+}
+
+.map-order-input-direction {
+    width: 18px;
+    text-align: center;
+    padding: 2px 2px;
 }
 
 .map-order-input-sm {
@@ -572,6 +630,14 @@ textarea {
     white-space: nowrap;
 }
 
+.mapOrdersTable > tbody > tr.itemGridRowAlreadyAdded > td {
+    background-color: #d9edf7;
+}
+
+.mapOrdersTable.table-hover > tbody > tr.itemGridRowAlreadyAdded:hover > td {
+    background-color: #c4e3f3;
+}
+
 .mapOrdersPickChip {
     min-width: 42px;
     border: 1px solid #bcbcbc;
@@ -584,6 +650,26 @@ textarea {
 .mapOrdersPickChip:focus {
     border-color: #8b8b8b;
     background: #ececec;
+}
+
+.mapOrdersPickChip.mapOrdersPickChipMoved {
+    border-color: #c79500;
+    background: #fff1c7;
+    color: #6a4b00;
+}
+
+.mapOrdersMovedBadge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border: 1px solid #d2ab35;
+    border-radius: 10px;
+    background: #fff1c7;
+    color: #6a4b00;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
 }
 
 .mapOrdersPickChipDisabled,
@@ -1032,6 +1118,18 @@ textarea {
 
 .ts-empty-cell {
     color: #bbb;
+}
+
+.ts-row-action-header,
+.ts-row-action-cell {
+    width: 1%;
+    min-width: 64px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.ts-remove-row-btn {
+    padding: 1px 6px;
 }
 
 .ts-empty-table {

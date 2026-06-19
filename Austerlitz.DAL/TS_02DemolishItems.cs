@@ -17,5 +17,6 @@ namespace Austerlitz.DAL
         public string TurnId { get; set; }
         public int OrderNo { get; set; }
         public Nullable<int> ItemNo { get; set; }
+        public Nullable<int> BrigadeNo { get; set; }
     }
 }

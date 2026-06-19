@@ -362,6 +362,7 @@
     <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
     <Property Name="OrderNo" Type="int" Nullable="false" />
     <Property Name="ItemNo" Type="int" />
+    <Property Name="BrigadeNo" Type="int" />
   </EntityType>
   <EntityType Name="TS_03SetUpBrigades">
     <Key>

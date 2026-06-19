@@ -18,6 +18,19 @@ austerlitzModule.factory('turnSheetFactory', function ($http, $q) {
                 .error(deferred.reject);
             return deferred.promise;
         },
+        importTurnsheetSpreadsheet: function (turnId, file) {
+            var deferred = $q.defer();
+            var formData = new FormData();
+            formData.append('file1', file);
+
+            $http.post('/Api/TurnSheetApi/PostImportTurnsheetSpreadsheet?turnId=' + encodeURIComponent(turnId || ''), formData, {
+                transformRequest: angular.identity,
+                headers: { 'Content-Type': undefined }
+            })
+                .success(deferred.resolve)
+                .error(deferred.reject);
+            return deferred.promise;
+        },
         clearTurnOrders: function (turnId) {
             var deferred = $q.defer();
             $http.post('/Api/TurnSheetApi/PostClearTurnOrders?turnId=' + encodeURIComponent(turnId || ''), null)

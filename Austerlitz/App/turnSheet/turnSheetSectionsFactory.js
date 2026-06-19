@@ -31,7 +31,8 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
             postType: 'DemolishItems',
             columns: [
                 { field: 'orderNo', displayName: 'No' },
-                { field: 'itemNo', displayName: 'Item No' }
+                { field: 'itemNo', displayName: 'Item No' },
+                { field: 'brigadeNo', displayName: 'Battalion No (1-7)' }
             ]
         },
         {
@@ -405,6 +406,20 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
         return row;
     }
 
+    function normalizeDemolishItemsRow(row) {
+        if (!row) {
+            return row;
+        }
+
+        row.itemNo = turnSheetValueRulesFactory.toPositiveIntOrNull(row.itemNo);
+        row.brigadeNo = turnSheetValueRulesFactory.toPositiveIntOrNull(row.brigadeNo);
+        if (row.brigadeNo != null && (row.brigadeNo < 1 || row.brigadeNo > 7)) {
+            row.brigadeNo = null;
+        }
+
+        return row;
+    }
+
     function normalizeSectionSpecificRow(section, row) {
         if (!section || !row) {
             return row;
@@ -416,6 +431,10 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
 
         if (section.key === 'TransferGoods') {
             return normalizeTransferGoodsRow(row);
+        }
+
+        if (section.key === 'DemolishItems') {
+            return normalizeDemolishItemsRow(row);
         }
 
         return row;
@@ -441,6 +460,17 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
         return normalizedRows;
     }
 
+    function clearRow(section, row, turnId) {
+        var orderNo = getOrderNo(row, null);
+        if (orderNo == null) {
+            return row;
+        }
+
+        var resolvedTurnId = turnId || (row && row.turnId);
+        var clearedRow = createEmptyRow(section, orderNo, resolvedTurnId);
+        return normalizeSectionSpecificRow(section, clearedRow);
+    }
+
     return {
         getAll: function () {
             return sections;
@@ -448,6 +478,7 @@ austerlitzModule.factory('turnSheetSectionsFactory', function (turnSheetFactory,
         getByKey: function (key) {
             return sectionsByKey[key];
         },
-        normalizeRows: normalizeRows
+        normalizeRows: normalizeRows,
+        clearRow: clearRow
     };
 });

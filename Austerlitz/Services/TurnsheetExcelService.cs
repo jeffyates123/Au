@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +18,7 @@ namespace Austerlitz.Services
         private static readonly SectionLayout[] Layouts =
         {
             Layout("TS_01", 12, 10, Col(2, "From"), Col(3, "To"), Col(4, "Louisdore"), Col(5, "Citizens"), Col(6, "EcPts"), Col(7, "Wood"), Col(8, "Horses"), Col(9, "Textiles")),
-            Layout("TS_02", 25, 6, Col(2, "ItemNo")),
+            Layout("TS_02", 25, 6, Col(2, "ItemNo"), Col(3, "BrigadeNo")),
             Layout("TS_03", 34, 8, Col(2, "Depot"), Col(3, "Batt1"), Col(4, "Batt2"), Col(5, "Batt3"), Col(6, "Batt4"), Col(7, "Batt5"), Col(8, "Batt6"), Col(9, "Batt7"), Col(10, "BrigadeName")),
             Layout("TS_04", 45, 6, Col(2, "BrigadeNo"), Col(3, "BattType")),
             Layout("TS_05", 54, 12, Col(2, "BrigadeOrFederation"), Col(3, "IncreaseAmount")),
@@ -39,6 +40,33 @@ namespace Austerlitz.Services
             Layout("TS_21", 288, 6, Col(2, "State"), Col(3, GetHandOverTerritoryTarget)),
             Layout("TS_22", 297, 4, Col(2, "ItemNo"), Col(3, "Name")),
             Layout("TS_23", 304, 4, Col(2, "State"), Col(3, "Relationship"))
+        };
+
+        private static readonly IDictionary<string, Type> SectionTypes = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "TS_01", typeof(TS_01TransferGoods) },
+            { "TS_02", typeof(TS_02DemolishItems) },
+            { "TS_03", typeof(TS_03SetUpBrigades) },
+            { "TS_04", typeof(TS_04SetUpAdditionalBrigades) },
+            { "TS_05", typeof(TS_05IncreaseHeadcount) },
+            { "TS_06", typeof(TS_06IncreaseBrigadeXP) },
+            { "TS_07", typeof(TS_07ExchangeBattalions) },
+            { "TS_08", typeof(TS_08MergeBattalions) },
+            { "TS_09", typeof(TS_09RepairShips_BaggageTrains) },
+            { "TS_10", typeof(TS_10BuildShips) },
+            { "TS_11", typeof(TS_11BuildBaggageTrain) },
+            { "TS_12", typeof(TS_12IncreasePopulationDensity) },
+            { "TS_13", typeof(TS_13BuildProductionSites) },
+            { "TS_14", typeof(TS_14FormFederations) },
+            { "TS_15", typeof(TS_15CoastalDefence) },
+            { "TS_16", typeof(TS_16SeaBlockade) },
+            { "TS_17", typeof(TS_17TradeAndLoading1) },
+            { "TS_18", typeof(TS_18Movement) },
+            { "TS_19", typeof(TS_19TradeAndLoading2) },
+            { "TS_20", typeof(TS_20Boarding) },
+            { "TS_21", typeof(TS_21HandOverTerritory) },
+            { "TS_22", typeof(TS_22ChangeNames) },
+            { "TS_23", typeof(TS_23ChangeStateRelationships) }
         };
 
         public void SaveTurnsheet(string turnId, IEnumerable<SectionRows> sections)
@@ -77,6 +105,94 @@ namespace Austerlitz.Services
 
             public string SectionKey { get; private set; }
             public IEnumerable Rows { get; private set; }
+        }
+
+        public sealed class ImportSectionRows
+        {
+            public string SectionKey { get; set; }
+            public object[] Rows { get; set; }
+            public string Error { get; set; }
+            public int ImportedRowCount { get; set; }
+        }
+
+        public sealed class ImportResult
+        {
+            public ImportResult()
+            {
+                Sections = new ImportSectionRows[0];
+            }
+
+            public ImportSectionRows[] Sections { get; set; }
+        }
+
+        public ImportResult LoadTurnsheet(string turnId, Stream workbookStream)
+        {
+            if (string.IsNullOrWhiteSpace(turnId))
+            {
+                throw new ArgumentException("turnId is required.", nameof(turnId));
+            }
+
+            if (workbookStream == null)
+            {
+                throw new ArgumentNullException(nameof(workbookStream));
+            }
+
+            var sectionResults = new List<ImportSectionRows>();
+            using (var workbook = new XLWorkbook(workbookStream))
+            {
+                var sheet = workbook.Worksheet(1);
+                ValidateStrictTemplateAnchors(sheet);
+                foreach (var layout in Layouts)
+                {
+                    var section = new ImportSectionRows
+                    {
+                        SectionKey = layout.SectionKey,
+                        Rows = new object[0],
+                        Error = null,
+                        ImportedRowCount = 0
+                    };
+
+                    try
+                    {
+                        section.Rows = ReadSection(sheet, layout, turnId);
+                        section.ImportedRowCount = CountImportedRows(section.Rows, layout);
+                    }
+                    catch (Exception ex)
+                    {
+                        section.Error = ex.Message;
+                    }
+
+                    sectionResults.Add(section);
+                }
+            }
+
+            return new ImportResult
+            {
+                Sections = sectionResults.ToArray()
+            };
+        }
+
+        private static void ValidateStrictTemplateAnchors(IXLWorksheet sheet)
+        {
+            foreach (var layout in Layouts)
+            {
+                // If the worksheet includes a TS_XX marker in the row above the section,
+                // enforce that it matches the expected section key.
+                var anchorCell = sheet.Cell(layout.FirstDataRow - 1, 1);
+                var anchorText = (anchorCell.GetString() ?? string.Empty).Trim();
+                if (!anchorText.StartsWith("TS_", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!string.Equals(anchorText, layout.SectionKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new FormatException(
+                        "Template mismatch near row " + layout.FirstDataRow +
+                        ": expected anchor '" + layout.SectionKey +
+                        "' but found '" + anchorText + "'.");
+                }
+            }
         }
 
         private sealed class SectionLayout
@@ -137,6 +253,199 @@ namespace Austerlitz.Services
                     WriteCell(sheet.Cell(layout.FirstDataRow + orderNo - 1, column.Column), GetMappedValue(row, column));
                 }
             }
+        }
+
+        private static object[] ReadSection(IXLWorksheet sheet, SectionLayout layout, string turnId)
+        {
+            Type rowType;
+            if (!SectionTypes.TryGetValue(layout.SectionKey, out rowType))
+            {
+                throw new InvalidOperationException("No row type mapping exists for section " + layout.SectionKey + ".");
+            }
+
+            var rows = new object[layout.MaxRows];
+            for (var orderNo = 1; orderNo <= layout.MaxRows; orderNo++)
+            {
+                var row = Activator.CreateInstance(rowType);
+                SetPropertyValue(row, "TurnId", turnId);
+                SetPropertyValue(row, "OrderNo", orderNo);
+
+                foreach (var column in layout.Columns)
+                {
+                    var cell = sheet.Cell(layout.FirstDataRow + orderNo - 1, column.Column);
+                    if (!string.IsNullOrWhiteSpace(column.PropertyName))
+                    {
+                        SetTypedPropertyValueFromCell(row, column.PropertyName, cell, layout.SectionKey, orderNo);
+                    }
+                    else if (string.Equals(layout.SectionKey, "TS_21", StringComparison.OrdinalIgnoreCase))
+                    {
+                        SetTS21TargetFromCell(row, cell, orderNo);
+                    }
+                }
+
+                rows[orderNo - 1] = row;
+            }
+
+            return rows;
+        }
+
+        private static void SetTypedPropertyValueFromCell(object row, string propertyName, IXLCell cell, string sectionKey, int orderNo)
+        {
+            var property = row.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+            if (property == null || !property.CanWrite)
+            {
+                return;
+            }
+
+            var value = ConvertCellValue(cell, property.PropertyType, sectionKey, property.Name, orderNo);
+            property.SetValue(row, value, null);
+        }
+
+        private static object ConvertCellValue(IXLCell cell, Type targetType, string sectionKey, string propertyName, int orderNo)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+            var rawText = (cell.GetString() ?? string.Empty).Trim();
+            if (rawText.Length == 0)
+            {
+                return underlyingType == typeof(string) || Nullable.GetUnderlyingType(targetType) != null
+                    ? null
+                    : Activator.CreateInstance(underlyingType);
+            }
+
+            if (underlyingType == typeof(string))
+            {
+                return rawText;
+            }
+
+            if (underlyingType == typeof(int))
+            {
+                int parsedInt;
+                if (int.TryParse(rawText, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedInt))
+                {
+                    return parsedInt;
+                }
+
+                double parsedDouble;
+                if (double.TryParse(rawText, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedDouble)
+                    && Math.Abs(parsedDouble % 1) < 0.000001)
+                {
+                    return Convert.ToInt32(parsedDouble);
+                }
+
+                throw new FormatException(sectionKey + " row " + orderNo + " has invalid integer for " + propertyName + ": '" + rawText + "'.");
+            }
+
+            if (underlyingType == typeof(long))
+            {
+                long parsedLong;
+                if (long.TryParse(rawText, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedLong))
+                {
+                    return parsedLong;
+                }
+
+                throw new FormatException(sectionKey + " row " + orderNo + " has invalid long for " + propertyName + ": '" + rawText + "'.");
+            }
+
+            if (underlyingType == typeof(decimal))
+            {
+                decimal parsedDecimal;
+                if (decimal.TryParse(rawText, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedDecimal))
+                {
+                    return parsedDecimal;
+                }
+
+                throw new FormatException(sectionKey + " row " + orderNo + " has invalid decimal for " + propertyName + ": '" + rawText + "'.");
+            }
+
+            if (underlyingType == typeof(double))
+            {
+                double parsedDouble;
+                if (double.TryParse(rawText, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedDouble))
+                {
+                    return parsedDouble;
+                }
+
+                throw new FormatException(sectionKey + " row " + orderNo + " has invalid number for " + propertyName + ": '" + rawText + "'.");
+            }
+
+            return Convert.ChangeType(rawText, underlyingType, CultureInfo.InvariantCulture);
+        }
+
+        private static void SetTS21TargetFromCell(object row, IXLCell cell, int orderNo)
+        {
+            var target = (cell.GetString() ?? string.Empty).Trim();
+            SetPropertyValue(row, "ShipNumber", null);
+            SetPropertyValue(row, "X", null);
+            SetPropertyValue(row, "Y", null);
+
+            if (target.Length == 0)
+            {
+                return;
+            }
+
+            if (target.Contains("/"))
+            {
+                var parts = target.Split('/');
+                if (parts.Length != 2)
+                {
+                    throw new FormatException("TS_21 row " + orderNo + " has invalid target '" + target + "'. Use ship no or X/Y.");
+                }
+
+                int x;
+                int y;
+                if (!int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out x)
+                    || !int.TryParse(parts[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out y))
+                {
+                    throw new FormatException("TS_21 row " + orderNo + " has invalid coordinates '" + target + "'.");
+                }
+
+                SetPropertyValue(row, "X", x);
+                SetPropertyValue(row, "Y", y);
+                return;
+            }
+
+            int shipNumber;
+            if (!int.TryParse(target, NumberStyles.Integer, CultureInfo.InvariantCulture, out shipNumber))
+            {
+                throw new FormatException("TS_21 row " + orderNo + " has invalid target '" + target + "'. Use ship no or X/Y.");
+            }
+
+            SetPropertyValue(row, "ShipNumber", shipNumber);
+        }
+
+        private static int CountImportedRows(IEnumerable<object> rows, SectionLayout layout)
+        {
+            if (rows == null)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            foreach (var row in rows)
+            {
+                if (row == null)
+                {
+                    continue;
+                }
+
+                var hasValue = false;
+                foreach (var column in layout.Columns)
+                {
+                    var value = GetMappedValue(row, column);
+                    if (value != null && !string.IsNullOrWhiteSpace(value.ToString()))
+                    {
+                        hasValue = true;
+                        break;
+                    }
+                }
+
+                if (hasValue)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private static Dictionary<int, object> GetRowsByOrderNo(IEnumerable rows)
@@ -201,6 +510,22 @@ namespace Austerlitz.Services
 
             int parsed;
             return int.TryParse(value.ToString(), out parsed) ? parsed : (int?)null;
+        }
+
+        private static void SetPropertyValue(object row, string propertyName, object value)
+        {
+            if (row == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return;
+            }
+
+            var property = row.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+            if (property == null || !property.CanWrite)
+            {
+                return;
+            }
+
+            property.SetValue(row, value, null);
         }
 
         private static object GetHandOverTerritoryTarget(object row)

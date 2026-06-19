@@ -20,6 +20,7 @@
         </div>
 
         <div ng-show="section.loadError" class="alert alert-warning ts-section-alert">{{section.loadError}}</div>
+        <div ng-show="section.actionError" class="alert alert-warning ts-section-alert">{{section.actionError}}</div>
         <div ng-show="section.isLoading" class="alert alert-info ts-section-alert">Loading...</div>
 
         <div class="ts-table-wrap" ng-show="!section.collapsed && !section.isLoading && !section.loadError">
@@ -27,6 +28,7 @@
                 <thead>
                     <tr>
                         <th ng-repeat="column in section.columns">{{column.displayName}}</th>
+                        <th class="ts-row-action-header"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,9 +36,17 @@
                         <td ng-repeat="column in section.columns" ng-class="{ 'ts-empty-cell': isEmptyValue(row, column) }">
                             {{getCellValue(row, column)}}
                         </td>
+                        <td class="ts-row-action-cell">
+                            <button type="button"
+                                    class="btn btn-default btn-xs ts-remove-row-btn"
+                                    ng-click="removeRow(section, row, $index)"
+                                    ng-disabled="!canRemoveRow(section, row)">
+                                Remove
+                            </button>
+                        </td>
                     </tr>
                     <tr ng-show="!section.rows.length">
-                        <td colspan="{{section.columns.length}}" class="ts-empty-table">No rows for this turn.</td>
+                        <td colspan="{{section.columns.length + 1}}" class="ts-empty-table">No rows for this turn.</td>
                     </tr>
                 </tbody>
             </table>

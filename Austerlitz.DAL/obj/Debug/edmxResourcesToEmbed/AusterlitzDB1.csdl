@@ -315,6 +315,7 @@
     <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
     <Property Name="OrderNo" Type="Int32" Nullable="false" />
     <Property Name="ItemNo" Type="Int32" />
+    <Property Name="BrigadeNo" Type="Int32" />
   </EntityType>
   <EntityType Name="TS_03SetUpBrigades">
     <Key>

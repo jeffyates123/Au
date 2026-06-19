@@ -331,14 +331,75 @@ austerlitzModule.controller('turnMapsController', function (
         movementRow.mpUsed = 0;
     };
 
+    $scope.findMovementOrderIndexByItemNo = function (itemNo) {
+        if (itemNo == null || itemNo === '' || !$scope.tsMovementList || !$scope.tsMovementList.length) return -1;
+
+        var foundIndex = -1;
+        angular.forEach($scope.tsMovementList, function (movementRow, idx) {
+            if (foundIndex !== -1) return;
+            if (!$scope.hasMovementItemNo(movementRow)) return;
+
+            if (movementRow.itemNo == itemNo) {
+                foundIndex = idx;
+            }
+        });
+
+        return foundIndex;
+    };
+
+    $scope.getNextEmptyMovementOrderIndex = function () {
+        if (!$scope.tsMovementList || !$scope.tsMovementList.length) return -1;
+
+        var listLength = $scope.tsMovementList.length;
+        var currentIndex = parseInt($scope.getCurrentOrderIndexForMode('movement'), 10);
+        if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= listLength) {
+            currentIndex = -1;
+        }
+
+        for (var offset = 1; offset <= listLength; offset++) {
+            var candidateIndex = (currentIndex + offset) % listLength;
+            if (!$scope.hasMovementItemNo($scope.tsMovementList[candidateIndex])) {
+                return candidateIndex;
+            }
+        }
+
+        return -1;
+    };
+
+    $scope.getCurrentOrNextEmptyMovementOrderIndex = function () {
+        if (!$scope.tsMovementList || !$scope.tsMovementList.length) return -1;
+
+        var currentIndex = parseInt($scope.getCurrentOrderIndexForMode('movement'), 10);
+        if (!isNaN(currentIndex)
+            && currentIndex >= 0
+            && currentIndex < $scope.tsMovementList.length
+            && !$scope.hasMovementItemNo($scope.tsMovementList[currentIndex])) {
+            return currentIndex;
+        }
+
+        return $scope.getNextEmptyMovementOrderIndex();
+    };
+
+    $scope.findNextEmptyMovementOrder = function () {
+        var emptyIndex = $scope.getNextEmptyMovementOrderIndex();
+        if (emptyIndex < 0) {
+            alert('No empty movement order found.');
+            return false;
+        }
+
+        $scope.selectOrderByIndex('movement', emptyIndex);
+        return true;
+    };
+
     $scope.selectMovementOrderItem = function (itemRow, selectionType) {
-        if (!itemRow || !$scope.tsMovementList || !$scope.tsMovementList.length) return;
+        if (!itemRow) return;
         $scope.orderUi.suppressCoordinatePickerOpenUntil = new Date().getTime() + 400;
 
         var selectedItemNo = itemRow.originalItemNo != null ? itemRow.originalItemNo : itemRow.itemNo;
         var selectedType = itemRow.itemTypeName;
         var selectedMp = itemRow.mp;
         var selectedXy = itemRow.xy;
+        var selectedFederationNo = itemRow.fed;
 
         if (selectionType === 'fed' && itemRow.fed != null && itemRow.fed !== '') {
             var federationSummary = $scope.getFederationMovementSummary(itemRow.fed);
@@ -348,29 +409,43 @@ austerlitzModule.controller('turnMapsController', function (
             selectedType = 'Fed';
             selectedMp = federationSummary.mp;
             selectedXy = federationSummary.x + '/' + federationSummary.y;
+            selectedFederationNo = federationSummary.itemNo;
         }
 
-        var existingIndex = -1;
-        angular.forEach($scope.tsMovementList, function (movementRow, idx) {
-            if (existingIndex === -1 && movementRow.itemNo == selectedItemNo) {
-                existingIndex = idx;
-            }
-        });
-
-        if (existingIndex >= 0) {
-            $scope.selectOrderByIndex('movement', existingIndex);
+        var exactMatchIndex = $scope.findMovementOrderIndexByItemNo(selectedItemNo);
+        if (exactMatchIndex >= 0) {
+            $scope.selectOrderByIndex('movement', exactMatchIndex);
             $scope.closeMovementPickerModal();
             return;
         }
 
-        var currentRow = $scope.getCurrentMovementOrderRow();
-        if (!currentRow) return;
+        if (selectedFederationNo != null && selectedFederationNo !== '') {
+            var federationMatchIndex = $scope.findMovementOrderIndexByItemNo(selectedFederationNo);
+            if (federationMatchIndex >= 0) {
+                $scope.selectOrderByIndex('movement', federationMatchIndex);
+                $scope.closeMovementPickerModal();
+                return;
+            }
+        }
 
-        currentRow.itemNo = selectedItemNo;
-        currentRow.type = selectedType;
-        currentRow.mp = selectedMp;
-        currentRow.xy = selectedXy;
-        $scope.clearMovementRouteSegments(currentRow);
+        var emptyIndex = $scope.getCurrentOrNextEmptyMovementOrderIndex();
+        if (emptyIndex < 0) {
+            alert('No empty movement order found.');
+            return;
+        }
+        $scope.selectOrderByIndex('movement', emptyIndex);
+
+        var targetRow = $scope.getCurrentMovementOrderRow();
+        if (!targetRow) {
+            alert('Unable to select a movement order.');
+            return;
+        }
+
+        targetRow.itemNo = selectedItemNo;
+        targetRow.type = selectedType;
+        targetRow.mp = selectedMp;
+        targetRow.xy = selectedXy;
+        $scope.clearMovementRouteSegments(targetRow);
 
         $scope.queueAutoSaveTsGrid('Movement');
         $scope.closeMovementPickerModal();
@@ -432,6 +507,47 @@ austerlitzModule.controller('turnMapsController', function (
         } else {
             $scope.selectedMapOptions.push(mapOption);
         }
+    };
+
+    $scope.getStateCodeFromSelection = function (selectedState) {
+        return (selectedState && (selectedState.state || selectedState.State) ? (selectedState.state || selectedState.State) : '')
+            .toString()
+            .trim()
+            .toUpperCase();
+    };
+
+    $scope.getPreferredMapIdForStateCode = function (stateCode) {
+        var normalizedStateCode = (stateCode || '').toString().trim().toUpperCase();
+        var eastStateCodes = { S: true, P: true, A: true, W: true, R: true, T: true };
+
+        return eastStateCodes[normalizedStateCode] ? 'EE' : 'EW';
+    };
+
+    $scope.findMapChoiceById = function (mapId) {
+        if (!$scope.mapChoice || !$scope.mapChoice.length) return null;
+
+        for (var i = 0; i < $scope.mapChoice.length; i++) {
+            if ($scope.mapChoice[i].mapId === mapId) return $scope.mapChoice[i];
+        }
+
+        return null;
+    };
+
+    $scope.applyMapChoiceForSelectedState = function () {
+        var preferredMapId = $scope.getPreferredMapIdForStateCode($scope.getStateCodeFromSelection($scope.selectedState));
+        var preferredMapChoice = $scope.findMapChoiceById(preferredMapId);
+
+        if (preferredMapChoice) {
+            $scope.selectedMapChoice = preferredMapChoice;
+        }
+    };
+
+    $scope.handleSelectedStateChange = function () {
+        if ($scope.masterData) {
+            $scope.masterData.selectedState = $scope.getStateCodeFromSelection($scope.selectedState);
+        }
+
+        $scope.applyMapChoiceForSelectedState();
     };
 
     $scope.coordinateClick = function (x, y) {
@@ -591,6 +707,33 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
+    $scope.isFederationAlreadyInMovementGrid = function (federationNo) {
+        if (federationNo == null || federationNo === '' || !$scope.tsMovementList) return false;
+
+        return $scope.tsMovementList.some(function (movementRow) {
+            if (!$scope.hasMovementItemNo(movementRow)) return false;
+
+            return movementRow.itemNo == federationNo;
+        });
+    };
+
+    $scope.isItemRowAlreadyInMovementGrid = function (itemRow) {
+        if (!itemRow) return false;
+        var itemNo = itemRow.originalItemNo != null ? itemRow.originalItemNo : itemRow.itemNo;
+        return $scope.isItemAlreadyInMovementGrid(itemNo);
+    };
+
+    $scope.isFederationRowAlreadyInMovementGrid = function (itemRow) {
+        if (!itemRow || itemRow.fed == null || itemRow.fed === '') return false;
+        return $scope.isFederationAlreadyInMovementGrid(itemRow.fed);
+    };
+
+    $scope.isItemOrFederationAlreadyInMovementGrid = function (itemRow) {
+        if (!itemRow) return false;
+
+        return $scope.isItemRowAlreadyInMovementGrid(itemRow) || $scope.isFederationRowAlreadyInMovementGrid(itemRow);
+    };
+
     $scope.saveTSMovement = function () {
         turnSheetFactory.postTSRecords($scope.tsMovementList, 'Movement').then(function (returnTsMovementList) {
             $scope.tsMovementList = returnTsMovementList;
@@ -697,6 +840,7 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         $scope.selectedState = selectedState || $scope.stateList[3];
+        $scope.applyMapChoiceForSelectedState();
         if (typeof $scope.recalculateTransferGoodsForSetUpBrigades === 'function') {
             $scope.recalculateTransferGoodsForSetUpBrigades();
         }

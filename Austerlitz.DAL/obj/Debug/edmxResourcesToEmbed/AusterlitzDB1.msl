@@ -318,6 +318,7 @@
           <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="BrigadeNo" ColumnName="BrigadeNo" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>

@@ -891,6 +891,22 @@ namespace Austerlitz.Domain
 
         public TS_02DemolishItems[] PostTSDemolishItems(TS_02DemolishItems[] tsPostedRecords)
         {
+            if (tsPostedRecords != null)
+            {
+                foreach (var record in tsPostedRecords)
+                {
+                    if (record == null)
+                    {
+                        continue;
+                    }
+
+                    if (record.BrigadeNo.HasValue && (record.BrigadeNo.Value < 1 || record.BrigadeNo.Value > 7))
+                    {
+                        record.BrigadeNo = null;
+                    }
+                }
+            }
+
             return SaveSectionRows(tsPostedRecords, Ts02MaxRows, "TS_02");
         }
 
