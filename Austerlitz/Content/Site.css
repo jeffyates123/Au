@@ -611,8 +611,10 @@ textarea {
 }
 
 .mapOrdersMovementPickerModal {
-    width: 980px;
-    margin-left: -490px;
+    width: min(1220px, calc(100vw - 80px));
+    max-width: none;
+    margin-left: 0;
+    transform: translateX(-50%);
 }
 
 .mapOrdersModalBody {
@@ -670,6 +672,25 @@ textarea {
     font-weight: 700;
     line-height: 1.2;
     text-transform: uppercase;
+}
+
+.mapOrdersMovedCell {
+    width: 28px;
+    text-align: center;
+}
+
+.mapOrdersMovedLozenge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    border: 1px solid #d2ab35;
+    border-radius: 10px;
+    background: #fff1c7;
+    color: #6a4b00;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: default;
 }
 
 .mapOrdersPickChipDisabled,
@@ -1771,6 +1792,13 @@ textarea {
 .landUnitsBoardingModal {
     width: 900px;
     margin-left: -450px;
+}
+
+.landUnitsModal.mapOrdersMovementPickerModal {
+    width: min(1220px, calc(100vw - 80px));
+    max-width: none;
+    margin-left: 0;
+    transform: translateX(-50%);
 }
 
 .landUnitsModalHeader {

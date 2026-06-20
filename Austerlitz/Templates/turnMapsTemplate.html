@@ -212,6 +212,7 @@
                         <tr>
                             <th>Item</th>
                             <th>Fed/Fleet</th>
+                            <th></th>
                             <th>Type</th>
                             <th>MP</th>
                             <th>X/Y</th>
@@ -234,13 +235,15 @@
                                         ng-disabled="itemRow.fed == null || itemRow.fed === ''"
                                         ng-click="selectMovementOrderItem(itemRow, 'fed'); closeMovementPickerModal()">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
                             </td>
+                            <td class="mapOrdersMovedCell">
+                                <span class="mapOrdersMovedLozenge"
+                                      ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
+                                      title="Unit has moved">M</span>
+                            </td>
                             <td>{{itemRow.itemTypeName}}</td>
                             <td>{{itemRow.mp}}</td>
                             <td>{{itemRow.xy}}</td>
-                            <td>
-                                {{itemRow.description}}
-                                <span class="mapOrdersMovedBadge" ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)">Moved</span>
-                            </td>
+                            <td>{{itemRow.description}}</td>
                         </tr>
                     </tbody>
                 </table>
