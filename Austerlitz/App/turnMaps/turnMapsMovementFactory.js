@@ -363,12 +363,194 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                     && item.y <= $scope.selectedMapChoice.rangeMaxY;
             };
 
+            $scope.getMovementPickerUnitKind = function (itemTypeName) {
+                switch ((itemTypeName || '').toString()) {
+                    case 'Brigade': return 'brigade';
+                    case 'Commander': return 'commander';
+                    case 'Warship': return 'warship';
+                    case 'MerchantShip': return 'merchant';
+                    default: return 'other';
+                }
+            };
+
+            $scope.toMovementPickerItemId = function (value) {
+                var parsed = parseInt(value, 10);
+                return isNaN(parsed) ? null : parsed;
+            };
+
+            $scope.formatMovementPickerPosition = function (x, y) {
+                var px = parseInt(x, 10);
+                var py = parseInt(y, 10);
+                if (isNaN(px) || isNaN(py) || px <= 0 || py <= 0) return '-';
+                return px + '/' + py;
+            };
+
+            $scope.buildMovementPickerBattalionSummary = function (brigade) {
+                if (!brigade) return '-';
+
+                var parts = [];
+                for (var i = 1; i <= 7; i++) {
+                    var type = (brigade['batt' + i + 'Type'] || '').toString().trim();
+                    if (!type || type === '--') continue;
+
+                    var ef = brigade['batt' + i + 'EF'];
+                    var size = brigade['batt' + i + 'Size'];
+                    var section = type;
+                    if (ef != null && ef !== '') section += ' ' + ef;
+                    if (size != null && size !== '') section += ' ' + size;
+                    parts.push(section);
+                }
+
+                return parts.length ? parts.join(' | ') : '-';
+            };
+
+            $scope.getMovementPickerMainDescription = function (itemRow) {
+                if (!itemRow) return '-';
+                var detail = itemRow.movementDetail || {};
+
+                if (detail.unitKind === 'brigade') {
+                    var name = (detail.name || '').toString().trim();
+                    var battalions = (detail.battalions || '').toString().trim();
+                    if (name && battalions && battalions !== '-') return name + ' | ' + battalions;
+                    if (name) return name;
+                    if (battalions && battalions !== '-') return battalions;
+                }
+
+                return itemRow.description || '-';
+            };
+
+            $scope.buildMovementPickerDetailLookups = function () {
+                var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+                var lookups = {
+                    brigadesById: {},
+                    commandersById: {},
+                    warshipsById: {},
+                    merchantsById: {}
+                };
+
+                angular.forEach(turnReport.brigades || [], function (brigade) {
+                    var id = $scope.toMovementPickerItemId(brigade && brigade.itemNo);
+                    if (id == null) return;
+                    lookups.brigadesById[id] = brigade;
+                });
+
+                angular.forEach(turnReport.commanders || [], function (commander) {
+                    var id = $scope.toMovementPickerItemId(commander && commander.itemNo);
+                    if (id == null) return;
+                    lookups.commandersById[id] = commander;
+                });
+
+                angular.forEach(turnReport.warships || [], function (warship) {
+                    var id = $scope.toMovementPickerItemId(warship && warship.itemNo);
+                    if (id == null) return;
+                    lookups.warshipsById[id] = warship;
+                });
+
+                angular.forEach(turnReport.merchantShips || [], function (merchant) {
+                    var id = $scope.toMovementPickerItemId(merchant && merchant.itemNo);
+                    if (id == null) return;
+                    lookups.merchantsById[id] = merchant;
+                });
+
+                return lookups;
+            };
+
+            $scope.resolveMovementPickerDetail = function (itemRow, detailLookups) {
+                var unitKind = $scope.getMovementPickerUnitKind(itemRow && itemRow.itemTypeName);
+                var itemId = $scope.toMovementPickerItemId(itemRow && itemRow.itemNo);
+
+                if (!itemRow || itemId == null) {
+                    return {
+                        unitKind: unitKind,
+                        description: '-'
+                    };
+                }
+
+                if (unitKind === 'brigade') {
+                    var brigade = detailLookups.brigadesById[itemId];
+                    if (brigade) {
+                        return {
+                            unitKind: unitKind,
+                            id: brigade.itemNo,
+                            name: brigade.name || '-',
+                            position: $scope.formatMovementPickerPosition(brigade.x_OrState, brigade.y_OrFleet),
+                            fed: brigade.federation != null ? brigade.federation : '-',
+                            mp: brigade.mp != null ? brigade.mp : itemRow.mp,
+                            battalions: $scope.buildMovementPickerBattalionSummary(brigade),
+                            boarded: brigade.boarded != null && brigade.boarded !== '' ? brigade.boarded : '-'
+                        };
+                    }
+                } else if (unitKind === 'commander') {
+                    var commander = detailLookups.commandersById[itemId];
+                    if (commander) {
+                        return {
+                            unitKind: unitKind,
+                            id: commander.itemNo,
+                            name: commander.name || '-',
+                            rank: commander.rank || '-',
+                            position: $scope.formatMovementPickerPosition(commander.x, commander.y),
+                            fed: commander.federation != null ? commander.federation : '-',
+                            mp: commander.mp != null ? commander.mp : itemRow.mp,
+                            commandCapacity: commander.commandCapacity != null ? commander.commandCapacity : '-',
+                            boarded: commander.boarded != null && commander.boarded !== '' ? commander.boarded : '-'
+                        };
+                    }
+                } else if (unitKind === 'warship') {
+                    var warship = detailLookups.warshipsById[itemId];
+                    if (warship) {
+                        return {
+                            unitKind: unitKind,
+                            id: warship.itemNo,
+                            shipType: warship.type || '-',
+                            name: warship.name || '-',
+                            position: $scope.formatMovementPickerPosition(warship.x, warship.y),
+                            fleet: warship.fleetNo != null ? warship.fleetNo : '-',
+                            mp: warship.mp != null ? warship.mp : itemRow.mp,
+                            condition: warship.condition != null ? warship.condition : '-',
+                            age: warship.age != null ? warship.age : '-',
+                            marines: warship.marines != null ? warship.marines : '-',
+                            brigadeLoad: (warship.brigade1 || 0) + ' ' + (warship.brigade2 || 0)
+                        };
+                    }
+                } else if (unitKind === 'merchant') {
+                    var merchant = detailLookups.merchantsById[itemId];
+                    if (merchant) {
+                        return {
+                            unitKind: unitKind,
+                            id: merchant.itemNo,
+                            shipType: merchant.type || '-',
+                            position: $scope.formatMovementPickerPosition(merchant.x, merchant.y),
+                            fleet: merchant.fleetNo != null ? merchant.fleetNo : '-',
+                            mp: merchant.mp != null ? merchant.mp : itemRow.mp,
+                            condition: merchant.condition != null ? merchant.condition : '-',
+                            age: merchant.age != null ? merchant.age : '-',
+                            goods1: merchant.goods1 || '-',
+                            qty1: merchant.quantity1 != null ? merchant.quantity1 : '-',
+                            goods2: merchant.goods2 || '-',
+                            qty2: merchant.quantity2 != null ? merchant.quantity2 : '-',
+                            money: merchant.money != null ? merchant.money : '-'
+                        };
+                    }
+                }
+
+                return {
+                    unitKind: unitKind,
+                    id: itemRow.itemNo,
+                    position: itemRow.xy || '-',
+                    fed: itemRow.fed != null ? itemRow.fed : '-',
+                    mp: itemRow.mp != null ? itemRow.mp : '-',
+                    description: itemRow.description || '-'
+                };
+            };
+
             $scope.refreshFilteredMovementItemsForMap = function () {
                 if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
                     $scope.filteredMovementItemsForMap = [];
                     $scope.itemGridRows = [];
                     return;
                 }
+
+                var detailLookups = $scope.buildMovementPickerDetailLookups();
 
                 $scope.filteredMovementItemsForMap = $scope.masterData.turnReport.movementItemList
                     .filter(function (item) {
@@ -379,7 +561,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                         var itemTypeName = $scope.getItemTypeName(item.itemType);
                         if (itemTypeName === 'BaggageTrain') itemTypeName = 'Bagagge';
 
-                        return {
+                        var row = {
                             itemNo: itemNo,
                             originalItemNo: itemNo,
                             fed: item.federationNo,
@@ -392,6 +574,10 @@ austerlitzModule.factory('turnMapsMovementFactory', function () {
                             y: item.y,
                             xy: item.x + '/' + item.y
                         };
+
+                        row.movementDetail = $scope.resolveMovementPickerDetail(row, detailLookups);
+                        row.mainDescription = $scope.getMovementPickerMainDescription(row);
+                        return row;
                     })
                     .sort(function (a, b) {
                         var fedA = a.fed != null ? a.fed : 999999;

@@ -298,6 +298,40 @@ textarea {
     flex-direction: column;
 }
 
+.window.turnMapsWideWindow .turnMapsMainDetail {
+    flex: 0 0 calc(50% - 5px);
+    max-width: calc(50% - 5px);
+}
+
+.turnMapsPickerPane {
+    flex: 0 0 calc(50% - 5px);
+    max-width: calc(50% - 5px);
+    min-width: 0;
+    border: 1px solid #d0d0d0;
+    border-radius: 3px;
+    background: #ffffff;
+}
+
+.turnMapsPaneHeader {
+    border-bottom: 1px solid #e6e0d8;
+}
+
+.turnMapsPaneBody {
+    padding: 10px;
+}
+
+.turnMapsPickerPane .mapOrdersModalBody {
+    max-height: calc(100vh - 190px);
+}
+
+.turnMapsPickerPaneEmpty {
+    padding: 16px;
+}
+
+.turnMapsPickerPaneEmpty h4 {
+    margin-top: 0;
+}
+
 /* Mode-specific master widths */
 .window.window-setupBrigades .master,
 .window.window-boarding .master {
@@ -632,6 +666,34 @@ textarea {
     white-space: nowrap;
 }
 
+.mapOrdersPickerDataRow > td {
+    vertical-align: middle !important;
+}
+
+.mapOrdersExpandCell {
+    width: 28px;
+    text-align: center;
+}
+
+.mapOrdersExpandBtn {
+    border: 1px solid #c7c7c7;
+    border-radius: 9px;
+    background: #f6f6f6;
+    color: #4d4d4d;
+    font-weight: 700;
+    line-height: 1;
+    width: 20px;
+    height: 18px;
+    padding: 0;
+}
+
+.mapOrdersExpandBtn:hover,
+.mapOrdersExpandBtn:focus {
+    border-color: #9d9d9d;
+    background: #ececec;
+    outline: none;
+}
+
 .mapOrdersTable > tbody > tr.itemGridRowAlreadyAdded > td {
     background-color: #d9edf7;
 }
@@ -691,6 +753,38 @@ textarea {
     font-weight: 700;
     line-height: 1.2;
     cursor: default;
+}
+
+.mapOrdersDetailRow > td {
+    padding: 6px 8px !important;
+    background: #fbf9f4;
+    border-top: none !important;
+}
+
+.mapOrdersDetailPanel {
+    border: 1px solid #e4ddd2;
+    border-radius: 3px;
+    background: #fffdf8;
+    padding: 6px 8px;
+}
+
+.mapOrdersDetailGrid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 3px;
+    align-items: center;
+    white-space: normal;
+    font-size: 11px;
+}
+
+.mapOrdersDetailLabel {
+    color: #6a6a6a;
+    font-weight: 700;
+}
+
+.mapOrdersDetailWide {
+    grid-column: span 5;
 }
 
 .mapOrdersPickChipDisabled,
@@ -1024,6 +1118,10 @@ textarea {
 .sectionPlaceholderPanel h2 {
     margin-top: 0;
     font-size: 20px;
+}
+
+.userSettingsOptionRow {
+    margin-top: 14px;
 }
 
 .menuCountryTitle {

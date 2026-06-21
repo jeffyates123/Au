@@ -3,6 +3,7 @@
     var selectedGameNoStorageKey = 'austerlitz.selectedGameNo';
     var selectedStateStorageKey = 'austerlitz.selectedState';
     var selectedMonthYearStorageKey = 'austerlitz.selectedMonthYear';
+    var wideScreenStorageKey = 'austerlitz.userSettings.wideScreenEnabled';
 
     var readStoredValue = function (storageKey) {
         try {
@@ -38,6 +39,9 @@
         selectedGameNo: readStoredValue(selectedGameNoStorageKey),
         selectedState: readStoredValue(selectedStateStorageKey),
         selectedMonthYear: readStoredValue(selectedMonthYearStorageKey),
+        wideScreenEnabled: readStoredValue(wideScreenStorageKey) == null
+            ? true
+            : readStoredValue(wideScreenStorageKey) === '1',
         turnsList: {},
         turnSheet: {},
         turnReport: {},
@@ -61,6 +65,18 @@
             writeStoredValue(selectedGameNoStorageKey, this.selectedGameNo);
             writeStoredValue(selectedStateStorageKey, this.selectedState);
             writeStoredValue(selectedMonthYearStorageKey, this.selectedMonthYear);
+        },
+        getWideScreenEnabled: function () {
+            var storedValue = readStoredValue(wideScreenStorageKey);
+            if (storedValue == null) {
+                return true;
+            }
+
+            return storedValue === '1';
+        },
+        setWideScreenEnabled: function (isEnabled) {
+            this.wideScreenEnabled = isEnabled === true;
+            writeStoredValue(wideScreenStorageKey, this.wideScreenEnabled ? '1' : '0');
         }
     };
 

@@ -19,6 +19,7 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
         { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
         { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
     ];
+    var wideScreenMinViewportWidth = 1500;
 
     return {
         createInitialState: function () {
@@ -32,7 +33,8 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
                 mapOptions: ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'],
                 selectedMapOptions: ['State', 'Population', 'ProductionSite'],
                 displayOptions: displays,
-                selectedDisplayOption: displays[3]
+                selectedDisplayOption: displays[3],
+                wideScreenMinViewportWidth: wideScreenMinViewportWidth
             };
         },
 
@@ -51,6 +53,10 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
 
         isMode: function (selectedDisplayOption, modeName) {
             return selectedDisplayOption && selectedDisplayOption.name === modeName;
+        },
+
+        getWideScreenMinViewportWidth: function () {
+            return wideScreenMinViewportWidth;
         }
     };
 });

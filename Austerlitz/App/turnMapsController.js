@@ -27,6 +27,7 @@ austerlitzModule.controller('turnMapsController', function (
     $scope,
     $routeParams,
     $timeout,
+    $window,
     turnReportFactory,
     rulesCatalogFactory,
     turnSheetFactory,
@@ -50,6 +51,7 @@ austerlitzModule.controller('turnMapsController', function (
         productionIndex: 0,
         movementInitialAutoSelectionDone: false,
         suppressCoordinatePickerOpenUntil: 0,
+        movementPickerDisplayMode: 'modal',
         allOrdersModal: {
             isOpen: false,
             mode: ''
@@ -57,6 +59,59 @@ austerlitzModule.controller('turnMapsController', function (
         movementPickerModal: {
             isOpen: false
         }
+    };
+
+    $scope.wideScreenMinViewportWidth = turnMapsConfigFactory.getWideScreenMinViewportWidth
+        ? turnMapsConfigFactory.getWideScreenMinViewportWidth()
+        : ($scope.wideScreenMinViewportWidth || 1500);
+
+    $scope.getViewportWidth = function () {
+        if ($window && $window.innerWidth) {
+            return $window.innerWidth;
+        }
+
+        if ($window && $window.document && $window.document.documentElement && $window.document.documentElement.clientWidth) {
+            return $window.document.documentElement.clientWidth;
+        }
+
+        return 0;
+    };
+
+    $scope.isWideScreenEnabled = function () {
+        if ($scope.masterData && $scope.masterData.getWideScreenEnabled) {
+            return $scope.masterData.getWideScreenEnabled();
+        }
+
+        return $scope.masterData ? $scope.masterData.wideScreenEnabled !== false : true;
+    };
+
+    $scope.refreshMovementPickerDisplayMode = function () {
+        var shouldUsePanel = $scope.isWideScreenEnabled()
+            && !$scope.isProductionSiteMode()
+            && $scope.getViewportWidth() >= $scope.wideScreenMinViewportWidth;
+
+        $scope.orderUi.movementPickerDisplayMode = shouldUsePanel ? 'panel' : 'modal';
+
+        if ($scope.orderUi.movementPickerDisplayMode === 'panel') {
+            $scope.orderUi.movementPickerModal.isOpen = true;
+            return;
+        }
+
+        if ($scope.isProductionSiteMode()) {
+            $scope.orderUi.movementPickerModal.isOpen = false;
+        }
+    };
+
+    $scope.isMovementPickerPanelMode = function () {
+        return $scope.orderUi.movementPickerDisplayMode === 'panel';
+    };
+
+    $scope.shouldShowMovementPickerModal = function () {
+        return $scope.orderUi.movementPickerModal.isOpen && !$scope.isMovementPickerPanelMode();
+    };
+
+    $scope.shouldShowMovementPickerPanel = function () {
+        return $scope.orderUi.movementPickerModal.isOpen && $scope.isMovementPickerPanelMode();
     };
 
     $scope.getOrderListForMode = function (mode) {
@@ -312,6 +367,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.openMovementPickerModal = function () {
         if ($scope.isProductionSiteMode()) return;
+        $scope.refreshMovementPickerDisplayMode();
         $scope.orderUi.movementPickerModal.isOpen = true;
     };
 
@@ -415,7 +471,9 @@ austerlitzModule.controller('turnMapsController', function (
         var exactMatchIndex = $scope.findMovementOrderIndexByItemNo(selectedItemNo);
         if (exactMatchIndex >= 0) {
             $scope.selectOrderByIndex('movement', exactMatchIndex);
-            $scope.closeMovementPickerModal();
+            if (!$scope.isMovementPickerPanelMode()) {
+                $scope.closeMovementPickerModal();
+            }
             return;
         }
 
@@ -423,7 +481,9 @@ austerlitzModule.controller('turnMapsController', function (
             var federationMatchIndex = $scope.findMovementOrderIndexByItemNo(selectedFederationNo);
             if (federationMatchIndex >= 0) {
                 $scope.selectOrderByIndex('movement', federationMatchIndex);
-                $scope.closeMovementPickerModal();
+                if (!$scope.isMovementPickerPanelMode()) {
+                    $scope.closeMovementPickerModal();
+                }
                 return;
             }
         }
@@ -448,7 +508,9 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.clearMovementRouteSegments(targetRow);
 
         $scope.queueAutoSaveTsGrid('Movement');
-        $scope.closeMovementPickerModal();
+        if (!$scope.isMovementPickerPanelMode()) {
+            $scope.closeMovementPickerModal();
+        }
         $scope.focusCurrentMovementOrder();
     };
 
@@ -480,6 +542,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.selectedMapOptions = turnMapsConfigFactory.getSelectedOptions($scope.selectedDisplayOption);
         $scope.selectedItemGridCoordinate = null;
         $scope.refreshItemGridRows();
+        $scope.refreshMovementPickerDisplayMode();
 
         if ($scope.isProductionSiteMode()) {
             $scope.pendingRouteSelection = null;
@@ -789,6 +852,25 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.syncProductionOrderIndexToRow(row);
     });
 
+    $scope.$on('userSettings:wideScreenChanged', function (event, payload) {
+        if (payload && payload.isEnabled !== undefined) {
+            $scope.masterData.wideScreenEnabled = payload.isEnabled === true;
+        }
+        $scope.refreshMovementPickerDisplayMode();
+    });
+
+    var onViewportResize = function () {
+        $scope.$applyAsync(function () {
+            $scope.refreshMovementPickerDisplayMode();
+        });
+    };
+
+    angular.element($window).on('resize', onViewportResize);
+
+    $scope.$on('$destroy', function () {
+        angular.element($window).off('resize', onViewportResize);
+    });
+
     turnReportFactory.getMapCoordinates($scope.masterData.turnId).then(function (mapCoordinates) {
         $scope.mapCoordinates = mapCoordinates;
         $scope.markJumpOffPoints();
@@ -851,5 +933,6 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.refreshMovementGridTypeValues();
     });
 
+    $scope.refreshMovementPickerDisplayMode();
     $scope.refreshFilteredMovementItemsForMap();
 });

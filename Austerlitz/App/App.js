@@ -9,6 +9,10 @@
             controller: 'turnMapsController',
             templateUrl: '/Templates/turnMapsTemplate.html'
         })
+        .when('/UserSettings', {
+            controller: 'userSettingsController',
+            templateUrl: '/Templates/userSettingsTemplate.html'
+        })
         .when('/TurnSheet', {
             controller: 'turnSheetAllSectionsController',
             templateUrl: '/Templates/turnSheetAllSectionsTemplate.html'

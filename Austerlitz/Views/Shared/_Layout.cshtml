@@ -65,6 +65,7 @@
     <script src="~/App/mathBattlesController.js"></script>
     <script src="~/App/mathBattlesStatsController.js"></script>
     <script src="~/App/sectionPlaceholderController.js"></script>
+    <script src="~/App/userSettingsController.js"></script>
     <script src="~/App/navalUnits/navalUnitsStateFactory.js"></script>
     <script src="~/App/navalUnits/navalUnitsModelFactory.js"></script>
     <script src="~/App/navalUnits/navalUnitsSetUpFactory.js"></script>
@@ -170,6 +171,14 @@
                         <a href="/TurnSheet/HandOverTerritory">TS_21 Hand Over Territory</a>
                         <a href="/TurnSheet/ChangeNames">TS_22 Change Names</a>
                         <a href="/TurnSheet/ChangeStateRelationships">TS_23 Relationships</a>
+                    </div>
+                </div>
+                <div class="dropdown appSidebarGroup" ng-class="{ active: isActive('/UserSettings') }">
+                    <a href="" class="dropdown-toggle appSidebarGroupLink" data-toggle="dropdown" ng-click="$event.preventDefault()">
+                        Settings <span class="caret"></span>
+                    </a>
+                    <div class="dropdown-menu appSidebarSubNav">
+                        <a href="/UserSettings">User Settings</a>
                     </div>
                 </div>
                 <button type="button" class="btn btn-default btn-xs appSidebarSave appSidebarTurnsheetAction" ng-click="clearTurnOrders($event)">Clear Turn Orders</button>

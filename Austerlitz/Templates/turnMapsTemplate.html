@@ -1,7 +1,7 @@
 <div class="turn-maps-page">
-    <div class="window">
+    <div class="window" ng-class="{ 'turnMapsWideWindow': isMovementPickerPanelMode() }">
         <!-- Map and controls -->
-        <div class="detail">
+        <div class="detail turnMapsMainDetail">
 
             <div class="map-toolbar-row">
                 <span class="map-control-item">
@@ -163,6 +163,29 @@
             </div>
 
         </div>
+
+        <aside class="turnMapsPickerPane" ng-if="isMovementPickerPanelMode()">
+            <div class="turnMapsPickerPaneEmpty" ng-if="!shouldShowMovementPickerPanel()">
+                <h4>Movement Picker</h4>
+                <p class="text-muted">Movement picker is closed.</p>
+                <button type="button" class="btn btn-default btn-sm" ng-click="openMovementPickerModal()">Open Picker</button>
+            </div>
+
+            <div ng-if="shouldShowMovementPickerPanel()">
+                <div class="landUnitsModalHeader turnMapsPaneHeader">
+                    <div>
+                        <h3>Movement Picker (Fed/Fleet)</h3>
+                        <div class="landUnitsModalSubtitle">Fed/Fleet pick enabled. Item and Fed/Fleet chips are selectable.</div>
+                    </div>
+                    <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
+                </div>
+                <div class="landUnitsModalBody turnMapsPaneBody">
+                    <div class="table-responsive mapOrdersModalBody">
+                        <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 
     <div class="landUnitsModalBackdrop" ng-show="orderUi.allOrdersModal.isOpen" ng-click="closeAllOrdersModal()"></div>
@@ -196,8 +219,8 @@
         </div>
     </div>
 
-    <div class="landUnitsModalBackdrop" ng-show="orderUi.movementPickerModal.isOpen" ng-click="closeMovementPickerModal()"></div>
-    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="orderUi.movementPickerModal.isOpen">
+    <div class="landUnitsModalBackdrop" ng-show="shouldShowMovementPickerModal()" ng-click="closeMovementPickerModal()"></div>
+    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="shouldShowMovementPickerModal()">
         <div class="landUnitsModalHeader">
             <div>
                 <h3>Movement Picker (Fed/Fleet)</h3>
@@ -207,46 +230,7 @@
         </div>
         <div class="landUnitsModalBody">
             <div class="table-responsive mapOrdersModalBody">
-                <table class="table table-condensed table-hover mapOrdersTable">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Fed/Fleet</th>
-                            <th></th>
-                            <th>Type</th>
-                            <th>MP</th>
-                            <th>X/Y</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
-                            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }">
-                            <td>
-                                <button type="button"
-                                        class="landUnitsFederationChip mapOrdersPickChip"
-                                        ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow) }"
-                                        ng-click="selectMovementOrderItem(itemRow, 'item'); closeMovementPickerModal()">{{itemRow.itemNo}}</button>
-                            </td>
-                            <td>
-                                <button type="button"
-                                        class="landUnitsFederationChip mapOrdersPickChip"
-                                        ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
-                                        ng-disabled="itemRow.fed == null || itemRow.fed === ''"
-                                        ng-click="selectMovementOrderItem(itemRow, 'fed'); closeMovementPickerModal()">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
-                            </td>
-                            <td class="mapOrdersMovedCell">
-                                <span class="mapOrdersMovedLozenge"
-                                      ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
-                                      title="Unit has moved">M</span>
-                            </td>
-                            <td>{{itemRow.itemTypeName}}</td>
-                            <td>{{itemRow.mp}}</td>
-                            <td>{{itemRow.xy}}</td>
-                            <td>{{itemRow.description}}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
             </div>
         </div>
     </div>

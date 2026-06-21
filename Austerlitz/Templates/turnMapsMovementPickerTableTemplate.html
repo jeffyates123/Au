@@ -1,0 +1,41 @@
+<table class="table table-condensed table-hover mapOrdersTable">
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Fed/Fleet</th>
+            <th></th>
+            <th>Type</th>
+            <th>MP</th>
+            <th>X/Y</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
+            class="mapOrdersPickerDataRow"
+            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }">
+            <td>
+                <button type="button"
+                        class="landUnitsFederationChip mapOrdersPickChip"
+                        ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow) }"
+                        ng-click="selectMovementOrderItem(itemRow, 'item')">{{itemRow.itemNo}}</button>
+            </td>
+            <td>
+                <button type="button"
+                        class="landUnitsFederationChip mapOrdersPickChip"
+                        ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
+                        ng-disabled="itemRow.fed == null || itemRow.fed === ''"
+                        ng-click="selectMovementOrderItem(itemRow, 'fed')">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
+            </td>
+            <td class="mapOrdersMovedCell">
+                <span class="mapOrdersMovedLozenge"
+                      ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
+                      title="Unit has moved">M</span>
+            </td>
+            <td>{{itemRow.itemTypeName}}</td>
+            <td>{{itemRow.mp}}</td>
+            <td>{{itemRow.xy}}</td>
+            <td>{{itemRow.mainDescription || itemRow.description}}</td>
+        </tr>
+    </tbody>
+</table>
