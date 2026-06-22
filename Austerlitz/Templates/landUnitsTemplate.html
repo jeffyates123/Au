@@ -190,8 +190,11 @@
       </div>
     </div>
 
-    <div class="alert alert-info landUnitsAlert" ng-show="positionFilter">
-      Showing only units at position {{positionFilter}}.
+    <div
+      class="alert alert-info landUnitsAlert"
+      ng-show="positionFilter || (selectedSphere && selectedSphere !== 'All')"
+    >
+      {{positionFilter ? ('Showing only units at position ' + positionFilter + '.') : ('Showing all units in sphere ' + selectedSphere + '.')}}
       <a href="" ng-click="$event.preventDefault(); clearPositionFilter()"
         >Show all units</a
       >
@@ -295,7 +298,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="togglePositionFilter(pair.left)"
-              title="Double-click to filter all units by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >
               {{pair.left.position || '-'}}
             </td>
@@ -368,7 +371,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="pair.right && togglePositionFilter(pair.right)"
-              title="Double-click to filter all units by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >
               {{pair.right ? (pair.right.position || '-') : ''}}
             </td>
@@ -492,7 +495,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="togglePositionFilter(brigade)"
-              title="Double-click to filter all units by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >
               {{brigade.position}}
             </td>
@@ -897,6 +900,12 @@
                 Type
               </th>
               <th ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                Warship type
+              </th>
+              <th ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                Warship name
+              </th>
+              <th ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
                 Condition
               </th>
               <th>Total loading capacity</th>
@@ -924,6 +933,12 @@
               </td>
               <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
                 {{fleet.typeLabel}}
+              </td>
+              <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.warshipType}}
+              </td>
+              <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
+                {{fleet.warshipName}}
               </td>
               <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
                 {{fleet.conditionLabel}}

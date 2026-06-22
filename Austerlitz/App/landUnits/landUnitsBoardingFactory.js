@@ -277,6 +277,14 @@ austerlitzModule.factory(
               wouldExceedForCurrentBrigade: currentBrigadeCapacity > availableCapacity,
               position: toInt(ship.x, 0) + "/" + toInt(ship.y, 0),
               typeLabel: kind === "warship" ? "Warship" : "Merchant",
+              warshipType:
+                kind === "warship" && ship.type != null && ship.type !== ""
+                  ? toKey(ship.type)
+                  : "-",
+              warshipName:
+                kind === "warship" && toKey(ship.name)
+                  ? toKey(ship.name)
+                  : "-",
               conditionLabel:
                 (parseInt(ship.condition, 10) || 100).toString() + "%",
               isIndividualShip: true,

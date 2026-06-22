@@ -13,28 +13,36 @@
     <tbody>
         <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
             class="mapOrdersPickerDataRow"
-            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }">
+            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }"
+            ng-click="selectMovementOrderItemFromPickerRow(itemRow)">
             <td>
                 <button type="button"
                         class="landUnitsFederationChip mapOrdersPickChip"
                         ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow) }"
-                        ng-click="selectMovementOrderItem(itemRow, 'item')">{{itemRow.itemNo}}</button>
+                        ng-click="$event.stopPropagation(); selectMovementOrderItem(itemRow, 'item')">{{itemRow.itemNo}}</button>
             </td>
             <td>
                 <button type="button"
                         class="landUnitsFederationChip mapOrdersPickChip"
                         ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
                         ng-disabled="itemRow.fed == null || itemRow.fed === ''"
-                        ng-click="selectMovementOrderItem(itemRow, 'fed')">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
+                        ng-click="$event.stopPropagation(); selectMovementOrderItem(itemRow, 'fed')">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
             </td>
             <td class="mapOrdersMovedCell">
-                <span class="mapOrdersMovedLozenge"
-                      ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
-                      title="Unit has moved">M</span>
+                <div class="mapOrdersStatusLozenges">
+                    <span class="mapOrdersMovedLozenge"
+                          ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
+                          title="Unit has moved">M</span>
+                    <span class="mapOrdersMovedLozenge mapOrdersBoardLozenge"
+                          ng-show="itemRow.hasBoarding"
+                          title="Unit or fleet has boarding load">Board</span>
+                </div>
             </td>
             <td>{{itemRow.itemTypeName}}</td>
             <td>{{itemRow.mp}}</td>
-            <td>{{itemRow.xy}}</td>
+            <td ng-click="$event.stopPropagation()"
+                ng-dblclick="toggleMovementPickerCoordinateFilter(itemRow, $event)"
+                title="Double-click to toggle between this X/Y and this sphere">{{itemRow.xy}}</td>
             <td>{{itemRow.mainDescription || itemRow.description}}</td>
         </tr>
     </tbody>

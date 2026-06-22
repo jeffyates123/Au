@@ -47,6 +47,7 @@ austerlitzModule.factory("navalUnitsStateFactory", function () {
           stagedItemNos: {},
         },
         navyPositionFilter: null,
+        navySphereFilter: null,
       };
     },
   };

@@ -737,8 +737,14 @@ textarea {
 }
 
 .mapOrdersMovedCell {
-    width: 28px;
+    width: 78px;
     text-align: center;
+}
+
+.mapOrdersStatusLozenges {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .mapOrdersMovedLozenge {
@@ -753,6 +759,12 @@ textarea {
     font-weight: 700;
     line-height: 1.2;
     cursor: default;
+}
+
+.mapOrdersBoardLozenge {
+    border-color: #80a7d9;
+    background: #e8f2ff;
+    color: #1f4f8c;
 }
 
 .mapOrdersDetailRow > td {
@@ -1623,8 +1635,8 @@ textarea {
     border-left: 2px solid #d9d2c6;
 }
 
-.navyFleetSummaryTable > thead > tr > th:nth-child(7),
-.navyFleetSummaryTable > tbody > tr > td:nth-child(7) {
+.navyFleetSummaryTable > thead > tr > th:nth-child(9),
+.navyFleetSummaryTable > tbody > tr > td:nth-child(9) {
     border-left: 2px solid #d9d2c6;
 }
 

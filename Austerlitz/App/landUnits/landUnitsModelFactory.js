@@ -527,14 +527,37 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
           return;
         }
 
-        $scope.positionFilter =
-          $scope.positionFilter === positionKey ? null : positionKey;
-        $scope.refreshCommanderPairRows();
+        var sphereKey = $scope.getLandUnitSphere(unit);
+        if (!sphereKey || sphereKey === "Unknown") {
+          sphereKey = "All";
+        }
+
+        if ($scope.positionFilter === positionKey) {
+          $scope.positionFilter = null;
+          $scope.selectedSphere = sphereKey;
+          $scope.onSphereChanged();
+          return;
+        }
+
+        if (
+          !$scope.positionFilter &&
+          sphereKey !== "All" &&
+          $scope.selectedSphere === sphereKey
+        ) {
+          $scope.positionFilter = positionKey;
+          $scope.refreshCommanderPairRows();
+          return;
+        }
+
+        $scope.selectedSphere = sphereKey;
+        $scope.positionFilter = positionKey;
+        $scope.onSphereChanged();
       };
 
       $scope.clearPositionFilter = function () {
         $scope.positionFilter = null;
-        $scope.refreshCommanderPairRows();
+        $scope.selectedSphere = "All";
+        $scope.onSphereChanged();
       };
 
       $scope.matchesPositionFilter = function (unit) {

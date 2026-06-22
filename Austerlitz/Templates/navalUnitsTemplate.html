@@ -216,7 +216,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="toggleNavyPositionFilter(pair.left)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.left.position}}</td>
             <td>{{pair.left.maxMp}}</td>
             <td>{{pair.left.warships}}</td>
@@ -228,7 +228,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="pair.right && toggleNavyPositionFilter(pair.right)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.right ? pair.right.position : ''}}</td>
             <td>{{pair.right ? pair.right.maxMp : ''}}</td>
             <td>{{pair.right ? pair.right.warships : ''}}</td>
@@ -241,8 +241,11 @@
       </table>
     </div>
 
-    <div class="alert alert-info landUnitsAlert" ng-show="navyPositionFilter">
-      Showing only ships at position {{navyPositionFilter}}.
+    <div
+      class="alert alert-info landUnitsAlert"
+      ng-show="navyPositionFilter || navySphereFilter"
+    >
+      {{navyPositionFilter ? ('Showing only ships at position ' + navyPositionFilter + '.') : ('Showing all ships in sphere ' + navySphereFilter + '.')}}
       <a href="" ng-click="$event.preventDefault(); clearNavyPositionFilter()">Show all ships</a>
     </div>
 
@@ -299,7 +302,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="toggleNavyPositionFilter(pair.left)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.left.position}}</td>
             <td>
               <button
@@ -331,7 +334,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="pair.right && toggleNavyPositionFilter(pair.right)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.right ? pair.right.position : ''}}</td>
             <td>
               <button
@@ -419,7 +422,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="toggleNavyPositionFilter(pair.left)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.left.position}}</td>
             <td>
               <button
@@ -453,7 +456,7 @@
             <td
               class="landUnitsPositionCol"
               ng-dblclick="pair.right && toggleNavyPositionFilter(pair.right)"
-              title="Double-click to filter ships by this position"
+              title="Double-click to toggle between this X/Y and this sphere"
             >{{pair.right ? pair.right.position : ''}}</td>
             <td>
               <button
@@ -539,7 +542,7 @@
         <table class="table table-condensed" style="font-size:11px">
           <thead>
             <tr>
-              <th></th><th>No</th><th>Type</th><th>Name</th><th>x/y</th><th>Fleet</th>
+              <th></th><th>No</th><th>Type</th><th>Name</th><th>x/y</th><th>Fleet</th><th>MP</th>
             </tr>
           </thead>
           <tbody>
@@ -557,6 +560,7 @@
               <td>{{ship.name}}</td>
               <td>{{ship.position}}</td>
               <td>{{ship.fleet || '-'}}</td>
+              <td>{{ship.mp}}</td>
             </tr>
             <tr ng-repeat="ship in getNavyFederationMerchants()">
               <td>
@@ -572,6 +576,7 @@
               <td>(merchant)</td>
               <td>{{ship.position}}</td>
               <td>{{ship.fleet || '-'}}</td>
+              <td>{{ship.mp}}</td>
             </tr>
           </tbody>
         </table>

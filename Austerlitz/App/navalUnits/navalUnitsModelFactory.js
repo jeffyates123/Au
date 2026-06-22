@@ -49,6 +49,29 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
         return (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0);
       };
 
+      $scope.getNavySphereFromCoordinates = function (x, y) {
+        var parsedX = parseInt(x, 10);
+        var parsedY = parseInt(y, 10);
+        if (isNaN(parsedX) || isNaN(parsedY)) return "Unknown";
+
+        if (parsedX <= 80 && parsedY <= 65) return "Europe";
+        if (parsedX <= 40 && parsedY <= 99) return "Caribbean";
+        if (parsedX <= 90 && parsedY <= 99) return "India";
+        return "Unknown";
+      };
+
+      $scope.getNavySphereForShip = function (ship) {
+        if (!ship) return "Unknown";
+        return $scope.getNavySphereFromCoordinates(ship.x, ship.y);
+      };
+
+      $scope.matchesNavyPositionOrSphereFilter = function (ship) {
+        if (!ship) return false;
+        if ($scope.navyPositionFilter) return ship.position === $scope.navyPositionFilter;
+        if ($scope.navySphereFilter) return $scope.getNavySphereForShip(ship) === $scope.navySphereFilter;
+        return true;
+      };
+
       $scope.buildWarshipRows = function () {
         var warships =
           ($scope.masterData &&
@@ -123,7 +146,7 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
       $scope.buildFleetSummaryRows = function () {
         var allShips = (($scope.warshipRows || []).concat($scope.merchantRows || []))
           .filter(function (ship) {
-            return !$scope.navyPositionFilter || ship.position === $scope.navyPositionFilter;
+            return $scope.matchesNavyPositionOrSphereFilter(ship);
           })
           .slice()
           .sort($scope.compareShipsForDisplay);
@@ -289,7 +312,34 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
       $scope.toggleNavyPositionFilter = function (ship) {
         var pos = ship && ship.position;
         if (!pos) return;
-        $scope.navyPositionFilter = $scope.navyPositionFilter === pos ? null : pos;
+
+        var sphere = $scope.getNavySphereForShip(ship);
+        var sphereKey = sphere && sphere !== "Unknown" ? sphere : null;
+
+        if ($scope.navyPositionFilter === pos) {
+          $scope.navyPositionFilter = null;
+          $scope.navySphereFilter = sphereKey;
+          $scope.buildFleetSummaryRows();
+          $scope.refreshWarshipPairRows();
+          $scope.refreshMerchantPairRows();
+          return;
+        }
+
+        if (
+          !$scope.navyPositionFilter &&
+          sphereKey &&
+          $scope.navySphereFilter === sphereKey
+        ) {
+          $scope.navyPositionFilter = pos;
+          $scope.navySphereFilter = null;
+          $scope.buildFleetSummaryRows();
+          $scope.refreshWarshipPairRows();
+          $scope.refreshMerchantPairRows();
+          return;
+        }
+
+        $scope.navyPositionFilter = pos;
+        $scope.navySphereFilter = null;
         $scope.buildFleetSummaryRows();
         $scope.refreshWarshipPairRows();
         $scope.refreshMerchantPairRows();
@@ -297,15 +347,16 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
 
       $scope.clearNavyPositionFilter = function () {
         $scope.navyPositionFilter = null;
+        $scope.navySphereFilter = null;
         $scope.buildFleetSummaryRows();
         $scope.refreshWarshipPairRows();
         $scope.refreshMerchantPairRows();
       };
 
       $scope.refreshWarshipPairRows = function () {
-        var ships = $scope.navyPositionFilter
-          ? ($scope.warshipRows || []).filter(function (s) { return s.position === $scope.navyPositionFilter; })
-          : ($scope.warshipRows || []);
+        var ships = ($scope.warshipRows || []).filter(function (s) {
+          return $scope.matchesNavyPositionOrSphereFilter(s);
+        });
         var pairs = [];
         for (var i = 0; i < ships.length; i += 2) {
           pairs.push({ left: ships[i], right: ships[i + 1] || null });
@@ -314,9 +365,9 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
       };
 
       $scope.refreshMerchantPairRows = function () {
-        var ships = $scope.navyPositionFilter
-          ? ($scope.merchantRows || []).filter(function (s) { return s.position === $scope.navyPositionFilter; })
-          : ($scope.merchantRows || []);
+        var ships = ($scope.merchantRows || []).filter(function (s) {
+          return $scope.matchesNavyPositionOrSphereFilter(s);
+        });
         var pairs = [];
         for (var i = 0; i < ships.length; i += 2) {
           pairs.push({ left: ships[i], right: ships[i + 1] || null });
