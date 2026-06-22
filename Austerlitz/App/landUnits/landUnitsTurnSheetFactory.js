@@ -240,6 +240,19 @@ austerlitzModule.factory("landUnitsTurnSheetFactory", function () {
 
         return null;
       };
+
+      $scope.findMatchingDemolishRow = function (rows, itemNo, battalionSlot) {
+        for (var i = 0; rows && i < rows.length; i++) {
+          if (
+            $scope.sameNullableInt(rows[i].itemNo, itemNo) &&
+            $scope.sameNullableInt(rows[i].brigadeNo, battalionSlot)
+          ) {
+            return rows[i];
+          }
+        }
+
+        return null;
+      };
     },
   };
 });

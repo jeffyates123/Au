@@ -12,14 +12,18 @@ austerlitzModule.controller(
     turnSheetFactory,
     navalUnitsStateFactory,
     navalUnitsModelFactory,
+    landUnitsTurnSheetFactory,
     navalUnitsSetUpFactory,
     navalUnitsFederationFactory,
     navalUnitsRepairFactory,
+    unitRenameFactory,
   ) {
     $scope.masterData = masterData;
     angular.extend($scope, navalUnitsStateFactory.createInitialState());
 
     navalUnitsModelFactory.attach($scope);
+    landUnitsTurnSheetFactory.attach($scope, turnSheetFactory);
+    unitRenameFactory.attach($scope, turnSheetFactory);
     navalUnitsSetUpFactory.attach($scope, turnSheetFactory);
     navalUnitsFederationFactory.attach($scope, turnSheetFactory);
     navalUnitsRepairFactory.attach($scope, turnSheetFactory);

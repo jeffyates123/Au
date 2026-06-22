@@ -1,9 +1,22 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsRenameFactory", function () {
+austerlitzModule.factory("unitRenameFactory", function () {
   return {
     attach: function ($scope, turnSheetFactory) {
-      $scope.persistRenameOrder = function (unit, newName) {
+      var TS_22_MAX_ROWS = 4;
+
+      function revertLocalRename(unit, previousName) {
+        if (!unit) {
+          return;
+        }
+
+        unit.name = previousName;
+        if (unit.source) {
+          unit.source.name = previousName;
+        }
+      }
+
+      $scope.persistRenameOrder = function (unit, newName, previousName) {
         if (!unit) {
           return;
         }
@@ -15,14 +28,18 @@ austerlitzModule.factory("landUnitsRenameFactory", function () {
 
             var targetRow =
               $scope.findMatchingRenameRow(rows, unit.id) ||
-              $scope.findNextEmptyTurnSheetRow(rows, ["itemNo", "name"]);
+              $scope.findNextEmptyTurnSheetRowWithinLimit(
+                rows,
+                ["itemNo", "name"],
+                TS_22_MAX_ROWS,
+              );
 
             if (!targetRow) {
-              targetRow = {
-                turnId: $scope.masterData.turnId,
-                orderNo: rows.length + 1,
-              };
-              rows.push(targetRow);
+              alert(
+                "TS_22 Change Name is full. You can only rename 4 units per turn.",
+              );
+              revertLocalRename(unit, previousName);
+              return;
             }
 
             targetRow.turnId = $scope.masterData.turnId;
@@ -64,7 +81,8 @@ austerlitzModule.factory("landUnitsRenameFactory", function () {
           newName = unit.name;
         }
 
-        var nameChanged = newName !== unit.name;
+        var previousName = unit.name;
+        var nameChanged = newName !== previousName;
         unit.name = newName;
         unit.isRenaming = false;
         unit.pendingName = null;
@@ -73,7 +91,7 @@ austerlitzModule.factory("landUnitsRenameFactory", function () {
         }
 
         if (nameChanged) {
-          $scope.persistRenameOrder(unit, newName);
+          $scope.persistRenameOrder(unit, newName, previousName);
         }
       };
 

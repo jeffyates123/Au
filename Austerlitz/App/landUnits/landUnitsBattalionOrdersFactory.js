@@ -23,7 +23,7 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
           return;
         }
 
-        if (actionType === "merge" && !battalion.type) {
+        if (actionType === "merge" && !$scope.getBattalionMergeType(battalion)) {
           alert("Choose a non-empty battalion to start a merge.");
           $scope.resetBattalionAction();
           return;
@@ -150,7 +150,7 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
       };
 
       $scope.canStartMerge = function (battalion) {
-        return !!(battalion && battalion.type);
+        return !!$scope.getBattalionMergeType(battalion);
       };
 
       $scope.canUseBarracksAction = function (brigade) {
@@ -173,6 +173,10 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
       };
 
       $scope.getBattalionTitle = function (battalion) {
+        if (battalion && battalion.isDemolishedThisTurn) {
+          return "This battalion has been demolished this turn.";
+        }
+
         if ($scope.isBattalionLockedForOrders(battalion)) {
           return "This battalion has already been used in Exchange Battalions or Merge Battalions this turn.";
         }
@@ -182,6 +186,32 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
               battalion.originalEf +
               " to " +
               battalion.currentEf
+          : "";
+      };
+
+      $scope.getBattalionLozengeDisplay = function (battalion) {
+        if (!battalion) {
+          return "- -- ---";
+        }
+
+        if (battalion.isDemolishedThisTurn && battalion.demolishedType) {
+          return battalion.demolishedType;
+        }
+
+        return battalion.display || "- -- ---";
+      };
+
+      $scope.getBattalionMergeType = function (battalion) {
+        if (!battalion) {
+          return "";
+        }
+
+        if (battalion.type) {
+          return battalion.type;
+        }
+
+        return battalion.isDemolishedThisTurn && battalion.demolishedType
+          ? battalion.demolishedType
           : "";
       };
 
@@ -228,6 +258,85 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
           });
           alert("Cleared " + clearedOrders.join(", ") + ".");
         }, $scope.showTurnSheetOrderError);
+      };
+
+      $scope.canDemolishBattalion = function (battalion) {
+        return !!(
+          battalion &&
+          !battalion.isDemolishedThisTurn &&
+          !$scope.isBattalionLockedForOrders(battalion) &&
+          !battalion.isNewAddition &&
+          (battalion.type || battalion.demolishedType)
+        );
+      };
+
+      $scope.demolishBattalion = function (brigade, battalion, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+
+        if (!brigade || !battalion || !$scope.canDemolishBattalion(battalion)) {
+          return;
+        }
+
+        turnSheetFactory
+          .getTSDemolishItems($scope.masterData.turnId)
+          .then(function (rows) {
+            var targetRow =
+              $scope.findMatchingDemolishRow(rows, brigade.id, battalion.slot) ||
+              $scope.findNextEmptyTurnSheetRowWithinLimit(
+                rows,
+                ["itemNo", "brigadeNo"],
+                6,
+              );
+
+            if (!targetRow) {
+              alert("No empty Demolish Items row is available.");
+              return;
+            }
+
+            targetRow.turnId = $scope.masterData.turnId;
+            targetRow.itemNo = brigade.id;
+            targetRow.brigadeNo = battalion.slot;
+
+            return turnSheetFactory
+              .postTSRecords(rows, "DemolishItems")
+              .then(function () {
+                $scope.applyDemolishBattalionPreview(brigade, battalion);
+              }, $scope.showTurnSheetOrderError);
+          }, $scope.showTurnSheetOrderError);
+      };
+
+      $scope.cancelDemolishBattalion = function (brigade, battalion, $event) {
+        if ($event && $event.preventDefault) $event.preventDefault();
+        if ($event && $event.stopPropagation) $event.stopPropagation();
+
+        if (!brigade || !battalion || !battalion.isDemolishedThisTurn) {
+          return;
+        }
+
+        turnSheetFactory
+          .getTSDemolishItems($scope.masterData.turnId)
+          .then(function (rows) {
+            var row = $scope.findMatchingDemolishRow(
+              rows,
+              brigade.id,
+              battalion.slot,
+            );
+            if (!row) {
+              alert("No matching Demolish Items row was found for this battalion.");
+              return;
+            }
+
+            row.turnId = $scope.masterData.turnId;
+            row.itemNo = null;
+            row.brigadeNo = null;
+
+            return turnSheetFactory
+              .postTSRecords(rows, "DemolishItems")
+              .then(function () {
+                $scope.restoreDemolishedBattalionPreview(brigade, battalion);
+              }, $scope.showTurnSheetOrderError);
+          }, $scope.showTurnSheetOrderError);
       };
 
       $scope.openAddBattalionModal = function (brigade, battalion, $event) {
@@ -366,9 +475,9 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
 
             if (
               actionType === "merge" &&
-              sourceBattalion.type &&
+              $scope.getBattalionMergeType(sourceBattalion) &&
               battalion.type &&
-              sourceBattalion.type === battalion.type &&
+              $scope.getBattalionMergeType(sourceBattalion) === battalion.type &&
               $scope.isSameCoordinate(sourceBrigade, brigade)
             ) {
               eligible[$scope.getBattalionKey(brigade, battalion)] = true;
@@ -524,8 +633,10 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
         $scope.markBattalionLockedForOrders(rightBattalion);
 
         $scope.recalculateBrigadeEffects(leftBrigade);
+        $scope.refreshBoardingForBrigadeIfNeeded(leftBrigade);
         if (leftBrigade.id !== rightBrigade.id) {
           $scope.recalculateBrigadeEffects(rightBrigade);
+          $scope.refreshBoardingForBrigadeIfNeeded(rightBrigade);
         }
       };
 
@@ -542,17 +653,19 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
           return;
         }
 
-        if (
-          !sourceBattalion.type ||
-          !targetBattalion.type ||
-          sourceBattalion.type !== targetBattalion.type
-        ) {
+        var sourceType = $scope.getBattalionMergeType(sourceBattalion);
+        var targetType = targetBattalion.type;
+        if (!sourceType || !targetType || sourceType !== targetType) {
           return;
         }
 
-        var sourceSize = parseInt(sourceBattalion.size, 10) || 0;
+        var sourceSize = sourceBattalion.isDemolishedThisTurn
+          ? 0
+          : parseInt(sourceBattalion.size, 10) || 0;
         var targetSize = parseInt(targetBattalion.size, 10) || 0;
-        var sourceEf = parseInt(sourceBattalion.originalEf, 10) || 0;
+        var sourceEf = sourceBattalion.isDemolishedThisTurn
+          ? parseInt(sourceBattalion.demolishedOriginalEf, 10) || 0
+          : parseInt(sourceBattalion.originalEf, 10) || 0;
         var targetEf = parseInt(targetBattalion.originalEf, 10) || 0;
         var combinedSize = sourceSize + targetSize;
         var mergedEf =
@@ -562,7 +675,7 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
               )
             : targetEf;
 
-        targetBattalion.type = targetBattalion.type || sourceBattalion.type;
+        targetBattalion.type = targetBattalion.type || sourceType;
         targetBattalion.originalEf = mergedEf;
         targetBattalion.currentEf = mergedEf;
         targetBattalion.baseSize = Math.min(800, combinedSize);
@@ -578,8 +691,10 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
         $scope.markBattalionLockedForOrders(targetBattalion);
 
         $scope.recalculateBrigadeEffects(sourceBrigade);
+        $scope.refreshBoardingForBrigadeIfNeeded(sourceBrigade);
         if (sourceBrigade.id !== targetBrigade.id) {
           $scope.recalculateBrigadeEffects(targetBrigade);
+          $scope.refreshBoardingForBrigadeIfNeeded(targetBrigade);
         }
       };
 
@@ -590,6 +705,10 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
           currentEf: battalion.originalEf,
           baseSize: battalion.baseSize,
           size: battalion.size,
+          isDemolishedThisTurn: battalion.isDemolishedThisTurn,
+          demolishedType: battalion.demolishedType,
+          demolishedOriginalEf: battalion.demolishedOriginalEf,
+          demolishedOriginalSize: battalion.demolishedOriginalSize,
         };
       };
 
@@ -599,6 +718,14 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
         target.currentEf = source.originalEf;
         target.baseSize = source.baseSize;
         target.size = source.size;
+        target.isDemolishedThisTurn = !!source.isDemolishedThisTurn;
+        target.demolishedType = source.demolishedType || "";
+        target.demolishedOriginalEf =
+          source.demolishedOriginalEf != null ? source.demolishedOriginalEf : null;
+        target.demolishedOriginalSize =
+          source.demolishedOriginalSize != null
+            ? source.demolishedOriginalSize
+            : null;
         target.display = target.type
           ? $scope.formatBattalionParts(
               target.type,
@@ -619,6 +746,79 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
         battalion.efDrop = 0;
         battalion.efIncrease = 0;
         battalion.isNewAddition = false;
+        battalion.isDemolishedThisTurn = false;
+        battalion.demolishedType = "";
+        battalion.demolishedOriginalEf = null;
+        battalion.demolishedOriginalSize = null;
+      };
+
+      $scope.applyDemolishBattalionPreview = function (brigade, battalion) {
+        if (!brigade || !battalion) {
+          return;
+        }
+
+        var demolishedType = battalion.type || battalion.demolishedType || "";
+        var demolishedOriginalEf =
+          battalion.originalEf != null
+            ? battalion.originalEf
+            : battalion.demolishedOriginalEf;
+        var demolishedOriginalSize =
+          battalion.baseSize != null
+            ? battalion.baseSize
+            : battalion.demolishedOriginalSize;
+        $scope.clearBattalionBaseline(battalion);
+        battalion.isDemolishedThisTurn = true;
+        battalion.demolishedType = demolishedType;
+        battalion.demolishedOriginalEf = demolishedOriginalEf;
+        battalion.demolishedOriginalSize = demolishedOriginalSize;
+
+        $scope.recalculateBrigadeEffects(brigade);
+        $scope.refreshBoardingForBrigadeIfNeeded(brigade);
+      };
+
+      $scope.restoreDemolishedBattalionPreview = function (brigade, battalion) {
+        if (!brigade || !battalion || !battalion.isDemolishedThisTurn) {
+          return;
+        }
+
+        battalion.type = battalion.demolishedType || "";
+        battalion.originalEf = battalion.demolishedOriginalEf;
+        battalion.currentEf = battalion.demolishedOriginalEf;
+        battalion.baseSize = battalion.demolishedOriginalSize;
+        battalion.size = battalion.demolishedOriginalSize;
+        battalion.display = battalion.type
+          ? $scope.formatBattalionParts(
+              battalion.type,
+              battalion.originalEf,
+              battalion.size,
+            )
+          : "";
+        battalion.isDemolishedThisTurn = false;
+        battalion.demolishedType = "";
+        battalion.demolishedOriginalEf = null;
+        battalion.demolishedOriginalSize = null;
+
+        $scope.recalculateBrigadeEffects(brigade);
+        $scope.refreshBoardingForBrigadeIfNeeded(brigade);
+      };
+
+      $scope.refreshBoardingForBrigadeIfNeeded = function (brigade) {
+        if (!brigade || !brigade.boardingSelected) {
+          return;
+        }
+
+        if (
+          $scope.boardingModal &&
+          $scope.boardingModal.isOpen &&
+          $scope.boardingModal.brigade &&
+          $scope.sameNullableInt($scope.boardingModal.brigade.id, brigade.id)
+        ) {
+          $scope.boardingModal.currentUnitCapacity =
+            $scope.getBoardingUnitRequiredCapacity(brigade);
+          $scope.boardingModal.currentBrigadeCapacity =
+            $scope.boardingModal.currentUnitCapacity;
+          $scope.refreshBoardingModalOptions(brigade, false);
+        }
       };
 
       $scope.findFirstFreeBattalion = function (brigade) {
@@ -646,6 +846,10 @@ austerlitzModule.factory("landUnitsBattalionOrdersFactory", function () {
         battalion.baseSize = 800;
         battalion.size = 800;
         battalion.isNewAddition = true;
+        battalion.isDemolishedThisTurn = false;
+        battalion.demolishedType = "";
+        battalion.demolishedOriginalEf = null;
+        battalion.demolishedOriginalSize = null;
         battalion.display = $scope.formatBattalionParts(
           battalion.type,
           battalion.originalEf,

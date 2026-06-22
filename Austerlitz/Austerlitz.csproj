@@ -245,6 +245,7 @@
     <Content Include="Scripts\angular.rangeSlider.js" />
     <Content Include="App\App.js" />
     <Content Include="App\boardingController.js" />
+    <Content Include="App\boardingSharedFactory.js" />
     <Content Include="App\brigadeCalculatorController.js" />
     <Content Include="App\editableCellDirective.js" />
     <Content Include="App\homeController.js" />
@@ -257,13 +258,17 @@
     <Content Include="App\landUnits\landUnitsFederationFactory.js" />
     <Content Include="App\landUnits\landUnitsHeadcountTrainFactory.js" />
     <Content Include="App\landUnits\landUnitsBattalionOrdersFactory.js" />
-    <Content Include="App\landUnits\landUnitsRenameFactory.js" />
+    <Content Include="App\landUnits\unitRenameFactory.js" />
     <Content Include="App\landUnits\landUnitsUiFactory.js" />
     <Content Include="App\landUnitsController.js" />
     <Content Include="App\mathBattlesCombatHelperFactory.js" />
     <Content Include="App\mathBattlesController.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\menuController.js" />
+    <Content Include="App\intelligence\intelligenceBoardingFactory.js" />
+    <Content Include="App\intelligenceController.js" />
+    <Content Include="App\trade\tradeBoardingFactory.js" />
+    <Content Include="App\tradeController.js" />
     <Content Include="App\simBattleFactory.js" />
     <Content Include="App\rulesCatalogFactory.js" />
     <Content Include="App\sectionPlaceholderController.js" />
@@ -666,6 +671,8 @@
     <Content Include="Templates\boardingTemplate.html" />
     <Content Include="Templates\headerTemplate.html" />
     <Content Include="Templates\homeTemplate.html" />
+    <Content Include="Templates\intelligenceTemplate.html" />
+    <Content Include="Templates\tradeTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />
     <Content Include="Templates\mathBattlesTemplate.html" />

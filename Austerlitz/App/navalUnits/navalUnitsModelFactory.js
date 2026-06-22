@@ -1,9 +1,11 @@
 "use strict";
 
-austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResolverFactory) {
-  var WARSHIP_MAX_TYPE = 25;
-  var SEA_TERRAIN_CHARS = { "*": true, "+": true, ".": true };
-  var SHIPYARD_PROD_SITE_CHARS = { "&": true, $: true };
+austerlitzModule.factory(
+  "navalUnitsModelFactory",
+  function (turnAssignmentResolverFactory, boardingSharedFactory) {
+    var WARSHIP_MAX_TYPE = 25;
+    var SEA_TERRAIN_CHARS = { "*": true, "+": true, ".": true };
+    var SHIPYARD_PROD_SITE_CHARS = { "&": true, $: true };
 
   return {
     attach: function ($scope) {
@@ -50,14 +52,7 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
       };
 
       $scope.getNavySphereFromCoordinates = function (x, y) {
-        var parsedX = parseInt(x, 10);
-        var parsedY = parseInt(y, 10);
-        if (isNaN(parsedX) || isNaN(parsedY)) return "Unknown";
-
-        if (parsedX <= 80 && parsedY <= 65) return "Europe";
-        if (parsedX <= 40 && parsedY <= 99) return "Caribbean";
-        if (parsedX <= 90 && parsedY <= 99) return "India";
-        return "Unknown";
+        return boardingSharedFactory.getSphereFromCoordinates(x, y);
       };
 
       $scope.getNavySphereForShip = function (ship) {
@@ -158,91 +153,25 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
           return isNaN(parsed) ? fallback : parsed;
         }
 
-        function roundTo2(value) {
-          return Math.round((parseFloat(value) || 0) * 100) / 100;
-        }
-
-        function toLoadCapacityUnits(rawWeight) {
-          return roundTo2((parseFloat(rawWeight) || 0) / 1000);
-        }
-
-        function getArmyListLookupByShortName() {
-          var lookup = {};
-          var allArmyItems =
-            ($scope.masterData &&
-              $scope.masterData.rulesCatalog &&
-              ($scope.masterData.rulesCatalog.armyList ||
-                $scope.masterData.rulesCatalog.ArmyList)) ||
-            [];
-
-          angular.forEach(allArmyItems, function (armyItem) {
-            var shortName = $scope.trimValue(armyItem && armyItem.shortName).toUpperCase();
-            if (shortName) {
-              lookup[shortName] = armyItem;
-            }
-          });
-          return lookup;
-        }
-
-        function getBattalionWeightPerMan(armyItem) {
-          if (!armyItem) return 0;
-          var itemNo = parseInt(armyItem.itemNo, 10);
-          if (armyItem.isCavalry) return 400;
-          if (!isNaN(itemNo) && itemNo >= 40) return 600;
-          return 200;
-        }
-
-        function getBrigadeRawWeight(itemNo) {
-          var brigades =
-            ($scope.masterData &&
-              $scope.masterData.turnReport &&
-              $scope.masterData.turnReport.brigades) ||
-            [];
-          var armyLookup = getArmyListLookupByShortName();
-          for (var i = 0; i < brigades.length; i++) {
-            if (!$scope.sameNullableInt(brigades[i].itemNo, itemNo)) continue;
-            var totalWeight = 0;
-            for (var b = 1; b <= 7; b++) {
-              var battType = $scope.trimValue(brigades[i]["batt" + b + "Type"]).toUpperCase();
-              var battSize = parseInt(brigades[i]["batt" + b + "Size"], 10) || 0;
-              if (!battType || battType === "--" || battSize <= 0) continue;
-              totalWeight += battSize * getBattalionWeightPerMan(armyLookup[battType]);
-            }
-            return totalWeight;
-          }
-          return 0;
-        }
-
-        function getBaggageTrainRawWeight(itemNo) {
-          var baggageTrains =
-            ($scope.masterData &&
-              $scope.masterData.turnReport &&
-              $scope.masterData.turnReport.baggageTrains) ||
-            [];
-          for (var i = 0; i < baggageTrains.length; i++) {
-            if (!$scope.sameNullableInt(baggageTrains[i].itemNo, itemNo)) continue;
-            var qty1 = parseInt(baggageTrains[i].quantity1, 10) || 0;
-            var qty2 = parseInt(baggageTrains[i].quantity2, 10) || 0;
-            return 500000 + qty1 + qty2;
-          }
-          return 0;
-        }
-
-        function getLoadedCapacityByFleet() {
-          var byFleet = {};
-          angular.forEach($scope.tsBoardingList || [], function (row) {
-            var fleetNo = toInt(row && row.fleetNo, null);
-            var itemNo = toInt(row && row.itemNo, null);
-            if (fleetNo == null || fleetNo <= 0 || itemNo == null || itemNo <= 0) return;
-            var loaded = toLoadCapacityUnits(
-              getBrigadeRawWeight(itemNo) || getBaggageTrainRawWeight(itemNo),
-            );
-            byFleet[fleetNo] = roundTo2((byFleet[fleetNo] || 0) + loaded);
-          });
-          return byFleet;
-        }
-
-        var loadedCapacityByFleet = getLoadedCapacityByFleet();
+        var turnReport =
+          ($scope.masterData && $scope.masterData.turnReport) || {};
+        var rulesCatalog =
+          ($scope.masterData && $scope.masterData.rulesCatalog) || {};
+        var loadedCapacityByFleet =
+          boardingSharedFactory.buildFleetUsedCapacityLookup(
+            $scope.tsBoardingList || [],
+            null,
+            true,
+            function (itemNo) {
+              return boardingSharedFactory.getBoardedItemLoadCapacity(
+                turnReport,
+                rulesCatalog,
+                itemNo,
+                $scope.sameNullableInt,
+              );
+            },
+            $scope.sameNullableInt,
+          );
 
         angular.forEach(allShips, function (ship) {
           var fleetNo =
@@ -260,7 +189,9 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
               warships: 0,
               merchants: 0,
               loadingCap: 0,
-              boardedCapRaw: roundTo2(loadedCapacityByFleet[fleetNo] || 0),
+                boardedCapRaw: boardingSharedFactory.roundTo2(
+                  loadedCapacityByFleet[fleetNo] || 0,
+                ),
               boardedCap: 0,
               availableCap: 0,
               position: ship.position || "",
@@ -554,4 +485,5 @@ austerlitzModule.factory("navalUnitsModelFactory", function (turnAssignmentResol
       };
     },
   };
-});
+}
+);

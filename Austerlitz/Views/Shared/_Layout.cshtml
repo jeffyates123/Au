@@ -41,6 +41,7 @@
     <script src="~/App/ts01TransferGoodsUtilsFactory.js"></script>
     <script src="~/App/navalUnits/navyFleetValidationFactory.js"></script>
     <script src="~/App/turnAssignmentResolverFactory.js"></script>
+    <script src="~/App/boardingSharedFactory.js"></script>
     <script src="~/App/setUpBrigadesSharedFactory.js"></script>
     <script src="~/App/setUpTransferPipelineFactory.js"></script>
     <script src="~/App/masterDataFactory.js"></script>
@@ -57,7 +58,7 @@
     <script src="~/App/landUnits/landUnitsHeadcountTrainFactory.js"></script>
     <script src="~/App/landUnits/landUnitsBoardingFactory.js"></script>
     <script src="~/App/landUnits/landUnitsBattalionOrdersFactory.js"></script>
-    <script src="~/App/landUnits/landUnitsRenameFactory.js"></script>
+    <script src="~/App/landUnits/unitRenameFactory.js"></script>
     <script src="~/App/landUnits/landUnitsUiFactory.js"></script>
     <script src="~/App/landUnits/landUnitsSetUpBrigadesFactory.js"></script>
     <script src="~/App/landUnitsController.js"></script>
@@ -72,6 +73,10 @@
     <script src="~/App/navalUnits/navalUnitsFederationFactory.js"></script>
     <script src="~/App/navalUnits/navalUnitsRepairFactory.js"></script>
     <script src="~/App/navalUnitsController.js"></script>
+    <script src="~/App/intelligence/intelligenceBoardingFactory.js"></script>
+    <script src="~/App/intelligenceController.js"></script>
+    <script src="~/App/trade/tradeBoardingFactory.js"></script>
+    <script src="~/App/tradeController.js"></script>
 
     <script src="~/App/turnMaps/turnMapsConfigFactory.js"></script>
     <script src="~/App/turnMaps/turnMapsSharedFactory.js"></script>
@@ -138,6 +143,7 @@
                 <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') && !isActive('/Military/MathBattles/Stats') }">Math Battles</a>
                 <a href="/Military/MathBattles/Stats" ng-class="{ active: isActive('/Military/MathBattles/Stats') }">-Stats</a>
                 <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Navy</a>
+                <a href="/Section/Trade" ng-class="{ active: isActive('/Section/Trade') }">Trade</a>
                 <a href="/Section/Diplomacy" ng-class="{ active: isActive('/Section/Diplomacy') }">Diplomacy</a>
                 <a href="/Section/Battles" ng-class="{ active: isActive('/Section/Battles') }">Battles</a>
                 <a href="/TurnMaps" ng-class="{ active: isActive('/TurnMaps') }">Map</a>

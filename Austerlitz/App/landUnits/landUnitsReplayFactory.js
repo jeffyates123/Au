@@ -1,6 +1,6 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsReplayFactory", function () {
+austerlitzModule.factory("landUnitsReplayFactory", function (boardingSharedFactory) {
   return {
     attach: function ($scope, $q, turnSheetFactory) {
       $scope.replaySetUpAdditionalBrigades = function (rows, warnings) {
@@ -43,6 +43,29 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
               brigade,
               targetBattalion,
               armyItem,
+            );
+          },
+        );
+      };
+
+      $scope.replayDemolishItems = function (rows, warnings) {
+        angular.forEach(
+          $scope.getFilledRowsInOrder(rows, ["itemNo", "brigadeNo"]),
+          function (row) {
+            var reference = $scope.getReplayBattalionRef(row.itemNo, row.brigadeNo);
+            if (!reference) {
+              $scope.addReplayWarning(
+                warnings,
+                "TS02",
+                row,
+                "brigade or battalion slot not found",
+              );
+              return;
+            }
+
+            $scope.applyDemolishBattalionPreview(
+              reference.brigade,
+              reference.battalion,
             );
           },
         );
@@ -116,24 +139,50 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
       };
 
       $scope.replayBoarding = function (rows, warnings) {
-        angular.forEach(
-          $scope.getFilledRowsInOrder(rows, ["itemNo", "fleetNo"]),
-          function (row) {
-            var unit = $scope.getLandUnitById(row.itemNo);
-            if (!unit) {
-              $scope.addReplayWarning(
-                warnings,
-                "TS20",
-                row,
-                "unit not found: " + row.itemNo,
-              );
+        var filledRows = $scope.getFilledRowsInOrder(rows, ["itemNo", "fleetNo"]);
+        var allLandUnits = ($scope.brigadeRows || []).concat(
+          $scope.commanderRows || [],
+        );
+        var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+        var nonLandBoardingItems = {};
+
+        angular.forEach(turnReport.spies || [], function (spy) {
+          var spyItemNo = parseInt(spy && spy.itemNo, 10);
+          if (!isNaN(spyItemNo)) {
+            nonLandBoardingItems[spyItemNo] = true;
+          }
+        });
+        angular.forEach(turnReport.baggageTrains || [], function (tradeRow) {
+          var tradeItemNo = parseInt(tradeRow && tradeRow.itemNo, 10);
+          if (!isNaN(tradeItemNo)) {
+            nonLandBoardingItems[tradeItemNo] = true;
+          }
+        });
+
+        boardingSharedFactory.replayBoardingAssignments({
+          rows: filledRows,
+          units: allLandUnits,
+          getUnitId: function (unit) {
+            return parseInt(unit && unit.id, 10);
+          },
+          applyAssigned: function (unit, fleetNo) {
+            unit.boardingSelected = true;
+            unit.boardingFleetNo = fleetNo;
+          },
+          clearUnassigned: false,
+          onUnmatchedAssignment: function (row, itemNo) {
+            if (nonLandBoardingItems[itemNo]) {
               return;
             }
 
-            unit.boardingSelected = true;
-            unit.boardingFleetNo = row.fleetNo;
+            $scope.addReplayWarning(
+              warnings,
+              "TS20",
+              row,
+              "unit not found: " + row.itemNo,
+            );
           },
-        );
+        });
       };
 
       $scope.replayExchangeBattalions = function (rows, warnings) {
@@ -251,9 +300,10 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
               return;
             }
             if (
-              !source.battalion.type ||
+              !$scope.getBattalionMergeType(source.battalion) ||
               !target.battalion.type ||
-              source.battalion.type !== target.battalion.type
+              $scope.getBattalionMergeType(source.battalion) !==
+                target.battalion.type
             ) {
               $scope.addReplayWarning(
                 warnings,
@@ -392,6 +442,7 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
             turnSheetFactory.getTSSetUpAdditionalBrigades(
               $scope.masterData.turnId,
             ),
+            turnSheetFactory.getTSDemolishItems($scope.masterData.turnId),
             turnSheetFactory.getTSIncreaseHeadcount($scope.masterData.turnId),
             turnSheetFactory.getTSIncreaseBrigadeXP($scope.masterData.turnId),
             turnSheetFactory.getTSExchangeBattalions($scope.masterData.turnId),
@@ -404,12 +455,13 @@ austerlitzModule.factory("landUnitsReplayFactory", function () {
               var warnings = [];
 
               $scope.replaySetUpAdditionalBrigades(results[0], warnings);
-              $scope.replayIncreaseHeadcount(results[1], warnings);
-              $scope.replayIncreaseBrigadeXP(results[2], warnings);
-              $scope.replayExchangeBattalions(results[3], warnings);
-              $scope.replayMergeBattalions(results[4], warnings);
-              $scope.replayFormFederations(results[5], warnings);
-              $scope.replayBoarding(results[6], warnings);
+              $scope.replayDemolishItems(results[1], warnings);
+              $scope.replayIncreaseHeadcount(results[2], warnings);
+              $scope.replayIncreaseBrigadeXP(results[3], warnings);
+              $scope.replayExchangeBattalions(results[4], warnings);
+              $scope.replayMergeBattalions(results[5], warnings);
+              $scope.replayFormFederations(results[6], warnings);
+              $scope.replayBoarding(results[7], warnings);
 
               $scope.replayWarnings = warnings;
             },

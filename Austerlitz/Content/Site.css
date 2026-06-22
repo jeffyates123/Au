@@ -1599,6 +1599,13 @@ textarea {
     table-layout: fixed;
 }
 
+.landUnitsIntelligenceTable,
+.landUnitsTradeTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
 .landUnitsColId {
     width: 42px;
 }
@@ -1614,7 +1621,7 @@ textarea {
 }
 
 .landUnitsCommanderColCmd {
-    width: 200px;
+    width: 131px;
     text-align: left;
 }
 
@@ -1630,9 +1637,9 @@ textarea {
     width: 30px;
 }
 
-.landUnitsExistingArmyCommandersTable > thead > tr > th:nth-child(8),
-.landUnitsExistingArmyCommandersTable > tbody > tr > td:nth-child(8) {
-    border-left: 2px solid #d9d2c6;
+.landUnitsExistingArmyCommandersTable > thead > tr > th:nth-child(9),
+.landUnitsExistingArmyCommandersTable > tbody > tr > td:nth-child(9) {
+    border-left: 1px solid #d9d2c6;
 }
 
 .navyFleetSummaryTable > thead > tr > th:nth-child(9),
@@ -1819,6 +1826,13 @@ textarea {
     border: 1px solid #b88900;
     background: #fff0c2;
     color: #6a4b00;
+    font-weight: bold;
+}
+
+.landUnitsBattalionChipDemolished {
+    border: 1px solid #b54444;
+    background: #f7caca;
+    color: #7a1d1d;
     font-weight: bold;
 }
 

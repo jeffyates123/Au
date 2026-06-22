@@ -1,0 +1,162 @@
+<div class="landUnitsPage" ng-init="initTrade()">
+  <div class="landUnitsHeader">
+    <div>
+      <h2 class="landUnitsTitle">Trade</h2>
+    </div>
+    <div class="landUnitsTurnInfo">
+      <span>{{masterData.turnId}}</span>
+    </div>
+  </div>
+
+  <div class="alert alert-info" ng-show="isLoading">Loading baggage trains...</div>
+  <div class="alert alert-danger" ng-show="loadError">{{loadError}}</div>
+
+  <div class="landUnitsTableWrap" ng-show="!isLoading">
+    <table class="table landUnitsTable landUnitsTradeTable">
+      <thead>
+        <tr>
+          <th>ItemNo</th>
+          <th class="landUnitsPositionCol">X</th>
+          <th class="landUnitsPositionCol">Y</th>
+          <th>FederationNo</th>
+          <th ng-if="hasNewFederationColumn">NewFederation</th>
+          <th>MP</th>
+          <th>Condition</th>
+          <th>Goods1</th>
+          <th>Quantity1</th>
+          <th>Goods2</th>
+          <th>Quantity2</th>
+          <th>Money</th>
+          <th>Boarded</th>
+          <th class="landUnitsToggleCol">Board</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="trade in tradeRows track by trade.id">
+          <td>{{trade.itemNo}}</td>
+          <td class="landUnitsPositionCol">{{trade.x}}</td>
+          <td class="landUnitsPositionCol">{{trade.y}}</td>
+          <td>{{trade.federationNo}}</td>
+          <td ng-if="hasNewFederationColumn">
+            {{trade.newFederation != null ? trade.newFederation : '----'}}
+          </td>
+          <td>{{trade.mp}}</td>
+          <td>{{trade.condition}}</td>
+          <td>{{trade.goods1}}</td>
+          <td>{{trade.quantity1}}</td>
+          <td>{{trade.goods2}}</td>
+          <td>{{trade.quantity2}}</td>
+          <td>{{trade.money}}</td>
+          <td>{{formatTradeBoarded(trade)}}</td>
+          <td class="landUnitsToggleCol">
+            <button
+              type="button"
+              class="landUnitsToggleButton"
+              ng-style="getTradeBoardToggleStyle(trade.boardingSelected)"
+              ng-click="openTradeBoardingModal(trade)"
+            >
+              Board
+            </button>
+          </td>
+        </tr>
+        <tr ng-if="!tradeRows || tradeRows.length === 0">
+          <td ng-attr-colspan="{{hasNewFederationColumn ? 14 : 13}}" class="text-muted">
+            No baggage trains found for this turn.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div
+    class="landUnitsModalBackdrop"
+    ng-show="boardingModal.isOpen"
+    ng-click="closeTradeBoardingModal()"
+  ></div>
+  <div class="landUnitsModal landUnitsBoardingModal" ng-show="boardingModal.isOpen">
+    <div class="landUnitsModalHeader">
+      <div>
+        <h3>Board Baggage Train</h3>
+        <div class="landUnitsModalSubtitle">
+          {{boardingModal.trade.id}} - {{boardingModal.trade.x}}/{{boardingModal.trade.y}}
+        </div>
+      </div>
+      <button type="button" class="close" ng-click="closeTradeBoardingModal()">
+        &times;
+      </button>
+    </div>
+
+    <div class="landUnitsModalBody">
+      <div class="alert alert-info" ng-show="boardingModal.isLoading">
+        Loading ship boarding usage...
+      </div>
+
+      <div
+        class="alert alert-warning"
+        ng-show="!boardingModal.isLoading && (!boardingModal.fleets || boardingModal.fleets.length === 0)"
+      >
+        No eligible ships are available for this baggage train.
+      </div>
+
+      <div
+        class="landUnitsBoardingTableWrap"
+        ng-show="boardingModal.fleets && boardingModal.fleets.length > 0"
+      >
+        <table class="table table-condensed landUnitsTable">
+          <thead>
+            <tr>
+              <th>Ship</th>
+              <th>Type</th>
+              <th>Position</th>
+              <th>Condition</th>
+              <th>Total Cap</th>
+              <th>Used</th>
+              <th>Available</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="ship in boardingModal.fleets track by ship.fleetNo">
+              <td>{{ship.fleetNo}}</td>
+              <td>{{ship.typeLabel}}</td>
+              <td>{{ship.position}}</td>
+              <td>{{ship.conditionLabel}}</td>
+              <td>{{ship.totalCapacity}}</td>
+              <td>{{ship.usedCapacityWhole}}</td>
+              <td>{{ship.remainingCapacity}}</td>
+              <td>
+                <button
+                  type="button"
+                  class="landUnitsToggleButton"
+                  ng-click="handleTradeBoardingRowAction(ship)"
+                  ng-style="getTradeBoardToggleStyle(ship.isCurrentlyAssigned)"
+                  ng-disabled="!ship.isCurrentlyAssigned && ship.wouldExceedForCurrentTrade"
+                  title="{{ship.isCurrentlyAssigned ? 'Unboard this baggage train from selected ship' : (ship.wouldExceedForCurrentTrade ? 'Not enough remaining capacity for this baggage train' : '')}}"
+                >
+                  {{ship.isCurrentlyAssigned ? 'Unboard' : '+Board'}}
+                </button>
+                <span class="text-muted">
+                  (Load: {{ship.currentUnitCapacityWholeUp}})
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        ng-show="boardingModal.trade.boardingSelected"
+        ng-click="removeTradeBoardingFromModal()"
+      >
+        Remove
+      </button>
+      <button type="button" class="btn btn-default btn-sm" ng-click="closeTradeBoardingModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

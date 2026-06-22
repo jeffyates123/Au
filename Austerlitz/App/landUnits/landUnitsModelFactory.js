@@ -1,6 +1,6 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsModelFactory", function () {
+austerlitzModule.factory("landUnitsModelFactory", function (boardingSharedFactory) {
   return {
     attach: function ($scope, rulesCatalogFactory) {
       var refStatesLoadPromise = null;
@@ -104,6 +104,10 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
             efIncrease: 0,
             isNewAddition: false,
             isLockedByTurnOrder: false,
+            isDemolishedThisTurn: false,
+            demolishedType: "",
+            demolishedOriginalEf: null,
+            demolishedOriginalSize: null,
           };
         }
 
@@ -120,6 +124,10 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
           efIncrease: 0,
           isNewAddition: false,
           isLockedByTurnOrder: false,
+          isDemolishedThisTurn: false,
+          demolishedType: "",
+          demolishedOriginalEf: null,
+          demolishedOriginalSize: null,
         };
       };
 
@@ -387,16 +395,7 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
       };
 
       $scope.getSphereFromCoordinates = function (x, y) {
-        var parsedX = parseInt(x, 10);
-        var parsedY = parseInt(y, 10);
-        if (isNaN(parsedX) || isNaN(parsedY)) {
-          return "Unknown";
-        }
-
-        if (parsedX <= 80 && parsedY <= 65) return "Europe";
-        if (parsedX <= 40 && parsedY <= 99) return "Caribbean";
-        if (parsedX <= 90 && parsedY <= 99) return "India";
-        return "Unknown";
+        return boardingSharedFactory.getSphereFromCoordinates(x, y);
       };
 
       $scope.getBrigadeSphere = function (brigade) {

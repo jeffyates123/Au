@@ -217,6 +217,10 @@
       </button>
       <span class="landUnitsSectionTitle">Commanders</span>
       <span class="landUnitsSectionMeta">{{commanderRows.length}} / 10</span>
+      <span class="landUnitsSectionMeta" title="Double-click names below to rename commanders">
+        <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+        Double-click names to rename
+      </span>
     </div>
 
     <div
@@ -435,6 +439,10 @@
     <div class="landUnitsSectionHeader" ng-show="brigadeRows.length > 0">
       <span class="landUnitsSectionTitle">Brigades</span>
       <span class="landUnitsSectionMeta">{{filteredBrigadeRows().length}}</span>
+      <span class="landUnitsSectionMeta" title="Double-click names below to rename brigades">
+        <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+        Double-click names to rename
+      </span>
     </div>
 
     <div class="landUnitsTableWrap" ng-show="brigadeRows.length > 0">
@@ -523,15 +531,15 @@
                   type="button"
                   class="landUnitsBattalionChip landUnitsBattalionChipButton dropdown-toggle"
                   data-toggle="dropdown"
-                  ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition, landUnitsBattalionChipLocked: isBattalionLockedForOrders(battalion) }"
+                  ng-class="{ landUnitsBattalionChipEfDrop1: battalion.efDrop === 1, landUnitsBattalionChipEfDrop2: battalion.efDrop === 2, landUnitsBattalionChipEfIncrease: battalion.efIncrease > 0, landUnitsBattalionChipNew: battalion.isNewAddition, landUnitsBattalionChipLocked: isBattalionLockedForOrders(battalion), landUnitsBattalionChipDemolished: battalion.isDemolishedThisTurn }"
                   ng-click="onBattalionLozengeClick($event, brigade, battalion)"
                   title="{{getBattalionTitle(battalion)}}"
                 >
-                  <span>{{battalion.display || '- -- ---'}}</span>
+                  <span>{{getBattalionLozengeDisplay(battalion)}}</span>
                 </button>
                 <ul class="dropdown-menu landUnitsBattalionMenu">
                   <li
-                    ng-show="!battalion.type"
+                    ng-show="!battalion.type && !battalion.isDemolishedThisTurn"
                     ng-class="{ disabled: brigadeHasLockedBattalion(brigade) }"
                   >
                     <a
@@ -563,6 +571,23 @@
                       href=""
                       ng-click="$event.preventDefault(); canStartMerge(battalion) && !battalion.isNewAddition && !isBattalionLockedForOrders(battalion) && startBattalionAction('merge', brigade, battalion, $event)"
                       >Merge</a
+                    >
+                  </li>
+                  <li
+                    ng-show="!battalion.isDemolishedThisTurn"
+                    ng-class="{ disabled: !canDemolishBattalion(battalion) }"
+                  >
+                    <a
+                      href=""
+                      ng-click="$event.preventDefault(); canDemolishBattalion(battalion) && demolishBattalion(brigade, battalion, $event)"
+                      >Demolish</a
+                    >
+                  </li>
+                  <li ng-show="battalion.isDemolishedThisTurn">
+                    <a
+                      href=""
+                      ng-click="cancelDemolishBattalion(brigade, battalion, $event)"
+                      >Cancel Demolish</a
                     >
                   </li>
                 </ul>
