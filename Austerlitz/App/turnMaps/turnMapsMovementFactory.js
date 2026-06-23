@@ -200,10 +200,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
             };
 
             $scope.isShipItem = function (item) {
-                if (!item) return false;
-
-                var itemTypeName = item.itemTypeName || $scope.getItemTypeName(item.itemType);
-                return itemTypeName === 'Warship' || itemTypeName === 'MerchantShip';
+                return $scope.isNavalMovementItem(item);
             };
 
             $scope.isShipyardCoordinate = function (coord) {
@@ -364,11 +361,15 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
             };
 
             $scope.getMovementPickerUnitKind = function (itemTypeName) {
-                switch ((itemTypeName || '').toString()) {
+                var normalizedTypeName = $scope.normalizeItemTypeName(itemTypeName);
+
+                if ($scope.isNavalItemTypeName(normalizedTypeName)) {
+                    return normalizedTypeName === 'Warship' ? 'warship' : 'merchant';
+                }
+
+                switch (normalizedTypeName) {
                     case 'Brigade': return 'brigade';
                     case 'Commander': return 'commander';
-                    case 'Warship': return 'warship';
-                    case 'MerchantShip': return 'merchant';
                     default: return 'other';
                 }
             };
@@ -439,6 +440,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
                 var lookups = {
                     brigadesById: {},
                     commandersById: {},
+                    spiesById: {},
                     warshipsById: {},
                     merchantsById: {}
                 };
@@ -453,6 +455,12 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
                     var id = $scope.toMovementPickerItemId(commander && commander.itemNo);
                     if (id == null) return;
                     lookups.commandersById[id] = commander;
+                });
+
+                angular.forEach(turnReport.spies || [], function (spy) {
+                    var id = $scope.toMovementPickerItemId(spy && spy.itemNo);
+                    if (id == null) return;
+                    lookups.spiesById[id] = spy;
                 });
 
                 angular.forEach(turnReport.warships || [], function (warship) {
@@ -484,7 +492,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
                     movementItems,
                     $scope.movementFormFederationRows || [],
                     function (item) {
-                        return $scope.getMovementPickerUnitKind($scope.getItemTypeName(item && item.itemType));
+                        return $scope.getMovementPickerUnitKind($scope.resolveItemTypeName(item));
                     },
                     shipsByItemNo,
                 );
@@ -543,7 +551,7 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
                 var itemId = $scope.toMovementPickerItemId(itemRow && itemRow.itemNo);
                 if (itemId == null) return false;
 
-                if (unitKind === 'brigade' || unitKind === 'commander') {
+                if (unitKind === 'brigade' || unitKind === 'commander' || unitKind === 'spy') {
                     if (boardingLookups.unitBoardingByItemNo[itemId]) return true;
                     var boarded = detail && detail.boarded != null ? detail.boarded : null;
                     var boardedNo = parseInt(boarded, 10);
@@ -643,6 +651,19 @@ austerlitzModule.factory('turnMapsMovementFactory', function (turnAssignmentReso
                             goods2: merchant.goods2 || '-',
                             qty2: merchant.quantity2 != null ? merchant.quantity2 : '-',
                             money: merchant.money != null ? merchant.money : '-'
+                        };
+                    }
+                } else if (unitKind === 'spy') {
+                    var spy = detailLookups.spiesById[itemId];
+                    if (spy) {
+                        return {
+                            unitKind: unitKind,
+                            id: spy.itemNo,
+                            name: spy.name || '-',
+                            position: $scope.formatMovementPickerPosition(spy.x, spy.y),
+                            fed: effectiveFed != null ? effectiveFed : '-',
+                            mp: spy.mp != null ? spy.mp : itemRow.mp,
+                            boarded: spy.boarded != null && spy.boarded !== '' ? spy.boarded : '-'
                         };
                     }
                 }

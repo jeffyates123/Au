@@ -76,6 +76,14 @@ austerlitzModule.controller(
       $scope.activeArmyTab = tabKey || "setUpBrigades";
     };
 
+    function replayLandUnitRenames() {
+      return $scope.replayUnitRenameOrders(function (itemNo) {
+        return typeof $scope.getLandUnitById === "function"
+          ? $scope.getLandUnitById(itemNo)
+          : null;
+      });
+    }
+
     $scope.initLandUnits = function () {
       if (
         !$scope.masterData ||
@@ -102,6 +110,7 @@ austerlitzModule.controller(
             .loadArmyListForHeadcountCosts()
             .then($scope.replayBrigadeTurnOrders),
           $scope.loadSetUpArmyListForTurnState(),
+          replayLandUnitRenames(),
         ]).finally(function () {
           $scope.loadSetUpBrigadesData();
         });
@@ -126,6 +135,7 @@ austerlitzModule.controller(
                   .loadArmyListForHeadcountCosts()
                   .then($scope.replayBrigadeTurnOrders),
                 $scope.loadSetUpArmyListForTurnState(),
+                replayLandUnitRenames(),
               ])
               .finally(function () {
                 $scope.loadSetUpBrigadesData();

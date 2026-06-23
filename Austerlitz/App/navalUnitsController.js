@@ -60,6 +60,14 @@ austerlitzModule.controller(
       $scope.activeNavyTab = tabKey || "setUpNavy";
     };
 
+    function replayWarshipRenames() {
+      return $scope.replayUnitRenameOrders(function (itemNo) {
+        return typeof $scope.getWarshipById === "function"
+          ? $scope.getWarshipById(itemNo)
+          : null;
+      });
+    }
+
     function loadRefShips() {
       var catalog = $scope.masterData && $scope.masterData.rulesCatalog;
       var ships = catalog && (catalog.Ships || catalog.ships);
@@ -118,9 +126,10 @@ austerlitzModule.controller(
       ) {
         $scope.buildWarshipRows();
         $scope.buildMerchantRows();
+        var replayRenamePromise = replayWarshipRenames();
         $scope.replayNavyFormFederations();
         $scope.buildEligibleShipyardOptions();
-        $q.all([refShipsPromise, tsBoardingPromise]).then(function () {
+        $q.all([refShipsPromise, tsBoardingPromise, replayRenamePromise]).then(function () {
           $scope.loadNavySetUpData();
         });
         return;
@@ -134,9 +143,10 @@ austerlitzModule.controller(
           function () {
             $scope.buildWarshipRows();
             $scope.buildMerchantRows();
+            var replayRenamePromise = replayWarshipRenames();
             $scope.replayNavyFormFederations();
             $scope.buildEligibleShipyardOptions();
-            $q.all([refShipsPromise, tsBoardingPromise]).then(function () {
+            $q.all([refShipsPromise, tsBoardingPromise, replayRenamePromise]).then(function () {
               $scope.loadNavySetUpData();
             });
           },

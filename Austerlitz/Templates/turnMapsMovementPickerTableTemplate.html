@@ -3,7 +3,8 @@
         <tr>
             <th>Item</th>
             <th>Fed/Fleet</th>
-            <th></th>
+            <th>M</th>
+            <th>Board</th>
             <th>Type</th>
             <th>MP</th>
             <th>X/Y</th>
@@ -33,9 +34,13 @@
                     <span class="mapOrdersMovedLozenge"
                           ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
                           title="Unit has moved">M</span>
+                </div>
+            </td>
+            <td class="mapOrdersMovedCell">
+                <div class="mapOrdersStatusLozenges">
                     <span class="mapOrdersMovedLozenge mapOrdersBoardLozenge"
-                          ng-show="itemRow.hasBoarding"
-                          title="Unit or fleet has boarding load">Board</span>
+                        ng-show="itemRow.hasBoarding"
+                        title="Unit or fleet has boarding load">Board</span>
                 </div>
             </td>
             <td>{{itemRow.itemTypeName}}</td>

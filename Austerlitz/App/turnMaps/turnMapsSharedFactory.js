@@ -73,13 +73,44 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                 }
             };
 
+            $scope.normalizeItemTypeName = function (itemTypeName) {
+                return (itemTypeName == null ? '' : itemTypeName.toString()).trim();
+            };
+
+            $scope.resolveItemTypeName = function (item) {
+                if (!item) return '';
+
+                var fromType = $scope.getItemTypeName(item.itemType);
+                if (fromType) return fromType;
+
+                var explicitTypeName = $scope.normalizeItemTypeName(item.itemTypeName);
+                if (explicitTypeName === 'Brigade'
+                    || explicitTypeName === 'Commander'
+                    || explicitTypeName === 'Warship'
+                    || explicitTypeName === 'MerchantShip'
+                    || explicitTypeName === 'BaggageTrain'
+                    || explicitTypeName === 'Spy') {
+                    return explicitTypeName;
+                }
+
+                return explicitTypeName;
+            };
+
+            $scope.isNavalItemTypeName = function (itemTypeName) {
+                var normalized = $scope.normalizeItemTypeName(itemTypeName);
+                return normalized === 'Warship' || normalized === 'MerchantShip';
+            };
+
+            $scope.isNavalMovementItem = function (item) {
+                if (!item) return false;
+                if ($scope.isNavalItemTypeName(item.itemTypeName)) return true;
+                return $scope.isNavalItemTypeName($scope.getItemTypeName(item.itemType));
+            };
+
             $scope.getItemTypeAbbrev = function (item) {
                 if (!item) return '';
 
-                var typeName = $scope.getItemTypeName(item.itemType);
-                if (!typeName && (item.itemTypeName === 'Brigade' || item.itemTypeName === 'Commander' || item.itemTypeName === 'Warship' || item.itemTypeName === 'MerchantShip' || item.itemTypeName === 'BaggageTrain' || item.itemTypeName === 'Spy')) {
-                    typeName = item.itemTypeName;
-                }
+                var typeName = $scope.resolveItemTypeName(item);
 
                 switch (typeName) {
                     case 'Brigade': return 'Bgd';

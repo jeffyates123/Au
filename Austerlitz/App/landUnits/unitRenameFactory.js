@@ -52,6 +52,43 @@ austerlitzModule.factory("unitRenameFactory", function () {
           }, $scope.showTurnSheetOrderError);
       };
 
+      $scope.replayUnitRenameOrders = function (resolveUnitByItemNo) {
+        if (
+          !$scope.masterData ||
+          !$scope.masterData.turnId ||
+          $scope.masterData.turnId === "Unknown" ||
+          typeof resolveUnitByItemNo !== "function"
+        ) {
+          return;
+        }
+
+        return turnSheetFactory
+          .getTSChangeNames($scope.masterData.turnId)
+          .then(function (rows) {
+            var filledRows =
+              typeof $scope.getFilledRowsInOrder === "function"
+                ? $scope.getFilledRowsInOrder(rows, ["itemNo", "name"])
+                : rows || [];
+
+            angular.forEach(filledRows, function (row) {
+              var unit = resolveUnitByItemNo(row.itemNo);
+              if (!unit) {
+                return;
+              }
+
+              var replayName = $scope.trimValue(row.name).substr(0, 15);
+              if (!replayName) {
+                return;
+              }
+
+              unit.name = replayName;
+              if (unit.source) {
+                unit.source.name = replayName;
+              }
+            });
+          });
+      };
+
       $scope.beginRename = function (unit) {
         if (!unit) {
           return;
