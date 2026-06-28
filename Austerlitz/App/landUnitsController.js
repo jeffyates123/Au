@@ -91,6 +91,8 @@ austerlitzModule.controller(
         $scope.masterData.turnId === "Unknown"
       ) {
         $scope.brigadeRows = [];
+        $scope.federationSummaryRows = [];
+        $scope.federationSummaryPairRows = [];
         $scope.commanderRows = [];
         return;
       }
@@ -145,6 +147,8 @@ austerlitzModule.controller(
             $scope.loadError =
               error && error.data ? error.data : "Unable to load turn report.";
             $scope.brigadeRows = [];
+            $scope.federationSummaryRows = [];
+            $scope.federationSummaryPairRows = [];
             $scope.commanderRows = [];
           },
         )

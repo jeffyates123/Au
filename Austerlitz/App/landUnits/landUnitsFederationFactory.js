@@ -202,6 +202,10 @@ austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentR
         if (brigade.source) {
           brigade.source.federation = formatted || 0;
         }
+
+        if ($scope.refreshFederationSummaryPairRows) {
+          $scope.refreshFederationSummaryPairRows();
+        }
       };
 
       $scope.setCommanderFederation = function (commander, federationNo) {
@@ -216,6 +220,10 @@ austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentR
 
         if (commander.source) {
           commander.source.federation = formatted || 0;
+        }
+
+        if ($scope.refreshFederationSummaryPairRows) {
+          $scope.refreshFederationSummaryPairRows();
         }
       };
 
@@ -243,6 +251,10 @@ austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentR
         unit.fedChanged = false;
         if (unit.source) {
           unit.source.federation = formatted || 0;
+        }
+
+        if ($scope.refreshFederationSummaryPairRows) {
+          $scope.refreshFederationSummaryPairRows();
         }
       };
 

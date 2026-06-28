@@ -60,6 +60,8 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
 
       return {
         brigadeRows: [],
+        federationSummaryRows: [],
+        federationSummaryPairRows: [],
         commanderRows: [],
         commanderOverflowCount: 0,
         commandersSectionCollapsed: getInitialCommandersSectionCollapsed(),

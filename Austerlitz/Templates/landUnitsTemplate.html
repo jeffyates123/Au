@@ -147,6 +147,7 @@
             <th>EF</th>
             <th>HC</th>
             <th>Formation</th>
+            <th>Troop Spec</th>
           </tr>
         </thead>
         <tbody>
@@ -165,6 +166,7 @@
             <td>{{armyItem.ef}}</td>
             <td>{{armyItem.hc}}</td>
             <td>{{armyItem.formation}}</td>
+            <td>{{armyItem.troopSpecification || armyItem.TroopSpecification || ''}}</td>
           </tr>
         </tbody>
       </table>
@@ -198,6 +200,81 @@
       <a href="" ng-click="$event.preventDefault(); clearPositionFilter()"
         >Show all units</a
       >
+    </div>
+
+    <div class="landUnitsSectionHeader" ng-show="federationSummaryPairRows.length > 0">
+      <span class="landUnitsSectionTitle">Federation Summary</span>
+    </div>
+
+    <div class="landUnitsTableWrap" ng-show="federationSummaryPairRows.length > 0">
+      <table class="table landUnitsTable landUnitsFederationSummaryTable" style="font-size:11px">
+        <colgroup>
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" /><col style="width:5%" />
+          <col style="width:5%" /><col style="width:5%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Fed No</th>
+            <th>x/y</th>
+            <th>Max MP</th>
+            <th>Max CC</th>
+            <th>Load Cap</th>
+            <th>Inf</th>
+            <th>Cav</th>
+            <th>Art</th>
+            <th>Total</th>
+            <th>% HC</th>
+            <th class="landUnitsSummarySecondGroupStart">Fed No</th>
+            <th>x/y</th>
+            <th>Max MP</th>
+            <th>Max CC</th>
+            <th>Load Cap</th>
+            <th>Inf</th>
+            <th>Cav</th>
+            <th>Art</th>
+            <th>Total</th>
+            <th>% HC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="pair in federationSummaryPairRows track by $index">
+            <td>{{pair.left.fedNo}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="!pair.left.isMixedPosition && pair.left.position !== '-' && togglePositionFilter({ position: pair.left.position })"
+              title="{{pair.left.isMixedPosition ? 'Federation spans multiple coordinates' : 'Double-click to toggle between this X/Y and this sphere'}}"
+            >{{pair.left.position}}</td>
+            <td>{{pair.left.maxMp}}</td>
+            <td>{{pair.left.maxCc}}</td>
+            <td>{{pair.left.totalLoadingCapacity}}</td>
+            <td>{{pair.left.inf}}</td>
+            <td>{{pair.left.cav}}</td>
+            <td>{{pair.left.art}}</td>
+            <td>{{pair.left.total}}</td>
+            <td>{{pair.left.percentHc}}%</td>
+
+            <td class="landUnitsSummarySecondGroupStart">{{pair.right ? pair.right.fedNo : ''}}</td>
+            <td
+              class="landUnitsPositionCol"
+              ng-dblclick="pair.right && !pair.right.isMixedPosition && pair.right.position !== '-' && togglePositionFilter({ position: pair.right.position })"
+              title="{{pair.right && pair.right.isMixedPosition ? 'Federation spans multiple coordinates' : 'Double-click to toggle between this X/Y and this sphere'}}"
+            >{{pair.right ? pair.right.position : ''}}</td>
+            <td>{{pair.right ? pair.right.maxMp : ''}}</td>
+            <td>{{pair.right ? pair.right.maxCc : ''}}</td>
+            <td>{{pair.right ? pair.right.totalLoadingCapacity : ''}}</td>
+            <td>{{pair.right ? pair.right.inf : ''}}</td>
+            <td>{{pair.right ? pair.right.cav : ''}}</td>
+            <td>{{pair.right ? pair.right.art : ''}}</td>
+            <td>{{pair.right ? pair.right.total : ''}}</td>
+            <td>{{pair.right ? (pair.right.percentHc + '%') : ''}}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <div

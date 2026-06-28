@@ -464,6 +464,9 @@ austerlitzModule.factory("landUnitsReplayFactory", function (boardingSharedFacto
               $scope.replayBoarding(results[7], warnings);
 
               $scope.replayWarnings = warnings;
+              if ($scope.refreshFederationSummaryPairRows) {
+                $scope.refreshFederationSummaryPairRows();
+              }
             },
             function (error) {
               $scope.replayWarnings = [
@@ -471,6 +474,9 @@ austerlitzModule.factory("landUnitsReplayFactory", function (boardingSharedFacto
                   ? error.data
                   : "Unable to load saved brigade turn orders.",
               ];
+              if ($scope.refreshFederationSummaryPairRows) {
+                $scope.refreshFederationSummaryPairRows();
+              }
             },
           );
       };

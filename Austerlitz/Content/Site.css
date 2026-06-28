@@ -1650,6 +1650,26 @@ textarea {
     table-layout: fixed;
 }
 
+.landUnitsFederationSummaryTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.landUnitsFederationSummaryTable > thead > tr > th,
+.landUnitsFederationSummaryTable > tbody > tr > td {
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.landUnitsFederationSummaryTable .landUnitsSummaryGroupHeader {
+    text-align: center;
+}
+
+.landUnitsFederationSummaryTable .landUnitsSummarySecondGroupStart {
+    border-left: 2px solid #d9d2c6;
+}
+
 .navyFleetSummaryTable,
 .navyWarshipsTable,
 .navyMerchantsTable {
