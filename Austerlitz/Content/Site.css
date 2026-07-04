@@ -767,6 +767,12 @@ textarea {
     color: #1f4f8c;
 }
 
+.mapOrdersBlockedLozenge {
+    border-color: #ce8d37;
+    background: #fff0da;
+    color: #8f4f00;
+}
+
 .mapOrdersDetailRow > td {
     padding: 6px 8px !important;
     background: #fbf9f4;
@@ -2078,6 +2084,58 @@ textarea {
     background: #faf8f4;
 }
 
+.landUnitsCompassPicker {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto;
+}
+
+.landUnitsCompassButton {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border: 1px solid #bdb6aa;
+    border-radius: 999px;
+    background: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.landUnitsCompassButton:hover,
+.landUnitsCompassButton:focus {
+    background: #f4f0e9;
+    outline: none;
+}
+
+.landUnitsCompassNorth {
+    left: 84px;
+    top: 0;
+}
+
+.landUnitsCompassEast {
+    right: 0;
+    top: 84px;
+}
+
+.landUnitsCompassSouth {
+    left: 84px;
+    bottom: 0;
+}
+
+.landUnitsCompassWest {
+    left: 0;
+    top: 84px;
+}
+
+.landUnitsCompassCenter {
+    left: 84px;
+    top: 84px;
+}
+
 .landUnitsArmyListTableWrap {
     max-height: 300px;
     overflow-y: auto;
@@ -2230,4 +2288,108 @@ textarea {
 .mathBattlesStatsTable > thead > tr > th,
 .mathBattlesStatsTable > tbody > tr > td {
     white-space: nowrap;
+}
+
+.seaBattlesPage {
+    max-width: 100%;
+}
+
+.seaBattlesSetupRow {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.seaBattlesFleetBuilder {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    padding: 10px;
+    min-width: 420px;
+    flex: 1 1 420px;
+}
+
+.seaBattlesNationRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.seaBattlesNationRow label {
+    margin-bottom: 0;
+    min-width: 48px;
+}
+
+.seaBattlesMoraleHint {
+    font-size: 12px;
+    color: #666666;
+    margin-bottom: 6px;
+}
+
+.seaBattlesBuilderTable {
+    margin-bottom: 8px;
+}
+
+.seaBattlesQtyInput {
+    width: 90px;
+}
+
+.seaBattlesActionRow {
+    margin: 14px 0;
+}
+
+.seaBattlesResultHeader {
+    margin: 16px 0 10px;
+}
+
+.seaBattlesSummaryTable > thead > tr > th,
+.seaBattlesSummaryTable > tbody > tr > td,
+.seaBattlesRoundSummaryTable > thead > tr > th,
+.seaBattlesRoundSummaryTable > tbody > tr > td {
+    white-space: nowrap;
+}
+
+.seaBattlesRoundBlock {
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    background: #ffffff;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+}
+
+.seaBattlesRoundHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.seaBattlesRoundDetails {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.seaBattlesDetailColumn {
+    flex: 1 1 420px;
+    border: 1px solid #efefef;
+    border-radius: 4px;
+    padding: 8px;
+    background: #fafafa;
+}
+
+.seaBattlesDetailItem {
+    border-bottom: 1px dashed #dddddd;
+    padding: 6px 0;
+    font-size: 12px;
+}
+
+.seaBattlesDetailItem:last-child {
+    border-bottom: 0;
+}
+
+.seaBattlesFormulaLine {
+    color: #666666;
+    margin-top: 2px;
 }

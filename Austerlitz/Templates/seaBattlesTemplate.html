@@ -1,0 +1,252 @@
+<section class="seaBattlesPage" ng-init="initSeaBattles()">
+  <h2>Sea Battles</h2>
+
+  <div class="alert alert-danger landUnitsAlert" ng-show="seaBattleLoadError">
+    {{seaBattleLoadError}}
+  </div>
+
+  <div class="seaBattlesSetupRow">
+    <div class="seaBattlesFleetBuilder">
+      <h4>Fleet A</h4>
+      <div class="seaBattlesNationRow">
+        <label>Nation</label>
+        <select class="form-control input-sm"
+                ng-model="nationA"
+                ng-options="state.code as state.label for state in nationOptions">
+          <option value="">-- nation --</option>
+        </select>
+      </div>
+      <div class="seaBattlesMoraleHint" ng-show="nationA">
+        Morale: {{getMoraleForNation(nationA, 0)}}
+      </div>
+      <table class="table table-condensed seaBattlesBuilderTable">
+        <thead>
+          <tr>
+            <th>Ship Type</th>
+            <th>Qty</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="line in fleetA track by $index">
+            <td>
+              <select class="form-control input-sm"
+                      ng-model="line.type"
+                      ng-options="ship.type as ship.label for ship in refWarshipOptions">
+                <option value="">-- warship --</option>
+              </select>
+            </td>
+            <td>
+              <input type="number"
+                     class="form-control input-sm seaBattlesQtyInput"
+                     min="1"
+                     ng-model="line.quantity" />
+            </td>
+            <td>
+              <button type="button"
+                      class="btn btn-default btn-xs"
+                      ng-click="removeFleetLine('A', $index)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-default btn-xs" ng-click="addFleetLine('A')">Add line</button>
+    </div>
+
+    <div class="seaBattlesFleetBuilder">
+      <h4>Fleet B</h4>
+      <div class="seaBattlesNationRow">
+        <label>Nation</label>
+        <select class="form-control input-sm"
+                ng-model="nationB"
+                ng-options="state.code as state.label for state in nationOptions">
+          <option value="">-- nation --</option>
+        </select>
+      </div>
+      <div class="seaBattlesMoraleHint" ng-show="nationB">
+        Morale: {{getMoraleForNation(nationB, 0)}}
+      </div>
+      <table class="table table-condensed seaBattlesBuilderTable">
+        <thead>
+          <tr>
+            <th>Ship Type</th>
+            <th>Qty</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="line in fleetB track by $index">
+            <td>
+              <select class="form-control input-sm"
+                      ng-model="line.type"
+                      ng-options="ship.type as ship.label for ship in refWarshipOptions">
+                <option value="">-- warship --</option>
+              </select>
+            </td>
+            <td>
+              <input type="number"
+                     class="form-control input-sm seaBattlesQtyInput"
+                     min="1"
+                     ng-model="line.quantity" />
+            </td>
+            <td>
+              <button type="button"
+                      class="btn btn-default btn-xs"
+                      ng-click="removeFleetLine('B', $index)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-default btn-xs" ng-click="addFleetLine('B')">Add line</button>
+    </div>
+  </div>
+
+  <div class="seaBattlesActionRow">
+    <button type="button"
+            class="btn btn-primary btn-sm"
+            ng-click="simulateSeaBattle()"
+            ng-disabled="seaBattleBusy">
+      {{seaBattleBusy ? 'Simulating...' : 'Simulate Sea Battle'}}
+    </button>
+  </div>
+
+  <div class="text-danger" ng-show="seaBattleValidationError">{{seaBattleValidationError}}</div>
+  <div class="text-danger" ng-show="seaBattleSimError">{{seaBattleSimError}}</div>
+
+  <div ng-if="result">
+    <div class="seaBattlesResultHeader">
+      <h3>Result</h3>
+      <div><strong>Winner:</strong> {{result.victory.winnerText}}</div>
+      <div><strong>Loss difference:</strong> {{result.victory.lossDifferencePct}}%</div>
+    </div>
+
+    <div class="landUnitsTableWrap">
+      <table class="table table-condensed seaBattlesSummaryTable">
+        <thead>
+          <tr>
+            <th>Fleet</th>
+            <th>Tonnage Before</th>
+            <th>Tonnage After</th>
+            <th>Tonnage Loss %</th>
+            <th>Marines Before</th>
+            <th>Marines After</th>
+            <th>Marines Loss %</th>
+            <th>Average Loss %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fleet A ({{result.nationA}})</td>
+            <td>{{result.fleetAStats.beforeTonnage}}</td>
+            <td>{{result.fleetAStats.afterTonnage}}</td>
+            <td>{{result.fleetAStats.tonnageLossPct}}</td>
+            <td>{{result.fleetAStats.beforeMarines}}</td>
+            <td>{{result.fleetAStats.afterMarines}}</td>
+            <td>{{result.fleetAStats.marinesLossPct}}</td>
+            <td>{{result.fleetAStats.averageLossPct}}</td>
+          </tr>
+          <tr>
+            <td>Fleet B ({{result.nationB}})</td>
+            <td>{{result.fleetBStats.beforeTonnage}}</td>
+            <td>{{result.fleetBStats.afterTonnage}}</td>
+            <td>{{result.fleetBStats.tonnageLossPct}}</td>
+            <td>{{result.fleetBStats.beforeMarines}}</td>
+            <td>{{result.fleetBStats.afterMarines}}</td>
+            <td>{{result.fleetBStats.marinesLossPct}}</td>
+            <td>{{result.fleetBStats.averageLossPct}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="seaBattlesRoundBlock" ng-repeat="round in result.rounds track by round.roundNo">
+      <div class="seaBattlesRoundHeader">
+        <div>
+          <strong>Round {{round.roundNo}}</strong> - {{round.action}}
+        </div>
+        <button type="button"
+                class="btn btn-default btn-xs"
+                ng-click="toggleRoundExpanded(round.roundNo)">
+          {{isRoundExpanded(round.roundNo) ? 'Hide details' : 'Show details'}}
+        </button>
+      </div>
+
+      <div class="landUnitsTableWrap">
+        <table class="table table-condensed seaBattlesRoundSummaryTable">
+          <thead>
+            <tr>
+              <th>Fleet</th>
+              <th>Actions</th>
+              <th>CP</th>
+              <th>Own Tonnage Lost</th>
+              <th>Own Marines Lost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fleet A ({{result.nationA}})</td>
+              <td>{{round.fleetA.shots}}</td>
+              <td>{{round.fleetA.cp}}</td>
+              <td>{{round.fleetA.ownTonnageLost}}</td>
+              <td>{{round.fleetA.ownMarinesLost}}</td>
+            </tr>
+            <tr>
+              <td>Fleet B ({{result.nationB}})</td>
+              <td>{{round.fleetB.shots}}</td>
+              <td>{{round.fleetB.cp}}</td>
+              <td>{{round.fleetB.ownTonnageLost}}</td>
+              <td>{{round.fleetB.ownMarinesLost}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="seaBattlesRoundDetails" ng-show="isRoundExpanded(round.roundNo)">
+        <div class="seaBattlesDetailColumn">
+          <h5>Fleet A ({{result.nationA}})</h5>
+          <div class="seaBattlesDetailItem" ng-repeat="entry in round.details.fleetA track by $index">
+            <div ng-if="entry.message">{{entry.message}}</div>
+            <div ng-if="!entry.message">
+              <div ng-if="entry.attackerId">
+                <strong>{{entry.attackerId}}</strong> fired on <strong>{{entry.targetId}}</strong>
+                (CP {{entry.cpRounded}}, tonnage loss {{entry.tonnageLost}}, marines loss {{entry.marinesLost}})
+              </div>
+              <div ng-if="entry.ownShipId">
+                <strong>{{entry.ownShipId}}</strong> boarded <strong>{{entry.enemyShipId}}</strong>
+                ({{entry.symbol}})
+              </div>
+              <div class="seaBattlesFormulaLine" ng-if="entry.formula">{{entry.formula}}</div>
+              <div class="seaBattlesFormulaLine" ng-if="entry.formulaValues">{{entry.formulaValues}}</div>
+              <div class="seaBattlesFormulaLine" ng-repeat="attack in entry.attacks track by $index">
+                Attack {{attack.attackNo}}: CP own {{attack.cpA}} / enemy {{attack.cpB}},
+                marine losses own {{attack.marinesALoss}} / enemy {{attack.marinesBLoss}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="seaBattlesDetailColumn">
+          <h5>Fleet B ({{result.nationB}})</h5>
+          <div class="seaBattlesDetailItem" ng-repeat="entry in round.details.fleetB track by $index">
+            <div ng-if="entry.message">{{entry.message}}</div>
+            <div ng-if="!entry.message">
+              <div ng-if="entry.attackerId">
+                <strong>{{entry.attackerId}}</strong> fired on <strong>{{entry.targetId}}</strong>
+                (CP {{entry.cpRounded}}, tonnage loss {{entry.tonnageLost}}, marines loss {{entry.marinesLost}})
+              </div>
+              <div ng-if="entry.ownShipId">
+                <strong>{{entry.ownShipId}}</strong> boarded <strong>{{entry.enemyShipId}}</strong>
+                ({{entry.symbol}})
+              </div>
+              <div class="seaBattlesFormulaLine" ng-if="entry.formula">{{entry.formula}}</div>
+              <div class="seaBattlesFormulaLine" ng-if="entry.formulaValues">{{entry.formulaValues}}</div>
+              <div class="seaBattlesFormulaLine" ng-repeat="attack in entry.attacks track by $index">
+                Attack {{attack.attackNo}}: CP own {{attack.cpA}} / enemy {{attack.cpB}},
+                marine losses own {{attack.marinesALoss}} / enemy {{attack.marinesBLoss}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

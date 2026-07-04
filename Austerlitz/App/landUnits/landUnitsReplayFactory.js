@@ -140,6 +140,8 @@ austerlitzModule.factory("landUnitsReplayFactory", function (boardingSharedFacto
 
       $scope.replayBoarding = function (rows, warnings) {
         var filledRows = $scope.getFilledRowsInOrder(rows, ["itemNo", "fleetNo"]);
+        var unloadDirectionLookup =
+          boardingSharedFactory.buildUnloadDirectionLookup(filledRows);
         var allLandUnits = ($scope.brigadeRows || []).concat(
           $scope.commanderRows || [],
         );
@@ -168,6 +170,12 @@ austerlitzModule.factory("landUnitsReplayFactory", function (boardingSharedFacto
           applyAssigned: function (unit, fleetNo) {
             unit.boardingSelected = true;
             unit.boardingFleetNo = fleetNo;
+            var unitId = parseInt(unit && unit.id, 10);
+            unit.unloadDirection =
+              !isNaN(unitId) &&
+              Object.prototype.hasOwnProperty.call(unloadDirectionLookup, unitId)
+                ? unloadDirectionLookup[unitId]
+                : null;
           },
           clearUnassigned: false,
           onUnmatchedAssignment: function (row, itemNo) {

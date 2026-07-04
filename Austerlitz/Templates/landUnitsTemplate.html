@@ -416,7 +416,7 @@
                 ng-style="getBrigadeToggleStyle(pair.left.boardingSelected)"
                 ng-click="openBoardingModal(pair.left)"
               >
-                Board
+                {{getBoardingButtonLabel(pair.left)}}
               </button>
             </td>
             <td class="landUnitsMenuCol">
@@ -493,7 +493,7 @@
                 ng-style="getBrigadeToggleStyle(pair.right.boardingSelected)"
                 ng-click="openBoardingModal(pair.right)"
               >
-                Board
+                {{getBoardingButtonLabel(pair.right)}}
               </button>
             </td>
             <td class="landUnitsMenuCol">
@@ -716,7 +716,7 @@
                 ng-style="getBrigadeToggleStyle(brigade.boardingSelected)"
                 ng-click="openBoardingModal(brigade)"
               >
-                Board
+                {{getBoardingButtonLabel(brigade)}}
               </button>
             </td>
             <td class="landUnitsMenuCol">
@@ -1098,6 +1098,58 @@
         type="button"
         class="btn btn-default btn-sm"
         ng-click="closeBoardingModal()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="landUnitsModalBackdrop"
+    ng-show="unloadDirectionModal.isOpen"
+    ng-click="closeUnloadDirectionModal()"
+  ></div>
+  <div
+    class="landUnitsModal landUnitsBoardingModal"
+    ng-show="unloadDirectionModal.isOpen"
+  >
+    <div class="landUnitsModalHeader">
+      <div>
+        <h3>Unload Direction</h3>
+        <div class="landUnitsModalSubtitle">
+          {{unloadDirectionModal.unit.id}} {{unloadDirectionModal.unit.name}}
+        </div>
+      </div>
+      <button type="button" class="close" ng-click="closeUnloadDirectionModal()">
+        &times;
+      </button>
+    </div>
+
+    <div class="landUnitsModalBody">
+      <div class="landUnitsCompassPicker">
+        <button
+          type="button"
+          class="landUnitsCompassButton"
+          ng-repeat="option in unloadDirectionModal.options"
+          ng-class="{
+            'landUnitsCompassNorth': option.value === 1,
+            'landUnitsCompassEast': option.value === 3,
+            'landUnitsCompassSouth': option.value === 5,
+            'landUnitsCompassWest': option.value === 7,
+            'landUnitsCompassCenter': option.value === 9
+          }"
+          ng-click="selectUnloadDirection(option.value)"
+        >
+          {{option.value}}
+        </button>
+      </div>
+    </div>
+
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="closeUnloadDirectionModal()"
       >
         Close
       </button>

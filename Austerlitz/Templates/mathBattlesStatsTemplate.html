@@ -50,6 +50,8 @@
           <th class="mathBattleCalcCol">Total</th>
           <th class="mathBattleCalcCol">Louisdore/Battalion</th>
           <th class="mathBattleCalcCol">£ per point</th>
+          <th class="mathBattleCalcCol">Louisdore/Battalion + Train</th>
+          <th class="mathBattleCalcCol">£ per point + Train</th>
         </tr>
       </thead>
       <tbody>
@@ -73,6 +75,8 @@
           <td class="mathBattleCalcCol">{{row.calcTotal}}</td>
           <td class="mathBattleCalcCol">{{row.louisdorePerBattalion}}</td>
           <td class="mathBattleCalcCol">{{row.pointsPerLouisdore != null ? row.pointsPerLouisdore : '-'}}</td>
+          <td class="mathBattleCalcCol">{{row.louisdorePerBattalionWithTraining}}</td>
+          <td class="mathBattleCalcCol">{{row.pointsPerLouisdoreWithTraining != null ? row.pointsPerLouisdoreWithTraining : '-'}}</td>
         </tr>
       </tbody>
     </table>

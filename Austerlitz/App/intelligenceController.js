@@ -48,6 +48,20 @@ austerlitzModule.controller(
       return "----";
     };
 
+    $scope.getSpyBoardButtonLabel = function (spy) {
+      var unloadDirection = toInt(spy && spy.unloadDirection, null);
+      if (unloadDirection != null && [1, 3, 5, 7, 9].indexOf(unloadDirection) >= 0) {
+        return "Unload (" + unloadDirection + ")";
+      }
+
+      if (!spy || !spy.boardingSelected) {
+        return "Board";
+      }
+
+      var transportNo = toInt(spy.boardingFleetNo, null);
+      return transportNo != null && transportNo > 0 ? transportNo.toString() : "Board";
+    };
+
     $scope.refreshSpyRows = function () {
       var spies = getSpyReportRows();
       $scope.spyRows = (spies || [])
@@ -63,6 +77,7 @@ austerlitzModule.controller(
             reportBoarded: reportBoarded != null && reportBoarded > 0 ? reportBoarded : null,
             boardingSelected: false,
             boardingFleetNo: null,
+            unloadDirection: null,
           };
         })
         .sort(function (left, right) {
@@ -71,6 +86,8 @@ austerlitzModule.controller(
     };
 
     $scope.replaySpyBoardingFromRows = function (boardingRows) {
+      var unloadDirectionLookup =
+        boardingSharedFactory.buildUnloadDirectionLookup(boardingRows || []);
       boardingSharedFactory.replayBoardingAssignments({
         rows: boardingRows || [],
         units: $scope.spyRows || [],
@@ -80,10 +97,17 @@ austerlitzModule.controller(
         applyAssigned: function (spy, fleetNo) {
           spy.boardingSelected = true;
           spy.boardingFleetNo = fleetNo;
+          var spyId = toInt(spy && spy.id, null);
+          spy.unloadDirection =
+            spyId != null &&
+            Object.prototype.hasOwnProperty.call(unloadDirectionLookup, spyId)
+              ? unloadDirectionLookup[spyId]
+              : null;
         },
         applyUnassigned: function (spy) {
           spy.boardingSelected = false;
           spy.boardingFleetNo = null;
+          spy.unloadDirection = null;
         },
         clearUnassigned: true,
       });

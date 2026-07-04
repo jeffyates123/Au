@@ -329,6 +329,59 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     return null;
   }
 
+  var unloadDirectionLookup = {
+    1: true,
+    3: true,
+    5: true,
+    7: true,
+    9: true,
+  };
+
+  function parseUnloadDirection(value) {
+    var direction = toInt(value, null);
+    if (direction == null || !unloadDirectionLookup[direction]) {
+      return null;
+    }
+    return direction;
+  }
+
+  function isBoardingCommandE(row) {
+    if (!row || row.command == null) {
+      return false;
+    }
+    return row.command.toString().trim().toUpperCase() === "E";
+  }
+
+  function isUnloadDirectionCommand(row) {
+    return parseUnloadDirection(row && row.command) != null;
+  }
+
+  function buildUnloadDirectionLookup(rows) {
+    var byItemNo = {};
+    angular.forEach(rows || [], function (row) {
+      var itemNo = toInt(row && row.itemNo, null);
+      var direction = parseUnloadDirection(row && row.command);
+      if (itemNo == null || direction == null) {
+        return;
+      }
+      byItemNo[itemNo] = direction;
+    });
+    return byItemNo;
+  }
+
+  function writeUnloadDirectionRow(row, turnId, itemNo, fleetNo, direction) {
+    if (!row) {
+      return row;
+    }
+
+    row.turnId = turnId;
+    row.command = parseUnloadDirection(direction);
+    row.itemNo = toInt(itemNo, null);
+    row.fleetNo = toInt(fleetNo, null);
+    row.fleetOwner = null;
+    return row;
+  }
+
   function writeBoardingRow(row, turnId, itemNo, fleetNo) {
     if (!row) {
       return row;
@@ -480,6 +533,11 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     buildFleetUsedCapacityLookup: buildFleetUsedCapacityLookup,
     collectTurnReportShips: collectTurnReportShips,
     findOptionByFleetNo: findOptionByFleetNo,
+    parseUnloadDirection: parseUnloadDirection,
+    isBoardingCommandE: isBoardingCommandE,
+    isUnloadDirectionCommand: isUnloadDirectionCommand,
+    buildUnloadDirectionLookup: buildUnloadDirectionLookup,
+    writeUnloadDirectionRow: writeUnloadDirectionRow,
     writeBoardingRow: writeBoardingRow,
     clearBoardingRow: clearBoardingRow,
     showTurnSheetOrderError: showTurnSheetOrderError,

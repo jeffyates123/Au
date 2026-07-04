@@ -25,6 +25,22 @@ austerlitzModule.factory("landUnitsUiFactory", function () {
         };
       };
 
+      $scope.getBoardingButtonLabel = function (unit) {
+        var unloadDirection = parseInt(unit && unit.unloadDirection, 10);
+        if (!isNaN(unloadDirection) && [1, 3, 5, 7, 9].indexOf(unloadDirection) >= 0) {
+          return "Unload (" + unloadDirection + ")";
+        }
+
+        if (!unit || !unit.boardingSelected) {
+          return "Board";
+        }
+
+        var transportNo = parseInt(unit.boardingFleetNo, 10);
+        return !isNaN(transportNo) && transportNo > 0
+          ? transportNo.toString()
+          : "Board";
+      };
+
       $scope.selectBrigadeAction = function (actionName, brigade) {
         if (actionName === "Form Federation") {
           $scope.openFormFederationModal(brigade);

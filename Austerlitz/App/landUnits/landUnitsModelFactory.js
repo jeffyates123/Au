@@ -500,6 +500,23 @@ austerlitzModule.factory("landUnitsModelFactory", function (boardingSharedFactor
         return !isNaN(parsed) && parsed > 0 ? "Yes" : "";
       };
 
+      $scope.getBrigadeBoardingFleetNo = function (brigadeSource) {
+        var directBoarded = parseInt(brigadeSource && brigadeSource.boarded, 10);
+        if (!isNaN(directBoarded) && directBoarded > 0) {
+          return directBoarded;
+        }
+
+        var xStateText = $scope.trimValue(brigadeSource && brigadeSource.x_OrState);
+        var xStateNumeric = parseInt(xStateText, 10);
+        var fleetNo = parseInt(brigadeSource && brigadeSource.y_OrFleet, 10);
+        var hasNonNumericState = xStateText && (isNaN(xStateNumeric) || xStateNumeric <= 0);
+        if (hasNonNumericState && !isNaN(fleetNo) && fleetNo >= 11 && fleetNo <= 30) {
+          return fleetNo;
+        }
+
+        return 0;
+      };
+
       $scope.getLandUnitPositionKey = function (unit) {
         if (!unit) {
           return "";
@@ -633,6 +650,7 @@ austerlitzModule.factory("landUnitsModelFactory", function (boardingSharedFactor
 
         $scope.brigadeRows = brigades
           .map(function (brigade, index) {
+            var boardedFleetNo = $scope.getBrigadeBoardingFleetNo(brigade);
             return {
               id: brigade.itemNo,
               loadedOrder: index,
@@ -647,6 +665,9 @@ austerlitzModule.factory("landUnitsModelFactory", function (boardingSharedFactor
               trainPlan: null,
               headcountSelected: false,
               headcountPlan: null,
+              boardingSelected: boardedFleetNo > 0,
+              boardingFleetNo: boardedFleetNo > 0 ? boardedFleetNo : null,
+              unloadDirection: null,
               resources: $scope.calculatePlaceholderResources(),
               source: brigade,
             };
@@ -694,6 +715,7 @@ austerlitzModule.factory("landUnitsModelFactory", function (boardingSharedFactor
                 (parseInt(commander.boarded, 10) || 0) > 0
                   ? parseInt(commander.boarded, 10)
                   : null,
+              unloadDirection: null,
               source: commander,
             };
           })

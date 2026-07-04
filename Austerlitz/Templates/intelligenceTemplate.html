@@ -37,7 +37,7 @@
               ng-style="getSpyBoardToggleStyle(spy.boardingSelected)"
               ng-click="openSpyBoardingModal(spy)"
             >
-              Board
+              {{getSpyBoardButtonLabel(spy)}}
             </button>
           </td>
         </tr>
@@ -135,6 +135,58 @@
         Remove
       </button>
       <button type="button" class="btn btn-default btn-sm" ng-click="closeSpyBoardingModal()">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="landUnitsModalBackdrop"
+    ng-show="spyUnloadDirectionModal.isOpen"
+    ng-click="closeSpyUnloadDirectionModal()"
+  ></div>
+  <div
+    class="landUnitsModal landUnitsBoardingModal"
+    ng-show="spyUnloadDirectionModal.isOpen"
+  >
+    <div class="landUnitsModalHeader">
+      <div>
+        <h3>Unload Direction</h3>
+        <div class="landUnitsModalSubtitle">
+          Spy {{spyUnloadDirectionModal.spy.id}}
+        </div>
+      </div>
+      <button type="button" class="close" ng-click="closeSpyUnloadDirectionModal()">
+        &times;
+      </button>
+    </div>
+
+    <div class="landUnitsModalBody">
+      <div class="landUnitsCompassPicker">
+        <button
+          type="button"
+          class="landUnitsCompassButton"
+          ng-repeat="option in spyUnloadDirectionModal.options"
+          ng-class="{
+            'landUnitsCompassNorth': option.value === 1,
+            'landUnitsCompassEast': option.value === 3,
+            'landUnitsCompassSouth': option.value === 5,
+            'landUnitsCompassWest': option.value === 7,
+            'landUnitsCompassCenter': option.value === 9
+          }"
+          ng-click="selectSpyUnloadDirection(option.value)"
+        >
+          {{option.value}}
+        </button>
+      </div>
+    </div>
+
+    <div class="landUnitsModalFooter">
+      <button
+        type="button"
+        class="btn btn-default btn-sm"
+        ng-click="closeSpyUnloadDirectionModal()"
+      >
         Close
       </button>
     </div>

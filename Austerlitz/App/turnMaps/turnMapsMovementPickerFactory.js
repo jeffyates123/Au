@@ -26,6 +26,21 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
         return px + '/' + py;
     }
 
+    function deriveBrigadeBoardedTransportNo(brigade, toMovementPickerItemId) {
+        var directBoarded = toMovementPickerItemId(brigade && brigade.boarded);
+        if (directBoarded != null && directBoarded > 0) return directBoarded;
+
+        var xStateText = (brigade && brigade.x_OrState != null ? brigade.x_OrState : '').toString().trim();
+        var xStateNo = parseInt(xStateText, 10);
+        var fleetNo = toMovementPickerItemId(brigade && brigade.y_OrFleet);
+        var hasNonNumericState = xStateText && (isNaN(xStateNo) || xStateNo <= 0);
+        if (hasNonNumericState && fleetNo != null && fleetNo >= 11 && fleetNo <= 30) {
+            return fleetNo;
+        }
+
+        return null;
+    }
+
     function buildMovementPickerBattalionSummary(brigade) {
         if (!brigade) return '-';
 
@@ -141,16 +156,122 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
 
     function buildMovementPickerBoardingLookups(movementBoardingRows, effectiveFedLookupByItemNo, detailLookups, toMovementPickerItemId) {
         var unitBoardingByItemNo = {};
+        var unitTransportByItemNo = {};
+        var unitTransportCoordinateByItemNo = {};
         var loadedFleetLookup = {};
+        var ts20LoadByUnitItemNo = {};
+        var unloadDirectionByUnitItemNo = {};
+        var ts20LockedShipByItemNo = {};
+        var ts20LockedFleetByFleetNo = {};
+        var transportCoordinateByNo = {};
+        var shipFleetNoByShipId = {};
+        var inferredFleetRemapByFleetNo = {};
+
+        function setCoordinateIfMissing(transportNo, x, y) {
+            if (transportNo == null || transportNo <= 0) return;
+            var px = parseInt(x, 10);
+            var py = parseInt(y, 10);
+            if (isNaN(px) || isNaN(py) || px <= 0 || py <= 0) return;
+            if (!Object.prototype.hasOwnProperty.call(transportCoordinateByNo, transportNo)) {
+                transportCoordinateByNo[transportNo] = { x: px, y: py };
+            }
+        }
+
+        function getLandKindByItemId(itemId) {
+            if (itemId == null) return '';
+            if (Object.prototype.hasOwnProperty.call(detailLookups.brigadesById || {}, itemId)) return 'brigade';
+            if (Object.prototype.hasOwnProperty.call(detailLookups.commandersById || {}, itemId)) return 'commander';
+            if (Object.prototype.hasOwnProperty.call(detailLookups.spiesById || {}, itemId)) return 'spy';
+            return '';
+        }
+
+        angular.forEach((detailLookups.warshipsById || {}), function (warship, warshipId) {
+            var shipId = toMovementPickerItemId(warshipId);
+            var fleetNo = toMovementPickerItemId(warship && warship.fleetNo);
+            if (shipId == null) return;
+            if (fleetNo != null && fleetNo > 0) {
+                shipFleetNoByShipId[shipId] = fleetNo;
+            }
+
+            setCoordinateIfMissing(shipId, warship && warship.x, warship && warship.y);
+            setCoordinateIfMissing(fleetNo, warship && warship.x, warship && warship.y);
+
+            var effectiveFleetNo = Object.prototype.hasOwnProperty.call(effectiveFedLookupByItemNo || {}, shipId)
+                ? toMovementPickerItemId(effectiveFedLookupByItemNo[shipId])
+                : null;
+            if (fleetNo != null && fleetNo > 0 && effectiveFleetNo != null && effectiveFleetNo > 0) {
+                inferredFleetRemapByFleetNo[fleetNo] = effectiveFleetNo;
+            }
+        });
+
+        angular.forEach((detailLookups.merchantsById || {}), function (merchant, merchantId) {
+            var shipId = toMovementPickerItemId(merchantId);
+            var fleetNo = toMovementPickerItemId(merchant && merchant.fleetNo);
+            if (shipId == null) return;
+            if (fleetNo != null && fleetNo > 0) {
+                shipFleetNoByShipId[shipId] = fleetNo;
+            }
+
+            setCoordinateIfMissing(shipId, merchant && merchant.x, merchant && merchant.y);
+            setCoordinateIfMissing(fleetNo, merchant && merchant.x, merchant && merchant.y);
+
+            var effectiveFleetNo = Object.prototype.hasOwnProperty.call(effectiveFedLookupByItemNo || {}, shipId)
+                ? toMovementPickerItemId(effectiveFedLookupByItemNo[shipId])
+                : null;
+            if (fleetNo != null && fleetNo > 0 && effectiveFleetNo != null && effectiveFleetNo > 0) {
+                inferredFleetRemapByFleetNo[fleetNo] = effectiveFleetNo;
+            }
+        });
 
         angular.forEach(movementBoardingRows || [], function (row) {
+            var command = (row && row.command != null ? row.command : '').toString().trim().toUpperCase();
+            var isTs20LoadOrder = command === 'E';
+            var unloadDirection = parseInt(command, 10);
+            var isUnloadDirectionOrder = [1, 3, 5, 7, 9].indexOf(unloadDirection) >= 0;
             var boardedUnitNo = toMovementPickerItemId(row && row.itemNo);
             var boardedFleetNo = toMovementPickerItemId(row && row.fleetNo);
             if (boardedUnitNo != null) {
                 unitBoardingByItemNo[boardedUnitNo] = true;
+                if (isTs20LoadOrder) {
+                    ts20LoadByUnitItemNo[boardedUnitNo] = true;
+                } else if (isUnloadDirectionOrder) {
+                    unloadDirectionByUnitItemNo[boardedUnitNo] = unloadDirection;
+                }
             }
             if (boardedFleetNo != null && boardedFleetNo > 0) {
                 loadedFleetLookup[boardedFleetNo] = true;
+
+                if (boardedUnitNo == null) return;
+                var landedKind = getLandKindByItemId(boardedUnitNo);
+                var resolvedTransportNo = boardedFleetNo;
+                if (landedKind === 'brigade' && Object.prototype.hasOwnProperty.call(inferredFleetRemapByFleetNo, boardedFleetNo)) {
+                    resolvedTransportNo = inferredFleetRemapByFleetNo[boardedFleetNo];
+                }
+
+                if (isTs20LoadOrder && landedKind === 'brigade') {
+                    if (resolvedTransportNo != null && resolvedTransportNo > 0) {
+                        ts20LockedFleetByFleetNo[resolvedTransportNo] = true;
+                    }
+                } else if (isTs20LoadOrder && (landedKind === 'commander' || landedKind === 'spy')) {
+                    if (resolvedTransportNo != null && resolvedTransportNo > 0) {
+                        ts20LockedShipByItemNo[resolvedTransportNo] = true;
+                    }
+                }
+
+                if ((landedKind === 'commander' || landedKind === 'spy')
+                    && !Object.prototype.hasOwnProperty.call(transportCoordinateByNo, resolvedTransportNo)
+                    && Object.prototype.hasOwnProperty.call(shipFleetNoByShipId, resolvedTransportNo)) {
+                    var fallbackFleetNo = shipFleetNoByShipId[resolvedTransportNo];
+                    if (fallbackFleetNo != null && fallbackFleetNo > 0
+                        && Object.prototype.hasOwnProperty.call(transportCoordinateByNo, fallbackFleetNo)) {
+                        transportCoordinateByNo[resolvedTransportNo] = transportCoordinateByNo[fallbackFleetNo];
+                    }
+                }
+
+                unitTransportByItemNo[boardedUnitNo] = resolvedTransportNo;
+                if (Object.prototype.hasOwnProperty.call(transportCoordinateByNo, resolvedTransportNo)) {
+                    unitTransportCoordinateByItemNo[boardedUnitNo] = transportCoordinateByNo[resolvedTransportNo];
+                }
             }
         });
 
@@ -173,7 +294,14 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
 
         return {
             unitBoardingByItemNo: unitBoardingByItemNo,
-            loadedFleetLookup: loadedFleetLookup
+            unitTransportByItemNo: unitTransportByItemNo,
+            unitTransportCoordinateByItemNo: unitTransportCoordinateByItemNo,
+            transportCoordinateByNo: transportCoordinateByNo,
+            loadedFleetLookup: loadedFleetLookup,
+            ts20LoadByUnitItemNo: ts20LoadByUnitItemNo,
+            unloadDirectionByUnitItemNo: unloadDirectionByUnitItemNo,
+            ts20LockedShipByItemNo: ts20LockedShipByItemNo,
+            ts20LockedFleetByFleetNo: ts20LockedFleetByFleetNo
         };
     }
 
@@ -202,6 +330,66 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
         return false;
     }
 
+    function isMovementPickerLandUnitKind(unitKind) {
+        return unitKind === 'brigade' || unitKind === 'commander' || unitKind === 'spy';
+    }
+
+    function isMovementPickerNavalUnitKind(unitKind) {
+        return unitKind === 'warship' || unitKind === 'merchant';
+    }
+
+    function isTs20NavalMovementLocked(itemRow, detail, boardingLookups, effectiveFedLookupByItemNo, toMovementPickerItemId, movementUnitKindResolver) {
+        var unitKind = (detail && detail.unitKind) || movementUnitKindResolver(itemRow && itemRow.itemTypeName);
+        if (!isMovementPickerNavalUnitKind(unitKind)) return false;
+
+        var itemId = toMovementPickerItemId(itemRow && itemRow.itemNo);
+        if (itemId == null) return false;
+
+        if (boardingLookups
+            && boardingLookups.ts20LockedShipByItemNo
+            && boardingLookups.ts20LockedShipByItemNo[itemId]) {
+            return true;
+        }
+
+        var effectiveFleetNo = Object.prototype.hasOwnProperty.call(effectiveFedLookupByItemNo || {}, itemId)
+            ? toMovementPickerItemId(effectiveFedLookupByItemNo[itemId])
+            : null;
+        if ((effectiveFleetNo == null || effectiveFleetNo <= 0) && detail && detail.fleet != null) {
+            effectiveFleetNo = toMovementPickerItemId(detail.fleet);
+        }
+
+        return effectiveFleetNo != null
+            && effectiveFleetNo > 0
+            && boardingLookups
+            && boardingLookups.ts20LockedFleetByFleetNo
+            && boardingLookups.ts20LockedFleetByFleetNo[effectiveFleetNo] === true;
+    }
+
+    function resolveMovementPickerBoardingDisplayText(itemRow, detail, boardingLookups, toMovementPickerItemId, movementUnitKindResolver) {
+        var unitKind = (detail && detail.unitKind) || movementUnitKindResolver(itemRow && itemRow.itemTypeName);
+        if (!isMovementPickerLandUnitKind(unitKind)) return 'Board';
+
+        var itemId = toMovementPickerItemId(itemRow && itemRow.itemNo);
+        var unloadDirection = itemId != null && boardingLookups && boardingLookups.unloadDirectionByUnitItemNo
+            && Object.prototype.hasOwnProperty.call(boardingLookups.unloadDirectionByUnitItemNo, itemId)
+            ? parseInt(boardingLookups.unloadDirectionByUnitItemNo[itemId], 10)
+            : null;
+        if (!isNaN(unloadDirection) && [1, 3, 5, 7, 9].indexOf(unloadDirection) >= 0) {
+            return 'Unload (' + unloadDirection + ')';
+        }
+
+        var transportNo = itemId != null && boardingLookups && boardingLookups.unitTransportByItemNo
+            && Object.prototype.hasOwnProperty.call(boardingLookups.unitTransportByItemNo, itemId)
+            ? toMovementPickerItemId(boardingLookups.unitTransportByItemNo[itemId])
+            : null;
+
+        if ((transportNo == null || transportNo <= 0) && detail && detail.boarded != null && detail.boarded !== '-') {
+            transportNo = toMovementPickerItemId(detail.boarded);
+        }
+
+        return transportNo != null && transportNo > 0 ? transportNo.toString() : 'Board';
+    }
+
     function resolveMovementPickerDetail(itemRow, detailLookups, effectiveFedLookupByItemNo, options) {
         var opts = options || {};
         var movementUnitKindResolver = opts.getMovementPickerUnitKind;
@@ -226,6 +414,7 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
         if (unitKind === 'brigade') {
             var brigade = detailLookups.brigadesById[itemId];
             if (brigade) {
+                var boardedFleetNo = deriveBrigadeBoardedTransportNo(brigade, toMovementPickerItemId);
                 return {
                     unitKind: unitKind,
                     id: brigade.itemNo,
@@ -234,7 +423,7 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     fed: effectiveFed != null ? effectiveFed : (brigade.federation != null ? brigade.federation : '-'),
                     mp: brigade.mp != null ? brigade.mp : itemRow.mp,
                     battalions: buildMovementPickerBattalionSummaryFn(brigade),
-                    boarded: brigade.boarded != null && brigade.boarded !== '' ? brigade.boarded : '-'
+                    boarded: boardedFleetNo != null && boardedFleetNo > 0 ? boardedFleetNo : '-'
                 };
             }
         } else if (unitKind === 'commander') {
@@ -328,9 +517,6 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
         var turnReport = opts.turnReport || {};
         var movementItems = turnReport.movementItemList || [];
         var filteredRows = movementItems
-            .filter(function (item) {
-                return filterMovementItemBySelectedMap(item, opts.selectedMapChoice);
-            })
             .map(function (item) {
                 var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
                 var itemTypeName = opts.getItemTypeName(item.itemType);
@@ -349,7 +535,8 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     mp: item.originalMP != null ? item.originalMP : item.mp,
                     x: item.x,
                     y: item.y,
-                    xy: item.x + '/' + item.y
+                    xy: item.x + '/' + item.y,
+                    isSelectable: true
                 };
 
                 row.movementDetail = opts.resolveMovementPickerDetail(
@@ -364,8 +551,69 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     opts.boardingLookups,
                     opts.effectiveFedLookupByItemNo
                 );
-                return row;
+                row.boardingDisplayText = resolveMovementPickerBoardingDisplayText(
+                    row,
+                    row.movementDetail,
+                    opts.boardingLookups,
+                    opts.toMovementPickerItemId,
+                    opts.getMovementPickerUnitKind
+                );
+
+                var isInSelectedMap = filterMovementItemBySelectedMap(item, opts.selectedMapChoice);
+                var isLoadedLandUnit = row.hasBoarding && isMovementPickerLandUnitKind(row.movementDetail && row.movementDetail.unitKind);
+                var rowItemId = opts.toMovementPickerItemId(row.itemNo);
+                var isLoadedThisTurnByTs20 = rowItemId != null
+                    && opts.boardingLookups
+                    && opts.boardingLookups.ts20LoadByUnitItemNo
+                    && opts.boardingLookups.ts20LoadByUnitItemNo[rowItemId] === true;
+                if (isLoadedLandUnit) {
+                    row.isSelectable = isLoadedThisTurnByTs20;
+                }
+                var isTs20LockedNaval = isTs20NavalMovementLocked(
+                    row,
+                    row.movementDetail,
+                    opts.boardingLookups,
+                    opts.effectiveFedLookupByItemNo,
+                    opts.toMovementPickerItemId,
+                    opts.getMovementPickerUnitKind
+                );
+                if (isTs20LockedNaval) {
+                    row.isSelectable = false;
+                    row.disableReasonCode = 'B';
+                    row.disableReasonTooltip = 'Loaded this turn (TS20), cannot move';
+                }
+
+                if (!isInSelectedMap && isLoadedLandUnit) {
+                    var boardedUnitId = opts.toMovementPickerItemId(row.itemNo);
+                    var boardedTransportCoordinate = boardedUnitId != null
+                        && opts.boardingLookups
+                        && opts.boardingLookups.unitTransportCoordinateByItemNo
+                        && Object.prototype.hasOwnProperty.call(opts.boardingLookups.unitTransportCoordinateByItemNo, boardedUnitId)
+                        ? opts.boardingLookups.unitTransportCoordinateByItemNo[boardedUnitId]
+                        : null;
+                    if (!boardedTransportCoordinate) {
+                        var fallbackTransportNo = opts.toMovementPickerItemId(row.movementDetail && row.movementDetail.boarded);
+                        boardedTransportCoordinate = fallbackTransportNo != null
+                            && opts.boardingLookups
+                            && opts.boardingLookups.transportCoordinateByNo
+                            && Object.prototype.hasOwnProperty.call(opts.boardingLookups.transportCoordinateByNo, fallbackTransportNo)
+                            ? opts.boardingLookups.transportCoordinateByNo[fallbackTransportNo]
+                            : null;
+                    }
+
+                    if (boardedTransportCoordinate
+                        && filterMovementItemBySelectedMap(boardedTransportCoordinate, opts.selectedMapChoice)) {
+                        row.x = boardedTransportCoordinate.x;
+                        row.y = boardedTransportCoordinate.y;
+                        row.xy = boardedTransportCoordinate.x + '/' + boardedTransportCoordinate.y;
+                        row.isBoardedVisibleOnly = true;
+                        isInSelectedMap = true;
+                    }
+                }
+
+                return isInSelectedMap ? row : null;
             })
+            .filter(function (row) { return row != null; })
             .sort(function (a, b) {
                 var ax = parseInt(a.x, 10);
                 var ay = parseInt(a.y, 10);

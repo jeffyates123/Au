@@ -85,6 +85,14 @@ austerlitzModule.factory(
         return totalWeight;
       }
 
+      var unloadDirectionOptions = [
+        { value: 1, label: "North" },
+        { value: 3, label: "East" },
+        { value: 5, label: "South" },
+        { value: 7, label: "West" },
+        { value: 9, label: "Current Square" },
+      ];
+
       $scope.getFleetUsedCapacityLookup = function (
         boardingRows,
         excludedItemNo,
@@ -133,6 +141,16 @@ austerlitzModule.factory(
             currentBrigadeCapacity: 0,
             currentAssignedFleetNo: null,
             hasExistingBoardingOrder: false,
+          };
+        }
+      };
+
+      $scope.ensureUnloadDirectionModalState = function () {
+        if (!$scope.unloadDirectionModal) {
+          $scope.unloadDirectionModal = {
+            isOpen: false,
+            unit: null,
+            options: unloadDirectionOptions,
           };
         }
       };
@@ -359,7 +377,7 @@ austerlitzModule.factory(
           }, $scope.showTurnSheetOrderError);
       };
 
-      $scope.openBoardingModal = function (brigade) {
+      $scope.openBoardingSelectionModal = function (brigade) {
         if (!brigade) {
           return;
         }
@@ -385,6 +403,20 @@ austerlitzModule.factory(
           });
       };
 
+      function resolveCurrentLoadedFleetNo(unit, row) {
+        var rowFleetNo = parseInt(row && row.fleetNo, 10);
+        if (!isNaN(rowFleetNo) && rowFleetNo > 0) {
+          return rowFleetNo;
+        }
+
+        var unitFleetNo = parseInt(unit && unit.boardingFleetNo, 10);
+        if (!isNaN(unitFleetNo) && unitFleetNo > 0) {
+          return unitFleetNo;
+        }
+
+        return null;
+      }
+
       $scope.closeBoardingModal = function () {
         $scope.ensureBoardingModalState();
         $scope.boardingModal.isOpen = false;
@@ -397,6 +429,12 @@ austerlitzModule.factory(
         $scope.boardingModal.currentBrigadeCapacity = 0;
         $scope.boardingModal.currentAssignedFleetNo = null;
         $scope.boardingModal.hasExistingBoardingOrder = false;
+      };
+
+      $scope.closeUnloadDirectionModal = function () {
+        $scope.ensureUnloadDirectionModalState();
+        $scope.unloadDirectionModal.isOpen = false;
+        $scope.unloadDirectionModal.unit = null;
       };
 
       $scope.findMatchingBoardingRow = function (rows, brigadeId) {
@@ -468,6 +506,7 @@ austerlitzModule.factory(
               .then(function () {
                 brigade.boardingSelected = true;
                 brigade.boardingFleetNo = targetRow.fleetNo;
+                brigade.unloadDirection = null;
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
       };
@@ -485,6 +524,7 @@ austerlitzModule.factory(
             if (!targetRow) {
               brigade.boardingSelected = false;
               brigade.boardingFleetNo = null;
+              brigade.unloadDirection = null;
               return null;
             }
 
@@ -498,8 +538,147 @@ austerlitzModule.factory(
               .then(function () {
                 brigade.boardingSelected = false;
                 brigade.boardingFleetNo = null;
+                brigade.unloadDirection = null;
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
+      };
+
+      $scope.persistUnloadDirectionOrder = function (unit, direction, fixedFleetNo) {
+        var unloadDirection = boardingSharedFactory.parseUnloadDirection(direction);
+        if (!unit || unloadDirection == null) {
+          return $q.when(null);
+        }
+
+        return turnSheetFactory
+          .getTSBoarding($scope.masterData.turnId)
+          .then(function (rows) {
+            rows = rows || [];
+            var targetRow =
+              $scope.findMatchingBoardingRow(rows, unit.id) ||
+              boardingSharedFactory.findNextEmptyTurnSheetRowWithinLimit(
+                rows,
+                ["command", "itemNo", "fleetNo", "fleetOwner"],
+                16,
+                $scope.masterData.turnId,
+                $scope.sameNullableInt,
+              );
+            if (!targetRow) {
+              alert("No empty TS_20 row is available.");
+              return null;
+            }
+
+            var loadedFleetNo = resolveCurrentLoadedFleetNo(unit, targetRow);
+            if (fixedFleetNo != null) {
+              loadedFleetNo = parseInt(fixedFleetNo, 10);
+            }
+            if (!navyFleetValidationFactory.isAssignedFleetNo(loadedFleetNo)) {
+              alert("Loaded ship/fleet number is not available.");
+              return null;
+            }
+
+            boardingSharedFactory.writeUnloadDirectionRow(
+              targetRow,
+              $scope.masterData.turnId,
+              unit.id,
+              loadedFleetNo,
+              unloadDirection,
+            );
+
+            return turnSheetFactory.postTSRecords(rows, "Boarding").then(
+              function () {
+                unit.boardingSelected = true;
+                unit.boardingFleetNo = loadedFleetNo;
+                unit.unloadDirection = unloadDirection;
+                return targetRow;
+              },
+              $scope.showTurnSheetOrderError,
+            );
+          }, $scope.showTurnSheetOrderError);
+      };
+
+      $scope.clearUnloadDirectionOrder = function (unit) {
+        if (!unit) {
+          return $q.when(null);
+        }
+
+        return turnSheetFactory
+          .getTSBoarding($scope.masterData.turnId)
+          .then(function (rows) {
+            rows = rows || [];
+            var targetRow = $scope.findMatchingBoardingRow(rows, unit.id);
+            if (!targetRow || !boardingSharedFactory.isUnloadDirectionCommand(targetRow)) {
+              unit.unloadDirection = null;
+              return null;
+            }
+
+            boardingSharedFactory.clearBoardingRow(
+              targetRow,
+              $scope.masterData.turnId,
+            );
+
+            return turnSheetFactory.postTSRecords(rows, "Boarding").then(
+              function () {
+                unit.unloadDirection = null;
+                return targetRow;
+              },
+              $scope.showTurnSheetOrderError,
+            );
+          }, $scope.showTurnSheetOrderError);
+      };
+
+      $scope.openUnloadDirectionModal = function (unit) {
+        if (!unit) {
+          return;
+        }
+        $scope.ensureUnloadDirectionModalState();
+        $scope.unloadDirectionModal.isOpen = true;
+        $scope.unloadDirectionModal.unit = unit;
+      };
+
+      $scope.selectUnloadDirection = function (direction) {
+        var modalUnit = $scope.unloadDirectionModal && $scope.unloadDirectionModal.unit;
+        if (!modalUnit) {
+          return;
+        }
+
+        $scope.persistUnloadDirectionOrder(modalUnit, direction).then(function (result) {
+          if (result == null) {
+            return;
+          }
+          $scope.closeUnloadDirectionModal();
+        });
+      };
+
+      $scope.openBoardingModal = function (unit) {
+        if (!unit) {
+          return;
+        }
+
+        turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+          function (rows) {
+            rows = rows || [];
+            var currentRow = $scope.findMatchingBoardingRow(rows, unit.id);
+
+            if (boardingSharedFactory.isUnloadDirectionCommand(currentRow)) {
+              $scope.clearUnloadDirectionOrder(unit);
+              return;
+            }
+
+            if (boardingSharedFactory.isBoardingCommandE(currentRow)) {
+              $scope.clearBoardingOrder(unit);
+              return;
+            }
+
+            var loadedFleetNo = resolveCurrentLoadedFleetNo(unit, currentRow);
+            if (navyFleetValidationFactory.isAssignedFleetNo(loadedFleetNo)) {
+              $scope.openUnloadDirectionModal(unit);
+              return;
+            }
+
+            $scope.openBoardingSelectionModal(unit);
+          },
+          $scope.showTurnSheetOrderError,
+        );
       };
 
       $scope.applyBoardingFleet = function (fleetNo) {
@@ -554,6 +733,7 @@ austerlitzModule.factory(
       };
 
       $scope.ensureBoardingModalState();
+      $scope.ensureUnloadDirectionModalState();
     },
   };
 },

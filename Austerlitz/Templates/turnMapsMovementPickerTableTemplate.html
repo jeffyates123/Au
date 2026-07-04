@@ -14,19 +14,20 @@
     <tbody>
         <tr ng-repeat="itemRow in itemGridRows track by (itemRow.itemNo + ':' + $index)"
             class="mapOrdersPickerDataRow"
-            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow) }"
+            ng-class="{ 'itemGridRowAlreadyAdded': isItemOrFederationAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.isSelectable === false }"
             ng-click="selectMovementOrderItemFromPickerRow(itemRow)">
             <td>
                 <button type="button"
                         class="landUnitsFederationChip mapOrdersPickChip"
-                        ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow) }"
+                        ng-class="{ 'mapOrdersPickChipMoved': isItemRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.isSelectable === false }"
+                        ng-disabled="itemRow.isSelectable === false"
                         ng-click="$event.stopPropagation(); selectMovementOrderItem(itemRow, 'item')">{{itemRow.itemNo}}</button>
             </td>
             <td>
                 <button type="button"
                         class="landUnitsFederationChip mapOrdersPickChip"
-                        ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' }"
-                        ng-disabled="itemRow.fed == null || itemRow.fed === ''"
+                        ng-class="{ 'mapOrdersPickChipMoved': isFederationRowAlreadyInMovementGrid(itemRow), 'mapOrdersPickChipDisabled': itemRow.fed == null || itemRow.fed === '' || itemRow.isSelectable === false }"
+                        ng-disabled="itemRow.fed == null || itemRow.fed === '' || itemRow.isSelectable === false"
                         ng-click="$event.stopPropagation(); selectMovementOrderItem(itemRow, 'fed')">{{itemRow.fed != null && itemRow.fed !== '' ? itemRow.fed : '-'}}</button>
             </td>
             <td class="mapOrdersMovedCell">
@@ -34,13 +35,16 @@
                     <span class="mapOrdersMovedLozenge"
                           ng-show="isItemOrFederationAlreadyInMovementGrid(itemRow)"
                           title="Unit has moved">M</span>
+                    <span class="mapOrdersMovedLozenge mapOrdersBlockedLozenge"
+                          ng-show="itemRow.disableReasonCode"
+                          title="{{itemRow.disableReasonTooltip}}">{{itemRow.disableReasonCode}}</span>
                 </div>
             </td>
             <td class="mapOrdersMovedCell">
                 <div class="mapOrdersStatusLozenges">
                     <span class="mapOrdersMovedLozenge mapOrdersBoardLozenge"
                         ng-show="itemRow.hasBoarding"
-                        title="Unit or fleet has boarding load">Board</span>
+                        title="Unit or fleet has boarding load">{{itemRow.boardingDisplayText || 'Board'}}</span>
                 </div>
             </td>
             <td>{{itemRow.itemTypeName}}</td>

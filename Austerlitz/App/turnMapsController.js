@@ -60,6 +60,143 @@ austerlitzModule.controller('turnMapsController', function (
             isOpen: false
         }
     };
+    $scope.spyCoordinateReportByKey = {};
+
+    $scope.toMapCoordinateInt = function (value) {
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
+
+    $scope.toMapCoordinateKey = function (x, y) {
+        var parsedX = $scope.toMapCoordinateInt(x);
+        var parsedY = $scope.toMapCoordinateInt(y);
+        if (parsedX == null || parsedY == null || parsedX <= 0 || parsedY <= 0) {
+            return null;
+        }
+
+        return parsedX + '_' + parsedY;
+    };
+
+    $scope.buildSpyTransportCoordinateLookup = function (turnReport) {
+        var report = turnReport || {};
+        var byShipItemNo = {};
+        var byFleetNo = {};
+
+        angular.forEach((report.warships || []).concat(report.merchantShips || []), function (ship) {
+            var x = $scope.toMapCoordinateInt(ship && ship.x);
+            var y = $scope.toMapCoordinateInt(ship && ship.y);
+            if (x == null || y == null || x <= 0 || y <= 0) return;
+
+            var coordinate = { x: x, y: y };
+            var shipItemNo = $scope.toMapCoordinateInt(ship && ship.itemNo);
+            var fleetNo = $scope.toMapCoordinateInt(ship && ship.fleetNo);
+
+            if (shipItemNo != null && shipItemNo > 0 && !Object.prototype.hasOwnProperty.call(byShipItemNo, shipItemNo)) {
+                byShipItemNo[shipItemNo] = coordinate;
+            }
+
+            if (fleetNo != null && fleetNo > 0 && !Object.prototype.hasOwnProperty.call(byFleetNo, fleetNo)) {
+                byFleetNo[fleetNo] = coordinate;
+            }
+        });
+
+        return {
+            byShipItemNo: byShipItemNo,
+            byFleetNo: byFleetNo
+        };
+    };
+
+    $scope.getTransportCoordinateByNo = function (transportNo, transportLookups) {
+        var parsedTransportNo = $scope.toMapCoordinateInt(transportNo);
+        if (parsedTransportNo == null || parsedTransportNo <= 0 || !transportLookups) return null;
+
+        if (Object.prototype.hasOwnProperty.call(transportLookups.byShipItemNo || {}, parsedTransportNo)) {
+            return transportLookups.byShipItemNo[parsedTransportNo];
+        }
+
+        if (Object.prototype.hasOwnProperty.call(transportLookups.byFleetNo || {}, parsedTransportNo)) {
+            return transportLookups.byFleetNo[parsedTransportNo];
+        }
+
+        return null;
+    };
+
+    $scope.buildTs20SpyTransportLookup = function (boardingRows) {
+        var bySpyItemNo = {};
+
+        angular.forEach(boardingRows || [], function (row) {
+            var spyItemNo = $scope.toMapCoordinateInt(row && row.itemNo);
+            var transportNo = $scope.toMapCoordinateInt(row && row.fleetNo);
+            if (spyItemNo == null || spyItemNo <= 0 || transportNo == null || transportNo <= 0) return;
+
+            if (!Object.prototype.hasOwnProperty.call(bySpyItemNo, spyItemNo)) {
+                bySpyItemNo[spyItemNo] = transportNo;
+            }
+        });
+
+        return bySpyItemNo;
+    };
+
+    $scope.resolveSpyReportCoordinate = function (spy, ts20TransportBySpyItemNo, transportLookups) {
+        var spyItemNo = $scope.toMapCoordinateInt(spy && spy.itemNo);
+        var ts20TransportNo = spyItemNo != null && ts20TransportBySpyItemNo
+            && Object.prototype.hasOwnProperty.call(ts20TransportBySpyItemNo, spyItemNo)
+            ? ts20TransportBySpyItemNo[spyItemNo]
+            : null;
+
+        var ts20TransportCoordinate = $scope.getTransportCoordinateByNo(ts20TransportNo, transportLookups);
+        if (ts20TransportCoordinate) return ts20TransportCoordinate;
+
+        var reportBoardedCoordinate = $scope.getTransportCoordinateByNo(spy && spy.boarded, transportLookups);
+        if (reportBoardedCoordinate) return reportBoardedCoordinate;
+
+        var spyX = $scope.toMapCoordinateInt(spy && spy.x);
+        var spyY = $scope.toMapCoordinateInt(spy && spy.y);
+        if (spyX == null || spyY == null || spyX <= 0 || spyY <= 0) return null;
+
+        return {
+            x: spyX,
+            y: spyY
+        };
+    };
+
+    $scope.rebuildSpyCoordinateReportLookup = function () {
+        var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+        var spyCoordinateReportByKey = {};
+        var ts20TransportBySpyItemNo = $scope.buildTs20SpyTransportLookup($scope.movementBoardingRows || []);
+        var transportLookups = $scope.buildSpyTransportCoordinateLookup(turnReport);
+
+        angular.forEach(turnReport.spies || [], function (spy) {
+            var reportText = (spy && spy.report != null ? spy.report : '').toString().trim();
+            if (!reportText) return;
+
+            var coordinate = $scope.resolveSpyReportCoordinate(spy, ts20TransportBySpyItemNo, transportLookups);
+            if (!coordinate) return;
+
+            var key = $scope.toMapCoordinateKey(coordinate.x, coordinate.y);
+            if (!key || Object.prototype.hasOwnProperty.call(spyCoordinateReportByKey, key)) return;
+
+            spyCoordinateReportByKey[key] = reportText;
+        });
+
+        $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+    };
+
+    $scope.getCoordinateHoverTooltip = function (coord) {
+        if (!coord) return '';
+
+        var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+        var spyReport = key && $scope.spyCoordinateReportByKey
+            && Object.prototype.hasOwnProperty.call($scope.spyCoordinateReportByKey, key)
+            ? $scope.spyCoordinateReportByKey[key]
+            : '';
+        var jumpOffText = (coord.jumpOffText || '').toString().trim();
+
+        if (spyReport && jumpOffText) return spyReport + ' | ' + jumpOffText;
+        if (spyReport) return spyReport;
+        if (jumpOffText) return jumpOffText;
+        return '';
+    };
 
     $scope.wideScreenMinViewportWidth = turnMapsConfigFactory.getWideScreenMinViewportWidth
         ? turnMapsConfigFactory.getWideScreenMinViewportWidth()
@@ -500,6 +637,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.selectMovementOrderItem = function (itemRow, selectionType) {
         if (!itemRow) return;
+        if (itemRow.isSelectable === false) return;
         $scope.orderUi.suppressCoordinatePickerOpenUntil = new Date().getTime() + 400;
 
         var selectedItemNo = itemRow.originalItemNo != null ? itemRow.originalItemNo : itemRow.itemNo;
@@ -567,6 +705,12 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.selectMovementOrderItemFromPickerRow = function (itemRow) {
         if (!itemRow) return;
+        if (itemRow.isSelectable === false) {
+            if (itemRow.disableReasonTooltip) {
+                $scope.selectedCoordinateDetails = itemRow.disableReasonTooltip;
+            }
+            return;
+        }
 
         if ($scope.isItemRowAlreadyInMovementGrid(itemRow)) {
             $scope.selectMovementOrderItem(itemRow, 'item');
@@ -959,6 +1103,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
         $scope.tryApplyInitialMovementOrderSelection();
+        $scope.rebuildSpyCoordinateReportLookup();
     }, true);
 
     $scope.$watch('tsMovementList', function () {
@@ -1015,6 +1160,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
         $scope.tryApplyInitialMovementOrderSelection();
+        $scope.rebuildSpyCoordinateReportLookup();
     });
 
     turnSheetFactory.getTSMovement($scope.masterData.turnId).then(function (tsMovementList) {
@@ -1043,6 +1189,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
         $scope.tryApplyInitialMovementOrderSelection();
+        $scope.rebuildSpyCoordinateReportLookup();
     });
 
     rulesCatalogFactory.getRefProductionSites().then(function (productionSiteList) {

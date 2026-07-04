@@ -260,6 +260,8 @@ austerlitzModule.factory('turnMapsMovementFactory', function (
                     detailLookups: detailLookups,
                     boardingLookups: boardingLookups,
                     getItemTypeName: $scope.getItemTypeName,
+                    getMovementPickerUnitKind: $scope.getMovementPickerUnitKind,
+                    toMovementPickerItemId: $scope.toMovementPickerItemId,
                     resolveMovementPickerDetail: $scope.resolveMovementPickerDetail,
                     hasMovementPickerBoardingStatus: $scope.hasMovementPickerBoardingStatus
                 });

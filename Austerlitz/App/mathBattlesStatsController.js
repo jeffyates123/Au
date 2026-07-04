@@ -3,6 +3,8 @@
 austerlitzModule.controller("mathBattlesStatsController", function ($scope, rulesCatalogFactory, mathBattlesCombatHelperFactory) {
     var RECRUITS_PER_BATTALION = 800;
     var RECRUITS_PER_EC_BLOCK = 25;
+    var TRAINING_START_EF = 3;
+    var TRAINING_COST_DIVISOR = 10;
 
     $scope.armyStatsRows = [];
     $scope.armyStatsLoading = false;
@@ -126,6 +128,7 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
 
     $scope.mapArmyItemToStatsRow = function (armyItem) {
         var ef = $scope.toPositiveNumber(armyItem.ef != null ? armyItem.ef : armyItem.EF);
+        var totalEf = $scope.toPositiveInt(armyItem.ef != null ? armyItem.ef : armyItem.EF);
         var lr = $scope.toPositiveNumber(armyItem.lr != null ? armyItem.lr : armyItem.LR);
         var rg = $scope.toPositiveNumber(armyItem.rg != null ? armyItem.rg : armyItem.RG);
         var hc = $scope.toPositiveNumber(armyItem.hc != null ? armyItem.hc : armyItem.HC);
@@ -139,6 +142,10 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
         var calcArtillery = $scope.isArtilleryItemNo(itemNo) ? calcLR : 0;
 
         var louisdorePerBattalion = Math.round(RECRUITS_PER_BATTALION * cost);
+        var trainingSteps = Math.max(0, totalEf - TRAINING_START_EF);
+        var trainingCostPerTraining = Math.round(louisdorePerBattalion / TRAINING_COST_DIVISOR);
+        var totalTrainingCost = Math.round(trainingCostPerTraining * trainingSteps);
+        var louisdorePerBattalionWithTraining = louisdorePerBattalion + totalTrainingCost;
         var ectsPerBattalion = Math.round(
             Math.ceil(RECRUITS_PER_BATTALION / RECRUITS_PER_EC_BLOCK) * ecPtsPer25
         );
@@ -158,12 +165,16 @@ austerlitzModule.controller("mathBattlesStatsController", function ($scope, rule
             ecPtsPer25: ecPtsPer25,
             ectsPerBattalion: ectsPerBattalion,
             louisdorePerBattalion: louisdorePerBattalion,
+            louisdorePerBattalionWithTraining: louisdorePerBattalionWithTraining,
             calcArtillery: calcArtillery,
             calcLR: calcLR,
             calcHC: calcHC,
             calcTotal: calcTotal,
             pointsPerLouisdore: calcTotal > 0
                 ? Math.round(louisdorePerBattalion / calcTotal)
+                : null,
+            pointsPerLouisdoreWithTraining: calcTotal > 0
+                ? Math.round(louisdorePerBattalionWithTraining / calcTotal)
                 : null
         };
     };

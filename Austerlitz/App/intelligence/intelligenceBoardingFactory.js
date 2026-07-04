@@ -48,6 +48,14 @@ austerlitzModule.factory(
           boardingSharedFactory.showTurnSheetOrderError(error);
         }
 
+        var unloadDirectionOptions = [
+          { value: 1, label: "North" },
+          { value: 3, label: "East" },
+          { value: 5, label: "South" },
+          { value: 7, label: "West" },
+          { value: 9, label: "Current Square" },
+        ];
+
         $scope.getFleetUsedCapacityLookup = function (
           boardingRows,
           excludedItemNo,
@@ -95,6 +103,16 @@ austerlitzModule.factory(
               currentSpyCapacity: 0,
               currentAssignedFleetNo: null,
               hasExistingBoardingOrder: false,
+            };
+          }
+        };
+
+        $scope.ensureSpyUnloadDirectionModalState = function () {
+          if (!$scope.spyUnloadDirectionModal) {
+            $scope.spyUnloadDirectionModal = {
+              isOpen: false,
+              spy: null,
+              options: unloadDirectionOptions,
             };
           }
         };
@@ -201,7 +219,7 @@ austerlitzModule.factory(
           );
         };
 
-        $scope.openSpyBoardingModal = function (spy) {
+        $scope.openSpyBoardingSelectionModal = function (spy) {
           if (!spy) {
             return;
           }
@@ -228,6 +246,20 @@ austerlitzModule.factory(
             });
         };
 
+        function resolveCurrentLoadedFleetNo(spy, row) {
+          var rowFleetNo = toInt(row && row.fleetNo, null);
+          if (rowFleetNo != null && rowFleetNo > 0) {
+            return rowFleetNo;
+          }
+
+          var spyFleetNo = toInt(spy && spy.boardingFleetNo, null);
+          if (spyFleetNo != null && spyFleetNo > 0) {
+            return spyFleetNo;
+          }
+
+          return null;
+        }
+
         $scope.closeSpyBoardingModal = function () {
           $scope.ensureIntelligenceBoardingModalState();
           $scope.boardingModal.isOpen = false;
@@ -240,6 +272,12 @@ austerlitzModule.factory(
           $scope.boardingModal.currentSpyCapacity = 0;
           $scope.boardingModal.currentAssignedFleetNo = null;
           $scope.boardingModal.hasExistingBoardingOrder = false;
+        };
+
+        $scope.closeSpyUnloadDirectionModal = function () {
+          $scope.ensureSpyUnloadDirectionModalState();
+          $scope.spyUnloadDirectionModal.isOpen = false;
+          $scope.spyUnloadDirectionModal.spy = null;
         };
 
         $scope.persistSpyBoardingOrder = function (spy, fleetNo) {
@@ -289,6 +327,7 @@ austerlitzModule.factory(
                 function () {
                   spy.boardingSelected = true;
                   spy.boardingFleetNo = targetRow.fleetNo;
+                  spy.unloadDirection = null;
                   return targetRow;
                 },
                 showTurnSheetOrderError,
@@ -310,6 +349,7 @@ austerlitzModule.factory(
               if (!targetRow) {
                 spy.boardingSelected = false;
                 spy.boardingFleetNo = null;
+                spy.unloadDirection = null;
                 return null;
               }
 
@@ -322,10 +362,149 @@ austerlitzModule.factory(
                 function () {
                   spy.boardingSelected = false;
                   spy.boardingFleetNo = null;
+                  spy.unloadDirection = null;
                   return targetRow;
                 },
                 showTurnSheetOrderError,
               );
+            },
+            showTurnSheetOrderError,
+          );
+        };
+
+        $scope.persistSpyUnloadDirectionOrder = function (spy, direction, fixedFleetNo) {
+          var unloadDirection = boardingSharedFactory.parseUnloadDirection(direction);
+          if (!spy || unloadDirection == null) {
+            return $q.when(null);
+          }
+
+          return turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+            function (rows) {
+              rows = rows || [];
+              var targetRow =
+                $scope.findMatchingBoardingRow(rows, spy.id) ||
+                findNextEmptyTurnSheetRowWithinLimit(
+                  rows,
+                  ["command", "itemNo", "fleetNo", "fleetOwner"],
+                  16,
+                );
+              if (!targetRow) {
+                alert("No empty TS_20 row is available.");
+                return null;
+              }
+
+              var loadedFleetNo = resolveCurrentLoadedFleetNo(spy, targetRow);
+              if (fixedFleetNo != null) {
+                loadedFleetNo = toInt(fixedFleetNo, null);
+              }
+              if (!navyFleetValidationFactory.isAssignedFleetNo(loadedFleetNo)) {
+                alert("Loaded ship/fleet number is not available.");
+                return null;
+              }
+
+              boardingSharedFactory.writeUnloadDirectionRow(
+                targetRow,
+                $scope.masterData.turnId,
+                spy.id,
+                loadedFleetNo,
+                unloadDirection,
+              );
+
+              return turnSheetFactory.postTSRecords(rows, "Boarding").then(
+                function () {
+                  spy.boardingSelected = true;
+                  spy.boardingFleetNo = loadedFleetNo;
+                  spy.unloadDirection = unloadDirection;
+                  return targetRow;
+                },
+                showTurnSheetOrderError,
+              );
+            },
+            showTurnSheetOrderError,
+          );
+        };
+
+        $scope.clearSpyUnloadDirectionOrder = function (spy) {
+          if (!spy) {
+            return $q.when(null);
+          }
+
+          return turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+            function (rows) {
+              rows = rows || [];
+              var targetRow = $scope.findMatchingBoardingRow(rows, spy.id);
+              if (!targetRow || !boardingSharedFactory.isUnloadDirectionCommand(targetRow)) {
+                spy.unloadDirection = null;
+                return null;
+              }
+
+              boardingSharedFactory.clearBoardingRow(
+                targetRow,
+                $scope.masterData.turnId,
+              );
+
+              return turnSheetFactory.postTSRecords(rows, "Boarding").then(
+                function () {
+                  spy.unloadDirection = null;
+                  return targetRow;
+                },
+                showTurnSheetOrderError,
+              );
+            },
+            showTurnSheetOrderError,
+          );
+        };
+
+        $scope.openSpyUnloadDirectionModal = function (spy) {
+          if (!spy) {
+            return;
+          }
+          $scope.ensureSpyUnloadDirectionModalState();
+          $scope.spyUnloadDirectionModal.isOpen = true;
+          $scope.spyUnloadDirectionModal.spy = spy;
+        };
+
+        $scope.selectSpyUnloadDirection = function (direction) {
+          var modalSpy = $scope.spyUnloadDirectionModal && $scope.spyUnloadDirectionModal.spy;
+          if (!modalSpy) {
+            return;
+          }
+
+          $scope.persistSpyUnloadDirectionOrder(modalSpy, direction).then(function (result) {
+            if (result == null) {
+              return;
+            }
+            $scope.closeSpyUnloadDirectionModal();
+          });
+        };
+
+        $scope.openSpyBoardingModal = function (spy) {
+          if (!spy) {
+            return;
+          }
+
+          turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+            function (rows) {
+              rows = rows || [];
+              var currentRow = $scope.findMatchingBoardingRow(rows, spy.id);
+
+              if (boardingSharedFactory.isUnloadDirectionCommand(currentRow)) {
+                $scope.clearSpyUnloadDirectionOrder(spy);
+                return;
+              }
+
+              if (boardingSharedFactory.isBoardingCommandE(currentRow)) {
+                $scope.clearSpyBoardingOrder(spy);
+                return;
+              }
+
+              var loadedFleetNo = resolveCurrentLoadedFleetNo(spy, currentRow);
+              if (navyFleetValidationFactory.isAssignedFleetNo(loadedFleetNo)) {
+                $scope.openSpyUnloadDirectionModal(spy);
+                return;
+              }
+
+              $scope.openSpyBoardingSelectionModal(spy);
             },
             showTurnSheetOrderError,
           );
@@ -384,6 +563,7 @@ austerlitzModule.factory(
         };
 
         $scope.ensureIntelligenceBoardingModalState();
+        $scope.ensureSpyUnloadDirectionModalState();
       },
     };
   },
