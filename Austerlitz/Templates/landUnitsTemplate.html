@@ -19,6 +19,14 @@
         >
           Existing Army
         </button>
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeArmyTab === 'intelligence' }"
+          ng-click="selectArmyTab('intelligence')"
+        >
+          Intelligence
+        </button>
       </div>
     </div>
     <div class="landUnitsTurnInfo">
@@ -742,6 +750,197 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div
+    class="landUnitsTabPane landUnitsIntelligencePane"
+    ng-show="activeArmyTab === 'intelligence'"
+    ng-controller="intelligenceController"
+    ng-init="initIntelligence()"
+  >
+    <div class="alert alert-info" ng-show="isLoading">Loading spies...</div>
+    <div class="alert alert-danger" ng-show="loadError">{{loadError}}</div>
+
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsIntelligenceTable">
+        <thead>
+          <tr>
+            <th class="landUnitsIdCol">Spy</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th class="landUnitsPositionCol">Boarded</th>
+            <th>Report</th>
+            <th class="landUnitsToggleCol">Board</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="spy in spyRows track by spy.id">
+            <td class="landUnitsIdCol">{{spy.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{spy.x}}</td>
+            <td class="landUnitsPositionCol">{{spy.y}}</td>
+            <td class="landUnitsPositionCol">{{formatSpyBoarded(spy)}}</td>
+            <td>{{spy.report}}</td>
+            <td class="landUnitsToggleCol">
+              <button
+                type="button"
+                class="landUnitsToggleButton"
+                ng-style="getSpyBoardToggleStyle(spy.boardingSelected)"
+                ng-click="openSpyBoardingModal(spy)"
+              >
+                {{getSpyBoardButtonLabel(spy)}}
+              </button>
+            </td>
+          </tr>
+          <tr ng-if="!spyRows || spyRows.length === 0">
+            <td colspan="6" class="text-muted">No spies found for this turn.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      class="landUnitsModalBackdrop"
+      ng-show="boardingModal.isOpen"
+      ng-click="closeSpyBoardingModal()"
+    ></div>
+    <div class="landUnitsModal landUnitsBoardingModal" ng-show="boardingModal.isOpen">
+      <div class="landUnitsModalHeader">
+        <div>
+          <h3>Board Spy</h3>
+          <div class="landUnitsModalSubtitle">
+            {{boardingModal.spy.id}} - {{boardingModal.spy.x}}/{{boardingModal.spy.y}}
+          </div>
+        </div>
+        <button type="button" class="close" ng-click="closeSpyBoardingModal()">
+          &times;
+        </button>
+      </div>
+
+      <div class="landUnitsModalBody">
+        <div class="alert alert-info" ng-show="boardingModal.isLoading">
+          Loading ship boarding usage...
+        </div>
+
+        <div
+          class="alert alert-warning"
+          ng-show="!boardingModal.isLoading && (!boardingModal.fleets || boardingModal.fleets.length === 0)"
+        >
+          No eligible ships are available for this spy.
+        </div>
+
+        <div
+          class="landUnitsBoardingTableWrap"
+          ng-show="boardingModal.fleets && boardingModal.fleets.length > 0"
+        >
+          <table class="table table-condensed landUnitsTable">
+            <thead>
+              <tr>
+                <th>Ship</th>
+                <th>Type</th>
+                <th>Position</th>
+                <th>Condition</th>
+                <th>Total Cap</th>
+                <th>Used</th>
+                <th>Available</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="ship in boardingModal.fleets track by ship.fleetNo">
+                <td>{{ship.fleetNo}}</td>
+                <td>{{ship.typeLabel}}</td>
+                <td>{{ship.position}}</td>
+                <td>{{ship.conditionLabel}}</td>
+                <td>{{ship.totalCapacity}}</td>
+                <td>{{ship.usedCapacityWhole}}</td>
+                <td>{{ship.remainingCapacity}}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="landUnitsToggleButton"
+                    ng-click="handleSpyBoardingRowAction(ship)"
+                    ng-style="getSpyBoardToggleStyle(ship.isCurrentlyAssigned)"
+                    ng-disabled="!ship.isCurrentlyAssigned && ship.wouldExceedForCurrentSpy"
+                    title="{{ship.isCurrentlyAssigned ? 'Unboard this spy from selected ship' : (ship.wouldExceedForCurrentSpy ? 'Not enough remaining capacity for this spy' : '')}}"
+                  >
+                    {{ship.isCurrentlyAssigned ? 'Unboard' : '+Board'}}
+                  </button>
+                  <span class="text-muted">
+                    (Load: {{ship.currentUnitCapacityWholeUp}})
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="landUnitsModalFooter">
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          ng-show="boardingModal.spy.boardingSelected"
+          ng-click="removeSpyBoardingFromModal()"
+        >
+          Remove
+        </button>
+        <button type="button" class="btn btn-default btn-sm" ng-click="closeSpyBoardingModal()">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="landUnitsModalBackdrop"
+      ng-show="spyUnloadDirectionModal.isOpen"
+      ng-click="closeSpyUnloadDirectionModal()"
+    ></div>
+    <div
+      class="landUnitsModal landUnitsBoardingModal"
+      ng-show="spyUnloadDirectionModal.isOpen"
+    >
+      <div class="landUnitsModalHeader">
+        <div>
+          <h3>Unload Direction</h3>
+          <div class="landUnitsModalSubtitle">
+            Spy {{spyUnloadDirectionModal.spy.id}}
+          </div>
+        </div>
+        <button type="button" class="close" ng-click="closeSpyUnloadDirectionModal()">
+          &times;
+        </button>
+      </div>
+
+      <div class="landUnitsModalBody">
+        <div class="landUnitsCompassPicker">
+          <button
+            type="button"
+            class="landUnitsCompassButton"
+            ng-repeat="option in spyUnloadDirectionModal.options"
+            ng-class="{
+              'landUnitsCompassNorth': option.value === 1,
+              'landUnitsCompassEast': option.value === 3,
+              'landUnitsCompassSouth': option.value === 5,
+              'landUnitsCompassWest': option.value === 7,
+              'landUnitsCompassCenter': option.value === 9
+            }"
+            ng-click="selectSpyUnloadDirection(option.value)"
+          >
+            {{option.value}}
+          </button>
+        </div>
+      </div>
+
+      <div class="landUnitsModalFooter">
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="closeSpyUnloadDirectionModal()"
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
 

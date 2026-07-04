@@ -257,6 +257,12 @@ austerlitzModule.factory(
             return spyFleetNo;
           }
 
+          // Match brigade behavior for "already boarded from report" state.
+          var reportedFleetNo = toInt(spy && spy.reportBoarded, null);
+          if (reportedFleetNo != null && reportedFleetNo > 0) {
+            return reportedFleetNo;
+          }
+
           return null;
         }
 

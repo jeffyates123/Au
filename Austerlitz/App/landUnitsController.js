@@ -6,6 +6,7 @@ austerlitzModule.controller(
     $scope,
     $q,
     $timeout,
+    $location,
     masterData,
     turnDataLoaderService,
     rulesCatalogFactory,
@@ -23,6 +24,12 @@ austerlitzModule.controller(
     landUnitsUiFactory,
     landUnitsSetUpBrigadesFactory,
   ) {
+    var validArmyTabs = {
+      setUpBrigades: true,
+      existingArmy: true,
+      intelligence: true,
+    };
+
     $scope.masterData = masterData;
     angular.extend($scope, landUnitsStateFactory.createInitialState());
 
@@ -73,7 +80,11 @@ austerlitzModule.controller(
     };
 
     $scope.selectArmyTab = function (tabKey) {
-      $scope.activeArmyTab = tabKey || "setUpBrigades";
+      var selectedTab =
+        tabKey && Object.prototype.hasOwnProperty.call(validArmyTabs, tabKey)
+          ? tabKey
+          : "setUpBrigades";
+      $scope.activeArmyTab = selectedTab;
     };
 
     function replayLandUnitRenames() {
@@ -85,6 +96,12 @@ austerlitzModule.controller(
     }
 
     $scope.initLandUnits = function () {
+      var requestedTab = ($location.search() && $location.search().tab) || "";
+      if (requestedTab === "intelligence") {
+        $scope.selectArmyTab("intelligence");
+        $location.search("tab", null);
+      }
+
       if (
         !$scope.masterData ||
         !$scope.masterData.turnId ||

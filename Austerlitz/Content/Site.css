@@ -1396,6 +1396,53 @@ textarea {
     margin-top: 10px;
 }
 
+.landUnitsIntelligencePane {
+    padding: 8px 10px 8px;
+    margin-bottom: 0;
+}
+
+.landUnitsIntelligencePane .alert {
+    margin-bottom: 6px;
+    padding: 5px 10px;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable > thead > tr > th,
+.landUnitsIntelligencePane .landUnitsIntelligenceTable > tbody > tr > td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.landUnitsIntelligencePane .landUnitsTableWrap {
+    overflow-x: hidden;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    table-layout: auto;
+    display: inline-table;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable .landUnitsIdCol {
+    width: 52px;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable .landUnitsPositionCol {
+    width: 42px;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable .landUnitsToggleCol {
+    width: 58px;
+}
+
+.landUnitsIntelligencePane .landUnitsIntelligenceTable > thead > tr > th:nth-child(5),
+.landUnitsIntelligencePane .landUnitsIntelligenceTable > tbody > tr > td:nth-child(5) {
+    white-space: normal;
+    word-break: break-word;
+    max-width: 520px;
+}
+
 .landUnitsSectionHeader {
     display: flex;
     align-items: center;

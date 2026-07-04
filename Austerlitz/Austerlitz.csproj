@@ -671,7 +671,6 @@
     <Content Include="Templates\boardingTemplate.html" />
     <Content Include="Templates\headerTemplate.html" />
     <Content Include="Templates\homeTemplate.html" />
-    <Content Include="Templates\intelligenceTemplate.html" />
     <Content Include="Templates\tradeTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />

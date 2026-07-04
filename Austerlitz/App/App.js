@@ -41,10 +41,6 @@
             controller: 'navalUnitsController',
             templateUrl: '/Templates/navalUnitsTemplate.html'
         })
-        .when('/Section/Intelligence', {
-            controller: 'intelligenceController',
-            templateUrl: '/Templates/intelligenceTemplate.html'
-        })
         .when('/Section/Trade', {
             controller: 'tradeController',
             templateUrl: '/Templates/tradeTemplate.html'

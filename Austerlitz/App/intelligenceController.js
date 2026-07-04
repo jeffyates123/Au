@@ -15,6 +15,9 @@ austerlitzModule.controller(
     $scope.spyRows = [];
     $scope.isLoading = false;
     $scope.loadError = null;
+    // Keep intelligence modal state local when controller runs as nested scope.
+    $scope.boardingModal = null;
+    $scope.spyUnloadDirectionModal = null;
 
     intelligenceBoardingFactory.attach($scope, turnSheetFactory);
 
