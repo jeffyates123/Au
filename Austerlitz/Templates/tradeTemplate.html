@@ -2,6 +2,24 @@
   <div class="landUnitsHeader">
     <div>
       <h2 class="landUnitsTitle">Trade</h2>
+      <div class="landUnitsTabs">
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeTradeTab === 'baggageTrains' }"
+          ng-click="selectTradeTab('baggageTrains')"
+        >
+          Baggage Trains
+        </button>
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeTradeTab === 'tradingCities' }"
+          ng-click="selectTradeTab('tradingCities')"
+        >
+          Trading Cities
+        </button>
+      </div>
     </div>
     <div class="landUnitsTurnInfo">
       <span>{{masterData.turnId}}</span>
@@ -11,61 +29,173 @@
   <div class="alert alert-info" ng-show="isLoading">Loading baggage trains...</div>
   <div class="alert alert-danger" ng-show="loadError">{{loadError}}</div>
 
-  <div class="landUnitsTableWrap" ng-show="!isLoading">
-    <table class="table landUnitsTable landUnitsTradeTable">
-      <thead>
-        <tr>
-          <th>ItemNo</th>
-          <th class="landUnitsPositionCol">X</th>
-          <th class="landUnitsPositionCol">Y</th>
-          <th>FederationNo</th>
-          <th ng-if="hasNewFederationColumn">NewFederation</th>
-          <th>MP</th>
-          <th>Condition</th>
-          <th>Goods1</th>
-          <th>Quantity1</th>
-          <th>Goods2</th>
-          <th>Quantity2</th>
-          <th>Money</th>
-          <th>Boarded</th>
-          <th class="landUnitsToggleCol">Board</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr ng-repeat="trade in tradeRows track by trade.id">
-          <td>{{trade.itemNo}}</td>
-          <td class="landUnitsPositionCol">{{trade.x}}</td>
-          <td class="landUnitsPositionCol">{{trade.y}}</td>
-          <td>{{trade.federationNo}}</td>
-          <td ng-if="hasNewFederationColumn">
-            {{trade.newFederation != null ? trade.newFederation : '----'}}
-          </td>
-          <td>{{trade.mp}}</td>
-          <td>{{trade.condition}}</td>
-          <td>{{trade.goods1}}</td>
-          <td>{{trade.quantity1}}</td>
-          <td>{{trade.goods2}}</td>
-          <td>{{trade.quantity2}}</td>
-          <td>{{trade.money}}</td>
-          <td>{{formatTradeBoarded(trade)}}</td>
-          <td class="landUnitsToggleCol">
-            <button
-              type="button"
-              class="landUnitsToggleButton"
-              ng-style="getTradeBoardToggleStyle(trade.boardingSelected)"
-              ng-click="openTradeBoardingModal(trade)"
-            >
-              Board
-            </button>
-          </td>
-        </tr>
-        <tr ng-if="!tradeRows || tradeRows.length === 0">
-          <td ng-attr-colspan="{{hasNewFederationColumn ? 14 : 13}}" class="text-muted">
-            No baggage trains found for this turn.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="landUnitsTabPane" ng-show="activeTradeTab === 'baggageTrains'">
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsTradeTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th>FederationNo</th>
+            <th ng-if="hasNewFederationColumn">NewFederation</th>
+            <th>MP</th>
+            <th>Condition</th>
+            <th>Goods1</th>
+            <th>Quantity1</th>
+            <th>Goods2</th>
+            <th>Quantity2</th>
+            <th>Money</th>
+            <th>Boarded</th>
+            <th class="landUnitsToggleCol">Board</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="trade in tradeRows track by trade.id">
+            <td>{{trade.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{trade.x}}</td>
+            <td class="landUnitsPositionCol">{{trade.y}}</td>
+            <td>{{trade.federationNo}}</td>
+            <td ng-if="hasNewFederationColumn">
+              {{trade.newFederation != null ? trade.newFederation : '----'}}
+            </td>
+            <td>{{trade.mp}}</td>
+            <td>{{trade.condition}}</td>
+            <td>{{trade.goods1}}</td>
+            <td>{{trade.quantity1}}</td>
+            <td>{{trade.goods2}}</td>
+            <td>{{trade.quantity2}}</td>
+            <td>{{trade.money}}</td>
+            <td>{{formatTradeBoarded(trade)}}</td>
+            <td class="landUnitsToggleCol">
+              <button
+                type="button"
+                class="landUnitsToggleButton"
+                ng-style="getTradeBoardToggleStyle(trade.boardingSelected)"
+                ng-click="openTradeBoardingModal(trade)"
+              >
+                Board
+              </button>
+            </td>
+          </tr>
+          <tr ng-if="!tradeRows || tradeRows.length === 0">
+            <td ng-attr-colspan="{{hasNewFederationColumn ? 14 : 13}}" class="text-muted">
+              No baggage trains found for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="landUnitsTabPane" ng-show="activeTradeTab === 'tradingCities'">
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader">
+      <span class="landUnitsSectionTitle">Owned Trade Cities</span>
+      <span class="landUnitsSectionMeta">{{ownedTradeCityRows.length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th class="landUnitsNameCol">Name</th>
+            <th>Rate</th>
+            <th>EctPts</th>
+            <th>Food</th>
+            <th>Stone</th>
+            <th>Wood</th>
+            <th>Ore</th>
+            <th>Zinc</th>
+            <th>Horses</th>
+            <th>Textiles</th>
+            <th>Wool</th>
+            <th>Gold</th>
+            <th>Wine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="city in ownedTradeCityRows track by city.id">
+            <td>{{city.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{city.x}}</td>
+            <td class="landUnitsPositionCol">{{city.y}}</td>
+            <td class="landUnitsNameCol">{{city.name}}</td>
+            <td>{{city.rate}}</td>
+            <td>{{city.ectPts}}</td>
+            <td>{{city.food}}</td>
+            <td>{{city.stone}}</td>
+            <td>{{city.wood}}</td>
+            <td>{{city.ore}}</td>
+            <td>{{city.zinc}}</td>
+            <td>{{city.horses}}</td>
+            <td>{{city.textiles}}</td>
+            <td>{{city.wool}}</td>
+            <td>{{city.gold}}</td>
+            <td>{{city.wine}}</td>
+          </tr>
+          <tr ng-if="!ownedTradeCityRows || ownedTradeCityRows.length === 0">
+            <td colspan="16" class="text-muted">
+              No owned trade cities found for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
+      <span class="landUnitsSectionTitle">All Trading Cities</span>
+      <span class="landUnitsSectionMeta">{{tradeCityRows.length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th class="landUnitsNameCol">Name</th>
+            <th>Rate</th>
+            <th>EctPts</th>
+            <th>Food</th>
+            <th>Stone</th>
+            <th>Wood</th>
+            <th>Ore</th>
+            <th>Zinc</th>
+            <th>Horses</th>
+            <th>Textiles</th>
+            <th>Wool</th>
+            <th>Gold</th>
+            <th>Wine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="city in tradeCityRows track by city.id">
+            <td>{{city.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{city.x}}</td>
+            <td class="landUnitsPositionCol">{{city.y}}</td>
+            <td class="landUnitsNameCol">{{city.name}}</td>
+            <td>{{city.rate}}</td>
+            <td>{{city.ectPts}}</td>
+            <td>{{city.food}}</td>
+            <td>{{city.stone}}</td>
+            <td>{{city.wood}}</td>
+            <td>{{city.ore}}</td>
+            <td>{{city.zinc}}</td>
+            <td>{{city.horses}}</td>
+            <td>{{city.textiles}}</td>
+            <td>{{city.wool}}</td>
+            <td>{{city.gold}}</td>
+            <td>{{city.wine}}</td>
+          </tr>
+          <tr ng-if="!tradeCityRows || tradeCityRows.length === 0">
+            <td colspan="16" class="text-muted">
+              No trading cities found for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div

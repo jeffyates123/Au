@@ -11,8 +11,16 @@ austerlitzModule.controller(
     tradeBoardingFactory,
     boardingSharedFactory,
   ) {
+    var validTradeTabs = {
+      baggageTrains: true,
+      tradingCities: true,
+    };
+
     $scope.masterData = masterData;
+    $scope.activeTradeTab = "baggageTrains";
     $scope.tradeRows = [];
+    $scope.tradeCityRows = [];
+    $scope.ownedTradeCityRows = [];
     $scope.hasNewFederationColumn = false;
     $scope.isLoading = false;
     $scope.loadError = null;
@@ -28,6 +36,33 @@ austerlitzModule.controller(
       var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
       return turnReport.baggageTrains || [];
     }
+
+    function getTradingCitiesReportRows() {
+      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+      return turnReport.tradingPortsAndCities || [];
+    }
+
+    function buildBarracksCoordinateLookup() {
+      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+      var barracks = turnReport.barracks || [];
+      var lookup = {};
+      (barracks || []).forEach(function (row) {
+        var x = toInt(row && row.x, null);
+        var y = toInt(row && row.y, null);
+        if (x == null || y == null) {
+          return;
+        }
+        lookup[x + "," + y] = true;
+      });
+      return lookup;
+    }
+
+    $scope.selectTradeTab = function (tabKey) {
+      $scope.activeTradeTab =
+        tabKey && Object.prototype.hasOwnProperty.call(validTradeTabs, tabKey)
+          ? tabKey
+          : "baggageTrains";
+    };
 
     $scope.sameNullableInt = function (left, right) {
       return parseInt(left, 10) === parseInt(right, 10);
@@ -85,6 +120,42 @@ austerlitzModule.controller(
       $scope.hasNewFederationColumn = hasNewFederation;
     };
 
+    $scope.refreshTradeCityRows = function () {
+      var tradingCities = getTradingCitiesReportRows();
+      var barracksLookup = buildBarracksCoordinateLookup();
+      var mappedRows = (tradingCities || [])
+        .map(function (city) {
+          var itemNo = toInt(city && city.itemNo, null);
+          return {
+            id: itemNo,
+            itemNo: itemNo,
+            x: toInt(city && city.x, null),
+            y: toInt(city && city.y, null),
+            name: city && city.name ? city.name : "",
+            rate: toInt(city && city.rate, 0),
+            ectPts: toInt(city && city.ectPts, 0),
+            food: toInt(city && city.food, 0),
+            stone: toInt(city && city.stone, 0),
+            wood: toInt(city && city.wood, 0),
+            ore: toInt(city && city.ore, 0),
+            zinc: toInt(city && city.zinc, 0),
+            horses: toInt(city && city.horses, 0),
+            textiles: toInt(city && city.textiles, 0),
+            wool: toInt(city && city.wool, 0),
+            gold: toInt(city && city.gold, 0),
+            wine: toInt(city && city.wine, 0),
+          };
+        })
+        .sort(function (left, right) {
+          return toInt(left && left.itemNo, 0) - toInt(right && right.itemNo, 0);
+        });
+
+      $scope.tradeCityRows = mappedRows;
+      $scope.ownedTradeCityRows = mappedRows.filter(function (city) {
+        return !!barracksLookup[city.x + "," + city.y];
+      });
+    };
+
     $scope.replayTradeBoardingFromRows = function (boardingRows) {
       boardingSharedFactory.replayBoardingAssignments({
         rows: boardingRows || [],
@@ -131,6 +202,7 @@ austerlitzModule.controller(
 
     function afterTurnReportLoaded() {
       $scope.refreshTradeRows();
+      $scope.refreshTradeCityRows();
       return loadBoardingReplay();
     }
 
@@ -141,6 +213,8 @@ austerlitzModule.controller(
         $scope.masterData.turnId === "Unknown"
       ) {
         $scope.tradeRows = [];
+        $scope.tradeCityRows = [];
+        $scope.ownedTradeCityRows = [];
         $scope.hasNewFederationColumn = false;
         return;
       }
@@ -149,7 +223,9 @@ austerlitzModule.controller(
       $scope.loadError = null;
 
       var hasTurnReport =
-        $scope.masterData.turnReport && $scope.masterData.turnReport.baggageTrains;
+        $scope.masterData.turnReport &&
+        ($scope.masterData.turnReport.baggageTrains ||
+          $scope.masterData.turnReport.tradingPortsAndCities);
       var loadPromise = hasTurnReport
         ? $q.when($scope.masterData.turnReport)
         : turnDataLoaderService.loadTR($scope.masterData, $scope.masterData.turnId);
@@ -159,6 +235,8 @@ austerlitzModule.controller(
           $scope.loadError =
             error && error.data ? error.data : "Unable to load trade data.";
           $scope.tradeRows = [];
+          $scope.tradeCityRows = [];
+          $scope.ownedTradeCityRows = [];
           $scope.hasNewFederationColumn = false;
         })
         .finally(function () {

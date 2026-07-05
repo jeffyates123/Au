@@ -1659,6 +1659,25 @@ textarea {
     table-layout: fixed;
 }
 
+.landUnitsTradingCitiesTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.landUnitsTradingCitiesTable .landUnitsNameCol {
+    width: 180px;
+    white-space: normal;
+}
+
+.tradeCitiesSectionHeader {
+    margin-top: 4px;
+}
+
+.tradeCitiesSectionHeaderSecondary {
+    margin-top: 10px;
+}
+
 .landUnitsColId {
     width: 42px;
 }
