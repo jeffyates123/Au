@@ -77,23 +77,40 @@ namespace Austerlitz.Services
         {
             try
             {
-                var turnId = "NotFound12345";
                 for (; lineLocation < lineList.Count; lineLocation++)
                 {
                     var lineToProcess = lineList[lineLocation].ToString();
-                    if (lineToProcess.IndexOf("AUSTERLITZ   Game:") == -1)
+                    if (lineToProcess.IndexOf("AUSTERLITZ   Game:", StringComparison.Ordinal) == -1)
                     {
                         continue;
                     }
 
-                    var gameNo = lineToProcess.Substring(23, 3);
-                    var state = TurnReportImportParsingUtils.GetStateLetter(lineToProcess.Substring(30).TrimStart().TrimEnd());
+                    var gameMatch = Regex.Match(lineToProcess, @"Game:\s*AU-(?<gameNo>\d{3})(?<state>.*)$");
+                    if (!gameMatch.Success)
+                    {
+                        continue;
+                    }
 
-                    lineLocation++;
-                    lineToProcess = lineList[lineLocation].ToString();
-                    var month = lineToProcess.Substring(21, 3).TrimEnd();
-                    var year = lineToProcess.Substring(lineToProcess.Length - 4, 4);
-                    turnId = gameNo + state + month + year;
+                    var nextContentLine = MoveToNextLine(lineList, lineLocation + 1, x => !string.IsNullOrWhiteSpace(x));
+                    if (nextContentLine < 0 || nextContentLine >= lineList.Count)
+                    {
+                        continue;
+                    }
+
+                    var gameNo = gameMatch.Groups["gameNo"].Value;
+                    var stateName = gameMatch.Groups["state"].Value.Trim();
+                    var state = TurnReportImportParsingUtils.GetStateLetter(stateName);
+
+                    var monthLine = lineList[nextContentLine].ToString();
+                    var monthMatch = Regex.Match(monthLine, @"Month:\s*(?<month>[A-Za-z]{3})[A-Za-z]*\s+(?<year>\d{4})");
+                    if (!monthMatch.Success)
+                    {
+                        continue;
+                    }
+
+                    var month = monthMatch.Groups["month"].Value;
+                    var year = monthMatch.Groups["year"].Value;
+                    var turnId = gameNo + state + month + year;
 
                     var existingTurn = auDB.TS_00TurnDetails.Where(x => x.TurnId == turnId);
                     if (existingTurn.Count() == 0)
@@ -106,10 +123,10 @@ namespace Austerlitz.Services
                         turnSheetManager.EnsureAllTurnsheetSectionsSeeded(turnId);
                     }
 
-                    break;
+                    return turnId;
                 }
 
-                return turnId;
+                throw new Exception("Unable to locate a valid turn header in imported file.");
             }
             catch (Exception ex)
             {

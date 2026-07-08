@@ -533,6 +533,7 @@
           <Property Name="Quantity" Type="int" />
           <Property Name="From" Type="int" />
           <Property Name="To" Type="int" />
+          <Property Name="RowMarker" Type="varchar" MaxLength="20" />
         </EntityType>
         <EntityType Name="TS_18Movement">
           <Key>
@@ -560,6 +561,7 @@
           <Property Name="Quantity" Type="int" />
           <Property Name="Source" Type="int" />
           <Property Name="Destination" Type="int" />
+          <Property Name="RowMarker" Type="varchar" MaxLength="20" />
         </EntityType>
         <EntityType Name="TS_20Boarding">
           <Key>
@@ -1135,6 +1137,7 @@
           <Property Name="Quantity" Type="Int32" />
           <Property Name="From" Type="Int32" />
           <Property Name="To" Type="Int32" />
+          <Property Name="RowMarker" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="TS_18Movement">
           <Key>
@@ -1162,6 +1165,7 @@
           <Property Name="Quantity" Type="Int32" />
           <Property Name="Source" Type="Int32" />
           <Property Name="Destination" Type="Int32" />
+          <Property Name="RowMarker" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="TS_20Boarding">
           <Key>
@@ -1788,6 +1792,7 @@
           <ScalarProperty Name="Quantity" ColumnName="Quantity" />
           <ScalarProperty Name="From" ColumnName="From" />
           <ScalarProperty Name="To" ColumnName="To" />
+          <ScalarProperty Name="RowMarker" ColumnName="RowMarker" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
@@ -1815,6 +1820,7 @@
           <ScalarProperty Name="Quantity" ColumnName="Quantity" />
           <ScalarProperty Name="Source" ColumnName="Source" />
           <ScalarProperty Name="Destination" ColumnName="Destination" />
+          <ScalarProperty Name="RowMarker" ColumnName="RowMarker" />
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>

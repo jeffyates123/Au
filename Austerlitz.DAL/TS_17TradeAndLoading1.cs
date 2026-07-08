@@ -20,5 +20,6 @@ namespace Austerlitz.DAL
         public Nullable<int> Quantity { get; set; }
         public Nullable<int> From { get; set; }
         public Nullable<int> To { get; set; }
+        public string RowMarker { get; set; }
     }
 }

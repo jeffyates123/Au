@@ -57,6 +57,68 @@ austerlitzModule.factory('turnMapsMovementRouteFactory', function () {
     function calculateReachableRoutes(startCoord, selectedItem, options) {
         var opts = options || {};
         var routesByCoord = {};
+        var maxMp = (selectedItem && selectedItem.mp) || 0;
+        var bestStateByKey = {};
+        var queue = [];
+
+        if (!startCoord || maxMp <= 0) return routesByCoord;
+        if (typeof opts.getNextCoordinate !== 'function') return routesByCoord;
+        if (typeof opts.getTerrainMPForItem !== 'function') return routesByCoord;
+
+        function makeStateKey(x, y, lastDir, segmentCount) {
+            return x + '_' + y + '_' + lastDir + '_' + segmentCount;
+        }
+
+        function queueCompare(a, b) {
+            if (a.usedMp !== b.usedMp) return a.usedMp - b.usedMp;
+            if (a.segmentCount !== b.segmentCount) return a.segmentCount - b.segmentCount;
+            return a.segments.length - b.segments.length;
+        }
+
+        function queuePush(state) {
+            queue.push(state);
+
+            var idx = queue.length - 1;
+            while (idx > 0) {
+                var parentIdx = Math.floor((idx - 1) / 2);
+                if (queueCompare(queue[parentIdx], queue[idx]) <= 0) break;
+
+                var tmp = queue[parentIdx];
+                queue[parentIdx] = queue[idx];
+                queue[idx] = tmp;
+                idx = parentIdx;
+            }
+        }
+
+        function queuePop() {
+            if (queue.length === 0) return null;
+            if (queue.length === 1) return queue.pop();
+
+            var first = queue[0];
+            queue[0] = queue.pop();
+
+            var idx = 0;
+            while (true) {
+                var left = idx * 2 + 1;
+                var right = idx * 2 + 2;
+                var smallest = idx;
+
+                if (left < queue.length && queueCompare(queue[left], queue[smallest]) < 0) {
+                    smallest = left;
+                }
+                if (right < queue.length && queueCompare(queue[right], queue[smallest]) < 0) {
+                    smallest = right;
+                }
+                if (smallest === idx) break;
+
+                var tmp = queue[idx];
+                queue[idx] = queue[smallest];
+                queue[smallest] = tmp;
+                idx = smallest;
+            }
+
+            return first;
+        }
 
         var recordRoute = function (coord, segments, usedMp) {
             if (!coord || segments.length === 0 || segments.length > 3) return;
@@ -74,37 +136,69 @@ austerlitzModule.factory('turnMapsMovementRouteFactory', function () {
             }
         };
 
-        var explore = function (fromCoord, remainingMp, usedMp, segments) {
-            if (segments.length >= 3 || remainingMp <= 0) return;
+        function tryQueueState(coord, usedMp, lastDir, segmentCount, segments) {
+            if (!coord || usedMp > maxMp || segmentCount > 3) return;
+
+            var stateKey = makeStateKey(coord.x, coord.y, lastDir, segmentCount);
+            if (Object.prototype.hasOwnProperty.call(bestStateByKey, stateKey) && bestStateByKey[stateKey] <= usedMp) {
+                return;
+            }
+
+            bestStateByKey[stateKey] = usedMp;
+            queuePush({
+                coord: coord,
+                usedMp: usedMp,
+                lastDir: lastDir,
+                segmentCount: segmentCount,
+                segments: segments
+            });
+        }
+
+        tryQueueState(startCoord, 0, 0, 0, []);
+
+        while (queue.length > 0) {
+            var state = queuePop();
+            if (!state || !state.coord) continue;
+
+            var stateKey = makeStateKey(state.coord.x, state.coord.y, state.lastDir, state.segmentCount);
+            if (!Object.prototype.hasOwnProperty.call(bestStateByKey, stateKey) || bestStateByKey[stateKey] !== state.usedMp) {
+                continue;
+            }
 
             for (var dir = 1; dir <= 8; dir++) {
-                var currentCoord = fromCoord;
-                var segmentDistance = 0;
-                var segmentCost = 0;
+                var nextCoord = opts.getNextCoordinate(dir, state.coord);
+                if (!nextCoord || !isCoordInSelectedMap(nextCoord, opts.selectedMapChoice)) continue;
 
-                while (true) {
-                    if (typeof opts.getNextCoordinate !== 'function') return;
-                    var nextCoord = opts.getNextCoordinate(dir, currentCoord);
-                    if (!nextCoord || !isCoordInSelectedMap(nextCoord, opts.selectedMapChoice)) break;
+                var moveCost = opts.getTerrainMPForItem(nextCoord, selectedItem);
+                if (moveCost <= 0) continue;
 
-                    if (typeof opts.getTerrainMPForItem !== 'function') return;
-                    var moveCost = opts.getTerrainMPForItem(nextCoord, selectedItem);
-                    if (moveCost <= 0 || segmentCost + moveCost > remainingMp) break;
+                var nextUsedMp = state.usedMp + moveCost;
+                if (nextUsedMp > maxMp) continue;
 
-                    segmentDistance++;
-                    segmentCost += moveCost;
-                    currentCoord = nextCoord;
+                var nextSegmentCount = state.segmentCount;
+                var nextSegments = state.segments;
 
-                    var nextSegments = segments.concat([{ dir: dir, dist: segmentDistance }]);
-                    var nextUsedMp = usedMp + segmentCost;
-
-                    recordRoute(currentCoord, nextSegments, nextUsedMp);
-                    explore(currentCoord, remainingMp - segmentCost, nextUsedMp, nextSegments);
+                if (state.segmentCount === 0) {
+                    nextSegmentCount = 1;
+                    nextSegments = [{ dir: dir, dist: 1 }];
+                } else if (dir === state.lastDir) {
+                    var lastSegmentIndex = state.segments.length - 1;
+                    nextSegments = state.segments.slice(0, lastSegmentIndex);
+                    nextSegments.push({
+                        dir: state.segments[lastSegmentIndex].dir,
+                        dist: state.segments[lastSegmentIndex].dist + 1
+                    });
+                } else {
+                    nextSegmentCount = state.segmentCount + 1;
+                    if (nextSegmentCount > 3) continue;
+                    nextSegments = state.segments.concat([{ dir: dir, dist: 1 }]);
                 }
-            }
-        };
 
-        explore(startCoord, (selectedItem && selectedItem.mp) || 0, 0, []);
+                recordRoute(nextCoord, nextSegments, nextUsedMp);
+                tryQueueState(nextCoord, nextUsedMp, dir, nextSegmentCount, nextSegments);
+            }
+        }
+
         return routesByCoord;
     }
 

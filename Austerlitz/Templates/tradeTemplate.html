@@ -6,6 +6,14 @@
         <button
           type="button"
           class="landUnitsTabButton"
+          ng-class="{ active: activeTradeTab === 'trading' }"
+          ng-click="selectTradeTab('trading')"
+        >
+          Trading
+        </button>
+        <button
+          type="button"
+          class="landUnitsTabButton"
           ng-class="{ active: activeTradeTab === 'baggageTrains' }"
           ng-click="selectTradeTab('baggageTrains')"
         >
@@ -191,6 +199,411 @@
           <tr ng-if="!tradeCityRows || tradeCityRows.length === 0">
             <td colspan="16" class="text-muted">
               No trading cities found for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="landUnitsTabPane" ng-show="activeTradeTab === 'trading'">
+    <div class="tradeCalculatorHeader">
+      <div class="tradeCalculatorCity">{{getSelectedTradingCityTitle()}}</div>
+      <div class="tradeCalculatorActions">
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="clearTradingGridInputs()"
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          ng-click="calculateTrade()"
+          ng-disabled="!selectedTradingCity"
+        >
+          Calculate Trade
+        </button>
+        <button type="button" class="btn btn-default btn-sm" ng-click="clearTrade1()">
+          Clear Trade1
+        </button>
+        <button type="button" class="btn btn-default btn-sm" ng-click="clearTrade2()">
+          Clear Trade2
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="alert tradeSyncAlert"
+      ng-class="{
+        'alert-warning': tradeSyncMessageType === 'warning',
+        'alert-danger': tradeSyncMessageType === 'danger',
+        'alert-success': tradeSyncMessageType === 'success'
+      }"
+      ng-show="tradeSyncMessage"
+    >
+      {{tradeSyncMessage}}
+    </div>
+
+    <div class="alert alert-info" ng-show="!selectedTradingCity">
+      Click an owned trade city to start trading.
+    </div>
+
+    <div class="landUnitsTableWrap" ng-show="selectedTradingCity">
+      <table class="table landUnitsTable tradeCalculatorTable">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Good</th>
+            <th>GF</th>
+            <th>Rate</th>
+            <th>Stock</th>
+            <th>Warehouse</th>
+            <th>Stock+W/H</th>
+            <th>D. Buy Qty</th>
+            <th>Total Direct</th>
+            <th>Net Stock</th>
+            <th>Qty</th>
+            <th>n</th>
+            <th>Total Sell</th>
+            <th>Profit LD</th>
+            <th>+Trade1</th>
+            <th>+Trade2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in tradingCalcRows track by row.key">
+            <td>{{getTradingGoodsCode(row)}}</td>
+            <td>{{row.label}}</td>
+            <td>{{row.goodsFactor}}</td>
+            <td>{{selectedTradingCity ? selectedTradingCity.rate : 0}}</td>
+            <td>{{row.stock}}</td>
+            <td>{{row.warehouse}}</td>
+            <td>{{getTradingStockPlusWarehouse(row)}}</td>
+            <td>
+              <input
+                type="number"
+                min="0"
+                class="form-control input-sm tradeCalcInput"
+                ng-model="row.directBuyQty"
+              />
+            </td>
+            <td>{{row.totalDirect == null ? 0 : row.totalDirect}}</td>
+            <td>{{getTradingNetStock(row)}}</td>
+            <td>
+              <input
+                type="number"
+                min="0"
+                class="form-control input-sm tradeCalcInput"
+                ng-model="row.qty"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                min="0"
+                class="form-control input-sm tradeCalcInput"
+                ng-model="row.n"
+              />
+            </td>
+            <td>{{row.totalSell == null ? 0 : row.totalSell}}</td>
+            <td>{{row.profitLd == null ? 0 : row.profitLd}}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-default btn-xs"
+                ng-click="addTrade1ForRow(row)"
+                ng-disabled="!selectedTradingCity"
+              >
+                +Trade1
+              </button>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-default btn-xs"
+                ng-click="addTrade2ForRow(row)"
+                ng-disabled="!selectedTradingCity"
+              >
+                +Trade2
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
+      <span class="landUnitsSectionTitle">Saved Trades</span>
+      <span class="landUnitsSectionMeta">{{savedTradingRows.length}}</span>
+    </div>
+    <div class="landUnitsTableWrap">
+      <table class="table landUnitsTable tradeCalculatorTable">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Good</th>
+            <th>GF</th>
+            <th>Rate</th>
+            <th>Stock</th>
+            <th>Warehouse</th>
+            <th>Stock+W/H</th>
+            <th>D. Buy Qty</th>
+            <th>Total Direct</th>
+            <th>Net Stock</th>
+            <th>Qty</th>
+            <th>n</th>
+            <th>Total Sell</th>
+            <th>Profit LD</th>
+            <th>Trade City</th>
+            <th>Id</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in savedTradingRows track by row.key">
+            <td>{{getTradingGoodsCode(row)}}</td>
+            <td>{{row.label}}</td>
+            <td>{{row.goodsFactor}}</td>
+            <td>{{row.rate}}</td>
+            <td>{{row.stock}}</td>
+            <td>{{row.warehouse}}</td>
+            <td>{{getTradingStockPlusWarehouse(row)}}</td>
+            <td>{{row.directBuyQty}}</td>
+            <td>{{row.totalDirect == null ? 0 : row.totalDirect}}</td>
+            <td>{{row.netStock}}</td>
+            <td>{{row.qty}}</td>
+            <td>{{row.n}}</td>
+            <td>{{row.totalSell == null ? 0 : row.totalSell}}</td>
+            <td>{{row.profitLd == null ? 0 : row.profitLd}}</td>
+            <td>{{row.cityName}}</td>
+            <td>{{row.cityItemNo}}</td>
+          </tr>
+          <tr ng-if="!savedTradingRows || savedTradingRows.length === 0">
+            <td colspan="16" class="text-muted">
+              No saved TRADE rows found in TS17/TS19.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tradeTurnSheetsHeader">
+      <button type="button" class="btn btn-link btn-sm tradeTurnSheetsToggle" ng-click="toggleTradeTurnSheets()">
+        <span ng-show="tradeTurnSheetsCollapsed">&#9654;</span>
+        <span ng-show="!tradeTurnSheetsCollapsed">&#9660;</span>
+        TS17 / TS19 Rows
+      </button>
+      <span class="tradeTurnSheetsCounts">
+        TS17: {{ts17Rows.length}} rows | TS19: {{ts19Rows.length}} rows
+      </span>
+    </div>
+
+    <div class="tradeTurnSheetsGrid" ng-show="!tradeTurnSheetsCollapsed">
+      <div class="tradeTurnSheetsPane">
+        <div class="tradeTurnSheetsPaneTitle">TS17 TradeAndLoading1</div>
+        <div class="landUnitsTableWrap">
+          <table class="table landUnitsTable tradeTurnSheetsTable">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="triplet in ts17Triplets track by $index">
+                <td>{{triplet[0] ? triplet[0].orderNo : ($index + 1)}}</td>
+                <td>{{triplet[0] && triplet[0].goods != null ? triplet[0].goods : ''}}</td>
+                <td>{{triplet[0] && triplet[0].quantity != null ? triplet[0].quantity : ''}}</td>
+                <td>{{triplet[0] && triplet[0].from != null ? triplet[0].from : ''}}</td>
+                <td>{{triplet[0] && triplet[0].to != null ? triplet[0].to : ''}}</td>
+                <td>{{triplet[1] ? triplet[1].orderNo : ($index + 7)}}</td>
+                <td>{{triplet[1] && triplet[1].goods != null ? triplet[1].goods : ''}}</td>
+                <td>{{triplet[1] && triplet[1].quantity != null ? triplet[1].quantity : ''}}</td>
+                <td>{{triplet[1] && triplet[1].from != null ? triplet[1].from : ''}}</td>
+                <td>{{triplet[1] && triplet[1].to != null ? triplet[1].to : ''}}</td>
+                <td>{{triplet[2] ? triplet[2].orderNo : ($index + 13)}}</td>
+                <td>{{triplet[2] && triplet[2].goods != null ? triplet[2].goods : ''}}</td>
+                <td>{{triplet[2] && triplet[2].quantity != null ? triplet[2].quantity : ''}}</td>
+                <td>{{triplet[2] && triplet[2].from != null ? triplet[2].from : ''}}</td>
+                <td>{{triplet[2] && triplet[2].to != null ? triplet[2].to : ''}}</td>
+              </tr>
+              <tr ng-if="!ts17Rows || ts17Rows.length === 0">
+                <td colspan="15" class="text-muted">No TS17 rows found for this turn.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tradeTurnSheetsPane">
+        <div class="tradeTurnSheetsPaneTitle">TS19 TradeAndLoading2</div>
+        <div class="landUnitsTableWrap">
+          <table class="table landUnitsTable tradeTurnSheetsTable">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Order</th>
+                <th>Gds</th>
+                <th>Qty</th>
+                <th>From</th>
+                <th>To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="triplet in ts19Triplets track by $index">
+                <td>{{triplet[0] ? triplet[0].orderNo : ($index + 1)}}</td>
+                <td>{{triplet[0] && triplet[0].goods != null ? triplet[0].goods : ''}}</td>
+                <td>{{triplet[0] && triplet[0].quantity != null ? triplet[0].quantity : ''}}</td>
+                <td>{{triplet[0] && triplet[0].source != null ? triplet[0].source : ''}}</td>
+                <td>{{triplet[0] && triplet[0].destination != null ? triplet[0].destination : ''}}</td>
+                <td>{{triplet[1] ? triplet[1].orderNo : ($index + 7)}}</td>
+                <td>{{triplet[1] && triplet[1].goods != null ? triplet[1].goods : ''}}</td>
+                <td>{{triplet[1] && triplet[1].quantity != null ? triplet[1].quantity : ''}}</td>
+                <td>{{triplet[1] && triplet[1].source != null ? triplet[1].source : ''}}</td>
+                <td>{{triplet[1] && triplet[1].destination != null ? triplet[1].destination : ''}}</td>
+                <td>{{triplet[2] ? triplet[2].orderNo : ($index + 13)}}</td>
+                <td>{{triplet[2] && triplet[2].goods != null ? triplet[2].goods : ''}}</td>
+                <td>{{triplet[2] && triplet[2].quantity != null ? triplet[2].quantity : ''}}</td>
+                <td>{{triplet[2] && triplet[2].source != null ? triplet[2].source : ''}}</td>
+                <td>{{triplet[2] && triplet[2].destination != null ? triplet[2].destination : ''}}</td>
+              </tr>
+              <tr ng-if="!ts19Rows || ts19Rows.length === 0">
+                <td colspan="15" class="text-muted">No TS19 rows found for this turn.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
+      <span class="landUnitsSectionTitle">Owned Trade Cities</span>
+      <span class="landUnitsSectionMeta">{{ownedTradeCityRows.length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable tradeOwnedCitiesPickerTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th class="landUnitsNameCol">Name</th>
+            <th>Rate</th>
+            <th>EctPts</th>
+            <th>Food</th>
+            <th>Stone</th>
+            <th>Wood</th>
+            <th>Ore</th>
+            <th>Zinc</th>
+            <th>Horses</th>
+            <th>Textiles</th>
+            <th>Wool</th>
+            <th>Gold</th>
+            <th>Wine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="city in ownedTradeCityRows track by city.id"
+            ng-click="selectOwnedTradingCity(city)"
+            ng-class="{ active: isOwnedTradingCitySelected(city) }"
+          >
+            <td>{{city.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{city.x}}</td>
+            <td class="landUnitsPositionCol">{{city.y}}</td>
+            <td class="landUnitsNameCol">{{city.name}}</td>
+            <td>{{city.rate}}</td>
+            <td>{{city.ectPts}}</td>
+            <td>{{city.food}}</td>
+            <td>{{city.stone}}</td>
+            <td>{{city.wood}}</td>
+            <td>{{city.ore}}</td>
+            <td>{{city.zinc}}</td>
+            <td>{{city.horses}}</td>
+            <td>{{city.textiles}}</td>
+            <td>{{city.wool}}</td>
+            <td>{{city.gold}}</td>
+            <td>{{city.wine}}</td>
+          </tr>
+          <tr ng-if="!ownedTradeCityRows || ownedTradeCityRows.length === 0">
+            <td colspan="16" class="text-muted">
+              No owned trade cities found for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
+      <span class="landUnitsSectionTitle">Sphere Warehouses</span>
+      <span class="landUnitsSectionMeta">{{sphereWarehouseRows.length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="!isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="landUnitsPositionCol">Inhab.</th>
+            <th class="landUnitsPositionCol">-Foreign</th>
+            <th class="landUnitsNameCol">Mny</th>
+            <th>Citz</th>
+            <th>EcPt</th>
+            <th>Food</th>
+            <th>Stone</th>
+            <th>Wood</th>
+            <th>Ore</th>
+            <th>Zinc</th>
+            <th>Horses</th>
+            <th>Textiles</th>
+            <th>Wool</th>
+            <th>Gold</th>
+            <th>Wine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="warehouse in sphereWarehouseRows track by warehouse.itemNo">
+            <td>{{warehouse.warehouseLabel}}</td>
+            <td class="landUnitsPositionCol">{{warehouse.inhabitants}}</td>
+            <td class="landUnitsPositionCol">{{warehouse.foreign}}</td>
+            <td class="landUnitsNameCol">{{warehouse.money}}</td>
+            <td>{{warehouse.citizens}}</td>
+            <td>{{warehouse.ectPts}}</td>
+            <td>{{warehouse.food}}</td>
+            <td>{{warehouse.stone}}</td>
+            <td>{{warehouse.wood}}</td>
+            <td>{{warehouse.ore}}</td>
+            <td>{{warehouse.zinc}}</td>
+            <td>{{warehouse.horses}}</td>
+            <td>{{warehouse.textiles}}</td>
+            <td>{{warehouse.wool}}</td>
+            <td>{{warehouse.gold}}</td>
+            <td>{{warehouse.wine}}</td>
+          </tr>
+          <tr ng-if="!sphereWarehouseRows || sphereWarehouseRows.length === 0">
+            <td colspan="16" class="text-muted">
+              No sphere warehouses found for this turn.
             </td>
           </tr>
         </tbody>

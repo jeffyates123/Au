@@ -599,7 +599,8 @@ CREATE TABLE [dbo].[TS_17TradeAndLoading1] (
     [Goods] int  NULL,
     [Quantity] int  NULL,
     [From] int  NULL,
-    [To] int  NULL
+    [To] int  NULL,
+    [RowMarker] varchar(20)  NULL
 );
 GO
 
@@ -624,7 +625,8 @@ CREATE TABLE [dbo].[TS_19TradeAndLoading2] (
     [Goods] int  NULL,
     [Quantity] int  NULL,
     [Source] int  NULL,
-    [Destination] int  NULL
+    [Destination] int  NULL,
+    [RowMarker] varchar(20)  NULL
 );
 GO
 
