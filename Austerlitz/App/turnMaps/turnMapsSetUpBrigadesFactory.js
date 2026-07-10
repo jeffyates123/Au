@@ -28,6 +28,16 @@ austerlitzModule.factory(
       return isNaN(parsed) ? fallback || 0 : parsed;
     }
 
+    function getSectionNoFromTsType(tsType) {
+      var text = (tsType || "").toString().trim().toUpperCase();
+      if (!text) return null;
+      if (text.indexOf("TS") === 0) {
+        text = text.substring(2);
+      }
+      var parsed = parseInt(text, 10);
+      return isNaN(parsed) ? null : parsed;
+    }
+
     function hasMeaningfulText(value) {
       return setUpBrigadesSharedFactory.hasMeaningfulText(value);
     }
@@ -561,6 +571,9 @@ austerlitzModule.factory(
               isTransferGoodsRowEmpty: $scope.isTransferGoodsRowEmpty,
               getRowSignature: $scope.getTransferGoodsRowSignature,
               clearTransferGoodsRowValues: $scope.clearTransferGoodsRowValues,
+              resolveManagedSectionNo: function (line) {
+                return getSectionNoFromTsType(line && line.tsType);
+              },
               toInt: toInt,
             });
 

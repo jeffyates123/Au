@@ -176,7 +176,7 @@ austerlitzModule.controller(
 
     function getTradingCitiesReportRows() {
       var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
-      return turnReport.tradingPortsAndCities || [];
+      return turnReport.tradingPortsAndCities || turnReport.TradingPortsAndCities || [];
     }
 
     function getWarehouseReportRows() {
@@ -257,6 +257,31 @@ austerlitzModule.controller(
         }
         lookup[cityItemNo] = city;
       });
+      if (Object.keys(lookup).length) {
+        return lookup;
+      }
+      (getTradingCitiesReportRows() || []).forEach(function (city) {
+        var cityItemNo = toInt(city && (city.itemNo != null ? city.itemNo : city.ItemNo), null);
+        if (cityItemNo == null) {
+          return;
+        }
+        lookup[cityItemNo] = {
+          itemNo: cityItemNo,
+          name: toText(city && (city.name != null ? city.name : city.Name), ""),
+          rate: toInt(city && (city.rate != null ? city.rate : city.Rate), 0),
+          ectPts: toInt(city && (city.ectPts != null ? city.ectPts : city.EctPts), 0),
+          food: toInt(city && (city.food != null ? city.food : city.Food), 0),
+          stone: toInt(city && (city.stone != null ? city.stone : city.Stone), 0),
+          wood: toInt(city && (city.wood != null ? city.wood : city.Wood), 0),
+          ore: toInt(city && (city.ore != null ? city.ore : city.Ore), 0),
+          zinc: toInt(city && (city.zinc != null ? city.zinc : city.Zinc), 0),
+          horses: toInt(city && (city.horses != null ? city.horses : city.Horses), 0),
+          textiles: toInt(city && (city.textiles != null ? city.textiles : city.Textiles), 0),
+          wool: toInt(city && (city.wool != null ? city.wool : city.Wool), 0),
+          gold: toInt(city && (city.gold != null ? city.gold : city.Gold), 0),
+          wine: toInt(city && (city.wine != null ? city.wine : city.Wine), 0),
+        };
+      });
       return lookup;
     }
 
@@ -273,7 +298,8 @@ austerlitzModule.controller(
     }
 
     function parseTradeReplayEntry(sectionKey, row) {
-      if (toText(row && row.rowMarker, "") !== tradeRowMarker) {
+      var marker = toText(row && row.rowMarker, "").toUpperCase();
+      if (marker && marker !== tradeRowMarker) {
         return null;
       }
 
@@ -284,29 +310,35 @@ austerlitzModule.controller(
       }
 
       var fromNo = toInt(
-        sectionKey === "ts17" ? row && row.from : row && row.source,
+        sectionKey === "ts17"
+          ? row && row.from
+          : row && (row.source != null ? row.source : row.from),
         null,
       );
       var toNo = toInt(
-        sectionKey === "ts17" ? row && row.to : row && row.destination,
+        sectionKey === "ts17"
+          ? row && row.to
+          : row && (row.destination != null ? row.destination : row.to),
         null,
       );
       if (fromNo == null || toNo == null) {
         return null;
       }
 
-      var fromIsWarehouse = !!sphereWarehouseNos[fromNo];
-      var toIsWarehouse = !!sphereWarehouseNos[toNo];
-      if (fromIsWarehouse === toIsWarehouse) {
+      var cityLookup = getCityLookupByItemNo();
+      var fromIsTradeCity = !!cityLookup[fromNo];
+      var toIsTradeCity = !!cityLookup[toNo];
+      if (fromIsTradeCity === toIsTradeCity) {
         return null;
       }
 
       return {
         goodsId: goodsId,
         quantity: quantity,
-        warehouseNo: fromIsWarehouse ? fromNo : toNo,
-        cityItemNo: fromIsWarehouse ? toNo : fromNo,
-        isSell: fromIsWarehouse,
+        warehouseNo: fromIsTradeCity ? toNo : fromNo,
+        cityItemNo: fromIsTradeCity ? fromNo : toNo,
+        // Direction rule: TO trade city = sell, FROM trade city = buy.
+        isSell: toIsTradeCity,
       };
     }
 
@@ -320,10 +352,6 @@ austerlitzModule.controller(
         if (!parsed) {
           return;
         }
-        if (!tradeGoodsKeyById[parsed.goodsId]) {
-          return;
-        }
-
         var key = parsed.cityItemNo + "|" + parsed.goodsId;
         if (!grouped[key]) {
           grouped[key] = {
@@ -365,17 +393,17 @@ austerlitzModule.controller(
           var goodsKey = tradeGoodsKeyById[source.goodsId];
           var calcTemplate = ($scope.tradingCalcRows || []).find(function (row) {
             return row.key === goodsKey;
-          });
-          if (!calcTemplate) {
-            return null;
-          }
+          }) || {
+            label: "Goods " + source.goodsId,
+            goodsFactor: 0,
+          };
 
           var warehouseNo =
             source.warehouseNo != null ? source.warehouseNo : getWarehouseNoForCity(city);
           var warehouse = warehouseLookup[warehouseNo] || {};
           var rate = Math.max(0, toNumber(city && city.rate, 0));
-          var stock = Math.max(0, toNumber(city && city[goodsKey], 0));
-          var warehouseStock = Math.max(0, toNumber(warehouse && warehouse[goodsKey], 0));
+          var stock = goodsKey ? Math.max(0, toNumber(city && city[goodsKey], 0)) : 0;
+          var warehouseStock = goodsKey ? Math.max(0, toNumber(warehouse && warehouse[goodsKey], 0)) : 0;
 
           var replayRow = {
             key: "saved-" + source.cityItemNo + "-" + source.goodsId,
@@ -956,25 +984,25 @@ austerlitzModule.controller(
       var barracksLookup = buildBarracksCoordinateLookup();
       var mappedRows = (tradingCities || [])
         .map(function (city) {
-          var itemNo = toInt(city && city.itemNo, null);
+          var itemNo = toInt(city && (city.itemNo != null ? city.itemNo : city.ItemNo), null);
           return {
             id: itemNo,
             itemNo: itemNo,
-            x: toInt(city && city.x, null),
-            y: toInt(city && city.y, null),
-            name: city && city.name ? city.name : "",
-            rate: toInt(city && city.rate, 0),
-            ectPts: toInt(city && city.ectPts, 0),
-            food: toInt(city && city.food, 0),
-            stone: toInt(city && city.stone, 0),
-            wood: toInt(city && city.wood, 0),
-            ore: toInt(city && city.ore, 0),
-            zinc: toInt(city && city.zinc, 0),
-            horses: toInt(city && city.horses, 0),
-            textiles: toInt(city && city.textiles, 0),
-            wool: toInt(city && city.wool, 0),
-            gold: toInt(city && city.gold, 0),
-            wine: toInt(city && city.wine, 0),
+            x: toInt(city && (city.x != null ? city.x : city.X), null),
+            y: toInt(city && (city.y != null ? city.y : city.Y), null),
+            name: toText(city && (city.name != null ? city.name : city.Name), ""),
+            rate: toInt(city && (city.rate != null ? city.rate : city.Rate), 0),
+            ectPts: toInt(city && (city.ectPts != null ? city.ectPts : city.EctPts), 0),
+            food: toInt(city && (city.food != null ? city.food : city.Food), 0),
+            stone: toInt(city && (city.stone != null ? city.stone : city.Stone), 0),
+            wood: toInt(city && (city.wood != null ? city.wood : city.Wood), 0),
+            ore: toInt(city && (city.ore != null ? city.ore : city.Ore), 0),
+            zinc: toInt(city && (city.zinc != null ? city.zinc : city.Zinc), 0),
+            horses: toInt(city && (city.horses != null ? city.horses : city.Horses), 0),
+            textiles: toInt(city && (city.textiles != null ? city.textiles : city.Textiles), 0),
+            wool: toInt(city && (city.wool != null ? city.wool : city.Wool), 0),
+            gold: toInt(city && (city.gold != null ? city.gold : city.Gold), 0),
+            wine: toInt(city && (city.wine != null ? city.wine : city.Wine), 0),
           };
         })
         .sort(function (left, right) {

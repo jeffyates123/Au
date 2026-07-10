@@ -58,6 +58,28 @@ namespace Austerlitz.Controllers
             public string Description { get; set; }
         }
 
+        public class ProductionSiteApiRow
+        {
+            public int SiteTypeNo { get; set; }
+            public string Terrain { get; set; }
+            public string SiteType { get; set; }
+            public string Symbol { get; set; }
+            public string SecondarySymbol { get; set; }
+            public int Cost { get; set; }
+            public int Maintenance { get; set; }
+            public int MinPopulation { get; set; }
+            public int MaxPopulation { get; set; }
+            public string ProductionType { get; set; }
+            public int MinProduction { get; set; }
+            public int MaxProduction { get; set; }
+            public int? MinProductionColonial { get; set; }
+            public string MaxProductionColonial { get; set; }
+            public string BonusSymbol { get; set; }
+            public int? BonusPercentage { get; set; }
+            public int CitizensRequired { get; set; }
+            public decimal CitizenAttritionPercent { get; set; }
+        }
+
         public RulesCatalog GetRulesCatalog()
         {
             var refManager = new Austerlitz.Domain.ReferenceManager();
@@ -101,17 +123,62 @@ ORDER BY ItemNo", new SqlParameter("@state", normalizedState)).ToArray();
             }
         }
 
-        public REF_ProductionSites[] GetRefProductionSites()
+        public ProductionSiteApiRow[] GetRefProductionSites()
         {
             using (var dataContext = new AusterlitzDbContext())
             {
-                var listRepository = new GenericRepository<REF_ProductionSites>(dataContext);
+                var hasAttritionColumn = dataContext.Database
+                    .SqlQuery<int>(
+                        "SELECT CASE WHEN COL_LENGTH('dbo.REF_ProductionSites','CitizenAttritionPercent') IS NULL THEN 0 ELSE 1 END")
+                    .SingleOrDefault() == 1;
 
-                IEnumerable<REF_ProductionSites> rtnList = listRepository
-                    .Get()
-                    .OrderBy(y => y.SiteTypeNo);
+                var sql = hasAttritionColumn
+                    ? @"
+SELECT
+    SiteTypeNo,
+    Terrain,
+    SiteType,
+    Symbol,
+    SecondarySymbol,
+    Cost,
+    Maintenance,
+    MinPopulation,
+    MaxPopulation,
+    ProductionType,
+    MinProduction,
+    MaxProduction,
+    MinProductionColonial,
+    MaxProductionColonial,
+    BonusSymbol,
+    BonusPercentage,
+    CitizensRequired,
+    CAST(CitizenAttritionPercent AS decimal(10,2)) AS CitizenAttritionPercent
+FROM dbo.REF_ProductionSites
+ORDER BY SiteTypeNo, Terrain, SiteType, Symbol"
+                    : @"
+SELECT
+    SiteTypeNo,
+    Terrain,
+    SiteType,
+    Symbol,
+    SecondarySymbol,
+    Cost,
+    Maintenance,
+    MinPopulation,
+    MaxPopulation,
+    ProductionType,
+    MinProduction,
+    MaxProduction,
+    MinProductionColonial,
+    MaxProductionColonial,
+    BonusSymbol,
+    BonusPercentage,
+    CitizensRequired,
+    CAST(100 AS decimal(10,2)) AS CitizenAttritionPercent
+FROM dbo.REF_ProductionSites
+ORDER BY SiteTypeNo, Terrain, SiteType, Symbol";
 
-                return rtnList.ToArray();
+                return dataContext.Database.SqlQuery<ProductionSiteApiRow>(sql).ToArray();
             }
         }
 

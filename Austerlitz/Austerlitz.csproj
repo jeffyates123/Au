@@ -269,6 +269,7 @@
     <Content Include="App\intelligenceController.js" />
     <Content Include="App\trade\tradeBoardingFactory.js" />
     <Content Include="App\tradeController.js" />
+    <Content Include="App\economyController.js" />
     <Content Include="App\simBattleFactory.js" />
     <Content Include="App\rulesCatalogFactory.js" />
     <Content Include="App\sectionPlaceholderController.js" />
@@ -672,6 +673,7 @@
     <Content Include="Templates\headerTemplate.html" />
     <Content Include="Templates\homeTemplate.html" />
     <Content Include="Templates\tradeTemplate.html" />
+    <Content Include="Templates\economyTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />
     <Content Include="Templates\mathBattlesTemplate.html" />

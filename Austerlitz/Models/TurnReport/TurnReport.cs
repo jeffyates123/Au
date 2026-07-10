@@ -105,6 +105,7 @@ namespace Austerlitz.Models.TurnReport
         public TR_BaggageTrains[] BaggageTrains;
         public TR_Spies[] Spies;
         public TR_TradingPortsAndCities[] TradingPortsAndCities;
+        public TR_EconomySummary EconomySummary;
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;
         public MathBattleDetails[] MathBattles;

@@ -45,6 +45,10 @@
             controller: 'tradeController',
             templateUrl: '/Templates/tradeTemplate.html'
         })
+        .when('/Section/Economy', {
+            controller: 'economyController',
+            templateUrl: '/Templates/economyTemplate.html'
+        })
         .when('/Section/:sectionName', {
             controller: 'sectionPlaceholderController',
             templateUrl: '/Templates/sectionPlaceholderTemplate.html'

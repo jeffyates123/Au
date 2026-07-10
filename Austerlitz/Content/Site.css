@@ -2572,3 +2572,99 @@ textarea {
     color: #666666;
     margin-top: 2px;
 }
+
+.economyPage .landUnitsTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.economyTabPane {
+    padding-top: 8px;
+}
+
+.economyWarehouseTable > thead > tr > th,
+.economyWarehouseTable > tbody > tr > td,
+.economyProductionTable > thead > tr > th,
+.economyProductionTable > tbody > tr > td,
+.economyTotalsTable > thead > tr > th,
+.economyTotalsTable > tbody > tr > td {
+    padding: 5px 4px;
+    text-align: center;
+    font-size: 11px;
+}
+
+.economyWarehouseTable > thead > tr > th:first-child,
+.economyWarehouseTable > tbody > tr > td:first-child,
+.economyProductionTable > thead > tr > th:first-child,
+.economyProductionTable > tbody > tr > td:first-child,
+.economyTotalsTable > thead > tr > th:first-child,
+.economyTotalsTable > tbody > tr > td:first-child {
+    text-align: left;
+}
+
+.economyMainSplit {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 8px;
+}
+
+.economyModeSelector {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.economyModeSelector .radio-inline {
+    font-size: 12px;
+    margin-right: 10px;
+}
+
+.economyMainGrid {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.economyFinancePane {
+    flex: 0 0 290px;
+    border: 1px solid #d0d0d0;
+    border-radius: 3px;
+    background: #ffffff;
+    padding: 8px;
+}
+
+.economyFinancePane h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.economyFinanceTable {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.economyFinanceTable > tbody > tr > td {
+    padding: 5px 6px;
+}
+
+.economyFinanceTable > tbody > tr > td:last-child {
+    text-align: right;
+    font-weight: bold;
+}
+
+.economyHighlightRow {
+    background: #fff2c8;
+}
+
+.economyBuildInput {
+    width: 58px;
+    margin: 0 auto;
+    height: 22px;
+    padding: 1px 3px;
+    text-align: center;
+}
+
+.economyTotalsWrap {
+    margin-top: 8px;
+}

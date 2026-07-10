@@ -101,6 +101,7 @@ namespace Austerlitz.Controllers
 
                 var turnTradingPortsAndCities = new GenericRepository<TR_TradingPortsAndCities>(dataContext);
                 turnReport.TradingPortsAndCities = turnTradingPortsAndCities.GetItems(x => x.TurnId == turnId).ToArray();
+                turnReport.EconomySummary = getTREconomySummary(dataContext, turnId);
 
                 List<MovementItems> movementItems = turnReport.Commanders.Select(x => new MovementItems() { ItemNo = x.ItemNo, OriginalItemNo = x.ItemNo, MemberItemNos = new[] { x.ItemNo }, FederationNo = FederationOverride(x, "NewFederation", "Federation"), ItemType = ItemType.Commander, Description = x.Name + " (" + x.CommandCapacity + ")", MP = x.MP, OriginalMP = x.MP, X = x.X, Y = x.Y, Sphere = CalcSphere(x.X, x.Y) }).ToList();
                 var dummy = 0;
@@ -1191,6 +1192,54 @@ WHERE R.TurnId = @p0
         public int AxisValue(string axisValue)
         {
             return Int32.TryParse(axisValue, out dummy) ? int.Parse(axisValue) : 0;
+        }
+
+        private TR_EconomySummary getTREconomySummary(AusterlitzDbContext dataContext, string turnId)
+        {
+            var summary = new TR_EconomySummary { TurnId = turnId };
+            try
+            {
+                var tableExists = dataContext.Database.SqlQuery<int>(
+                    @"SELECT COUNT(1)
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'TR_EconomySummary'").SingleOrDefault() > 0;
+                if (!tableExists)
+                {
+                    return summary;
+                }
+
+                var row = dataContext.Database.SqlQuery<TR_EconomySummary>(@"
+SELECT TOP 1
+    TurnId,
+    ProductionMaintenanceLd,
+    EuropeMaintenanceWorkers,
+    CaribbeanMaintenanceWorkers,
+    IndiaMaintenanceWorkers,
+    CommanderPayLd,
+    BrigadePayLd,
+    NavyMaintenanceLd,
+    NavyMaintenanceMarines,
+    BarracksCount,
+    FactoriesCount,
+    WeavingMillsCount,
+    MintsCount,
+    EstatesCount,
+    SheepFarmsCount,
+    HorseFarmsCount,
+    LumberCampsCount,
+    QuarriesCount,
+    MinesCount,
+    VineyardsCount,
+    FreeAreasCount
+FROM dbo.TR_EconomySummary
+WHERE TurnId = @turnId",
+                    new SqlParameter("@turnId", turnId ?? string.Empty)).SingleOrDefault();
+                return row ?? summary;
+            }
+            catch
+            {
+                return summary;
+            }
         }
 
         public Sphere CalcSphere(int x, int y)

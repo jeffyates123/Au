@@ -67,6 +67,12 @@ austerlitzModule.factory("setUpTransferPipelineFactory", function () {
         : function () {
             return true;
           };
+    var resolveManagedSectionNo =
+      typeof config.resolveManagedSectionNo === "function"
+        ? config.resolveManagedSectionNo
+        : function () {
+            return managedSectionNo;
+          };
 
     var lines = config.lines || [];
     var previousManaged = (config.previousManagedOrderNos || []).slice();
@@ -118,8 +124,9 @@ austerlitzModule.factory("setUpTransferPipelineFactory", function () {
     angular.forEach(targetRows, function (row, idx) {
       var line = lines[idx];
       var before = config.getRowSignature(row);
-      if (managedSectionNo != null) {
-        row.turnSheetSectionNo = managedSectionNo;
+      var resolvedSectionNo = resolveManagedSectionNo(line, row);
+      if (resolvedSectionNo != null) {
+        row.turnSheetSectionNo = resolvedSectionNo;
       }
       row.from = line.from;
       row.to = line.to;

@@ -122,6 +122,7 @@
     <Compile Include="TR_MerchantShips.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_EconomySummary.cs" />
     <Compile Include="TR_Spies.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>

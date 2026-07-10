@@ -24,7 +24,7 @@ austerlitzModule.factory(
       setUpBrigadesSharedFactory.MANAGED_TS01_ROW_LIMIT;
     var MANAGED_TS01_STORAGE_KEY_PREFIX =
       "austerlitz.landUnits.managedTs01Rows.";
-    var ARMY_MANAGED_TS01_SECTION = 3;
+    var ARMY_MANAGED_TS01_SECTIONS = { 3: true, 4: true, 5: true, 6: true };
     var SPHERE_ALL = "All";
     var SPHERE_EUROPE = "Europe";
     var SPHERE_CARIBBEAN = "Caribbean";
@@ -73,6 +73,16 @@ austerlitzModule.factory(
       var text = (sectionNo || "").toString().trim().toUpperCase();
       if (!text) return null;
       if (text.indexOf("TS") === 0) text = text.substring(2);
+      var parsed = parseInt(text, 10);
+      return isNaN(parsed) ? null : parsed;
+    }
+
+    function getSectionNoFromTsType(tsType) {
+      var text = (tsType || "").toString().trim().toUpperCase();
+      if (!text) return null;
+      if (text.indexOf("TS") === 0) {
+        text = text.substring(2);
+      }
       var parsed = parseInt(text, 10);
       return isNaN(parsed) ? null : parsed;
     }
@@ -845,8 +855,9 @@ austerlitzModule.factory(
             var orderNo = toInt(row && row.orderNo, 0);
             if (orderNo <= 0) return;
             if (
-              getSectionNumber(row && row.turnSheetSectionNo) ===
-                ARMY_MANAGED_TS01_SECTION &&
+              ARMY_MANAGED_TS01_SECTIONS[
+                getSectionNumber(row && row.turnSheetSectionNo)
+              ] &&
               previousManagedOrderNos.indexOf(orderNo) < 0
             ) {
               previousManagedOrderNos.push(orderNo);
@@ -862,11 +873,13 @@ austerlitzModule.factory(
               isTransferGoodsRowEmpty: $scope.isTransferGoodsRowEmpty,
               getRowSignature: $scope.getTransferGoodsRowSignature,
               clearTransferGoodsRowValues: $scope.clearTransferGoodsRowValues,
-              managedSectionNo: ARMY_MANAGED_TS01_SECTION,
+              resolveManagedSectionNo: function (line) {
+                return getSectionNoFromTsType(line && line.tsType);
+              },
               isManagedRowOwned: function (row) {
-                // Own section 3 rows; allow blank/legacy section rows to migrate.
+                // Own TS03/TS04/TS05/TS06 rows; allow blank/legacy rows to migrate.
                 var sectionNo = getSectionNumber(row && row.turnSheetSectionNo);
-                return sectionNo == null || sectionNo === ARMY_MANAGED_TS01_SECTION;
+                return sectionNo == null || !!ARMY_MANAGED_TS01_SECTIONS[sectionNo];
               },
               toInt: toInt,
             });
