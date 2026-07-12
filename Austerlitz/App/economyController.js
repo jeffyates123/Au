@@ -7,6 +7,7 @@ austerlitzModule.controller(
     $q,
     masterData,
     turnDataLoaderService,
+    turnReportFactory,
     turnSheetFactory,
     rulesCatalogFactory,
   ) {
@@ -16,6 +17,7 @@ austerlitzModule.controller(
       india: { minX: 51, maxX: 90, minY: 70, maxY: 99 },
     };
     var economyTabs = { europe: true, caribbean: true, india: true };
+    var economyComputedVersion = 2;
     var resourceKeys = [
       "money",
       "citizens",
@@ -48,10 +50,6 @@ austerlitzModule.controller(
       { key: "oreMine", label: "12. Ore Mine", siteTypeNo: 12, productionType: "ore" },
       { key: "zincMine", label: "12. Zinc Mine", siteTypeNo: 12, productionType: "zinc" },
       { key: "vineyards", label: "13. Vineyards", siteTypeNo: 13 },
-      { key: "quickFortress", label: "15. Quick Fortress", siteTypeNo: 15 },
-      { key: "smallFortress", label: "21. Small Fortress", siteTypeNo: 21, fortressCost: 350000 },
-      { key: "mediumFortress", label: "21. Medium Fortress", siteTypeNo: 21, fortressCost: 600000 },
-      { key: "largeFortress", label: "21. Large Fortress", siteTypeNo: 21, fortressCost: 900000 },
     ];
     var tradeEstimateGoodsConfig = [
       { cityKey: "ectPts", goodsFactor: 6 },
@@ -94,6 +92,7 @@ austerlitzModule.controller(
       8: 160000,
       9: 200000,
     };
+    var mintGoldPerSiteCap = 20;
 
     function toInt(value, fallback) {
       var parsed = parseInt(value, 10);
@@ -119,6 +118,19 @@ austerlitzModule.controller(
         return "";
       }
       return text.charAt(0);
+    }
+
+    function normalizeStrictUpperStateCode(value) {
+      var raw = toText(value, "");
+      if (!raw) {
+        return "";
+      }
+      var first = raw.charAt(0);
+      // Economy production counting should ignore lower-case state markers.
+      if (first < "A" || first > "Z") {
+        return "";
+      }
+      return first;
     }
 
     function createEmptyResourceBag() {
@@ -197,9 +209,13 @@ austerlitzModule.controller(
         if (!bounds || !inBounds(x, y, bounds)) {
           return;
         }
-        resourceKeys.forEach(function (key) {
-          totals[key] += toInt(row && (row[key] != null ? row[key] : row[key.charAt(0).toUpperCase() + key.slice(1)]), 0);
-        });
+        // Goods in Barracks row must come only from barracks section columns.
+        totals.money += toInt(row && (row.money != null ? row.money : row.Money), 0);
+        totals.citizens += toInt(row && (row.citizens != null ? row.citizens : row.Citizens), 0);
+        totals.ecPts += toInt(row && (row.ecPts != null ? row.ecPts : row.EcPts), 0);
+        totals.wood += toInt(row && (row.wood != null ? row.wood : row.Wood), 0);
+        totals.horses += toInt(row && (row.horses != null ? row.horses : row.Horses), 0);
+        totals.textiles += toInt(row && (row.textiles != null ? row.textiles : row.Textiles), 0);
       });
       return totals;
     }
@@ -226,6 +242,88 @@ austerlitzModule.controller(
         totals.textiles += toInt(row && (row.textiles != null ? row.textiles : row.Textiles), 0);
       });
       return totals;
+    }
+
+    function getWarehouseNoForTab(tabKey) {
+      if (tabKey === "europe") {
+        return 1;
+      }
+      if (tabKey === "caribbean") {
+        return 2;
+      }
+      if (tabKey === "india") {
+        return 3;
+      }
+      return 0;
+    }
+
+    function getSphereLabelForWarehouseNo(warehouseNo) {
+      if (warehouseNo === 1) {
+        return "Europe";
+      }
+      if (warehouseNo === 2) {
+        return "Caribbean";
+      }
+      if (warehouseNo === 3) {
+        return "India";
+      }
+      return "";
+    }
+
+    function buildTs01InterSphereTransferRows(tabKey) {
+      var currentWarehouseNo = getWarehouseNoForTab(tabKey);
+      if (currentWarehouseNo <= 0) {
+        return [];
+      }
+
+      var allWarehouseNos = [1, 2, 3];
+      var otherWarehouseNos = allWarehouseNos.filter(function (warehouseNo) {
+        return warehouseNo !== currentWarehouseNo;
+      });
+      var transferToByWarehouseNo = {};
+      var transferFromByWarehouseNo = {};
+      otherWarehouseNos.forEach(function (warehouseNo) {
+        transferToByWarehouseNo[warehouseNo] = 0;
+        transferFromByWarehouseNo[warehouseNo] = 0;
+      });
+
+      var turnSheet = ($scope.masterData && $scope.masterData.turnSheet) || {};
+      var rows = turnSheet.tsTransferGoods || turnSheet.TSTransferGoods || [];
+      (rows || []).forEach(function (row) {
+        var fromNo = toInt(row && (row.from != null ? row.from : row.From), 0);
+        var toNo = toInt(row && (row.to != null ? row.to : row.To), 0);
+        if (fromNo === toNo) {
+          return;
+        }
+        if (allWarehouseNos.indexOf(fromNo) < 0 || allWarehouseNos.indexOf(toNo) < 0) {
+          return;
+        }
+        var ld = toInt(row && (row.louisdore != null ? row.louisdore : row.Louisdore), 0);
+        if (!ld) {
+          return;
+        }
+
+        if (fromNo === currentWarehouseNo && transferToByWarehouseNo[toNo] != null) {
+          transferToByWarehouseNo[toNo] += ld;
+        }
+        if (toNo === currentWarehouseNo && transferFromByWarehouseNo[fromNo] != null) {
+          transferFromByWarehouseNo[fromNo] += ld;
+        }
+      });
+
+      var result = [];
+      otherWarehouseNos.forEach(function (warehouseNo) {
+        var sphereLabel = getSphereLabelForWarehouseNo(warehouseNo);
+        result.push({
+          label: "Transfer TO " + sphereLabel,
+          value: transferToByWarehouseNo[warehouseNo] || 0,
+        });
+        result.push({
+          label: "Transfer FROM " + sphereLabel,
+          value: transferFromByWarehouseNo[warehouseNo] || 0,
+        });
+      });
+      return result;
     }
 
     function buildTradeDirectByGoodForSphere(tabKey) {
@@ -285,14 +383,11 @@ austerlitzModule.controller(
         var cityItemNo = fromIsTradeCity ? fromNo : toNo;
         var key = cityItemNo + "|" + goodsId;
         if (!grouped[key]) {
-          grouped[key] = { cityItemNo: cityItemNo, goodsId: goodsId, directBuyQty: 0, sellQty: 0, sellN: 0 };
+          grouped[key] = { cityItemNo: cityItemNo, goodsId: goodsId, directBuyQty: 0, sellTotalQty: 0 };
         }
         // Direction rule: TO trade city = sell, FROM trade city = buy.
         if (toIsTradeCity) {
-          grouped[key].sellN += 1;
-          if (!grouped[key].sellQty) {
-            grouped[key].sellQty = qty;
-          }
+          grouped[key].sellTotalQty += qty;
         } else {
           grouped[key].directBuyQty += qty;
         }
@@ -300,11 +395,6 @@ austerlitzModule.controller(
 
       Object.keys(grouped).forEach(function (groupKey) {
         var item = grouped[groupKey];
-        var city = cityLookup[item.cityItemNo];
-        var cityRate = Math.max(0, toInt(city.rate != null ? city.rate : city.Rate, 0));
-        if (cityRate <= 0) {
-          return;
-        }
         var cityKey = tradeGoodsIdToKey[item.goodsId];
         if (!cityKey) {
           return;
@@ -313,29 +403,8 @@ austerlitzModule.controller(
         if (!Object.prototype.hasOwnProperty.call(totals, resourceKey)) {
           return;
         }
-        var goodsFactor = Math.max(0, toInt(goodsFactorByKey[cityKey], 0));
-        var cityStock = Math.max(
-          0,
-          toInt(
-            city[cityKey] != null ? city[cityKey] : city[cityKey.charAt(0).toUpperCase() + cityKey.slice(1)],
-            0,
-          ),
-        );
-        var directBuyQty = Math.max(0, item.directBuyQty);
-        var qty = Math.max(0, item.sellQty);
-        var n = Math.max(0, item.sellN);
-        var netStock = Math.max(0, cityStock - directBuyQty);
-        var buyPerUnit = (1600 * goodsFactor * cityRate) / Math.sqrt(cityStock + 10);
-        var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-        var totalSell = 0;
-        if (qty > 0 && n > 0) {
-          for (var i = 0; i < n; i++) {
-            var existingQtyForRound = netStock + i * qty;
-            var sellPerUnit = (1500 * goodsFactor * cityRate) / (Math.sqrt(existingQtyForRound + 10) + Math.sqrt(qty));
-            totalSell += Math.floor(sellPerUnit * qty);
-          }
-        }
-        totals[resourceKey] += totalSell - totalDirect;
+        var netGoods = toInt(item.directBuyQty, 0) - toInt(item.sellTotalQty, 0);
+        totals[resourceKey] += netGoods;
       });
 
       return totals;
@@ -365,34 +434,35 @@ austerlitzModule.controller(
       byKey.productionBuildMaintenance.citizens = (productionRows || []).reduce(function (sum, row) {
         return sum + toInt(row.maintenanceWorkers, 0) + toInt(row.buildCitizens, 0);
       }, 0);
+      byKey.productionBuildMaintenance.citizens = -Math.abs(byKey.productionBuildMaintenance.citizens);
 
       var populationTotals = sumTs01GoodsForSections(tabKey, [12]);
-      byKey.populationBuildMaintenance.citizens = toInt(populationTotals.citizens, 0);
-      byKey.populationBuildMaintenance.resources.ecPts = toInt(populationTotals.ecPts, 0);
-      byKey.populationBuildMaintenance.resources.wood = toInt(populationTotals.wood, 0);
-      byKey.populationBuildMaintenance.resources.horses = toInt(populationTotals.horses, 0);
-      byKey.populationBuildMaintenance.resources.textiles = toInt(populationTotals.textiles, 0);
+      byKey.populationBuildMaintenance.citizens = -Math.abs(toInt(populationTotals.citizens, 0));
+      byKey.populationBuildMaintenance.resources.ecPts = -Math.abs(toInt(populationTotals.ecPts, 0));
+      byKey.populationBuildMaintenance.resources.wood = -Math.abs(toInt(populationTotals.wood, 0));
+      byKey.populationBuildMaintenance.resources.horses = -Math.abs(toInt(populationTotals.horses, 0));
+      byKey.populationBuildMaintenance.resources.textiles = -Math.abs(toInt(populationTotals.textiles, 0));
 
       var armyTotals = sumTs01GoodsForSections(tabKey, [3, 4, 5, 6]);
-      byKey.armyBuildMaintenance.citizens = toInt(armyTotals.citizens, 0);
-      byKey.armyBuildMaintenance.resources.ecPts = toInt(armyTotals.ecPts, 0);
-      byKey.armyBuildMaintenance.resources.wood = toInt(armyTotals.wood, 0);
-      byKey.armyBuildMaintenance.resources.horses = toInt(armyTotals.horses, 0);
-      byKey.armyBuildMaintenance.resources.textiles = toInt(armyTotals.textiles, 0);
+      byKey.armyBuildMaintenance.citizens = -Math.abs(toInt(armyTotals.citizens, 0));
+      byKey.armyBuildMaintenance.resources.ecPts = -Math.abs(toInt(armyTotals.ecPts, 0));
+      byKey.armyBuildMaintenance.resources.wood = -Math.abs(toInt(armyTotals.wood, 0));
+      byKey.armyBuildMaintenance.resources.horses = -Math.abs(toInt(armyTotals.horses, 0));
+      byKey.armyBuildMaintenance.resources.textiles = -Math.abs(toInt(armyTotals.textiles, 0));
 
       var navyTotals = sumTs01GoodsForSections(tabKey, [9, 10]);
-      byKey.navyBuildRepair.citizens = toInt(navyTotals.citizens, 0);
-      byKey.navyBuildRepair.resources.ecPts = toInt(navyTotals.ecPts, 0);
-      byKey.navyBuildRepair.resources.wood = toInt(navyTotals.wood, 0);
-      byKey.navyBuildRepair.resources.horses = toInt(navyTotals.horses, 0);
-      byKey.navyBuildRepair.resources.textiles = toInt(navyTotals.textiles, 0);
+      byKey.navyBuildRepair.citizens = -Math.abs(toInt(navyTotals.citizens, 0));
+      byKey.navyBuildRepair.resources.ecPts = -Math.abs(toInt(navyTotals.ecPts, 0));
+      byKey.navyBuildRepair.resources.wood = -Math.abs(toInt(navyTotals.wood, 0));
+      byKey.navyBuildRepair.resources.horses = -Math.abs(toInt(navyTotals.horses, 0));
+      byKey.navyBuildRepair.resources.textiles = -Math.abs(toInt(navyTotals.textiles, 0));
 
       var baggageTotals = sumTs01GoodsForSections(tabKey, [11]);
-      byKey.baggageTrainBuildRepair.citizens = toInt(baggageTotals.citizens, 0);
-      byKey.baggageTrainBuildRepair.resources.ecPts = toInt(baggageTotals.ecPts, 0);
-      byKey.baggageTrainBuildRepair.resources.wood = toInt(baggageTotals.wood, 0);
-      byKey.baggageTrainBuildRepair.resources.horses = toInt(baggageTotals.horses, 0);
-      byKey.baggageTrainBuildRepair.resources.textiles = toInt(baggageTotals.textiles, 0);
+      byKey.baggageTrainBuildRepair.citizens = -Math.abs(toInt(baggageTotals.citizens, 0));
+      byKey.baggageTrainBuildRepair.resources.ecPts = -Math.abs(toInt(baggageTotals.ecPts, 0));
+      byKey.baggageTrainBuildRepair.resources.wood = -Math.abs(toInt(baggageTotals.wood, 0));
+      byKey.baggageTrainBuildRepair.resources.horses = -Math.abs(toInt(baggageTotals.horses, 0));
+      byKey.baggageTrainBuildRepair.resources.textiles = -Math.abs(toInt(baggageTotals.textiles, 0));
 
       var tradeDirectTotals = buildTradeDirectByGoodForSphere(tabKey);
       byKey.directTrade.resources.ecPts = toInt(tradeDirectTotals.ecPts, 0);
@@ -605,19 +675,20 @@ austerlitzModule.controller(
         return;
       }
 
+      var minProduction = toInt(rule.minProduction != null ? rule.minProduction : rule.MinProduction, 0);
       var maxProduction = toInt(rule.maxProduction != null ? rule.maxProduction : rule.MaxProduction, 0);
-      var bonusSymbol = toText(rule.bonusSymbol != null ? rule.bonusSymbol : rule.BonusSymbol, "");
-      var bonusPercent = toInt(rule.bonusPercentage != null ? rule.bonusPercentage : rule.BonusPercentage, 0);
-      var coordBonus = toText(coord.bonus != null ? coord.bonus : coord.Bonus, "");
-      if (bonusSymbol && coordBonus && bonusSymbol.toLowerCase() === coordBonus.toLowerCase() && bonusPercent > 0) {
-        maxProduction += Math.round((maxProduction * bonusPercent) / 100);
+      var siteProduction = 0;
+      if (minProduction > 0 && maxProduction > 0) {
+        siteProduction = Math.round((minProduction + maxProduction) / 2);
+      } else {
+        siteProduction = Math.max(minProduction, maxProduction);
       }
 
       // Factories EcPts should always be shown as a positive contribution.
       if (row.key === "factories" && resourceKey === "ecPts") {
-        maxProduction = Math.abs(maxProduction);
+        siteProduction = Math.abs(siteProduction);
       }
-      row.resources[resourceKey] += maxProduction;
+      row.resources[resourceKey] += siteProduction;
     }
 
     function normalizeBuildRows(rows) {
@@ -669,7 +740,7 @@ austerlitzModule.controller(
             return;
           }
 
-          var state = normalizeStateCode(coord.state != null ? coord.state : coord.State);
+          var state = normalizeStrictUpperStateCode(coord.state != null ? coord.state : coord.State);
           if (!state || state !== selectedState) {
             return;
           }
@@ -718,6 +789,94 @@ austerlitzModule.controller(
           );
         }
       });
+
+      function applyFactoryInputConsumption(productionRows, warehouse) {
+        var factoriesRow = null;
+        (productionRows || []).forEach(function (row) {
+          if (row && row.key === "factories") {
+            factoriesRow = row;
+          }
+        });
+        if (!factoriesRow) {
+          return;
+        }
+
+        // Factory rule: every 100 EcPts consumes 1 ore, 5 textiles, 20 wood.
+        var plannedEcPts = Math.max(0, toInt(factoriesRow.resources && factoriesRow.resources.ecPts, 0));
+        var plannedBlocks = Math.floor(plannedEcPts / 100);
+        var availableOre = Math.max(0, toInt(warehouse && warehouse.ore, 0));
+        var availableTextiles = Math.max(0, toInt(warehouse && warehouse.textiles, 0));
+        var availableWood = Math.max(0, toInt(warehouse && warehouse.wood, 0));
+        var maxBlocksByInputs = Math.min(
+          Math.floor(availableOre / 1),
+          Math.floor(availableTextiles / 5),
+          Math.floor(availableWood / 20),
+        );
+        var actualBlocks = Math.max(0, Math.min(plannedBlocks, maxBlocksByInputs));
+
+        factoriesRow.resources.ecPts = actualBlocks * 100;
+        factoriesRow.resources.ore = -(actualBlocks * 1);
+        factoriesRow.resources.textiles = -(actualBlocks * 5);
+        factoriesRow.resources.wood = -(actualBlocks * 20);
+      }
+
+      function applyMintGoldConstraint(productionRows, warehouse) {
+        var mintsRow = null;
+        var producedGold = 0;
+        (productionRows || []).forEach(function (row) {
+          if (!row || !row.resources) {
+            return;
+          }
+          if (row.key === "mints") {
+            mintsRow = row;
+            return;
+          }
+          producedGold += Math.max(0, toInt(row.resources.gold, 0));
+        });
+        if (!mintsRow) {
+          return;
+        }
+        var plannedLd = Math.max(0, toInt(mintsRow.resources.money, 0));
+        if (plannedLd <= 0) {
+          mintsRow.resources.money = 0;
+          mintsRow.resources.gold = 0;
+          return;
+        }
+
+        var warehouseGold = Math.max(0, toInt(warehouse && warehouse.gold, 0));
+        var availableGold = Math.max(0, warehouseGold + producedGold);
+        var mintSiteCount = Math.max(0, toInt(mintsRow.workCount, 0));
+        if (mintSiteCount <= 0 || availableGold <= 0) {
+          mintsRow.resources.money = 0;
+          mintsRow.resources.gold = 0;
+          return;
+        }
+
+        var maxGoldNeeded = mintSiteCount * mintGoldPerSiteCap;
+        var ldPerMintSite = plannedLd / mintSiteCount;
+        var fullMintLd = plannedLd;
+        // Spreadsheet formula mirror:
+        // =IF((G18*F18)+W3>G9*20,G9*F9,(W3+W18)*F9/20)
+        // Mapping:
+        // - (G18*F18)+W3 -> producedGold + warehouseGold
+        // - G9*20        -> mintSiteCount * 20
+        // - G9*F9        -> fullMintLd (mint work * average produce per mint site)
+        // - (W3+W18)*F9/20 -> availableGold * ldPerMintSite / 20
+        var actualLd =
+          availableGold > maxGoldNeeded
+            ? fullMintLd
+            : Math.round((availableGold * ldPerMintSite) / mintGoldPerSiteCap);
+        var actualGoldUsed = Math.max(0, Math.min(availableGold, maxGoldNeeded));
+        mintsRow.resources.money = actualLd;
+        mintsRow.resources.gold = -Math.round(actualGoldUsed);
+      }
+
+      var warehouseForConstraints = normalizeWarehouseForDisplay(
+        getWarehouseRowForSphere(tabKey),
+        tabKey,
+      );
+      applyFactoryInputConsumption(rows, warehouseForConstraints);
+      applyMintGoldConstraint(rows, warehouseForConstraints);
 
       return rows;
     }
@@ -1064,6 +1223,8 @@ austerlitzModule.controller(
     function buildFinanceSummary(tabKey, warehouse, productionRows) {
       var economySummary = ($scope.masterData && $scope.masterData.turnReport && ($scope.masterData.turnReport.economySummary || $scope.masterData.turnReport.EconomySummary)) || {};
       var productionTotals = sumResourceRows(productionRows);
+      var barracksTotals = sumBarracksGoodsForSphere(tabKey);
+      var barracksLd = toInt(barracksTotals.money, 0);
       var maintenanceLd = productionRows.reduce(function (sum, row) { return sum + toInt(row.maintenanceLd, 0); }, 0);
       var productionBuildLd = productionRows.reduce(function (sum, row) { return sum + toInt(row.buildLd, 0); }, 0);
 
@@ -1090,9 +1251,14 @@ austerlitzModule.controller(
       }
 
       var productionMaintenanceLd = maintenanceLd;
+      var includeArmyNavyMaintenance = tabKey === "europe";
       var commanderPay = toInt(economySummary.commanderPayLd != null ? economySummary.commanderPayLd : economySummary.CommanderPayLd, 0);
       var brigadePay = toInt(economySummary.brigadePayLd != null ? economySummary.brigadePayLd : economySummary.BrigadePayLd, 0);
-      var navyMaintenance = toInt(economySummary.navyMaintenanceLd != null ? economySummary.navyMaintenanceLd : economySummary.NavyMaintenanceLd, 0);
+      var armyMaintTotal = includeArmyNavyMaintenance ? brigadePay + commanderPay : 0;
+      var navyMaintenance = includeArmyNavyMaintenance
+        ? toInt(economySummary.navyMaintenanceLd != null ? economySummary.navyMaintenanceLd : economySummary.NavyMaintenanceLd, 0)
+        : 0;
+      var ldProduction = Math.max(0, toInt(productionTotals.money, 0));
       var ts01ArmyTrainingLd = sumTransferGoodsLdForSections([6], tabKey);
       var computedArmyTrainingLd = tabKey === "europe" ? estimateArmyTrainingLdFromTs06ForEurope() : 0;
       var armyTrainingLd = computedArmyTrainingLd > 0 ? computedArmyTrainingLd : ts01ArmyTrainingLd;
@@ -1122,26 +1288,263 @@ austerlitzModule.controller(
         productionBuildLd -
         armyTrainingLd -
         armyBuildingLd -
-        commanderPay -
-        brigadePay -
+        armyMaintTotal -
         navyMaintenance -
         navyBuildRepairLd;
+      var startingRevenue = toInt(warehouse.money, 0);
+      var buildFundsDeductions =
+        armyMaintTotal +
+        navyMaintenance +
+        productionMaintenanceLd +
+        armyBuildingLd +
+        armyTrainingLd +
+        navyBuildRepairLd +
+        productionBuildLd +
+        barracksLd;
+      var buildFundsAvailable = startingRevenue - buildFundsDeductions;
+      var interSphereTransferRows = buildTs01InterSphereTransferRows(tabKey);
 
-      return [
-        { label: "Starting Revenue", value: toInt(warehouse.money, 0) },
+      var rows = [
+        { label: "Starting Revenue", value: startingRevenue, totalLine: true },
         { label: "Production Maint.", value: productionMaintenanceLd },
-        { label: "Production Build", value: productionBuildLd },
-        { label: "Army Maint", value: brigadePay },
-        { label: "Army Training", value: armyTrainingLd },
         { label: "Army Building", value: armyBuildingLd },
-        { label: "Commander Pay", value: commanderPay },
-        { label: "Navy Maint", value: navyMaintenance },
+        { label: "Army Training", value: armyTrainingLd },
         { label: "Navy Build & Repair", value: navyBuildRepairLd },
-        { label: "Direct Selling", value: directSelling },
-        { label: "Direct Buying", value: directBuying },
-        { label: "Taxes", value: taxes },
-        { label: "Projected Next Month LD", value: projectedNextMonthLd, highlight: true },
+        { label: "Production Build", value: productionBuildLd },
+        { label: "LD (Mny) in Barracks", value: barracksLd },
+        { label: "Build Funds Available", value: buildFundsAvailable, totalLine: true },
       ];
+      if (includeArmyNavyMaintenance) {
+        rows.splice(1, 0, { label: "Army Maint", value: armyMaintTotal }, { label: "Navy Maint", value: navyMaintenance });
+      }
+      rows = rows.concat(interSphereTransferRows);
+      rows.push({ label: "Direct Selling", value: directSelling });
+      rows.push({ label: "Direct Buying", value: directBuying });
+      rows.push({ label: "Taxes", value: taxes });
+      rows.push({ label: "LD Production", value: ldProduction });
+      rows.push({ label: "Projected Next Month LD", value: projectedNextMonthLd, highlight: true, totalLine: true });
+      return rows;
+    }
+
+    function getComputedSphereForTab(tabKey) {
+      if (tabKey === "europe") {
+        return "Europe";
+      }
+      if (tabKey === "caribbean") {
+        return "Caribbean";
+      }
+      if (tabKey === "india") {
+        return "India";
+      }
+      return "";
+    }
+
+    function getFinanceRowValueByLabel(rows, label) {
+      var list = rows || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].label === label) {
+          return toInt(list[i].value, 0);
+        }
+      }
+      return 0;
+    }
+
+    function buildEconomyComputedSummaryPayload(buildRows) {
+      var payload = {
+        turnId: toText($scope.masterData && $scope.masterData.turnId, ""),
+        rows: [],
+      };
+      Object.keys(economyTabs).forEach(function (tabKey) {
+        var sphere = getComputedSphereForTab(tabKey);
+        if (!sphere) {
+          return;
+        }
+        var warehouse = normalizeWarehouseForDisplay(getWarehouseRowForSphere(tabKey), tabKey);
+        var productionRows = buildProductionModel(tabKey, buildRows || []);
+        var financeRows = buildFinanceSummary(tabKey, warehouse, productionRows);
+        payload.rows.push({
+          turnId: payload.turnId,
+          sphere: sphere,
+          computedVersion: economyComputedVersion,
+          computedAtUtc: new Date().toISOString(),
+          startingRevenueLd: getFinanceRowValueByLabel(financeRows, "Starting Revenue"),
+          armyMaintLd: getFinanceRowValueByLabel(financeRows, "Army Maint"),
+          navyMaintLd: getFinanceRowValueByLabel(financeRows, "Navy Maint"),
+          productionMaintLd: getFinanceRowValueByLabel(financeRows, "Production Maint."),
+          armyBuildingLd: getFinanceRowValueByLabel(financeRows, "Army Building"),
+          armyTrainingLd: getFinanceRowValueByLabel(financeRows, "Army Training"),
+          navyBuildRepairLd: getFinanceRowValueByLabel(financeRows, "Navy Build & Repair"),
+          productionBuildLd: getFinanceRowValueByLabel(financeRows, "Production Build"),
+          ldInBarracks: getFinanceRowValueByLabel(financeRows, "LD (Mny) in Barracks"),
+          buildFundsAvailableLd: getFinanceRowValueByLabel(financeRows, "Build Funds Available"),
+          transferToEuropeLd: getFinanceRowValueByLabel(financeRows, "Transfer TO Europe"),
+          transferFromEuropeLd: getFinanceRowValueByLabel(financeRows, "Transfer FROM Europe"),
+          transferToCaribbeanLd: getFinanceRowValueByLabel(financeRows, "Transfer TO Caribbean"),
+          transferFromCaribbeanLd: getFinanceRowValueByLabel(financeRows, "Transfer FROM Caribbean"),
+          transferToIndiaLd: getFinanceRowValueByLabel(financeRows, "Transfer TO India"),
+          transferFromIndiaLd: getFinanceRowValueByLabel(financeRows, "Transfer FROM India"),
+          directSellingLd: getFinanceRowValueByLabel(financeRows, "Direct Selling"),
+          directBuyingLd: getFinanceRowValueByLabel(financeRows, "Direct Buying"),
+          taxesLd: getFinanceRowValueByLabel(financeRows, "Taxes"),
+          ldProduction: getFinanceRowValueByLabel(financeRows, "LD Production"),
+          projectedNextMonthLd: getFinanceRowValueByLabel(financeRows, "Projected Next Month LD"),
+        });
+      });
+      return payload;
+    }
+
+    function hasPersistedEconomySummary(summary) {
+      if (!summary) {
+        return false;
+      }
+      var rows = summary.rows || summary.Rows || [];
+      return Object.keys(economyTabs).every(function (tabKey) {
+        var sphere = getComputedSphereForTab(tabKey);
+        if (!sphere) {
+          return false;
+        }
+        var match = null;
+        (rows || []).forEach(function (row) {
+          var rowSphere = toText(row && (row.sphere != null ? row.sphere : row.Sphere), "");
+          if (!match && rowSphere.toLowerCase() === sphere.toLowerCase()) {
+            match = row;
+          }
+        });
+        if (!match) {
+          return false;
+        }
+        var computedVersion = toInt(match.computedVersion != null ? match.computedVersion : match.ComputedVersion, 0);
+        return computedVersion >= economyComputedVersion;
+      });
+    }
+
+    function buildFinanceSummaryFromPersisted(tabKey, summary) {
+      var sphere = getComputedSphereForTab(tabKey);
+      if (!sphere) {
+        return [];
+      }
+      var persistedRows = summary.rows || summary.Rows || [];
+      var match = null;
+      (persistedRows || []).forEach(function (row) {
+        var rowSphere = toText(row && (row.sphere != null ? row.sphere : row.Sphere), "");
+        if (!match && rowSphere.toLowerCase() === sphere.toLowerCase()) {
+          match = row;
+        }
+      });
+      if (!match) {
+        return [];
+      }
+      function getValue(camelName, pascalName) {
+        if (match && match[camelName] != null) {
+          return toInt(match[camelName], 0);
+        }
+        if (match && match[pascalName] != null) {
+          return toInt(match[pascalName], 0);
+        }
+        return 0;
+      }
+
+      var financeRows = [
+        { label: "Starting Revenue", value: getValue("startingRevenueLd", "StartingRevenueLd"), totalLine: true },
+        { label: "Production Maint.", value: getValue("productionMaintLd", "ProductionMaintLd") },
+        { label: "Army Building", value: getValue("armyBuildingLd", "ArmyBuildingLd") },
+        { label: "Army Training", value: getValue("armyTrainingLd", "ArmyTrainingLd") },
+        { label: "Navy Build & Repair", value: getValue("navyBuildRepairLd", "NavyBuildRepairLd") },
+        { label: "Production Build", value: getValue("productionBuildLd", "ProductionBuildLd") },
+        { label: "LD (Mny) in Barracks", value: getValue("ldInBarracks", "LdInBarracks") },
+        { label: "Build Funds Available", value: getValue("buildFundsAvailableLd", "BuildFundsAvailableLd"), totalLine: true },
+        { label: "Direct Selling", value: getValue("directSellingLd", "DirectSellingLd") },
+        { label: "Direct Buying", value: getValue("directBuyingLd", "DirectBuyingLd") },
+        { label: "Taxes", value: getValue("taxesLd", "TaxesLd") },
+        { label: "LD Production", value: getValue("ldProduction", "LdProduction") },
+        { label: "Projected Next Month LD", value: getValue("projectedNextMonthLd", "ProjectedNextMonthLd"), highlight: true, totalLine: true },
+      ];
+
+      if (tabKey === "europe") {
+        financeRows.splice(
+          1,
+          0,
+          { label: "Army Maint", value: getValue("armyMaintLd", "ArmyMaintLd") },
+          { label: "Navy Maint", value: getValue("navyMaintLd", "NavyMaintLd") },
+        );
+      }
+
+      var transferRows = [];
+      if (tabKey !== "europe") {
+        transferRows.push(
+          { label: "Transfer TO Europe", value: getValue("transferToEuropeLd", "TransferToEuropeLd") },
+          { label: "Transfer FROM Europe", value: getValue("transferFromEuropeLd", "TransferFromEuropeLd") },
+        );
+      }
+      if (tabKey !== "caribbean") {
+        transferRows.push(
+          { label: "Transfer TO Caribbean", value: getValue("transferToCaribbeanLd", "TransferToCaribbeanLd") },
+          { label: "Transfer FROM Caribbean", value: getValue("transferFromCaribbeanLd", "TransferFromCaribbeanLd") },
+        );
+      }
+      if (tabKey !== "india") {
+        transferRows.push(
+          { label: "Transfer TO India", value: getValue("transferToIndiaLd", "TransferToIndiaLd") },
+          { label: "Transfer FROM India", value: getValue("transferFromIndiaLd", "TransferFromIndiaLd") },
+        );
+      }
+
+      // Keep transfer rows between build funds and direct trade rows.
+      var firstDirectTradeIndex = -1;
+      for (var i = 0; i < financeRows.length; i++) {
+        if (financeRows[i] && financeRows[i].label === "Direct Selling") {
+          firstDirectTradeIndex = i;
+          break;
+        }
+      }
+      if (firstDirectTradeIndex < 0 || !transferRows.length) {
+        return financeRows;
+      }
+      return financeRows
+        .slice(0, firstDirectTradeIndex)
+        .concat(transferRows)
+        .concat(financeRows.slice(firstDirectTradeIndex));
+    }
+
+    function loadPersistedEconomySummary(turnId) {
+      return turnReportFactory.getTREconomyComputedSummary(turnId).then(
+        function (summary) {
+          $scope.economyComputedSummary = summary || null;
+          return $scope.economyComputedSummary;
+        },
+        function () {
+          $scope.economyComputedSummary = null;
+          return null;
+        },
+      );
+    }
+
+    function ensurePersistedEconomySummary() {
+      var turnId = toText($scope.masterData && $scope.masterData.turnId, "");
+      if (!turnId || turnId === "Unknown") {
+        return $q.when(null);
+      }
+      // Always recompute from current TS/TR data when entering Economy so
+      // build/train/repair cost edits are reflected immediately on next visit.
+      return getBuildRowsForTurn().then(function (buildRows) {
+        var payload = buildEconomyComputedSummaryPayload(buildRows || []);
+        return turnReportFactory.saveTREconomyComputedSummary(payload).then(
+          function (savedSummary) {
+            $scope.economyComputedSummary = savedSummary || payload;
+            return $scope.economyComputedSummary;
+          },
+          function () {
+            // If save fails, try loading persisted summary; otherwise rely on runtime calculation.
+            return loadPersistedEconomySummary(turnId).then(function (fallbackSummary) {
+              if (hasPersistedEconomySummary(fallbackSummary)) {
+                return fallbackSummary;
+              }
+              $scope.economyComputedSummary = null;
+              return null;
+            });
+          },
+        );
+      });
     }
 
     function estimateTradeSummaryForSphere(tabKey) {
@@ -1363,15 +1766,14 @@ austerlitzModule.controller(
         var stock = toInt(warehouse[key], 0);
         var produced = toInt(productionTotals[key], 0);
         if (key === "citizens") {
-          // Citizens in production mode represent maintain+build citizens from the middle table.
-          balance[key] = productionCitizens;
-          projected[key] = stock - productionCitizens;
+          // Total Citz column is the net citizens value from the middle production table.
+          balance[key] = stock + productionCitizens;
+          projected[key] = stock + productionCitizens;
           return;
         }
-        // Balance row reflects the total of the middle production grid per resource column.
-        balance[key] = produced;
-        // Projected row reflects current warehouse stock minus production totals.
-        projected[key] = stock - produced;
+        // Balance Available = warehouse start value + net production table values.
+        balance[key] = stock + produced;
+        projected[key] = stock + produced;
       });
 
       return {
@@ -1387,7 +1789,11 @@ austerlitzModule.controller(
       return getBuildRowsForTurn().then(function (buildRows) {
         $scope.economyProductionRows = buildProductionModel(tabKey, buildRows);
         $scope.economyProductionSummaryRows = buildProductionSummaryRows(tabKey, $scope.economyProductionRows);
-        $scope.economyFinanceRows = buildFinanceSummary(tabKey, $scope.economyWarehouse, $scope.economyProductionRows);
+        if (hasPersistedEconomySummary($scope.economyComputedSummary)) {
+          $scope.economyFinanceRows = buildFinanceSummaryFromPersisted(tabKey, $scope.economyComputedSummary);
+        } else {
+          $scope.economyFinanceRows = buildFinanceSummary(tabKey, $scope.economyWarehouse, $scope.economyProductionRows);
+        }
         $scope.economyTotals = buildBalanceRows($scope.economyWarehouse, $scope.economyProductionRows);
       });
     }
@@ -1484,7 +1890,7 @@ austerlitzModule.controller(
 
     $scope.masterData = masterData;
     $scope.activeEconomyTab = "europe";
-    $scope.europeEconomyViewMode = "buildMaintain";
+    $scope.economyViewMode = "buildMaintain";
     $scope.economyWarehouse = normalizeWarehouseForDisplay({}, "europe");
     $scope.economyProductionRows = [];
     $scope.economyProductionSummaryRows = createProductionSummaryRows();
@@ -1492,6 +1898,7 @@ austerlitzModule.controller(
     $scope.economyTotals = { balance: createEmptyResourceBag(), projected: createEmptyResourceBag() };
     $scope.isEconomyLoading = false;
     $scope.economyLoadError = null;
+    $scope.economyComputedSummary = null;
     $scope.productionSiteRules = [];
     $scope.refStates = [];
     $scope.economyArmyList = [];
@@ -1500,25 +1907,81 @@ austerlitzModule.controller(
     $scope.selectEconomyTab = function (tabKey) {
       var nextTab = economyTabs[tabKey] ? tabKey : "europe";
       $scope.activeEconomyTab = nextTab;
-      if (nextTab !== "europe") {
-        return;
-      }
-      refreshEconomyViewForTab("europe");
+      refreshEconomyViewForTab(nextTab).catch(function (error) {
+        $scope.economyLoadError = (error && error.data) || "Unable to load economy data.";
+      });
     };
 
-    $scope.setEuropeEconomyViewMode = function (modeKey) {
+    $scope.setEconomyViewMode = function (modeKey) {
       if (modeKey !== "buildMaintain" && modeKey !== "production") {
         return;
       }
-      $scope.europeEconomyViewMode = modeKey;
+      $scope.economyViewMode = modeKey;
+    };
+
+    $scope.getEconomyFinancePaneTitle = function () {
+      var sphereLabel = toText($scope.economyWarehouse && $scope.economyWarehouse.sphereLabel, "");
+      return sphereLabel ? sphereLabel + " Finances" : "Finances";
     };
 
     $scope.formatNumber = function (value) {
       return toInt(value, 0).toLocaleString();
     };
 
+    $scope.getProductionValueClass = function (value) {
+      var numeric = toInt(value, 0);
+      if (numeric > 0) {
+        return "bg-success";
+      }
+      if (numeric < 0) {
+        return "text-danger";
+      }
+      return "";
+    };
+
+    $scope.getVisibleProductionRows = function () {
+      var rows = $scope.economyProductionRows || [];
+      if ($scope.economyViewMode !== "production") {
+        return rows;
+      }
+      return rows.filter(function (row) {
+        return row && row.key !== "barracks";
+      });
+    };
+
+    $scope.isProductionResourceApplicable = function (row, resourceKey) {
+      if (!row || !resourceKey) {
+        return false;
+      }
+
+      // Barracks (and similar non-producing rows) do not produce resource outputs.
+      if (!row.productionType) {
+        // Factory row has explicit input consumption columns on production view.
+        if (row.key === "factories") {
+          return (
+            resourceKey === "ecPts" ||
+            resourceKey === "wood" ||
+            resourceKey === "textiles" ||
+            resourceKey === "ore"
+          );
+        }
+        return false;
+      }
+
+      var mappedKey = mapProductionTypeToResourceKey(row.productionType);
+      return mappedKey === resourceKey;
+    };
+
+    $scope.getProductionResourceCellClass = function (row, resourceKey) {
+      if (!$scope.isProductionResourceApplicable(row, resourceKey)) {
+        return "economyCellNotApplicable";
+      }
+      return $scope.getProductionValueClass(row && row.resources ? row.resources[resourceKey] : 0);
+    };
+
     $scope.getProductionCitizensForRow = function (row) {
-      return toInt(row && row.maintenanceWorkers, 0) + toInt(row && row.buildCitizens, 0);
+      var total = toInt(row && row.maintenanceWorkers, 0) + toInt(row && row.buildCitizens, 0);
+      return total === 0 ? 0 : -Math.abs(total);
     };
 
     $scope.initEconomy = function () {
@@ -1537,7 +2000,10 @@ austerlitzModule.controller(
           return $q.all([ensureProductionSiteRules(), ensureRefStates(), ensureEconomyArmyList()]);
         })
         .then(function () {
-          return refreshEconomyViewForTab("europe");
+          return ensurePersistedEconomySummary();
+        })
+        .then(function () {
+          return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
         })
         .catch(function (error) {
           $scope.economyLoadError = (error && error.data) || "Unable to load economy data.";

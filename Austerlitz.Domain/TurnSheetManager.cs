@@ -2,6 +2,7 @@ using Austerlitz.DAL;
 using Austerlitz.DAL.Management;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -859,11 +860,58 @@ namespace Austerlitz.Domain
                 deletedRows += ClearTurnOrderSet<TS_21HandOverTerritory>(dataContext, turnId);
                 deletedRows += ClearTurnOrderSet<TS_22ChangeNames>(dataContext, turnId);
                 deletedRows += ClearTurnOrderSet<TS_23ChangeStateRelationships>(dataContext, turnId);
+                ClearOrderDrivenEconomyComputedSummary(dataContext, turnId);
 
                 EnsureAllTurnsheetSectionsSeeded(dataContext, turnId);
                 dataContext.SaveChanges();
                 return deletedRows;
             }
+        }
+
+        private void ClearOrderDrivenEconomyComputedSummary(AusterlitzDbContext dataContext, string turnId)
+        {
+            if (dataContext == null || string.IsNullOrWhiteSpace(turnId))
+            {
+                return;
+            }
+
+            dataContext.Database.ExecuteSqlCommand(@"
+IF OBJECT_ID('dbo.TR_EconomyComputedSummary', 'U') IS NOT NULL
+BEGIN
+    UPDATE dbo.TR_EconomyComputedSummary
+    SET
+        ArmyBuildingLd = 0,
+        ArmyTrainingLd = 0,
+        NavyBuildRepairLd = 0,
+        ProductionBuildLd = 0,
+        TransferToEuropeLd = 0,
+        TransferFromEuropeLd = 0,
+        TransferToCaribbeanLd = 0,
+        TransferFromCaribbeanLd = 0,
+        TransferToIndiaLd = 0,
+        TransferFromIndiaLd = 0,
+        DirectSellingLd = 0,
+        DirectBuyingLd = 0,
+        BuildFundsAvailableLd =
+            ISNULL(StartingRevenueLd, 0) -
+            (
+                ISNULL(ArmyMaintLd, 0) +
+                ISNULL(NavyMaintLd, 0) +
+                ISNULL(ProductionMaintLd, 0) +
+                ISNULL(LdInBarracks, 0)
+            ),
+        ProjectedNextMonthLd =
+            ISNULL(StartingRevenueLd, 0) +
+            ISNULL(TaxesLd, 0) +
+            ISNULL(LdProduction, 0) -
+            ISNULL(ProductionMaintLd, 0) -
+            ISNULL(ArmyMaintLd, 0) -
+            ISNULL(NavyMaintLd, 0),
+        ComputedVersion = 0,
+        ComputedAtUtc = GETUTCDATE()
+    WHERE TurnId = @turnId;
+END",
+                new SqlParameter("@turnId", turnId));
         }
 
         private int ClearTurnOrderSet<T>(AusterlitzDbContext dataContext, string turnId) where T : class, ITurnSheetEntity

@@ -37,49 +37,51 @@
   <div class="alert alert-info" ng-show="isEconomyLoading">Loading economy data...</div>
   <div class="alert alert-danger" ng-show="economyLoadError">{{economyLoadError}}</div>
 
-  <div class="landUnitsTabPane economyTabPane" ng-show="activeEconomyTab === 'europe'">
+  <div class="landUnitsTabPane economyTabPane">
     <div class="landUnitsTableWrap">
       <table class="table landUnitsTable economyWarehouseTable">
         <thead>
           <tr>
             <th>Nation</th>
-            <th ng-show="europeEconomyViewMode === 'buildMaintain'">Inhabitants</th>
-            <th ng-show="europeEconomyViewMode === 'buildMaintain'">Foreigners</th>
-            <th ng-show="europeEconomyViewMode === 'buildMaintain'">Mny</th>
-            <th ng-show="europeEconomyViewMode === 'buildMaintain'">Citz</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Total Citz</th>
-            <th ng-show="europeEconomyViewMode === 'production'">EcPts</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Food</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Stone</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Wood</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Ore</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Zinc</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Horses</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Textiles</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Wool</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Gold</th>
-            <th ng-show="europeEconomyViewMode === 'production'">Wine</th>
+            <th ng-show="economyViewMode === 'buildMaintain'">Inhabitants</th>
+            <th ng-show="economyViewMode === 'buildMaintain'">Foreigners</th>
+            <th ng-show="economyViewMode === 'buildMaintain'">Mny</th>
+            <th ng-show="economyViewMode === 'buildMaintain'">Citz</th>
+            <th ng-show="economyViewMode === 'production'">Work</th>
+            <th ng-show="economyViewMode === 'production'">Total Citz</th>
+            <th ng-show="economyViewMode === 'production'">EcPts</th>
+            <th ng-show="economyViewMode === 'production'">Food</th>
+            <th ng-show="economyViewMode === 'production'">Stone</th>
+            <th ng-show="economyViewMode === 'production'">Wood</th>
+            <th ng-show="economyViewMode === 'production'">Ore</th>
+            <th ng-show="economyViewMode === 'production'">Zinc</th>
+            <th ng-show="economyViewMode === 'production'">Horses</th>
+            <th ng-show="economyViewMode === 'production'">Textiles</th>
+            <th ng-show="economyViewMode === 'production'">Wool</th>
+            <th ng-show="economyViewMode === 'production'">Gold</th>
+            <th ng-show="economyViewMode === 'production'">Wine</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>{{economyWarehouse.sphereLabel}}</td>
-            <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.inhabitants)}}</td>
-            <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.foreign)}}</td>
-            <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.money)}}</td>
-            <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.citizens)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.citizens)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.ecPts)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.food)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.stone)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.wood)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.ore)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.zinc)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.horses)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.textiles)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.wool)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.gold)}}</td>
-            <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(economyWarehouse.wine)}}</td>
+            <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.inhabitants)}}</td>
+            <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.foreign)}}</td>
+            <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.money)}}</td>
+            <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.citizens)}}</td>
+            <td ng-show="economyViewMode === 'production'"></td>
+            <td ng-show="economyViewMode === 'production'" ng-class="getProductionValueClass(economyWarehouse.citizens)">{{formatNumber(economyWarehouse.citizens)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.ecPts)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.food)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.stone)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wood)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.ore)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.zinc)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.horses)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.textiles)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wool)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.gold)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wine)}}</td>
           </tr>
         </tbody>
       </table>
@@ -89,20 +91,20 @@
       <label class="radio-inline">
         <input
           type="radio"
-          name="economyEuropeViewMode"
-          ng-model="europeEconomyViewMode"
+          name="economyViewMode"
+          ng-model="economyViewMode"
           value="buildMaintain"
-          ng-change="setEuropeEconomyViewMode(europeEconomyViewMode)"
+          ng-change="setEconomyViewMode(economyViewMode)"
         />
         Build / Maintain
       </label>
       <label class="radio-inline">
         <input
           type="radio"
-          name="economyEuropeViewMode"
-          ng-model="europeEconomyViewMode"
+          name="economyViewMode"
+          ng-model="economyViewMode"
           value="production"
-          ng-change="setEuropeEconomyViewMode(europeEconomyViewMode)"
+          ng-change="setEconomyViewMode(economyViewMode)"
         />
         Production
       </label>
@@ -115,80 +117,81 @@
             <thead>
               <tr>
                 <th>Production Site</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Build</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Work</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Maint LD</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Maint Citz</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Build Citz</th>
-                <th ng-show="europeEconomyViewMode === 'buildMaintain'">Build LD</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Build</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Work</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Maint LD</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Maint Citz</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Build Citz</th>
+                <th ng-show="economyViewMode === 'buildMaintain'">Build LD</th>
 
-                <th ng-show="europeEconomyViewMode === 'production'">Work</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Total Citz</th>
-                <th ng-show="europeEconomyViewMode === 'production'">EcPts</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Food</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Stone</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Wood</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Ore</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Zinc</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Horses</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Textiles</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Wool</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Gold</th>
-                <th ng-show="europeEconomyViewMode === 'production'">Wine</th>
+                <th ng-show="economyViewMode === 'production'">Work</th>
+                <th ng-show="economyViewMode === 'production'">Total Citz</th>
+                <th ng-show="economyViewMode === 'production'">EcPts</th>
+                <th ng-show="economyViewMode === 'production'">Food</th>
+                <th ng-show="economyViewMode === 'production'">Stone</th>
+                <th ng-show="economyViewMode === 'production'">Wood</th>
+                <th ng-show="economyViewMode === 'production'">Ore</th>
+                <th ng-show="economyViewMode === 'production'">Zinc</th>
+                <th ng-show="economyViewMode === 'production'">Horses</th>
+                <th ng-show="economyViewMode === 'production'">Textiles</th>
+                <th ng-show="economyViewMode === 'production'">Wool</th>
+                <th ng-show="economyViewMode === 'production'">Gold</th>
+                <th ng-show="economyViewMode === 'production'">Wine</th>
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="row in economyProductionRows track by row.key">
+              <tr ng-repeat="row in getVisibleProductionRows() track by row.key">
                 <td>{{row.label}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.buildCount)}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.workCount)}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.maintenanceLd)}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.maintenanceWorkers)}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.buildCitizens)}}</td>
-                <td ng-show="europeEconomyViewMode === 'buildMaintain'">{{formatNumber(row.buildLd)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.buildCount)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.workCount)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.maintenanceLd)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.maintenanceWorkers)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.buildCitizens)}}</td>
+                <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.buildLd)}}</td>
 
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.workCount)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(getProductionCitizensForRow(row))}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.ecPts)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.food)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.stone)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.wood)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.ore)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.zinc)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.horses)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.textiles)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.wool)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.gold)}}</td>
-                <td ng-show="europeEconomyViewMode === 'production'">{{formatNumber(row.resources.wine)}}</td>
+                <td ng-show="economyViewMode === 'production'">{{formatNumber(row.workCount)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionValueClass(getProductionCitizensForRow(row))">{{formatNumber(getProductionCitizensForRow(row))}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ecPts')">{{formatNumber(row.resources.ecPts)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'food')">{{formatNumber(row.resources.food)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'stone')">{{formatNumber(row.resources.stone)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wood')">{{formatNumber(row.resources.wood)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ore')">{{formatNumber(row.resources.ore)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'zinc')">{{formatNumber(row.resources.zinc)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'horses')">{{formatNumber(row.resources.horses)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'textiles')">{{formatNumber(row.resources.textiles)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wool')">{{formatNumber(row.resources.wool)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'gold')">{{formatNumber(row.resources.gold)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wine')">{{formatNumber(row.resources.wine)}}</td>
               </tr>
               <tr
                 ng-repeat="summaryRow in economyProductionSummaryRows track by summaryRow.key"
-                ng-show="europeEconomyViewMode === 'production'"
+                ng-show="economyViewMode === 'production'"
               >
                 <td>{{summaryRow.label}}</td>
                 <td></td>
-                <td>{{formatNumber(summaryRow.citizens)}}</td>
-                <td>{{formatNumber(summaryRow.resources.ecPts)}}</td>
-                <td>{{formatNumber(summaryRow.resources.food)}}</td>
-                <td>{{formatNumber(summaryRow.resources.stone)}}</td>
-                <td>{{formatNumber(summaryRow.resources.wood)}}</td>
-                <td>{{formatNumber(summaryRow.resources.ore)}}</td>
-                <td>{{formatNumber(summaryRow.resources.zinc)}}</td>
-                <td>{{formatNumber(summaryRow.resources.horses)}}</td>
-                <td>{{formatNumber(summaryRow.resources.textiles)}}</td>
-                <td>{{formatNumber(summaryRow.resources.wool)}}</td>
-                <td>{{formatNumber(summaryRow.resources.gold)}}</td>
-                <td>{{formatNumber(summaryRow.resources.wine)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.citizens)">{{formatNumber(summaryRow.citizens)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.ecPts)">{{formatNumber(summaryRow.resources.ecPts)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.food)">{{formatNumber(summaryRow.resources.food)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.stone)">{{formatNumber(summaryRow.resources.stone)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.wood)">{{formatNumber(summaryRow.resources.wood)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.ore)">{{formatNumber(summaryRow.resources.ore)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.zinc)">{{formatNumber(summaryRow.resources.zinc)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.horses)">{{formatNumber(summaryRow.resources.horses)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.textiles)">{{formatNumber(summaryRow.resources.textiles)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.wool)">{{formatNumber(summaryRow.resources.wool)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.gold)">{{formatNumber(summaryRow.resources.gold)}}</td>
+                <td ng-class="getProductionValueClass(summaryRow.resources.wine)">{{formatNumber(summaryRow.resources.wine)}}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="landUnitsTableWrap economyTotalsWrap" ng-show="europeEconomyViewMode === 'production'">
+        <div class="landUnitsTableWrap economyTotalsWrap" ng-show="economyViewMode === 'production'">
           <table class="table landUnitsTable economyTotalsTable">
             <thead>
               <tr>
                 <th>Balance</th>
+                <th>Work</th>
                 <th>Total Citz</th>
                 <th>EcPts</th>
                 <th>Food</th>
@@ -205,8 +208,9 @@
             </thead>
             <tbody>
               <tr>
-                <td>Spend this month</td>
-                <td>{{formatNumber(economyTotals.balance.citizens)}}</td>
+                <td>Balance Available</td>
+                <td></td>
+                <td ng-class="getProductionValueClass(economyTotals.balance.citizens)">{{formatNumber(economyTotals.balance.citizens)}}</td>
                 <td>{{formatNumber(economyTotals.balance.ecPts)}}</td>
                 <td>{{formatNumber(economyTotals.balance.food)}}</td>
                 <td>{{formatNumber(economyTotals.balance.stone)}}</td>
@@ -221,7 +225,8 @@
               </tr>
               <tr>
                 <td>Projected Next Month</td>
-                <td>{{formatNumber(economyTotals.projected.citizens)}}</td>
+                <td></td>
+                <td ng-class="getProductionValueClass(economyTotals.projected.citizens)">{{formatNumber(economyTotals.projected.citizens)}}</td>
                 <td>{{formatNumber(economyTotals.projected.ecPts)}}</td>
                 <td>{{formatNumber(economyTotals.projected.food)}}</td>
                 <td>{{formatNumber(economyTotals.projected.stone)}}</td>
@@ -239,29 +244,20 @@
         </div>
       </div>
 
-      <aside class="economyFinancePane" ng-show="europeEconomyViewMode === 'buildMaintain'">
-        <h4>European Finances</h4>
+      <aside class="economyFinancePane" ng-show="economyViewMode === 'buildMaintain'">
+        <h4>{{getEconomyFinancePaneTitle()}}</h4>
         <table class="table economyFinanceTable">
           <tbody>
-            <tr ng-repeat="item in economyFinanceRows track by item.label" ng-class="{ economyHighlightRow: item.highlight }">
+            <tr
+              ng-repeat="item in economyFinanceRows track by item.label"
+              ng-class="{ economyHighlightRow: item.highlight, economyTotalLineRow: item.totalLine }"
+            >
               <td>{{item.label}}</td>
               <td>{{formatNumber(item.value)}}</td>
             </tr>
           </tbody>
         </table>
       </aside>
-    </div>
-  </div>
-
-  <div class="landUnitsTabPane economyTabPane" ng-show="activeEconomyTab === 'caribbean'">
-    <div class="alert alert-info">
-      Caribbean economy tab placeholder for next step.
-    </div>
-  </div>
-
-  <div class="landUnitsTabPane economyTabPane" ng-show="activeEconomyTab === 'india'">
-    <div class="alert alert-info">
-      India economy tab placeholder for next step.
     </div>
   </div>
 </div>

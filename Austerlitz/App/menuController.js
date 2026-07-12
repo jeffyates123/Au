@@ -10,6 +10,16 @@
     $scope.sidebarTurnLoading = false;
 
     $scope.init = function () {
+        // One-shot hard refresh after Home button navigation.
+        // We clear the flag before reload to avoid loops.
+        if (window && window.sessionStorage && window.sessionStorage.getItem('homeHardRefreshPending') === '1') {
+            window.sessionStorage.removeItem('homeHardRefreshPending');
+            if (window.location && window.location.reload) {
+                window.location.reload(true);
+                return;
+            }
+        }
+
         var rememberedTurnId = $scope.masterData.getSelectedTurnId ? $scope.masterData.getSelectedTurnId() : null;
         if (rememberedTurnId) {
             $scope.masterData.turnId = rememberedTurnId;
@@ -317,6 +327,12 @@
             var detail = (error && error.data) ? error.data : '';
             alert('Spreadsheet save failed.' + (detail ? ' ' + detail : ''));
         });
+    };
+
+    $scope.onHomeLinkClicked = function () {
+        if (window && window.sessionStorage) {
+            window.sessionStorage.setItem('homeHardRefreshPending', '1');
+        }
     };
 
     $scope.clearTurnOrders = function ($event) {

@@ -2653,8 +2653,20 @@ textarea {
     font-weight: bold;
 }
 
+.economyCellNotApplicable {
+    background-color: #f2f2f2;
+    color: #a0a0a0;
+}
+
 .economyHighlightRow {
     background: #fff2c8;
+}
+
+.economyFinanceTable > tbody > tr.economyTotalLineRow > td {
+    border-top: 2px solid #666;
+    border-bottom: 2px solid #666;
+    background: #fff2c8;
+    font-weight: bold;
 }
 
 .economyBuildInput {

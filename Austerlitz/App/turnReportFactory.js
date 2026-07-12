@@ -10,6 +10,16 @@
             $http.get('/Api/TurnReportApi/getMapCoordinates?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
+        getTREconomyComputedSummary: function (turnId) {
+            var deferred = $q.defer();
+            $http.get('/Api/TurnReportApi/getTREconomyComputedSummary?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        saveTREconomyComputedSummary: function (summaryPayload) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/saveTREconomyComputedSummary', summaryPayload || {}).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
         getTRMathBattles: function (turnId) {
             var deferred = $q.defer();
             $http.get('/Api/TurnReportApi/getTRMathBattles?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);

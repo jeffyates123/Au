@@ -410,11 +410,15 @@ austerlitzModule.factory(
             }, $scope.showTurnSheetOrderError);
         };
 
-        $scope.clearTrainOrder = function (brigade, scope) {
-          var brigadeOrFederation = $scope.getTurnSheetBrigadeOrFederationValue(
-            brigade,
-            scope,
-          );
+        $scope.clearTrainOrder = function (
+          brigade,
+          scope,
+          sourceBrigadeOrFederation,
+        ) {
+          var brigadeOrFederation =
+            sourceBrigadeOrFederation != null
+              ? toInt(sourceBrigadeOrFederation, null)
+              : $scope.getTurnSheetBrigadeOrFederationValue(brigade, scope);
           if (brigadeOrFederation == null) {
             return $q.when(null);
           }
@@ -693,19 +697,38 @@ austerlitzModule.factory(
             return;
           }
 
-          var scope =
-            $scope.trainModal.scope === "federation" &&
-            $scope.canApplyFederationScope(brigade)
+          // Clear against the currently active saved plan (if present), not the
+          // current modal toggle state, so replayed federation orders are reliably removed.
+          var activePlan = brigade.trainPlan || null;
+          var scope = activePlan
+            ? activePlan.scope
+            : $scope.trainModal.scope === "federation" &&
+                $scope.canApplyFederationScope(brigade)
               ? "federation"
               : "brigade";
-          var affectedBrigades = $scope.getHeadcountAffectedBrigades(
-            brigade,
-            scope,
-          );
+          var sourceBrigadeOrFederation = activePlan
+            ? toInt(activePlan.sourceBrigadeId, null)
+            : $scope.getTurnSheetBrigadeOrFederationValue(brigade, scope);
+          var affectedBrigades = [];
+          if (activePlan && sourceBrigadeOrFederation != null) {
+            affectedBrigades = ($scope.brigadeRows || []).filter(function (
+              row,
+            ) {
+              return (
+                row &&
+                row.trainPlan &&
+                toInt(row.trainPlan.sourceBrigadeId, null) ===
+                  sourceBrigadeOrFederation
+              );
+            });
+          }
+          if (!affectedBrigades.length) {
+            affectedBrigades = $scope.getHeadcountAffectedBrigades(brigade, scope);
+          }
           angular.forEach(affectedBrigades, $scope.clearTrainPlanFromBrigade);
 
           $scope
-            .clearTrainOrder(brigade, scope)
+            .clearTrainOrder(brigade, scope, sourceBrigadeOrFederation)
             .then(function () {
               return $scope.syncTransferGoodsForLandUnitsPlans();
             })
