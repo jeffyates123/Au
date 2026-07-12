@@ -414,6 +414,7 @@ austerlitzModule.factory(
           brigade,
           scope,
           sourceBrigadeOrFederation,
+          affectedBrigades,
         ) {
           var brigadeOrFederation =
             sourceBrigadeOrFederation != null
@@ -427,16 +428,38 @@ austerlitzModule.factory(
             .getTSIncreaseBrigadeXP($scope.masterData.turnId)
             .then(function (rows) {
               rows = rows || [];
-              var targetRow = $scope.findMatchingBrigadeOrFederationRow(
-                rows,
-                brigadeOrFederation,
-              );
-              if (!targetRow) {
-                return null;
+              var clearTargets = {};
+              clearTargets[brigadeOrFederation] = true;
+
+              // Federation clear should also remove any stale brigade-scoped TS06
+              // rows that may exist for members in that federation.
+              if (scope === "federation") {
+                (affectedBrigades || []).forEach(function (rowBrigade) {
+                  var brigadeId = toInt(rowBrigade && rowBrigade.id, 0);
+                  if (brigadeId > 0) {
+                    clearTargets[brigadeId] = true;
+                  }
+                });
               }
 
-              targetRow.turnId = $scope.masterData.turnId;
-              targetRow.brigadeOrFederation = null;
+              var changed = false;
+              (rows || []).forEach(function (row) {
+                var rowKey = toInt(
+                  row && row.brigadeOrFederation,
+                  null,
+                );
+                if (rowKey == null || !clearTargets[rowKey]) {
+                  return;
+                }
+
+                row.turnId = $scope.masterData.turnId;
+                row.brigadeOrFederation = null;
+                changed = true;
+              });
+
+              if (!changed) {
+                return null;
+              }
 
               return turnSheetFactory
                 .postTSRecords(rows, "IncreaseBrigadeXP")
@@ -672,12 +695,18 @@ austerlitzModule.factory(
             brigade,
             scope,
           );
+          var sourceBrigadeOrFederation =
+            $scope.getTurnSheetBrigadeOrFederationValue(brigade, scope);
           if ($scope.hasAnyLockedBrigade(affectedBrigades, "Training")) {
             return;
           }
 
           angular.forEach(affectedBrigades, function (affectedBrigade) {
-            $scope.applyTrainPlanToBrigade(affectedBrigade, scope, brigade.id);
+            $scope.applyTrainPlanToBrigade(
+              affectedBrigade,
+              scope,
+              sourceBrigadeOrFederation,
+            );
           });
 
           $scope
@@ -728,7 +757,12 @@ austerlitzModule.factory(
           angular.forEach(affectedBrigades, $scope.clearTrainPlanFromBrigade);
 
           $scope
-            .clearTrainOrder(brigade, scope, sourceBrigadeOrFederation)
+            .clearTrainOrder(
+              brigade,
+              scope,
+              sourceBrigadeOrFederation,
+              affectedBrigades,
+            )
             .then(function () {
               return $scope.syncTransferGoodsForLandUnitsPlans();
             })

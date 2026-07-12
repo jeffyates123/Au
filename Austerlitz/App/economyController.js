@@ -17,6 +17,7 @@ austerlitzModule.controller(
       india: { minX: 51, maxX: 90, minY: 70, maxY: 99 },
     };
     var economyTabs = { europe: true, caribbean: true, india: true };
+    var economyWarehouseNos = [1, 2, 3];
     var economyComputedVersion = 2;
     var resourceKeys = [
       "money",
@@ -270,23 +271,27 @@ austerlitzModule.controller(
       return "";
     }
 
-    function buildTs01InterSphereTransferRows(tabKey) {
-      var currentWarehouseNo = getWarehouseNoForTab(tabKey);
-      if (currentWarehouseNo <= 0) {
-        return [];
+    function getInterSphereTransferKey(fromWarehouseNo, toWarehouseNo) {
+      return toInt(fromWarehouseNo, 0) + "|" + toInt(toWarehouseNo, 0);
+    }
+
+    function getInterSphereTransferAmount(fromWarehouseNo, toWarehouseNo) {
+      var key = getInterSphereTransferKey(fromWarehouseNo, toWarehouseNo);
+      return toInt($scope.economyInterSphereTransfers[key], 0);
+    }
+
+    function setInterSphereTransferAmount(fromWarehouseNo, toWarehouseNo, amount) {
+      var key = getInterSphereTransferKey(fromWarehouseNo, toWarehouseNo);
+      var sanitizedAmount = Math.max(0, toInt(amount, 0));
+      if (sanitizedAmount > 0) {
+        $scope.economyInterSphereTransfers[key] = sanitizedAmount;
+      } else {
+        delete $scope.economyInterSphereTransfers[key];
       }
+    }
 
-      var allWarehouseNos = [1, 2, 3];
-      var otherWarehouseNos = allWarehouseNos.filter(function (warehouseNo) {
-        return warehouseNo !== currentWarehouseNo;
-      });
-      var transferToByWarehouseNo = {};
-      var transferFromByWarehouseNo = {};
-      otherWarehouseNos.forEach(function (warehouseNo) {
-        transferToByWarehouseNo[warehouseNo] = 0;
-        transferFromByWarehouseNo[warehouseNo] = 0;
-      });
-
+    function hydrateInterSphereTransfersFromTurnSheet() {
+      $scope.economyInterSphereTransfers = {};
       var turnSheet = ($scope.masterData && $scope.masterData.turnSheet) || {};
       var rows = turnSheet.tsTransferGoods || turnSheet.TSTransferGoods || [];
       (rows || []).forEach(function (row) {
@@ -295,35 +300,214 @@ austerlitzModule.controller(
         if (fromNo === toNo) {
           return;
         }
-        if (allWarehouseNos.indexOf(fromNo) < 0 || allWarehouseNos.indexOf(toNo) < 0) {
+        if (economyWarehouseNos.indexOf(fromNo) < 0 || economyWarehouseNos.indexOf(toNo) < 0) {
           return;
         }
-        var ld = toInt(row && (row.louisdore != null ? row.louisdore : row.Louisdore), 0);
+        var ld = Math.max(0, toInt(row && (row.louisdore != null ? row.louisdore : row.Louisdore), 0));
         if (!ld) {
           return;
         }
+        setInterSphereTransferAmount(
+          fromNo,
+          toNo,
+          getInterSphereTransferAmount(fromNo, toNo) + ld,
+        );
+      });
+    }
 
-        if (fromNo === currentWarehouseNo && transferToByWarehouseNo[toNo] != null) {
-          transferToByWarehouseNo[toNo] += ld;
+    function getInterSphereTransferTotals(tabKey) {
+      var currentWarehouseNo = getWarehouseNoForTab(tabKey);
+      var totals = { transferToLd: 0, transferFromLd: 0 };
+      if (currentWarehouseNo <= 0) {
+        return totals;
+      }
+      economyWarehouseNos.forEach(function (warehouseNo) {
+        if (warehouseNo === currentWarehouseNo) {
+          return;
         }
-        if (toNo === currentWarehouseNo && transferFromByWarehouseNo[fromNo] != null) {
-          transferFromByWarehouseNo[fromNo] += ld;
-        }
+        totals.transferToLd += getInterSphereTransferAmount(currentWarehouseNo, warehouseNo);
+        totals.transferFromLd += getInterSphereTransferAmount(warehouseNo, currentWarehouseNo);
+      });
+      return totals;
+    }
+
+    function buildTs01InterSphereTransferRows(tabKey) {
+      var currentWarehouseNo = getWarehouseNoForTab(tabKey);
+      if (currentWarehouseNo <= 0) {
+        return [];
+      }
+
+      var otherWarehouseNos = economyWarehouseNos.filter(function (warehouseNo) {
+        return warehouseNo !== currentWarehouseNo;
       });
 
       var result = [];
       otherWarehouseNos.forEach(function (warehouseNo) {
         var sphereLabel = getSphereLabelForWarehouseNo(warehouseNo);
+        var transferToValue = getInterSphereTransferAmount(currentWarehouseNo, warehouseNo);
+        var transferFromValue = getInterSphereTransferAmount(warehouseNo, currentWarehouseNo);
         result.push({
           label: "Transfer TO " + sphereLabel,
-          value: transferToByWarehouseNo[warehouseNo] || 0,
+          value: transferToValue,
+          editable: true,
+          fromWarehouseNo: currentWarehouseNo,
+          toWarehouseNo: warehouseNo,
+          inputValue: transferToValue,
         });
         result.push({
           label: "Transfer FROM " + sphereLabel,
-          value: transferFromByWarehouseNo[warehouseNo] || 0,
+          value: transferFromValue,
         });
       });
       return result;
+    }
+
+    function rowHasTransferGoodsValues(row) {
+      return !!(
+        toInt(row && (row.from != null ? row.from : row.From), 0) ||
+        toInt(row && (row.to != null ? row.to : row.To), 0) ||
+        toInt(row && (row.louisdore != null ? row.louisdore : row.Louisdore), 0) ||
+        toInt(row && (row.citizens != null ? row.citizens : row.Citizens), 0) ||
+        toInt(row && (row.ecPts != null ? row.ecPts : row.EcPts), 0) ||
+        toInt(row && (row.wood != null ? row.wood : row.Wood), 0) ||
+        toInt(row && (row.horses != null ? row.horses : row.Horses), 0) ||
+        toInt(row && (row.textiles != null ? row.textiles : row.Textiles), 0)
+      );
+    }
+
+    function isInterSphereWarehouseTransferRow(row) {
+      var fromNo = toInt(row && (row.from != null ? row.from : row.From), 0);
+      var toNo = toInt(row && (row.to != null ? row.to : row.To), 0);
+      if (
+        fromNo <= 0 ||
+        toNo <= 0 ||
+        fromNo === toNo ||
+        economyWarehouseNos.indexOf(fromNo) < 0 ||
+        economyWarehouseNos.indexOf(toNo) < 0
+      ) {
+        return false;
+      }
+      // Keep only pure LD warehouse-to-warehouse transfer rows in this managed pool.
+      return (
+        toInt(row && (row.citizens != null ? row.citizens : row.Citizens), 0) === 0 &&
+        toInt(row && (row.ecPts != null ? row.ecPts : row.EcPts), 0) === 0 &&
+        toInt(row && (row.wood != null ? row.wood : row.Wood), 0) === 0 &&
+        toInt(row && (row.horses != null ? row.horses : row.Horses), 0) === 0 &&
+        toInt(row && (row.textiles != null ? row.textiles : row.Textiles), 0) === 0
+      );
+    }
+
+    function clearTransferGoodsRow(row) {
+      if (!row) {
+        return;
+      }
+      row.from = null;
+      row.to = null;
+      row.louisdore = null;
+      row.citizens = null;
+      row.ecPts = null;
+      row.wood = null;
+      row.horses = null;
+      row.textiles = null;
+      row.turnSheetSectionNo = null;
+    }
+
+    function syncTurnSheetTransferGoodsRows(rows) {
+      if (!$scope.masterData) {
+        return;
+      }
+      $scope.masterData.turnSheet = $scope.masterData.turnSheet || {};
+      $scope.masterData.turnSheet.tsTransferGoods = rows || [];
+      $scope.masterData.turnSheet.TSTransferGoods = rows || [];
+    }
+
+    function buildDesiredInterSphereTransferLines() {
+      var lines = [];
+      Object.keys($scope.economyInterSphereTransfers || {}).forEach(function (key) {
+        var parts = (key || "").split("|");
+        var fromNo = toInt(parts[0], 0);
+        var toNo = toInt(parts[1], 0);
+        var amount = Math.max(0, toInt($scope.economyInterSphereTransfers[key], 0));
+        if (
+          fromNo <= 0 ||
+          toNo <= 0 ||
+          fromNo === toNo ||
+          economyWarehouseNos.indexOf(fromNo) < 0 ||
+          economyWarehouseNos.indexOf(toNo) < 0 ||
+          !amount
+        ) {
+          return;
+        }
+        lines.push({ from: fromNo, to: toNo, louisdore: amount });
+      });
+      lines.sort(function (left, right) {
+        if (left.from !== right.from) {
+          return left.from - right.from;
+        }
+        return left.to - right.to;
+      });
+      return lines;
+    }
+
+    function persistInterSphereTransfersToTurnSheet() {
+      if (!$scope.masterData || !$scope.masterData.turnId) {
+        return $q.when(null);
+      }
+      return turnSheetFactory.getTSTransferGoods($scope.masterData.turnId).then(function (rows) {
+        rows = rows || [];
+        var managedRows = rows.filter(function (row) {
+          return isInterSphereWarehouseTransferRow(row);
+        });
+        var desiredLines = buildDesiredInterSphereTransferLines();
+        var availableEmptyRows = rows
+          .filter(function (row) {
+            var isManaged = managedRows.indexOf(row) >= 0;
+            return !isManaged && !rowHasTransferGoodsValues(row);
+          })
+          .sort(function (left, right) {
+            return toInt(left && (left.orderNo != null ? left.orderNo : left.OrderNo), 0) -
+              toInt(right && (right.orderNo != null ? right.orderNo : right.OrderNo), 0);
+          });
+
+        var targetRows = [];
+        for (var i = 0; i < desiredLines.length; i++) {
+          if (i < managedRows.length) {
+            targetRows.push(managedRows[i]);
+          } else if (availableEmptyRows.length) {
+            targetRows.push(availableEmptyRows.shift());
+          }
+        }
+
+        if (targetRows.length < desiredLines.length) {
+          throw new Error("No empty TS01 row is available to save inter-sphere transfers.");
+        }
+
+        for (var rowIdx = 0; rowIdx < targetRows.length; rowIdx++) {
+          var row = targetRows[rowIdx];
+          var line = desiredLines[rowIdx];
+          row.turnId = $scope.masterData.turnId;
+          row.from = line.from;
+          row.to = line.to;
+          row.louisdore = line.louisdore;
+          row.citizens = null;
+          row.ecPts = null;
+          row.wood = null;
+          row.horses = null;
+          row.textiles = null;
+          row.turnSheetSectionNo = null;
+        }
+
+        for (var staleIdx = targetRows.length; staleIdx < managedRows.length; staleIdx++) {
+          var staleRow = managedRows[staleIdx];
+          staleRow.turnId = $scope.masterData.turnId;
+          clearTransferGoodsRow(staleRow);
+        }
+
+        return turnSheetFactory.postTSRecords(rows, "TransferGoods").then(function (savedRows) {
+          syncTurnSheetTransferGoodsRows(savedRows || rows);
+          return savedRows || rows;
+        });
+      });
     }
 
     function buildTradeDirectByGoodForSphere(tabKey) {
@@ -1279,10 +1463,13 @@ austerlitzModule.controller(
       var directBuying = toInt(tradeSummary && tradeSummary.directBuying, 0);
       var estimatedNetTrade = directSelling - directBuying;
       var taxes = estimateTaxesForSphere(tabKey);
+      var interSphereTransferTotals = getInterSphereTransferTotals(tabKey);
       var projectedNextMonthLd =
         toInt(warehouse.money, 0) +
         estimatedNetTrade +
         taxes +
+        interSphereTransferTotals.transferFromLd -
+        interSphereTransferTotals.transferToLd +
         toInt(productionTotals.money, 0) -
         productionMaintenanceLd -
         productionBuildLd -
@@ -1469,25 +1656,7 @@ austerlitzModule.controller(
         );
       }
 
-      var transferRows = [];
-      if (tabKey !== "europe") {
-        transferRows.push(
-          { label: "Transfer TO Europe", value: getValue("transferToEuropeLd", "TransferToEuropeLd") },
-          { label: "Transfer FROM Europe", value: getValue("transferFromEuropeLd", "TransferFromEuropeLd") },
-        );
-      }
-      if (tabKey !== "caribbean") {
-        transferRows.push(
-          { label: "Transfer TO Caribbean", value: getValue("transferToCaribbeanLd", "TransferToCaribbeanLd") },
-          { label: "Transfer FROM Caribbean", value: getValue("transferFromCaribbeanLd", "TransferFromCaribbeanLd") },
-        );
-      }
-      if (tabKey !== "india") {
-        transferRows.push(
-          { label: "Transfer TO India", value: getValue("transferToIndiaLd", "TransferToIndiaLd") },
-          { label: "Transfer FROM India", value: getValue("transferFromIndiaLd", "TransferFromIndiaLd") },
-        );
-      }
+      var transferRows = buildTs01InterSphereTransferRows(tabKey);
 
       // Keep transfer rows between build funds and direct trade rows.
       var firstDirectTradeIndex = -1;
@@ -1903,6 +2072,7 @@ austerlitzModule.controller(
     $scope.refStates = [];
     $scope.economyArmyList = [];
     $scope.economyArmyListState = "";
+    $scope.economyInterSphereTransfers = {};
 
     $scope.selectEconomyTab = function (tabKey) {
       var nextTab = economyTabs[tabKey] ? tabKey : "europe";
@@ -1922,6 +2092,32 @@ austerlitzModule.controller(
     $scope.getEconomyFinancePaneTitle = function () {
       var sphereLabel = toText($scope.economyWarehouse && $scope.economyWarehouse.sphereLabel, "");
       return sphereLabel ? sphereLabel + " Finances" : "Finances";
+    };
+
+    $scope.onEconomyFinanceRowInputChanged = function (item) {
+      if (!item || !item.editable) {
+        return;
+      }
+      var fromWarehouseNo = toInt(item.fromWarehouseNo, 0);
+      var toWarehouseNo = toInt(item.toWarehouseNo, 0);
+      if (fromWarehouseNo <= 0 || toWarehouseNo <= 0 || fromWarehouseNo === toWarehouseNo) {
+        return;
+      }
+      var amount = Math.max(0, toInt(item.inputValue, 0));
+      item.inputValue = amount;
+      item.value = amount;
+      setInterSphereTransferAmount(fromWarehouseNo, toWarehouseNo, amount);
+      persistInterSphereTransfersToTurnSheet()
+        .then(function () {
+          // Recompute and persist all sphere summaries so cross-sphere totals stay in sync.
+          return ensurePersistedEconomySummary();
+        })
+        .then(function () {
+          return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
+        })
+        .catch(function (error) {
+          $scope.economyLoadError = (error && error.data) || "Unable to save economy transfer.";
+        });
     };
 
     $scope.formatNumber = function (value) {
@@ -1997,6 +2193,7 @@ austerlitzModule.controller(
 
       loadTurnDataIfNeeded()
         .then(function () {
+          hydrateInterSphereTransfersFromTurnSheet();
           return $q.all([ensureProductionSiteRules(), ensureRefStates(), ensureEconomyArmyList()]);
         })
         .then(function () {
