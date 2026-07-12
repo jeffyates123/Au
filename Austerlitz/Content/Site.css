@@ -976,6 +976,28 @@ textarea {
     opacity: 0.45;
 }
 
+.appBannerFundsChip {
+    margin-left: auto;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.appBannerFundsLabel {
+    color: #333;
+}
+
+.appBannerFundsValue {
+    font-weight: 600;
+}
+
+.appBannerFundsSeparator {
+    color: rgba(0, 0, 0, 0.45);
+}
+
 .appSidebar {
     position: fixed;
     top: 32px;

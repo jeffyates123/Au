@@ -1,4 +1,4 @@
-﻿austerlitzModule.controller("menuController", function ($scope, $location, $route, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, masterData) {
+﻿austerlitzModule.controller("menuController", function ($scope, $location, $route, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, turnReportFactory, masterData) {
     $scope.masterData = masterData;
     $scope.sidebarGameNoOptions = [];
     $scope.sidebarStateOptions = [];
@@ -8,6 +8,87 @@
     $scope.sidebarSelectedMonthYear = $scope.masterData.selectedMonthYear || null;
     $scope.sidebarSelectedTurnDetails = {};
     $scope.sidebarTurnLoading = false;
+    $scope.topBarBuildFunds = { europe: 0, caribbean: 0, india: 0 };
+
+    function toInt(value, fallback) {
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) ? fallback : parsed;
+    }
+
+    function toText(value, fallback) {
+        if (value === null || value === undefined) {
+            return fallback;
+        }
+        var text = value.toString().trim();
+        return text ? text : fallback;
+    }
+
+    function getSummaryRows(summary) {
+        if (!summary) {
+            return [];
+        }
+        return summary.rows || summary.Rows || [];
+    }
+
+    function readBuildFundsValue(row) {
+        if (!row) {
+            return 0;
+        }
+        if (row.buildFundsAvailableLd !== undefined && row.buildFundsAvailableLd !== null) {
+            return toInt(row.buildFundsAvailableLd, 0);
+        }
+        return toInt(row.BuildFundsAvailableLd, 0);
+    }
+
+    function getBuildFundsBySphere(summary) {
+        var result = { europe: 0, caribbean: 0, india: 0 };
+        var rows = getSummaryRows(summary);
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var sphere = toText(row && (row.sphere !== undefined ? row.sphere : row.Sphere), '').toLowerCase();
+            if (sphere === 'europe') {
+                result.europe = readBuildFundsValue(row);
+            } else if (sphere === 'caribbean') {
+                result.caribbean = readBuildFundsValue(row);
+            } else if (sphere === 'india') {
+                result.india = readBuildFundsValue(row);
+            }
+        }
+
+        return result;
+    }
+
+    function setTopBarBuildFundsDisplay(values) {
+        var normalized = values || { europe: 0, caribbean: 0, india: 0 };
+        $scope.topBarBuildFunds = normalized;
+    }
+
+    $scope.formatTopBarFundsValue = function (value) {
+        return '$' + toInt(value, 0).toLocaleString();
+    };
+
+    $scope.getTopBarFundsClass = function (value) {
+        return toInt(value, 0) < 0 ? 'text-danger' : 'text-success';
+    };
+
+    $scope.refreshTopBarBuildFunds = function () {
+        var turnId = $scope.masterData ? $scope.masterData.turnId : null;
+        if (!turnId || turnId === 'Unknown') {
+            setTopBarBuildFundsDisplay({ europe: 0, caribbean: 0, india: 0 });
+            return;
+        }
+
+        turnReportFactory.getTREconomyComputedSummary(turnId).then(function (summary) {
+            setTopBarBuildFundsDisplay(getBuildFundsBySphere(summary));
+        }, function () {
+            setTopBarBuildFundsDisplay({ europe: 0, caribbean: 0, india: 0 });
+        });
+    };
+
+    $scope.$on('economyBuildFundsChanged', function () {
+        $scope.refreshTopBarBuildFunds();
+    });
 
     $scope.init = function () {
         // One-shot hard refresh after Home button navigation.
@@ -30,6 +111,7 @@
                 $scope.masterData.getTSFullTurnDetails();
                 $scope.masterData.getTRFullTurnDetails();
             }
+            $scope.refreshTopBarBuildFunds();
         });
 
         $scope.getRulesCatalog();
@@ -302,12 +384,14 @@
         }
 
         $scope.syncSidebarSelectedFiltersToMasterData();
-        turnDataLoaderService.loadTurn($scope.masterData, $scope.masterData.turnId).finally(function () {
-            $scope.sidebarTurnLoading = false;
-            if ($route && $route.reload) {
-                $route.reload();
-            }
-        });
+        turnDataLoaderService.loadTurn($scope.masterData, $scope.masterData.turnId)
+            .finally(function () {
+                $scope.refreshTopBarBuildFunds();
+                $scope.sidebarTurnLoading = false;
+                if ($route && $route.reload) {
+                    $route.reload();
+                }
+            });
     };
 
     $scope.saveTurnsheetSpreadsheet = function ($event) {

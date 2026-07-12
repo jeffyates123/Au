@@ -1488,7 +1488,11 @@ austerlitzModule.controller(
         navyBuildRepairLd +
         productionBuildLd +
         barracksLd;
-      var buildFundsAvailable = startingRevenue - buildFundsDeductions;
+      var buildFundsAvailable =
+        startingRevenue -
+        buildFundsDeductions +
+        interSphereTransferTotals.transferFromLd -
+        interSphereTransferTotals.transferToLd;
       var interSphereTransferRows = buildTs01InterSphereTransferRows(tabKey);
 
       var rows = [
@@ -1499,12 +1503,12 @@ austerlitzModule.controller(
         { label: "Navy Build & Repair", value: navyBuildRepairLd },
         { label: "Production Build", value: productionBuildLd },
         { label: "LD (Mny) in Barracks", value: barracksLd },
-        { label: "Build Funds Available", value: buildFundsAvailable, totalLine: true },
       ];
       if (includeArmyNavyMaintenance) {
         rows.splice(1, 0, { label: "Army Maint", value: armyMaintTotal }, { label: "Navy Maint", value: navyMaintenance });
       }
       rows = rows.concat(interSphereTransferRows);
+      rows.push({ label: "Build Funds Available", value: buildFundsAvailable, totalLine: true });
       rows.push({ label: "Direct Selling", value: directSelling });
       rows.push({ label: "Direct Buying", value: directBuying });
       rows.push({ label: "Taxes", value: taxes });
@@ -1631,48 +1635,65 @@ austerlitzModule.controller(
         return 0;
       }
 
+      var startingRevenue = getValue("startingRevenueLd", "StartingRevenueLd");
+      var armyMaintLd = getValue("armyMaintLd", "ArmyMaintLd");
+      var navyMaintLd = getValue("navyMaintLd", "NavyMaintLd");
+      var productionMaintLd = getValue("productionMaintLd", "ProductionMaintLd");
+      var armyBuildingLd = getValue("armyBuildingLd", "ArmyBuildingLd");
+      var armyTrainingLd = getValue("armyTrainingLd", "ArmyTrainingLd");
+      var navyBuildRepairLd = getValue("navyBuildRepairLd", "NavyBuildRepairLd");
+      var productionBuildLd = getValue("productionBuildLd", "ProductionBuildLd");
+      var ldInBarracks = getValue("ldInBarracks", "LdInBarracks");
+      var interSphereTransferTotals = getInterSphereTransferTotals(tabKey);
+      var buildFundsDeductions =
+        armyMaintLd +
+        navyMaintLd +
+        productionMaintLd +
+        armyBuildingLd +
+        armyTrainingLd +
+        navyBuildRepairLd +
+        productionBuildLd +
+        ldInBarracks;
+      var buildFundsAvailable =
+        startingRevenue -
+        buildFundsDeductions +
+        interSphereTransferTotals.transferFromLd -
+        interSphereTransferTotals.transferToLd;
+
       var financeRows = [
-        { label: "Starting Revenue", value: getValue("startingRevenueLd", "StartingRevenueLd"), totalLine: true },
-        { label: "Production Maint.", value: getValue("productionMaintLd", "ProductionMaintLd") },
-        { label: "Army Building", value: getValue("armyBuildingLd", "ArmyBuildingLd") },
-        { label: "Army Training", value: getValue("armyTrainingLd", "ArmyTrainingLd") },
-        { label: "Navy Build & Repair", value: getValue("navyBuildRepairLd", "NavyBuildRepairLd") },
-        { label: "Production Build", value: getValue("productionBuildLd", "ProductionBuildLd") },
-        { label: "LD (Mny) in Barracks", value: getValue("ldInBarracks", "LdInBarracks") },
-        { label: "Build Funds Available", value: getValue("buildFundsAvailableLd", "BuildFundsAvailableLd"), totalLine: true },
-        { label: "Direct Selling", value: getValue("directSellingLd", "DirectSellingLd") },
-        { label: "Direct Buying", value: getValue("directBuyingLd", "DirectBuyingLd") },
-        { label: "Taxes", value: getValue("taxesLd", "TaxesLd") },
-        { label: "LD Production", value: getValue("ldProduction", "LdProduction") },
-        { label: "Projected Next Month LD", value: getValue("projectedNextMonthLd", "ProjectedNextMonthLd"), highlight: true, totalLine: true },
+        { label: "Starting Revenue", value: startingRevenue, totalLine: true },
+        { label: "Production Maint.", value: productionMaintLd },
+        { label: "Army Building", value: armyBuildingLd },
+        { label: "Army Training", value: armyTrainingLd },
+        { label: "Navy Build & Repair", value: navyBuildRepairLd },
+        { label: "Production Build", value: productionBuildLd },
+        { label: "LD (Mny) in Barracks", value: ldInBarracks },
       ];
 
       if (tabKey === "europe") {
         financeRows.splice(
           1,
           0,
-          { label: "Army Maint", value: getValue("armyMaintLd", "ArmyMaintLd") },
-          { label: "Navy Maint", value: getValue("navyMaintLd", "NavyMaintLd") },
+          { label: "Army Maint", value: armyMaintLd },
+          { label: "Navy Maint", value: navyMaintLd },
         );
       }
 
       var transferRows = buildTs01InterSphereTransferRows(tabKey);
+      financeRows = financeRows.concat(transferRows);
+      financeRows.push({ label: "Build Funds Available", value: buildFundsAvailable, totalLine: true });
+      financeRows.push({ label: "Direct Selling", value: getValue("directSellingLd", "DirectSellingLd") });
+      financeRows.push({ label: "Direct Buying", value: getValue("directBuyingLd", "DirectBuyingLd") });
+      financeRows.push({ label: "Taxes", value: getValue("taxesLd", "TaxesLd") });
+      financeRows.push({ label: "LD Production", value: getValue("ldProduction", "LdProduction") });
+      financeRows.push({
+        label: "Projected Next Month LD",
+        value: getValue("projectedNextMonthLd", "ProjectedNextMonthLd"),
+        highlight: true,
+        totalLine: true,
+      });
 
-      // Keep transfer rows between build funds and direct trade rows.
-      var firstDirectTradeIndex = -1;
-      for (var i = 0; i < financeRows.length; i++) {
-        if (financeRows[i] && financeRows[i].label === "Direct Selling") {
-          firstDirectTradeIndex = i;
-          break;
-        }
-      }
-      if (firstDirectTradeIndex < 0 || !transferRows.length) {
-        return financeRows;
-      }
-      return financeRows
-        .slice(0, firstDirectTradeIndex)
-        .concat(transferRows)
-        .concat(financeRows.slice(firstDirectTradeIndex));
+      return financeRows;
     }
 
     function loadPersistedEconomySummary(turnId) {
@@ -2115,6 +2136,9 @@ austerlitzModule.controller(
         .then(function () {
           return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
         })
+        .then(function () {
+          $scope.$emit("economyBuildFundsChanged");
+        })
         .catch(function (error) {
           $scope.economyLoadError = (error && error.data) || "Unable to save economy transfer.";
         });
@@ -2201,6 +2225,9 @@ austerlitzModule.controller(
         })
         .then(function () {
           return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
+        })
+        .then(function () {
+          $scope.$emit("economyBuildFundsChanged");
         })
         .catch(function (error) {
           $scope.economyLoadError = (error && error.data) || "Unable to load economy data.";

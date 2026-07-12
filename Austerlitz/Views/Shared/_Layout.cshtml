@@ -104,18 +104,13 @@
 <body ng-controller="menuController">
     <div class="appShell" ng-init="init();">
         <header class="appTopBanner" ng-style="getMenuBarStyle()">
-            <div class="appBannerLeft">
-                <a href="/" ng-click="onHomeLinkClicked()" class="appBannerCountry appBannerCountryLink appBannerHomeLink" title="Home">
-                    <span class="glyphicon glyphicon-home appBannerHomeIcon" aria-hidden="true"></span>
-                    <span class="sr-only">Home</span>
-                </a>
-                <span class="appBannerDivider">|</span>
-                <span>AU-{{masterData.selectedGameNo || '--'}}</span>
-                <span class="appBannerDivider">|</span>
-                <span>{{getSelectedMonthYearText() || masterData.turnId}}</span>
-            </div>
-            <div class="appBannerRight">
-                <span>{{masterData.turnId}}</span>
+            <div class="appBannerRight appBannerFundsChip">
+                <span class="appBannerFundsLabel">Build funds (E/C/I):</span>
+                <span class="appBannerFundsValue" ng-class="getTopBarFundsClass(topBarBuildFunds.europe)">{{formatTopBarFundsValue(topBarBuildFunds.europe)}}</span>
+                <span class="appBannerFundsSeparator" aria-hidden="true">|</span>
+                <span class="appBannerFundsValue" ng-class="getTopBarFundsClass(topBarBuildFunds.caribbean)">{{formatTopBarFundsValue(topBarBuildFunds.caribbean)}}</span>
+                <span class="appBannerFundsSeparator" aria-hidden="true">|</span>
+                <span class="appBannerFundsValue" ng-class="getTopBarFundsClass(topBarBuildFunds.india)">{{formatTopBarFundsValue(topBarBuildFunds.india)}}</span>
             </div>
         </header>
 
@@ -144,6 +139,9 @@
             </div>
 
             <nav class="appSidebarNav">
+                <a href="/home" ng-click="onHomeLinkClicked()" ng-class="{ active: isActive('/home') }">
+                    <span>Home</span>
+                </a>
                 <a href="/home" ng-class="{ active: isActive('/home') }">Load/Import</a>
                 <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
                 <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Army</a>
