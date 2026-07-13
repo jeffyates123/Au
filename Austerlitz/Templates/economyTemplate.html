@@ -70,18 +70,18 @@
             <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.money)}}</td>
             <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(economyWarehouse.citizens)}}</td>
             <td ng-show="economyViewMode === 'production'"></td>
-            <td ng-show="economyViewMode === 'production'" ng-class="getProductionValueClass(economyWarehouse.citizens)">{{formatNumber(economyWarehouse.citizens)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.ecPts)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.food)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.stone)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wood)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.ore)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.zinc)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.horses)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.textiles)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wool)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.gold)}}</td>
-            <td ng-show="economyViewMode === 'production'">{{formatNumber(economyWarehouse.wine)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.citizens)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.ecPts)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.food)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.stone)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.wood)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.ore)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.zinc)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.horses)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.textiles)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.wool)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.gold)}}</td>
+            <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(economyWarehouse.wine)}}</td>
           </tr>
         </tbody>
       </table>
@@ -149,19 +149,19 @@
                 <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.buildCitizens)}}</td>
                 <td ng-show="economyViewMode === 'buildMaintain'">{{formatNumber(row.buildLd)}}</td>
 
-                <td ng-show="economyViewMode === 'production'">{{formatNumber(row.workCount)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionValueClass(getProductionCitizensForRow(row))">{{formatNumber(getProductionCitizensForRow(row))}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ecPts')">{{formatNumber(row.resources.ecPts)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'food')">{{formatNumber(row.resources.food)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'stone')">{{formatNumber(row.resources.stone)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wood')">{{formatNumber(row.resources.wood)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ore')">{{formatNumber(row.resources.ore)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'zinc')">{{formatNumber(row.resources.zinc)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'horses')">{{formatNumber(row.resources.horses)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'textiles')">{{formatNumber(row.resources.textiles)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wool')">{{formatNumber(row.resources.wool)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'gold')">{{formatNumber(row.resources.gold)}}</td>
-                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wine')">{{formatNumber(row.resources.wine)}}</td>
+                <td ng-show="economyViewMode === 'production'">{{formatProductionNumber(row.workCount)}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionValueClass(getProductionCitizensForRow(row))">{{formatProductionNumber(getProductionCitizensForRow(row))}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ecPts')">{{getProductionResourceDisplayValue(row, 'ecPts')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'food')">{{getProductionResourceDisplayValue(row, 'food')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'stone')">{{getProductionResourceDisplayValue(row, 'stone')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wood')">{{getProductionResourceDisplayValue(row, 'wood')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'ore')">{{getProductionResourceDisplayValue(row, 'ore')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'zinc')">{{getProductionResourceDisplayValue(row, 'zinc')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'horses')">{{getProductionResourceDisplayValue(row, 'horses')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'textiles')">{{getProductionResourceDisplayValue(row, 'textiles')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wool')">{{getProductionResourceDisplayValue(row, 'wool')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'gold')">{{getProductionResourceDisplayValue(row, 'gold')}}</td>
+                <td ng-show="economyViewMode === 'production'" ng-class="getProductionResourceCellClass(row, 'wine')">{{getProductionResourceDisplayValue(row, 'wine')}}</td>
               </tr>
               <tr
                 ng-repeat="summaryRow in economyProductionSummaryRows track by summaryRow.key"
@@ -169,18 +169,18 @@
               >
                 <td>{{summaryRow.label}}</td>
                 <td></td>
-                <td ng-class="getProductionValueClass(summaryRow.citizens)">{{formatNumber(summaryRow.citizens)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.ecPts)">{{formatNumber(summaryRow.resources.ecPts)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.food)">{{formatNumber(summaryRow.resources.food)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.stone)">{{formatNumber(summaryRow.resources.stone)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.wood)">{{formatNumber(summaryRow.resources.wood)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.ore)">{{formatNumber(summaryRow.resources.ore)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.zinc)">{{formatNumber(summaryRow.resources.zinc)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.horses)">{{formatNumber(summaryRow.resources.horses)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.textiles)">{{formatNumber(summaryRow.resources.textiles)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.wool)">{{formatNumber(summaryRow.resources.wool)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.gold)">{{formatNumber(summaryRow.resources.gold)}}</td>
-                <td ng-class="getProductionValueClass(summaryRow.resources.wine)">{{formatNumber(summaryRow.resources.wine)}}</td>
+                <td>{{formatProductionNumber(summaryRow.citizens)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.ecPts)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.food)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.stone)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.wood)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.ore)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.zinc)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.horses)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.textiles)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.wool)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.gold)}}</td>
+                <td>{{formatProductionNumber(summaryRow.resources.wine)}}</td>
               </tr>
             </tbody>
           </table>
@@ -210,34 +210,34 @@
               <tr>
                 <td>Balance Available</td>
                 <td></td>
-                <td ng-class="getProductionValueClass(economyTotals.balance.citizens)">{{formatNumber(economyTotals.balance.citizens)}}</td>
-                <td>{{formatNumber(economyTotals.balance.ecPts)}}</td>
-                <td>{{formatNumber(economyTotals.balance.food)}}</td>
-                <td>{{formatNumber(economyTotals.balance.stone)}}</td>
-                <td>{{formatNumber(economyTotals.balance.wood)}}</td>
-                <td>{{formatNumber(economyTotals.balance.ore)}}</td>
-                <td>{{formatNumber(economyTotals.balance.zinc)}}</td>
-                <td>{{formatNumber(economyTotals.balance.horses)}}</td>
-                <td>{{formatNumber(economyTotals.balance.textiles)}}</td>
-                <td>{{formatNumber(economyTotals.balance.wool)}}</td>
-                <td>{{formatNumber(economyTotals.balance.gold)}}</td>
-                <td>{{formatNumber(economyTotals.balance.wine)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.citizens)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.ecPts)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.food)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.stone)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.wood)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.ore)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.zinc)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.horses)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.textiles)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.wool)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.gold)}}</td>
+                <td>{{formatProductionNumber(economyTotals.balance.wine)}}</td>
               </tr>
               <tr>
                 <td>Projected Next Month</td>
                 <td></td>
-                <td ng-class="getProductionValueClass(economyTotals.projected.citizens)">{{formatNumber(economyTotals.projected.citizens)}}</td>
-                <td>{{formatNumber(economyTotals.projected.ecPts)}}</td>
-                <td>{{formatNumber(economyTotals.projected.food)}}</td>
-                <td>{{formatNumber(economyTotals.projected.stone)}}</td>
-                <td>{{formatNumber(economyTotals.projected.wood)}}</td>
-                <td>{{formatNumber(economyTotals.projected.ore)}}</td>
-                <td>{{formatNumber(economyTotals.projected.zinc)}}</td>
-                <td>{{formatNumber(economyTotals.projected.horses)}}</td>
-                <td>{{formatNumber(economyTotals.projected.textiles)}}</td>
-                <td>{{formatNumber(economyTotals.projected.wool)}}</td>
-                <td>{{formatNumber(economyTotals.projected.gold)}}</td>
-                <td>{{formatNumber(economyTotals.projected.wine)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.citizens)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.ecPts)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.food)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.stone)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.wood)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.ore)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.zinc)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.horses)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.textiles)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.wool)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.gold)}}</td>
+                <td>{{formatProductionNumber(economyTotals.projected.wine)}}</td>
               </tr>
             </tbody>
           </table>

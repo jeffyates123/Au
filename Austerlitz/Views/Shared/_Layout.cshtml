@@ -45,6 +45,8 @@
     <script src="~/App/setUpBrigadesSharedFactory.js"></script>
     <script src="~/App/setUpTransferPipelineFactory.js"></script>
     <script src="~/App/masterDataFactory.js"></script>
+    <script src="~/App/turnHistoryFactory.js"></script>
+    <script src="~/App/stateColorFactory.js"></script>
     <script src="~/App/bgModalController.js"></script>
 
     <script src="~/App/menuController.js"></script>
@@ -105,7 +107,7 @@
     <div class="appShell" ng-init="init();">
         <header class="appTopBanner" ng-style="getMenuBarStyle()">
             <div class="appBannerRight appBannerFundsChip">
-                <span class="appBannerFundsLabel">Build funds (E/C/I):</span>
+                <span class="appBannerFundsLabel">Available Funds (E/C/I):</span>
                 <span class="appBannerFundsValue" ng-class="getTopBarFundsClass(topBarBuildFunds.europe)">{{formatTopBarFundsValue(topBarBuildFunds.europe)}}</span>
                 <span class="appBannerFundsSeparator" aria-hidden="true">|</span>
                 <span class="appBannerFundsValue" ng-class="getTopBarFundsClass(topBarBuildFunds.caribbean)">{{formatTopBarFundsValue(topBarBuildFunds.caribbean)}}</span>
@@ -139,13 +141,13 @@
             </div>
 
             <nav class="appSidebarNav">
-                <a href="/home" ng-click="onHomeLinkClicked()" ng-class="{ active: isActive('/home') }">
+                <a href="/" ng-click="onHomeLinkClicked()" ng-class="{ active: isHomeMenuActive() }">
                     <span>Home</span>
                 </a>
-                <a href="/home" ng-class="{ active: isActive('/home') }">Load/Import</a>
+                <a href="/home" ng-class="{ active: isLoadImportMenuActive() }">Load/Import</a>
                 <a href="/Section/Economy" ng-class="{ active: isActive('/Section/Economy') }">Economy</a>
-                <a href="/Military/Brigades" ng-class="{ active: isActive('/Military') }">Army</a>
-                <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') && !isActive('/Military/MathBattles/Stats') }">Math Battles</a>
+                <a href="/Military/Brigades" ng-class="{ active: isActive('/Military/Brigades') }">Army</a>
+                <a href="/Military/MathBattles" ng-class="{ active: isActive('/Military/MathBattles') && !isActive('/Military/MathBattles/Stats') }">-Math Battles</a>
                 <a href="/Military/MathBattles/Stats" ng-class="{ active: isActive('/Military/MathBattles/Stats') }">-Stats</a>
                 <a href="/Section/Naval" ng-class="{ active: isActive('/Section/Naval') }">Navy</a>
                 <a href="/Military/SeaBattles" ng-class="{ active: isActive('/Military/SeaBattles') }">-Sea Battles</a>

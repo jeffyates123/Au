@@ -31,6 +31,7 @@ austerlitzModule.controller('turnMapsController', function (
     turnReportFactory,
     rulesCatalogFactory,
     turnSheetFactory,
+    turnHistoryFactory,
     masterData,
     turnMapsConfigFactory,
     turnMapsSharedFactory,
@@ -61,6 +62,7 @@ austerlitzModule.controller('turnMapsController', function (
         }
     };
     $scope.spyCoordinateReportByKey = {};
+    $scope.previousMapCoordinatesByKey = {};
 
     $scope.toMapCoordinateInt = function (value) {
         var parsed = parseInt(value, 10);
@@ -75,6 +77,90 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         return parsedX + '_' + parsedY;
+    };
+
+    $scope.getPreviousTurnId = function () {
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
+        if (!currentTurnId) {
+            return null;
+        }
+
+        var comparisonTurnId = $scope.getComparisonTurnIdForSelectedState
+            ? $scope.getComparisonTurnIdForSelectedState(currentTurnId)
+            : currentTurnId;
+
+        var strictPreviousMonthTurnId = turnHistoryFactory.getPreviousMonthTurnIdFromTurnId
+            ? turnHistoryFactory.getPreviousMonthTurnIdFromTurnId(comparisonTurnId)
+            : null;
+
+        if (!strictPreviousMonthTurnId) {
+            return null;
+        }
+
+        var turnsList = $scope.masterData && $scope.masterData.turnsList ? $scope.masterData.turnsList : null;
+        if (!turnsList || !turnsList.length) {
+            return strictPreviousMonthTurnId;
+        }
+
+        if (turnHistoryFactory.containsTurnId && turnHistoryFactory.containsTurnId(turnsList, strictPreviousMonthTurnId)) {
+            return strictPreviousMonthTurnId;
+        }
+
+        return null;
+    };
+
+    $scope.getComparisonStateCode = function () {
+        var fromSelection = $scope.getStateCodeFromSelection ? $scope.getStateCodeFromSelection($scope.selectedState) : '';
+        if (fromSelection) return fromSelection;
+
+        var fromMasterData = ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
+        if (fromMasterData) return fromMasterData;
+
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
+        return currentTurnId.length >= 4 ? currentTurnId.substr(3, 1).toUpperCase() : '';
+    };
+
+    $scope.getComparisonTurnIdForSelectedState = function (currentTurnId) {
+        var normalizedTurnId = (currentTurnId || '').toString().trim();
+        if (!normalizedTurnId || normalizedTurnId.length < 8) return normalizedTurnId;
+
+        var comparisonStateCode = $scope.getComparisonStateCode();
+        if (!comparisonStateCode) return normalizedTurnId;
+
+        var candidateTurnId = normalizedTurnId.substr(0, 3) + comparisonStateCode + normalizedTurnId.substring(4);
+        var turnsList = $scope.masterData && $scope.masterData.turnsList ? $scope.masterData.turnsList : null;
+
+        if (turnsList && turnsList.length && turnHistoryFactory.containsTurnId && !turnHistoryFactory.containsTurnId(turnsList, candidateTurnId)) {
+            return normalizedTurnId;
+        }
+
+        return candidateTurnId;
+    };
+
+    $scope.buildCoordinateLookup = function (mapCoordinates) {
+        var lookup = {};
+
+        angular.forEach(mapCoordinates || [], function (mapRow) {
+            angular.forEach(mapRow || [], function (coord) {
+                var key = $scope.toMapCoordinateKey(coord && coord.x, coord && coord.y);
+                if (key) lookup[key] = coord;
+            });
+        });
+
+        return lookup;
+    };
+
+    $scope.loadPreviousMapCoordinates = function () {
+        $scope.previousMapCoordinatesByKey = {};
+
+        var previousTurnId = $scope.getPreviousTurnId();
+        if (!previousTurnId) return;
+
+        turnReportFactory.getMapCoordinates(previousTurnId).then(function (previousMapCoordinates) {
+            $scope.previousMapCoordinatesByKey = $scope.buildCoordinateLookup(previousMapCoordinates);
+        }, function () {
+            $scope.previousMapCoordinatesByKey = {};
+        });
     };
 
     $scope.buildSpyTransportCoordinateLookup = function (turnReport) {
@@ -191,8 +277,17 @@ austerlitzModule.controller('turnMapsController', function (
             ? $scope.spyCoordinateReportByKey[key]
             : '';
         var jumpOffText = (coord.jumpOffText || '').toString().trim();
+        var intelligenceText = '';
 
+        if ($scope.isIntelligenceMode() && $scope.getIntelligenceTooltip) {
+            intelligenceText = ($scope.getIntelligenceTooltip(coord) || '').toString().trim();
+        }
+
+        if (spyReport && jumpOffText && intelligenceText) return spyReport + ' | ' + jumpOffText + ' | ' + intelligenceText;
         if (spyReport && jumpOffText) return spyReport + ' | ' + jumpOffText;
+        if (spyReport && intelligenceText) return spyReport + ' | ' + intelligenceText;
+        if (jumpOffText && intelligenceText) return jumpOffText + ' | ' + intelligenceText;
+        if (intelligenceText) return intelligenceText;
         if (spyReport) return spyReport;
         if (jumpOffText) return jumpOffText;
         return '';
@@ -774,6 +869,10 @@ austerlitzModule.controller('turnMapsController', function (
         return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'ProductionSite');
     };
 
+    $scope.isIntelligenceMode = function () {
+        return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'Intelligence');
+    };
+
     $scope.toggleSelection = function toggleSelection(mapOption) {
         var idx = $scope.selectedMapOptions.indexOf(mapOption);
         if (idx > -1) {
@@ -822,6 +921,7 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         $scope.applyMapChoiceForSelectedState();
+        $scope.loadPreviousMapCoordinates();
     };
 
     $scope.coordinateClick = function (x, y) {
@@ -871,6 +971,7 @@ austerlitzModule.controller('turnMapsController', function (
                 prodCoord.state,
                 prodCoord.population,
                 prodCoord.productionSite,
+                prodCoord.owner,
                 prodCoord.bonus,
                 prodCoord.displayField,
                 prodCoord.units,
@@ -1087,6 +1188,10 @@ austerlitzModule.controller('turnMapsController', function (
         }
     }, true);
 
+    $scope.$watch('masterData.turnsList', function () {
+        $scope.loadPreviousMapCoordinates();
+    }, true);
+
     $scope.$watch('masterData.turnReport.movementItemList', function () {
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();
@@ -1226,4 +1331,5 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.refreshMovementPickerDisplayMode();
     $scope.refreshFilteredMovementItemsForMap();
+    $scope.loadPreviousMapCoordinates();
 });

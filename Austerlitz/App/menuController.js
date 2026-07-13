@@ -1,4 +1,4 @@
-﻿austerlitzModule.controller("menuController", function ($scope, $location, $route, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, turnReportFactory, masterData) {
+﻿austerlitzModule.controller("menuController", function ($scope, $location, $route, turnSheetFactory, rulesCatalogFactory, turnDataLoaderService, turnReportFactory, turnHistoryFactory, stateColorFactory, masterData) {
     $scope.masterData = masterData;
     $scope.sidebarGameNoOptions = [];
     $scope.sidebarStateOptions = [];
@@ -65,7 +65,7 @@
     }
 
     $scope.formatTopBarFundsValue = function (value) {
-        return '$' + toInt(value, 0).toLocaleString();
+        return toInt(value, 0).toLocaleString();
     };
 
     $scope.getTopBarFundsClass = function (value) {
@@ -201,15 +201,16 @@
     };
 
     $scope.normalizeSidebarTurn = function (turn) {
-        if (!turn || !turn.turnId) {
+        var parsedTurn = turnHistoryFactory.parseTurnSummary(turn);
+        if (!parsedTurn) {
             return null;
         }
 
-        var turnId = turn.turnId;
-        var gameNo = (turn.gameNo != null ? turn.gameNo : (turnId.length >= 3 ? turnId.substr(0, 3) : '')).toString().trim();
-        var state = (turn.state != null ? turn.state : (turnId.length >= 4 ? turnId.substr(3, 1) : '')).toString().trim();
-        var monthText = turn.month || (turnId.length >= 8 ? turnId.substring(4, turnId.length - 4) : '');
-        var year = turn.year || (turnId.length >= 8 ? parseInt(turnId.substr(turnId.length - 4), 10) : 0);
+        var turnId = parsedTurn.turnId;
+        var gameNo = parsedTurn.gameNo;
+        var state = parsedTurn.state;
+        var monthText = parsedTurn.monthText;
+        var year = parsedTurn.year;
 
         return {
             turnId: turnId,
@@ -498,28 +499,9 @@
     };
 
     $scope.getMenuBarStyle = function () {
-        var stateCode = ($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '').toString().trim().toUpperCase();
-        var stateColors = {
-            'A': 'rgb(198, 23, 23)',
-            'B': 'rgb(51,153,102)',
-            'D': 'rgb(255, 204, 153)',
-            'E': 'rgb(234, 230, 21)',
-            'F': 'rgb(47, 164, 231)',
-            'G': 'rgb(135, 219, 106)',
-            'H': 'rgb(255, 106, 0)',
-            'I': 'rgb(0, 255, 0)',
-            'K': 'rgb(181, 36, 165)',
-            'M': 'rgb(206, 203, 83)',
-            'N': 'rgb(128, 128, 0)',
-            'P': 'rgb(128, 128, 128)',
-            'R': 'rgb(192, 192, 192)',
-            'S': 'rgb(255, 255, 153)',
-            'T': 'black',
-            'W': 'rgb(0, 128, 0)'
-        };
-
-        var backgroundColor = stateColors[stateCode] || 'rgb(248, 248, 248)';
-        var textColor = stateCode === 'T' ? 'rgb(192, 192, 192)' : '#111111';
+        var stateCode = stateColorFactory.normalizeStateCode($scope.masterData && $scope.masterData.selectedState ? $scope.masterData.selectedState : '');
+        var backgroundColor = stateColorFactory.getColor(stateCode);
+        var textColor = stateColorFactory.getTextColor(stateCode);
 
         return {
             'background-color': backgroundColor,
@@ -545,5 +527,15 @@
         }
 
         return currentPath === targetPath || currentPath.indexOf(targetPath + '/') === 0;
+    };
+
+    $scope.isHomeMenuActive = function () {
+        var currentPath = ($location.path() || '').toLowerCase();
+        return currentPath === '' || currentPath === '/';
+    };
+
+    $scope.isLoadImportMenuActive = function () {
+        var currentPath = ($location.path() || '').toLowerCase();
+        return currentPath === '/home';
     };
 });

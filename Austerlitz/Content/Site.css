@@ -2,6 +2,25 @@
 /*http://stackoverflow.com/questions/23379575/pretty-auto-layout-of-2-ng-grids-master-detail-whose-width-changes-based-on-co */
 
 
+:root {
+    --state-color-A: rgb(198, 23, 23);
+    --state-color-B: rgb(51, 153, 102);
+    --state-color-D: rgb(255, 204, 153);
+    --state-color-E: rgb(234, 230, 21);
+    --state-color-F: rgb(0, 148, 255);
+    --state-color-G: rgb(135, 219, 106);
+    --state-color-H: rgb(255, 106, 0);
+    --state-color-I: rgb(0, 255, 0);
+    --state-color-K: rgb(181, 36, 165);
+    --state-color-M: rgb(206, 203, 83);
+    --state-color-N: rgb(128, 128, 0);
+    --state-color-P: rgb(128, 128, 128);
+    --state-color-R: rgb(192, 192, 192);
+    --state-color-S: rgb(255, 255, 153);
+    --state-color-T: black;
+    --state-color-W: rgb(0, 128, 0);
+}
+
 body {
     padding-top: 0;
     padding-bottom: 0;
@@ -217,22 +236,22 @@ textarea {
 
 
 
-.state_A {border:none; background-color:rgb(198, 23, 23);}
-.state_B {border:none; background-color:rgb(51,153,102)}
-.state_D {border:none; background-color:rgb(255, 204, 153);}
-.state_E {border:none; background-color:rgb(234, 230, 21);}
-.state_F {border:none; background-color:rgb(0, 148, 255)}
-.state_G {border:none; background-color:rgb(135, 219, 106);}
-.state_H {border:none; background-color:rgb(255, 106, 0)}
-.state_I {border:none; background-color:rgb(0, 255, 0);}
-.state_K {border:none; background-color:rgb(181, 36, 165)}
-.state_M {border:none; background-color:rgb(206, 203, 83)}
-.state_N {border:none; background-color:rgb(128, 128, 0);}
-.state_P {border:none; background-color:rgb(128, 128, 128);}
-.state_R {border:none; background-color:rgb(192, 192, 192);}
-.state_S {border:none; background-color:rgb(255, 255, 153);}
+.state_A {border:none; background-color:var(--state-color-A);}
+.state_B {border:none; background-color:var(--state-color-B)}
+.state_D {border:none; background-color:var(--state-color-D);}
+.state_E {border:none; background-color:var(--state-color-E);}
+.state_F {border:none; background-color:var(--state-color-F)}
+.state_G {border:none; background-color:var(--state-color-G);}
+.state_H {border:none; background-color:var(--state-color-H)}
+.state_I {border:none; background-color:var(--state-color-I);}
+.state_K {border:none; background-color:var(--state-color-K)}
+.state_M {border:none; background-color:var(--state-color-M)}
+.state_N {border:none; background-color:var(--state-color-N);}
+.state_P {border:none; background-color:var(--state-color-P);}
+.state_R {border:none; background-color:var(--state-color-R);}
+.state_S {border:none; background-color:var(--state-color-S);}
 .state_T {border:none; background-color:black; color: rgb(192, 192, 192)}
-.state_W {border:none; background-color:rgb(0, 128, 0);}
+.state_W {border:none; background-color:var(--state-color-W);}
 .state_ {border: 1px rgb(192, 192, 192) solid; background-color:rgb(204, 255, 255);}
 
 .prodSite_Yes {background-color: rgb(135, 219, 106);}
@@ -240,6 +259,31 @@ textarea {
 .prodSite_TooMany {background-color:red;}
 .prodSite_Existing {background-color:black; color: rgb(192, 192, 192)}
 .prodSite_BuiltThisTurn {background-color: purple !important; color: white !important;}
+
+.intel_Normal { background-color: #ffffff; color: #000000; }
+.intel_TooHigh { background-color: red; color: #000000; }
+.intel_TooLow { background-color: pink; color: #000000; }
+.intel_Changed { background-color: #008000; color: #ffffff; }
+.intel_ChangedAndOutOfRange { background-color: #000000; color: #ffffff; }
+.intel_MultiCriteria { background-color: #000000; color: #ffffff; }
+
+.intelBorder_A { border: 2px solid var(--state-color-A) !important; }
+.intelBorder_B { border: 2px solid var(--state-color-B) !important; }
+.intelBorder_D { border: 2px solid var(--state-color-D) !important; }
+.intelBorder_E { border: 2px solid var(--state-color-E) !important; }
+.intelBorder_F { border: 2px solid var(--state-color-F) !important; }
+.intelBorder_G { border: 2px solid var(--state-color-G) !important; }
+.intelBorder_H { border: 2px solid var(--state-color-H) !important; }
+.intelBorder_I { border: 2px solid var(--state-color-I) !important; }
+.intelBorder_K { border: 2px solid var(--state-color-K) !important; }
+.intelBorder_M { border: 2px solid var(--state-color-M) !important; }
+.intelBorder_N { border: 2px solid var(--state-color-N) !important; }
+.intelBorder_P { border: 2px solid var(--state-color-P) !important; }
+.intelBorder_R { border: 2px solid var(--state-color-R) !important; }
+.intelBorder_S { border: 2px solid var(--state-color-S) !important; }
+.intelBorder_T { border: 2px solid black !important; }
+.intelBorder_W { border: 2px solid var(--state-color-W) !important; }
+.intelBorder_Thick { border-width: 4px !important; border-style: solid !important; }
 
 .moveStart {background-color: black; color: rgb(192, 192, 192);}
 .moveDir1 {background-color: darkblue; color: rgb(192, 192, 192);}

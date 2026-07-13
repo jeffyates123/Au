@@ -264,6 +264,7 @@
     <Content Include="App\mathBattlesCombatHelperFactory.js" />
     <Content Include="App\mathBattlesController.js" />
     <Content Include="App\masterDataFactory.js" />
+    <Content Include="App\stateColorFactory.js" />
     <Content Include="App\menuController.js" />
     <Content Include="App\intelligence\intelligenceBoardingFactory.js" />
     <Content Include="App\intelligenceController.js" />
@@ -275,6 +276,7 @@
     <Content Include="App\sectionPlaceholderController.js" />
     <Content Include="App\simBattleController.js" />
     <Content Include="App\turnDataLoaderService.js" />
+    <Content Include="App\turnHistoryFactory.js" />
     <Content Include="App\ts01TransferGoodsUtilsFactory.js" />
     <Content Include="App\turnMaps\turnMapsConfigFactory.js" />
     <Content Include="App\turnMaps\turnMapsDepotLookupFactory.js" />

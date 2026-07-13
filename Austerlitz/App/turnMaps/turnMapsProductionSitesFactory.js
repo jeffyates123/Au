@@ -88,6 +88,207 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 return coord.productionSite;
             };
 
+            $scope.isSeaTerrain = function (terrain) {
+                return '.+*'.indexOf((terrain || '').toString()) > -1;
+            };
+
+            $scope.getProductionSiteInfoByCoordinateSymbol = function (productionSiteSymbol) {
+                if (!$scope.productionSiteList) return null;
+
+                var normalizedSymbol = (productionSiteSymbol || '').toString().trim().toUpperCase();
+                if (!normalizedSymbol) return null;
+
+                for (var i = 0; i < $scope.productionSiteList.length; i++) {
+                    var productionSite = $scope.productionSiteList[i] || {};
+                    var symbol = (productionSite.symbol || productionSite.Symbol || '').toString().trim().toUpperCase();
+                    var secondarySymbol = (productionSite.secondarySymbol || productionSite.SecondarySymbol || '').toString().trim().toUpperCase();
+
+                    if (normalizedSymbol === symbol || normalizedSymbol === secondarySymbol) {
+                        return productionSite;
+                    }
+                }
+
+                return null;
+            };
+
+            $scope.normalizeProductionSiteSymbol = function (productionSiteSymbol) {
+                return (productionSiteSymbol || '').toString().trim().toUpperCase();
+            };
+
+            $scope.getProductionSiteDisplayNameFromSymbol = function (productionSiteSymbol) {
+                var normalizedSymbol = $scope.normalizeProductionSiteSymbol(productionSiteSymbol);
+                if (!normalizedSymbol) return 'nothing';
+
+                var productionSite = $scope.getProductionSiteInfoByCoordinateSymbol(normalizedSymbol);
+                if (!productionSite) return normalizedSymbol;
+
+                var siteName = (productionSite.siteType || productionSite.SiteType || '').toString().trim();
+                return siteName || normalizedSymbol;
+            };
+
+            $scope.getPreviousCoordinateForIntelligence = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.previousMapCoordinatesByKey) return null;
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.previousMapCoordinatesByKey, key)) return null;
+
+                return $scope.previousMapCoordinatesByKey[key];
+            };
+
+            $scope.getProductionSiteChangeInfo = function (coord) {
+                var previousCoord = $scope.getPreviousCoordinateForIntelligence(coord);
+                if (!previousCoord) {
+                    return {
+                        hasPrevious: false,
+                        changed: false,
+                        previousSymbol: '',
+                        currentSymbol: '',
+                        previousName: '',
+                        currentName: ''
+                    };
+                }
+
+                var previousSymbol = $scope.normalizeProductionSiteSymbol(previousCoord.productionSite);
+                var currentSymbol = $scope.normalizeProductionSiteSymbol($scope.getCurrentProductionSiteSymbolForIntelligence(coord));
+                var previousName = $scope.getProductionSiteDisplayNameFromSymbol(previousSymbol);
+                var currentName = $scope.getProductionSiteDisplayNameFromSymbol(currentSymbol);
+
+                return {
+                    hasPrevious: true,
+                    changed: previousSymbol !== currentSymbol,
+                    previousSymbol: previousSymbol,
+                    currentSymbol: currentSymbol,
+                    previousName: previousName,
+                    currentName: currentName
+                };
+            };
+
+            $scope.getCurrentProductionSiteSymbolForIntelligence = function (coord) {
+                if (!coord) return '';
+
+                var buildRow = $scope.getBuildProductionSiteRowAtCoordinate
+                    ? $scope.getBuildProductionSiteRowAtCoordinate(coord.x, coord.y)
+                    : null;
+
+                if (buildRow) {
+                    var buildTypeNo = parseInt(buildRow.prodSiteType, 10);
+                    if (!isNaN(buildTypeNo) && buildTypeNo === 1) {
+                        // Demolition row: effective site becomes nothing.
+                        return '';
+                    }
+
+                    var buildSymbol = $scope.getProductionSiteSymbol(buildRow);
+                    if (buildSymbol) return buildSymbol;
+                }
+
+                return coord.productionSite || '';
+            };
+
+            $scope.getIntelligenceNewOwnerStateCode = function (coord) {
+                var stateCode = (coord && coord.state ? coord.state : '').toString().trim();
+                if (!stateCode) return '';
+
+                var isSingleLowercaseLetter = stateCode.length === 1 && stateCode >= 'a' && stateCode <= 'z';
+                return isSingleLowercaseLetter ? stateCode.toUpperCase() : '';
+            };
+
+            $scope.getCoordinateIntelligenceStatus = function (coord) {
+                if (!coord) {
+                    return { status: 'none', siteName: '' };
+                }
+
+                if ($scope.isSeaTerrain(coord.terrain)) {
+                    return { status: 'sea', siteName: '' };
+                }
+
+                var productionSite = $scope.getProductionSiteInfoByCoordinateSymbol(coord.productionSite);
+                if (!productionSite) {
+                    return { status: 'ok', siteName: '' };
+                }
+
+                var minPopulation = parseInt(productionSite.minPopulation != null ? productionSite.minPopulation : productionSite.MinPopulation, 10);
+                var maxPopulation = parseInt(productionSite.maxPopulation != null ? productionSite.maxPopulation : productionSite.MaxPopulation, 10);
+                var population = parseInt(coord.population, 10);
+                var siteName = (productionSite.siteType || productionSite.SiteType || '').toString().trim();
+
+                if (isNaN(population)) population = 0;
+                if (isNaN(minPopulation) || isNaN(maxPopulation)) {
+                    return { status: 'ok', siteName: siteName };
+                }
+
+                if (population < minPopulation) {
+                    return { status: 'tooLow', siteName: siteName };
+                }
+
+                if (population > maxPopulation) {
+                    return { status: 'tooHigh', siteName: siteName };
+                }
+
+                return { status: 'ok', siteName: siteName };
+            };
+
+            $scope.getIntelligenceClass = function (coord) {
+                var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
+                var changeInfo = $scope.getProductionSiteChangeInfo(coord);
+                var isOutOfRange = intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh';
+                var isLowercaseStateOwnerMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
+                var metCriteriaCount = 0;
+
+                if (intelligenceStatus.status === 'sea') return 'terrain_sea';
+
+                if (changeInfo.hasPrevious && changeInfo.changed) metCriteriaCount++;
+                if (isOutOfRange) metCriteriaCount++;
+                if (isLowercaseStateOwnerMarker) metCriteriaCount++;
+
+                if (metCriteriaCount > 1) return 'intel_MultiCriteria';
+                if (changeInfo.hasPrevious && changeInfo.changed) return 'intel_Changed';
+                if (intelligenceStatus.status === 'tooLow') return 'intel_TooLow';
+                if (intelligenceStatus.status === 'tooHigh') return 'intel_TooHigh';
+
+                return 'intel_Normal';
+            };
+
+            $scope.hasIntelligenceStateBorder = function (coord) {
+                var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
+                if (intelligenceStatus.status === 'sea') return false;
+
+                var changeInfo = $scope.getProductionSiteChangeInfo(coord);
+                if (changeInfo.hasPrevious && changeInfo.changed) return true;
+                if ($scope.getIntelligenceNewOwnerStateCode(coord)) return true;
+
+                return intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh';
+            };
+
+            $scope.getIntelligenceChangedTooltip = function (coord) {
+                var changeInfo = $scope.getProductionSiteChangeInfo(coord);
+                if (!changeInfo.hasPrevious || !changeInfo.changed) return '';
+
+                return "Prod site changed from '" + changeInfo.previousName + "' to '" + changeInfo.currentName + "'";
+            };
+
+            $scope.getIntelligenceNewOwnerTooltip = function (coord) {
+                var ownerStateCode = $scope.getIntelligenceNewOwnerStateCode(coord);
+                if (!ownerStateCode) return '';
+
+                return "New owner is state : '" + ownerStateCode + "'";
+            };
+
+            $scope.getIntelligenceTooltip = function (coord) {
+                var tooltipParts = [];
+                var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
+                if (intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh') {
+                    var siteName = intelligenceStatus.siteName || (coord && coord.productionSite ? coord.productionSite : '');
+                    tooltipParts.push("Min/Max for '" + siteName + "' not met");
+                }
+
+                var changedText = $scope.getIntelligenceChangedTooltip(coord);
+                if (changedText) tooltipParts.push(changedText);
+
+                var newOwnerText = $scope.getIntelligenceNewOwnerTooltip(coord);
+                if (newOwnerText) tooltipParts.push(newOwnerText);
+
+                return tooltipParts.join(' | ');
+            };
+
             $scope.selectProductionSiteRow = function (row) {
                 $scope.selectedProductionSiteRow = row || null;
             };

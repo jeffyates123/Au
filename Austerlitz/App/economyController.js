@@ -52,6 +52,23 @@ austerlitzModule.controller(
       { key: "zincMine", label: "12. Zinc Mine", siteTypeNo: 12, productionType: "zinc" },
       { key: "vineyards", label: "13. Vineyards", siteTypeNo: 13 },
     ];
+    var productionResourceColumnsByRowKey = {
+      factories: { ecPts: true, wood: true, ore: true, zinc: true, textiles: true },
+      weaving: { textiles: true },
+      mints: { gold: true },
+      primeEstates: { food: true },
+      estates: { food: true },
+      primeSheep: { wool: true },
+      sheep: { wool: true },
+      primeHorse: { horses: true },
+      horse: { horses: true },
+      lumber: { wood: true },
+      quarries: { stone: true },
+      goldMine: { gold: true },
+      oreMine: { ore: true },
+      zincMine: { zinc: true },
+      vineyards: { wine: true },
+    };
     var tradeEstimateGoodsConfig = [
       { cityKey: "ectPts", goodsFactor: 6 },
       { cityKey: "food", goodsFactor: 4 },
@@ -976,23 +993,35 @@ austerlitzModule.controller(
 
       function applyFactoryInputConsumption(productionRows, warehouse) {
         var factoriesRow = null;
+        var producedInputs = { wood: 0, ore: 0, zinc: 0, textiles: 0 };
         (productionRows || []).forEach(function (row) {
           if (row && row.key === "factories") {
             factoriesRow = row;
+            return;
           }
+          if (!row || !row.resources) {
+            return;
+          }
+          // Factory can use same-turn resource outputs from other production rows.
+          producedInputs.wood += Math.max(0, toInt(row.resources.wood, 0));
+          producedInputs.ore += Math.max(0, toInt(row.resources.ore, 0));
+          producedInputs.zinc += Math.max(0, toInt(row.resources.zinc, 0));
+          producedInputs.textiles += Math.max(0, toInt(row.resources.textiles, 0));
         });
         if (!factoriesRow) {
           return;
         }
 
-        // Factory rule: every 100 EcPts consumes 1 ore, 5 textiles, 20 wood.
+        // Factory rule: every 100 EcPts consumes 1 ore, 1 zinc, 5 textiles, 20 wood.
         var plannedEcPts = Math.max(0, toInt(factoriesRow.resources && factoriesRow.resources.ecPts, 0));
         var plannedBlocks = Math.floor(plannedEcPts / 100);
-        var availableOre = Math.max(0, toInt(warehouse && warehouse.ore, 0));
-        var availableTextiles = Math.max(0, toInt(warehouse && warehouse.textiles, 0));
-        var availableWood = Math.max(0, toInt(warehouse && warehouse.wood, 0));
+        var availableOre = Math.max(0, toInt(warehouse && warehouse.ore, 0) + producedInputs.ore);
+        var availableZinc = Math.max(0, toInt(warehouse && warehouse.zinc, 0) + producedInputs.zinc);
+        var availableTextiles = Math.max(0, toInt(warehouse && warehouse.textiles, 0) + producedInputs.textiles);
+        var availableWood = Math.max(0, toInt(warehouse && warehouse.wood, 0) + producedInputs.wood);
         var maxBlocksByInputs = Math.min(
           Math.floor(availableOre / 1),
+          Math.floor(availableZinc / 1),
           Math.floor(availableTextiles / 5),
           Math.floor(availableWood / 20),
         );
@@ -1000,6 +1029,7 @@ austerlitzModule.controller(
 
         factoriesRow.resources.ecPts = actualBlocks * 100;
         factoriesRow.resources.ore = -(actualBlocks * 1);
+        factoriesRow.resources.zinc = -(actualBlocks * 1);
         factoriesRow.resources.textiles = -(actualBlocks * 5);
         factoriesRow.resources.wood = -(actualBlocks * 20);
       }
@@ -2148,11 +2178,17 @@ austerlitzModule.controller(
       return toInt(value, 0).toLocaleString();
     };
 
+    $scope.formatProductionNumber = function (value) {
+      var numeric = toInt(value, 0);
+      if (!numeric) {
+        return "";
+      }
+      // Production view should show negative values without the minus sign.
+      return Math.abs(numeric).toLocaleString();
+    };
+
     $scope.getProductionValueClass = function (value) {
       var numeric = toInt(value, 0);
-      if (numeric > 0) {
-        return "bg-success";
-      }
       if (numeric < 0) {
         return "text-danger";
       }
@@ -2174,18 +2210,9 @@ austerlitzModule.controller(
         return false;
       }
 
-      // Barracks (and similar non-producing rows) do not produce resource outputs.
-      if (!row.productionType) {
-        // Factory row has explicit input consumption columns on production view.
-        if (row.key === "factories") {
-          return (
-            resourceKey === "ecPts" ||
-            resourceKey === "wood" ||
-            resourceKey === "textiles" ||
-            resourceKey === "ore"
-          );
-        }
-        return false;
+      var rowKey = toText(row.key, "");
+      if (rowKey && productionResourceColumnsByRowKey[rowKey]) {
+        return !!productionResourceColumnsByRowKey[rowKey][resourceKey];
       }
 
       var mappedKey = mapProductionTypeToResourceKey(row.productionType);
@@ -2197,6 +2224,13 @@ austerlitzModule.controller(
         return "economyCellNotApplicable";
       }
       return $scope.getProductionValueClass(row && row.resources ? row.resources[resourceKey] : 0);
+    };
+
+    $scope.getProductionResourceDisplayValue = function (row, resourceKey) {
+      if (!$scope.isProductionResourceApplicable(row, resourceKey)) {
+        return "";
+      }
+      return $scope.formatProductionNumber(row && row.resources ? row.resources[resourceKey] : 0);
     };
 
     $scope.getProductionCitizensForRow = function (row) {

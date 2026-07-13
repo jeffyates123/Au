@@ -202,8 +202,19 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                 return nextCoordinate;
             };
 
-            $scope.defineCoordClass = function (terrain, state, population, productionSite, bonusSymbol, displayField, units, x, y, routeCandidate, jumpOffText) {
+            $scope.defineCoordClass = function (terrain, state, population, productionSite, owner, bonusSymbol, displayField, units, x, y, routeCandidate, jumpOffText) {
                 var baseClass = '';
+                var intelligenceStatus;
+                var intelligenceCoord = {
+                    terrain: terrain,
+                    state: state,
+                    population: population,
+                    productionSite: productionSite,
+                    owner: owner,
+                    bonus: bonusSymbol,
+                    x: x,
+                    y: y
+                };
 
                 switch ($scope.selectedDisplayOption.name) {
                     case 'Movement':
@@ -232,13 +243,35 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                             bonus: bonusSymbol
                         });
                         break;
+                    case 'Intelligence':
+                        intelligenceStatus = $scope.getCoordinateIntelligenceStatus
+                            ? $scope.getCoordinateIntelligenceStatus(intelligenceCoord)
+                            : { status: 'ok' };
+                        baseClass = $scope.getIntelligenceClass
+                            ? $scope.getIntelligenceClass(intelligenceCoord)
+                            : 'intel_Normal';
+
+                        if ($scope.hasIntelligenceStateBorder && $scope.hasIntelligenceStateBorder(intelligenceCoord)) {
+                            var borderStateCode = ((state || '').toString().trim().toUpperCase());
+                            var isNewOwnerState = $scope.getIntelligenceNewOwnerStateCode
+                                ? !!$scope.getIntelligenceNewOwnerStateCode(intelligenceCoord)
+                                : false;
+
+                            baseClass = (baseClass ? baseClass + ' ' : '') + 'intelBorder_' + borderStateCode;
+                            if (isNewOwnerState) {
+                                baseClass = (baseClass ? baseClass + ' ' : '') + 'intelBorder_Thick';
+                            }
+                        }
+                        break;
                 }
 
                 if ($scope.isProductionSiteMode && $scope.isProductionSiteMode() && $scope.hasBuildProductionSiteAtCoordinate && $scope.hasBuildProductionSiteAtCoordinate(x, y)) {
                     baseClass = (baseClass ? baseClass + ' ' : '') + 'prodSite_BuiltThisTurn';
                 }
 
-                if (x > 0 && y > 0 && units && units.length > 0) {
+                if ($scope.selectedDisplayOption.name !== 'Intelligence'
+                    && x > 0 && y > 0
+                    && units && units.length > 0) {
                     baseClass = (baseClass ? baseClass + ' ' : '') + 'unit_Exists';
                 }
 
