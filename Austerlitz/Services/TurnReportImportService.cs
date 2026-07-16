@@ -17,6 +17,9 @@ namespace Austerlitz.Services
         private static readonly Regex TurnOrderErrorRegex = new Regex(
             @"(?<section>\d{1,2})\s+(?<order>\d{1,2})\s+(?<error>\d{1,2})--",
             RegexOptions.Compiled);
+        private static readonly Regex ArmyPositionTokenRegex = new Regex(
+            @"(?<x>\d{1,2})\s*/\s*(?<y>\d{1,2})\s+(?<state>[A-Za-z])\s+(?<bat>\d+)",
+            RegexOptions.Compiled);
 
         public string LoadTurnReport(string filePath)
         {
@@ -38,6 +41,7 @@ namespace Austerlitz.Services
                 lineLocation = LoadMerchantShips(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadBaggageTrains(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadSpies(lineList, lineLocation, auDB, turnId);
+                lineLocation = LoadArmyPositions(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadStateRelationships(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadTradingPortsAndCities(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadMathBattles(lineList, lineLocation, auDB, turnId);
@@ -1513,6 +1517,117 @@ Batt7Type, Batt7EF, Batt7Size
             }
         }
 
+        private int LoadArmyPositions(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)
+        {
+            try
+            {
+                EnsureArmyPositionsTable(auDB);
+                var originalLineLocation = lineLocation;
+                var sectionStart = -1;
+                for (var i = lineLocation; i < lineList.Count; i++)
+                {
+                    var lineToProcess = (lineList[i] ?? string.Empty).ToString();
+                    if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        return originalLineLocation;
+                    }
+
+                    if (lineToProcess.IndexOf("Army positions in your empire", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        sectionStart = i + 1;
+                        break;
+                    }
+                }
+
+                if (sectionStart < 0 || sectionStart >= lineList.Count)
+                {
+                    return originalLineLocation;
+                }
+
+                auDB.Database.ExecuteSqlCommand(
+                    "DELETE FROM dbo.TR_ArmyPositions WHERE TurnId = @p0",
+                    turnId ?? string.Empty);
+
+                var parsedArmyPositions = new List<Tuple<int, int, string, int>>();
+                var hasLoadedRows = false;
+                var cursor = sectionStart;
+
+                for (; cursor < lineList.Count; cursor++)
+                {
+                    var lineToProcess = (lineList[cursor] ?? string.Empty).ToString();
+                    if (string.IsNullOrWhiteSpace(lineToProcess))
+                    {
+                        if (hasLoadedRows)
+                        {
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    if (lineToProcess.IndexOf("x/ y State", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        continue;
+                    }
+
+                    if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1
+                        || lineToProcess.IndexOf("There are epidemics", StringComparison.OrdinalIgnoreCase) != -1
+                        || lineToProcess.IndexOf("Occupying Forces", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        break;
+                    }
+
+                    var matches = ArmyPositionTokenRegex.Matches(lineToProcess);
+                    if (matches.Count == 0)
+                    {
+                        if (hasLoadedRows)
+                        {
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    foreach (Match match in matches)
+                    {
+                        if (!match.Success)
+                        {
+                            continue;
+                        }
+
+                        parsedArmyPositions.Add(Tuple.Create(
+                            ParseDigitsToInt(match.Groups["x"].Value),
+                            ParseDigitsToInt(match.Groups["y"].Value),
+                            (match.Groups["state"].Value ?? string.Empty).Trim().ToUpperInvariant(),
+                            ParseDigitsToInt(match.Groups["bat"].Value)));
+                    }
+
+                    hasLoadedRows = true;
+                }
+
+                if (parsedArmyPositions.Count > 0)
+                {
+                    foreach (var parsedArmyPosition in parsedArmyPositions)
+                    {
+                        auDB.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.TR_ArmyPositions (TurnId, X, Y, State, Bat)
+VALUES (@p0, @p1, @p2, @p3, @p4)",
+                            turnId ?? string.Empty,
+                            parsedArmyPosition.Item1,
+                            parsedArmyPosition.Item2,
+                            parsedArmyPosition.Item3,
+                            parsedArmyPosition.Item4);
+                    }
+                }
+
+                return cursor;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("loadArmyPositions: " + ex.Message, ex);
+            }
+        }
+
         private int LoadSimArmies(ArrayList lineList, SimBattleVm simBattleVm, int lineLocation)
         {
             var armyA = new Army();
@@ -2017,6 +2132,33 @@ BEGIN
         [Message] NVARCHAR(500) NOT NULL,
         CONSTRAINT PK_REF_TurnErrorCodes PRIMARY KEY (SectionNo, ErrorCode)
     );
+END;");
+        }
+
+        private void EnsureArmyPositionsTable(AusterlitzDbContext auDB)
+        {
+            auDB.Database.ExecuteSqlCommand(@"
+IF OBJECT_ID('dbo.TR_ArmyPositions', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.TR_ArmyPositions (
+        TurnId VARCHAR(13) NOT NULL,
+        X INT NOT NULL,
+        Y INT NOT NULL,
+        State VARCHAR(1) NOT NULL,
+        Bat INT NOT NULL,
+        CONSTRAINT PK_TR_ArmyPositions PRIMARY KEY (TurnId, X, Y, State)
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID('dbo.TR_ArmyPositions')
+      AND name = 'IX_TR_ArmyPositions_TurnId'
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_TR_ArmyPositions_TurnId
+        ON dbo.TR_ArmyPositions (TurnId);
 END;");
         }
 

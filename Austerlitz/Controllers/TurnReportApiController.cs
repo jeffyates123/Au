@@ -90,6 +90,8 @@ namespace Austerlitz.Controllers
                 var turnSpies = new GenericRepository<TR_Spies>(dataContext);
                 turnReport.Spies = turnSpies.GetItems(x => x.TurnId == turnId).ToArray();
 
+                turnReport.ArmyPositions = getTRArmyPositions(dataContext, turnId);
+
                 var turnStateRelationships = new GenericRepository<TR_StateRelationships>(dataContext);
                 turnReport.StateRelationships = turnStateRelationships.GetItems(x => x.TurnId == turnId).ToArray();
 
@@ -161,6 +163,30 @@ namespace Austerlitz.Controllers
 
                 return turnReport;
             }
+        }
+
+        private ArmyPosition[] getTRArmyPositions(AusterlitzDbContext dataContext, string turnId)
+        {
+            var tableExists = dataContext.Database.SqlQuery<int>(
+                @"SELECT COUNT(1)
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'TR_ArmyPositions'").SingleOrDefault() > 0;
+            if (!tableExists)
+            {
+                return new ArmyPosition[0];
+            }
+
+            return dataContext.Database.SqlQuery<ArmyPosition>(@"
+SELECT
+    TurnId,
+    X,
+    Y,
+    State,
+    Bat
+FROM dbo.TR_ArmyPositions
+WHERE TurnId = @turnId
+ORDER BY Y, X, State",
+                new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();
         }
 
         private TurnOrderError[] getTRTurnOrderErrors(AusterlitzDbContext dataContext, string turnId)

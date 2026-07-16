@@ -63,6 +63,7 @@ austerlitzModule.controller('turnMapsController', function (
         }
     };
     $scope.spyCoordinateReportByKey = {};
+    $scope.armyCoordinateByKey = {};
     $scope.spyTurnReportCacheByTurnId = {};
     $scope.spyLookupRequestId = 0;
     $scope.previousMapCoordinatesByKey = {};
@@ -380,6 +381,33 @@ austerlitzModule.controller('turnMapsController', function (
             if (requestId !== $scope.spyLookupRequestId) return;
             $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
         });
+    };
+
+    $scope.rebuildArmyCoordinateLookup = function () {
+        var report = ($scope.masterData && $scope.masterData.turnReport) || {};
+        var rows = report.armyPositions || report.ArmyPositions || [];
+        var lookup = {};
+
+        angular.forEach(rows, function (row) {
+            var x = $scope.toMapCoordinateInt(row && row.x);
+            var y = $scope.toMapCoordinateInt(row && row.y);
+            var key = $scope.toMapCoordinateKey(x, y);
+            if (!key) return;
+
+            var state = (row && (row.state || row.State) ? (row.state || row.State) : '').toString().trim().toUpperCase();
+            var bats = $scope.toMapCoordinateInt(row && (row.bat || row.Bat));
+
+            if (!Object.prototype.hasOwnProperty.call(lookup, key)) {
+                lookup[key] = [];
+            }
+
+            lookup[key].push({
+                state: state,
+                bats: bats == null ? 0 : bats
+            });
+        });
+
+        $scope.armyCoordinateByKey = lookup;
     };
 
     $scope.getCoordinateHoverTooltip = function (coord) {
@@ -1386,6 +1414,7 @@ austerlitzModule.controller('turnMapsController', function (
     turnReportFactory.getTRFullTurnDetails($scope.masterData.turnId).then(function (turnReport) {
         $scope.masterData.turnReport = turnReport;
         $scope.spyTurnReportCacheByTurnId[$scope.masterData.turnId] = turnReport;
+        $scope.rebuildArmyCoordinateLookup();
         $scope.attachUnitsToMapCoordinates();
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();

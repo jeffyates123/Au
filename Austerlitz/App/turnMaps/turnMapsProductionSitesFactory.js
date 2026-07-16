@@ -242,6 +242,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 var isProdSiteChanged = !!(changeInfo.hasPrevious && changeInfo.changed);
                 var isLowercaseStateMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
                 var hasSpyReport = !!$scope.getIntelligenceSpyReportText(coord);
+                var hasArmyPosition = ($scope.getArmyPositionsAtCoordinate(coord) || []).length > 0;
                 var metCriteriaCount = 0;
 
                 if (isOutOfRange) metCriteriaCount++;
@@ -256,6 +257,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                     isProdSiteChanged: isProdSiteChanged,
                     isLowercaseStateMarker: isLowercaseStateMarker,
                     hasSpyReport: hasSpyReport,
+                    hasArmyPosition: hasArmyPosition,
                     metCriteriaCount: metCriteriaCount
                 };
             };
@@ -277,6 +279,22 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 return 'Normal';
             };
 
+            $scope.getIntelligenceBorderTierRank = function (borderTierClass) {
+                var tierClass = (borderTierClass || '').toString();
+                if (tierClass === 'intelBorder_ArmyFound') return 4;
+                if (tierClass === 'intelBorder_Critical') return 4;
+                if (tierClass === 'intelBorder_Spy') return 3;
+                if (tierClass === 'intelBorder_Alert') return 2;
+                return 1;
+            };
+
+            $scope.getIntelligenceBorderTierClassByRank = function (rank) {
+                if (rank >= 4) return 'intelBorder_Critical';
+                if (rank === 3) return 'intelBorder_Spy';
+                if (rank === 2) return 'intelBorder_Alert';
+                return 'intelBorder_Normal';
+            };
+
             $scope.getIntelligenceVisualInfo = function (coord) {
                 var criteria = $scope.getIntelligenceCriteria(coord);
                 var bucket = $scope.getIntelligenceSeverityBucket(coord, criteria);
@@ -296,7 +314,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                     };
                 }
 
-                var hasHighlight = criteria.metCriteriaCount > 0;
+                var hasHighlight = criteria.metCriteriaCount > 0 || criteria.hasArmyPosition;
 
                 var borderColorClassMap = {
                     critical: 'intelSeverityBorder_Critical',
@@ -321,12 +339,22 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 var textContrastClass = stateColorFactory && stateColorFactory.getReadableTextClass
                     ? stateColorFactory.getReadableTextClass(backgroundColor)
                     : 'intelText_Dark';
-                var borderTierClass = shouldUseSpyVisual
+                var baseBorderTierClass = shouldUseSpyVisual
                     ? 'intelBorder_Spy'
                     : ('intelBorder_' + $scope.getIntelligenceBorderTier(coord, criteria));
+                var borderTierClass = baseBorderTierClass;
                 var borderColorClass = shouldUseSpyVisual && borderStateCode
                     ? ('intelStateBorder_' + borderStateCode)
                     : (borderColorClassMap[bucket] || 'intelSeverityBorder_Normal');
+
+                if (criteria.hasArmyPosition) {
+                    var armyTierClass = 'intelBorder_ArmyFound';
+                    var finalTierRank = Math.max(
+                        $scope.getIntelligenceBorderTierRank(baseBorderTierClass),
+                        $scope.getIntelligenceBorderTierRank(armyTierClass));
+                    borderTierClass = $scope.getIntelligenceBorderTierClassByRank(finalTierRank);
+                    borderColorClass = 'intelSeverityBorder_ArmyFound';
+                }
 
                 return {
                     bucket: bucket,
@@ -384,6 +412,13 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 return ($scope.spyCoordinateReportByKey[key] || '').toString().trim();
             };
 
+            $scope.getArmyPositionsAtCoordinate = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.armyCoordinateByKey) return [];
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.armyCoordinateByKey, key)) return [];
+                return $scope.armyCoordinateByKey[key] || [];
+            };
+
             $scope.getIntelligenceTooltip = function (coord) {
                 var tooltipParts = [];
                 var criteria = $scope.getIntelligenceCriteria(coord);
@@ -405,6 +440,13 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
 
                 var spyReportText = $scope.getIntelligenceSpyReportText(coord);
                 if (spyReportText) tooltipParts.push("Spy report: '" + spyReportText + "'");
+
+                angular.forEach($scope.getArmyPositionsAtCoordinate(coord), function (armyPosition) {
+                    var state = (armyPosition && armyPosition.state != null ? armyPosition.state : '').toString().trim().toUpperCase();
+                    var bats = parseInt(armyPosition && armyPosition.bats, 10);
+                    if (isNaN(bats)) bats = 0;
+                    tooltipParts.push("Army found here, State: " + state + " and Bats: " + bats);
+                });
 
                 return tooltipParts.join(' | ');
             };
