@@ -68,5 +68,14 @@ namespace Austerlitz.DAL
         public virtual DbSet<TR_MapCoordinates> TR_MapCoordinates { get; set; }
         public virtual DbSet<REF_PoliticalMapCoordinates> REF_PoliticalMapCoordinates { get; set; }
         public virtual DbSet<TR_TradingPortsAndCities> TR_TradingPortsAndCities { get; set; }
+        public virtual DbSet<TR_EconomyComputedSummary> TR_EconomyComputedSummary { get; set; }
+        public virtual DbSet<TR_EconomySummary> TR_EconomySummary { get; set; }
+        public virtual DbSet<TR_MathBattleResultEstimated> TR_MathBattleResultEstimated { get; set; }
+        public virtual DbSet<TR_TurnCostSummary> TR_TurnCostSummary { get; set; }
+        public virtual DbSet<REF_Terrain_Factor> REF_Terrain_Factor { get; set; }
+        public virtual DbSet<TR_MathBattleBrigades> TR_MathBattleBrigades { get; set; }
+        public virtual DbSet<TR_MathBattleResultActual> TR_MathBattleResultActual { get; set; }
+        public virtual DbSet<REF_TurnErrorCodes> REF_TurnErrorCodes { get; set; }
+        public virtual DbSet<TR_TurnOrderErrors> TR_TurnOrderErrors { get; set; }
     }
 }

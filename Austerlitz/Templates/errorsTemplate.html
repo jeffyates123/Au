@@ -1,0 +1,50 @@
+<div class="landUnitsPage errorsPage" ng-init="initErrors()">
+    <div class="landUnitsHeader">
+        <div>
+            <h2 class="landUnitsTitle">Errors</h2>
+        </div>
+        <div class="landUnitsTurnInfo">
+            <span>{{masterData.turnId}}</span>
+        </div>
+    </div>
+
+    <div class="landUnitsTabPane">
+        <div class="landUnitsSectionHeader">
+            <span class="landUnitsSectionTitle">Turn Report Errors</span>
+            <span class="landUnitsSectionMeta">{{getSortedErrors().length}} error(s)</span>
+        </div>
+
+        <div class="errorsToolbar">
+            <input type="text"
+                   class="form-control input-sm"
+                   ng-model="errorSearchText"
+                   placeholder="Filter by section/order/code/message..." />
+        </div>
+
+        <div class="landUnitsTableWrap">
+            <table class="table landUnitsTable errorsTable">
+                <thead>
+                    <tr>
+                        <th><a href="" ng-click="$event.preventDefault(); toggleErrorsSort('sectionNo')">Section</a></th>
+                        <th><a href="" ng-click="$event.preventDefault(); toggleErrorsSort('orderNo')">Order</a></th>
+                        <th><a href="" ng-click="$event.preventDefault(); toggleErrorsSort('errorCode')">Code</a></th>
+                        <th><a href="" ng-click="$event.preventDefault(); toggleErrorsSort('message')">Meaning</a></th>
+                        <th>Raw</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in getSortedErrors() track by (row.turnOrderErrorId || ($index + '-' + row.sectionNo + '-' + row.orderNo + '-' + row.errorCode))">
+                        <td>{{row.sectionNo}}</td>
+                        <td>{{row.orderNo}}</td>
+                        <td>{{row.errorCode}}</td>
+                        <td class="errorsMessageCell">{{row.message}}</td>
+                        <td><code>{{row.rawToken}}</code></td>
+                    </tr>
+                    <tr ng-show="!getSortedErrors().length">
+                        <td colspan="5" class="text-center text-muted">No errors recorded for this turn.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

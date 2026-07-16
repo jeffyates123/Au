@@ -12,11 +12,10 @@ namespace Austerlitz.DAL
     using System;
     using System.Collections.Generic;
     
-    public partial class TR_StateRelationships
+    public partial class REF_TurnErrorCodes
     {
-        public string TurnId { get; set; }
-        public string State { get; set; }
-        public int Relationship { get; set; }
-        public string SourceState { get; set; }
+        public short SectionNo { get; set; }
+        public short ErrorCode { get; set; }
+        public string Message { get; set; }
     }
 }

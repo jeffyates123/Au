@@ -25,6 +25,17 @@
             $http.get('/Api/TurnReportApi/getTRMathBattles?turnId=' + turnId).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
+        getTRErrors: function (turnId) {
+            var deferred = $q.defer();
+            $http.get('/Api/TurnReportApi/getTRFullTurnDetails?turnId=' + turnId).success(function (turnReport) {
+                if (turnReport && turnReport.errors) {
+                    deferred.resolve(turnReport.errors);
+                    return;
+                }
+                deferred.resolve([]);
+            }).error(deferred.reject);
+            return deferred.promise;
+        },
         saveTRMathBattleBrigadeCalcs: function (turnId, rows, mathBattleNo) {
             var deferred = $q.defer();
             $http.post('/Api/TurnReportApi/saveTRMathBattleBrigadeCalcs', {

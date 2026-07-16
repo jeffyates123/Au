@@ -12,11 +12,11 @@ namespace Austerlitz.DAL
     using System;
     using System.Collections.Generic;
     
-    public partial class TR_StateRelationships
+    public partial class REF_Terrain_Factor
     {
-        public string TurnId { get; set; }
-        public string State { get; set; }
-        public int Relationship { get; set; }
-        public string SourceState { get; set; }
+        public string TerrainId { get; set; }
+        public string TroopType { get; set; }
+        public Nullable<int> TF { get; set; }
+        public string TerrainTypeId { get; set; }
     }
 }

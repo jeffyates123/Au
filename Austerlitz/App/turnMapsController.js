@@ -25,6 +25,7 @@ function sendRegionalMapFile(file) {
 
 austerlitzModule.controller('turnMapsController', function (
     $scope,
+    $q,
     $routeParams,
     $timeout,
     $window,
@@ -62,6 +63,8 @@ austerlitzModule.controller('turnMapsController', function (
         }
     };
     $scope.spyCoordinateReportByKey = {};
+    $scope.spyTurnReportCacheByTurnId = {};
+    $scope.spyLookupRequestId = 0;
     $scope.previousMapCoordinatesByKey = {};
 
     $scope.toMapCoordinateInt = function (value) {
@@ -246,26 +249,137 @@ austerlitzModule.controller('turnMapsController', function (
         };
     };
 
-    $scope.rebuildSpyCoordinateReportLookup = function () {
-        var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
-        var spyCoordinateReportByKey = {};
-        var ts20TransportBySpyItemNo = $scope.buildTs20SpyTransportLookup($scope.movementBoardingRows || []);
-        var transportLookups = $scope.buildSpyTransportCoordinateLookup(turnReport);
+    $scope.appendSpyReportText = function (lookup, key, reportText) {
+        if (!lookup || !key || !reportText) return;
 
-        angular.forEach(turnReport.spies || [], function (spy) {
+        if (!Object.prototype.hasOwnProperty.call(lookup, key) || !lookup[key]) {
+            lookup[key] = reportText;
+            return;
+        }
+
+        var existing = lookup[key].toString();
+        if (existing.indexOf(reportText) > -1) return;
+        lookup[key] = existing + ' || ' + reportText;
+    };
+
+    $scope.addSpyReportsFromTurnReport = function (turnReport, spyCoordinateReportByKey, ts20TransportBySpyItemNo) {
+        var report = turnReport || {};
+        var transportLookups = $scope.buildSpyTransportCoordinateLookup(report);
+        var ts20Lookup = ts20TransportBySpyItemNo || null;
+
+        angular.forEach(report.spies || [], function (spy) {
             var reportText = (spy && spy.report != null ? spy.report : '').toString().trim();
             if (!reportText) return;
 
-            var coordinate = $scope.resolveSpyReportCoordinate(spy, ts20TransportBySpyItemNo, transportLookups);
+            var coordinate = $scope.resolveSpyReportCoordinate(spy, ts20Lookup, transportLookups);
             if (!coordinate) return;
 
             var key = $scope.toMapCoordinateKey(coordinate.x, coordinate.y);
-            if (!key || Object.prototype.hasOwnProperty.call(spyCoordinateReportByKey, key)) return;
+            if (!key) return;
 
-            spyCoordinateReportByKey[key] = reportText;
+            $scope.appendSpyReportText(spyCoordinateReportByKey, key, reportText);
+        });
+    };
+
+    $scope.getAllStateTurnIdsForCurrentTurn = function () {
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
+        if (!currentTurnId) return [];
+
+        var baseTurnId = $scope.getComparisonTurnIdForSelectedState
+            ? $scope.getComparisonTurnIdForSelectedState(currentTurnId)
+            : currentTurnId;
+        var baseParsed = turnHistoryFactory.parseTurnSummary
+            ? turnHistoryFactory.parseTurnSummary({ turnId: baseTurnId })
+            : null;
+
+        if (!baseParsed) return [baseTurnId];
+
+        var turnsList = ($scope.masterData && $scope.masterData.turnsList) || [];
+        var collectedByUpper = {};
+        var turnIds = [];
+
+        angular.forEach(turnsList, function (turnRow) {
+            var parsed = turnHistoryFactory.parseTurnSummary
+                ? turnHistoryFactory.parseTurnSummary(turnRow)
+                : null;
+            if (!parsed) return;
+            if (parsed.gameNo !== baseParsed.gameNo) return;
+            if (parsed.turnSortKey !== baseParsed.turnSortKey) return;
+
+            var parsedTurnId = (parsed.turnId || '').toString().trim();
+            if (!parsedTurnId) return;
+
+            var upperTurnId = parsedTurnId.toUpperCase();
+            if (Object.prototype.hasOwnProperty.call(collectedByUpper, upperTurnId)) return;
+
+            collectedByUpper[upperTurnId] = true;
+            turnIds.push(parsedTurnId);
         });
 
-        $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+        var baseTurnIdUpper = baseTurnId.toUpperCase();
+        if (!Object.prototype.hasOwnProperty.call(collectedByUpper, baseTurnIdUpper)) {
+            turnIds.push(baseTurnId);
+        }
+
+        return turnIds;
+    };
+
+    $scope.rebuildSpyCoordinateReportLookup = function () {
+        var requestId = ++$scope.spyLookupRequestId;
+        var spyCoordinateReportByKey = {};
+        var ts20TransportBySpyItemNo = $scope.buildTs20SpyTransportLookup($scope.movementBoardingRows || []);
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
+        var currentStateTurnId = $scope.getComparisonTurnIdForSelectedState
+            ? $scope.getComparisonTurnIdForSelectedState(currentTurnId)
+            : currentTurnId;
+        var turnIds = $scope.getAllStateTurnIdsForCurrentTurn();
+
+        if (!turnIds.length) {
+            $scope.spyCoordinateReportByKey = {};
+            return;
+        }
+
+        var reportPromises = turnIds.map(function (turnId) {
+            var normalizedTurnId = (turnId || '').toString().trim();
+            if (!normalizedTurnId) return $q.when({ turnId: '', report: null });
+
+            var cachedReport = $scope.spyTurnReportCacheByTurnId[normalizedTurnId];
+            if (cachedReport) {
+                return $q.when({ turnId: normalizedTurnId, report: cachedReport });
+            }
+
+            if (currentTurnId && normalizedTurnId.toUpperCase() === currentTurnId.toUpperCase()
+                && $scope.masterData && $scope.masterData.turnReport) {
+                $scope.spyTurnReportCacheByTurnId[normalizedTurnId] = $scope.masterData.turnReport;
+                return $q.when({ turnId: normalizedTurnId, report: $scope.masterData.turnReport });
+            }
+
+            return turnReportFactory.getTRFullTurnDetails(normalizedTurnId).then(function (report) {
+                $scope.spyTurnReportCacheByTurnId[normalizedTurnId] = report || {};
+                return { turnId: normalizedTurnId, report: report || {} };
+            }, function () {
+                return { turnId: normalizedTurnId, report: {} };
+            });
+        });
+
+        $q.all(reportPromises).then(function (results) {
+            if (requestId !== $scope.spyLookupRequestId) return;
+
+            angular.forEach(results || [], function (resultRow) {
+                if (!resultRow || !resultRow.report) return;
+                var useTs20Lookup = resultRow.turnId
+                    && currentStateTurnId
+                    && resultRow.turnId.toUpperCase() === currentStateTurnId.toUpperCase()
+                    ? ts20TransportBySpyItemNo
+                    : null;
+                $scope.addSpyReportsFromTurnReport(resultRow.report, spyCoordinateReportByKey, useTs20Lookup);
+            });
+
+            $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+        }, function () {
+            if (requestId !== $scope.spyLookupRequestId) return;
+            $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+        });
     };
 
     $scope.getCoordinateHoverTooltip = function (coord) {
@@ -281,6 +395,14 @@ austerlitzModule.controller('turnMapsController', function (
 
         if ($scope.isIntelligenceMode() && $scope.getIntelligenceTooltip) {
             intelligenceText = ($scope.getIntelligenceTooltip(coord) || '').toString().trim();
+        }
+
+        // Intelligence tooltip now includes spy-report details directly.
+        if ($scope.isIntelligenceMode()) {
+            if (jumpOffText && intelligenceText) return jumpOffText + ' | ' + intelligenceText;
+            if (intelligenceText) return intelligenceText;
+            if (jumpOffText) return jumpOffText;
+            return '';
         }
 
         if (spyReport && jumpOffText && intelligenceText) return spyReport + ' | ' + jumpOffText + ' | ' + intelligenceText;
@@ -922,6 +1044,7 @@ austerlitzModule.controller('turnMapsController', function (
 
         $scope.applyMapChoiceForSelectedState();
         $scope.loadPreviousMapCoordinates();
+        $scope.rebuildSpyCoordinateReportLookup();
     };
 
     $scope.coordinateClick = function (x, y) {
@@ -1190,6 +1313,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.$watch('masterData.turnsList', function () {
         $scope.loadPreviousMapCoordinates();
+        $scope.rebuildSpyCoordinateReportLookup();
     }, true);
 
     $scope.$watch('masterData.turnReport.movementItemList', function () {
@@ -1261,6 +1385,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     turnReportFactory.getTRFullTurnDetails($scope.masterData.turnId).then(function (turnReport) {
         $scope.masterData.turnReport = turnReport;
+        $scope.spyTurnReportCacheByTurnId[$scope.masterData.turnId] = turnReport;
         $scope.attachUnitsToMapCoordinates();
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();

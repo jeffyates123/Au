@@ -19,6 +19,6 @@ namespace Austerlitz.DAL
         public string Command { get; set; }
         public Nullable<int> ItemNo { get; set; }
         public Nullable<int> FleetNo { get; set; }
-        public Nullable<int> FleetOwner { get; set; }
+        public string FleetOwner { get; set; }
     }
 }

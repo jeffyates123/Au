@@ -42,5 +42,6 @@ namespace Austerlitz.DAL
         public Nullable<int> Batt7Size { get; set; }
         public string X_OrState { get; set; }
         public string Y_OrFleet { get; set; }
+        public Nullable<int> NewFederation { get; set; }
     }
 }

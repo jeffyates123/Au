@@ -204,7 +204,6 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
 
             $scope.defineCoordClass = function (terrain, state, population, productionSite, owner, bonusSymbol, displayField, units, x, y, routeCandidate, jumpOffText) {
                 var baseClass = '';
-                var intelligenceStatus;
                 var intelligenceCoord = {
                     terrain: terrain,
                     state: state,
@@ -244,23 +243,20 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                         });
                         break;
                     case 'Intelligence':
-                        intelligenceStatus = $scope.getCoordinateIntelligenceStatus
-                            ? $scope.getCoordinateIntelligenceStatus(intelligenceCoord)
-                            : { status: 'ok' };
                         baseClass = $scope.getIntelligenceClass
                             ? $scope.getIntelligenceClass(intelligenceCoord)
-                            : 'intel_Normal';
+                            : 'intelStateBg_Default intelText_Dark';
 
                         if ($scope.hasIntelligenceStateBorder && $scope.hasIntelligenceStateBorder(intelligenceCoord)) {
-                            var borderStateCode = ((state || '').toString().trim().toUpperCase());
-                            var isNewOwnerState = $scope.getIntelligenceNewOwnerStateCode
-                                ? !!$scope.getIntelligenceNewOwnerStateCode(intelligenceCoord)
-                                : false;
+                            var borderColorClass = $scope.getIntelligenceBorderColorClass
+                                ? $scope.getIntelligenceBorderColorClass(intelligenceCoord)
+                                : 'intelSeverityBorder_Normal';
+                            var borderThicknessClass = $scope.getIntelligenceBorderThicknessClass
+                                ? $scope.getIntelligenceBorderThicknessClass(intelligenceCoord)
+                                : 'intelBorder_Alert';
 
-                            baseClass = (baseClass ? baseClass + ' ' : '') + 'intelBorder_' + borderStateCode;
-                            if (isNewOwnerState) {
-                                baseClass = (baseClass ? baseClass + ' ' : '') + 'intelBorder_Thick';
-                            }
+                            baseClass = (baseClass ? baseClass + ' ' : '') + borderColorClass;
+                            baseClass = (baseClass ? baseClass + ' ' : '') + borderThicknessClass;
                         }
                         break;
                 }

@@ -1,6 +1,6 @@
 'use strict';
 
-austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
+austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorFactory) {
     return {
         attach: function ($scope) {
             $scope.selectedProductionSiteRow = null;
@@ -191,6 +191,15 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 return isSingleLowercaseLetter ? stateCode.toUpperCase() : '';
             };
 
+            $scope.intelligencePaletteByBucket = {
+                critical: '#000000',
+                high: '#d62828',
+                mediumHigh: '#ffb703',
+                medium: '#008000',
+                low: '#7ccf8a',
+                normal: '#ffffff'
+            };
+
             $scope.getCoordinateIntelligenceStatus = function (coord) {
                 if (!coord) {
                     return { status: 'none', siteName: '' };
@@ -226,36 +235,131 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 return { status: 'ok', siteName: siteName };
             };
 
-            $scope.getIntelligenceClass = function (coord) {
+            $scope.getIntelligenceCriteria = function (coord) {
                 var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
                 var changeInfo = $scope.getProductionSiteChangeInfo(coord);
                 var isOutOfRange = intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh';
-                var isLowercaseStateOwnerMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
+                var isProdSiteChanged = !!(changeInfo.hasPrevious && changeInfo.changed);
+                var isLowercaseStateMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
+                var hasSpyReport = !!$scope.getIntelligenceSpyReportText(coord);
                 var metCriteriaCount = 0;
 
-                if (intelligenceStatus.status === 'sea') return 'terrain_sea';
-
-                if (changeInfo.hasPrevious && changeInfo.changed) metCriteriaCount++;
                 if (isOutOfRange) metCriteriaCount++;
-                if (isLowercaseStateOwnerMarker) metCriteriaCount++;
+                if (isProdSiteChanged) metCriteriaCount++;
+                if (isLowercaseStateMarker) metCriteriaCount++;
+                if (hasSpyReport) metCriteriaCount++;
 
-                if (metCriteriaCount > 1) return 'intel_MultiCriteria';
-                if (changeInfo.hasPrevious && changeInfo.changed) return 'intel_Changed';
-                if (intelligenceStatus.status === 'tooLow') return 'intel_TooLow';
-                if (intelligenceStatus.status === 'tooHigh') return 'intel_TooHigh';
+                return {
+                    intelligenceStatus: intelligenceStatus,
+                    changeInfo: changeInfo,
+                    isOutOfRange: isOutOfRange,
+                    isProdSiteChanged: isProdSiteChanged,
+                    isLowercaseStateMarker: isLowercaseStateMarker,
+                    hasSpyReport: hasSpyReport,
+                    metCriteriaCount: metCriteriaCount
+                };
+            };
 
-                return 'intel_Normal';
+            $scope.getIntelligenceSeverityBucket = function (coord, criteria) {
+                var resolvedCriteria = criteria || $scope.getIntelligenceCriteria(coord);
+                if (resolvedCriteria.metCriteriaCount > 1) return 'critical';
+                if (resolvedCriteria.isOutOfRange) return 'high';
+                if (resolvedCriteria.hasSpyReport) return 'spyHigh';
+                if (resolvedCriteria.isLowercaseStateMarker) return 'mediumHigh';
+                if (resolvedCriteria.isProdSiteChanged) return 'medium';
+                return 'normal';
+            };
+
+            $scope.getIntelligenceBorderTier = function (coord, criteria) {
+                var resolvedCriteria = criteria || $scope.getIntelligenceCriteria(coord);
+                if (resolvedCriteria.metCriteriaCount >= 2) return 'Critical';
+                if (resolvedCriteria.metCriteriaCount === 1) return 'Alert';
+                return 'Normal';
+            };
+
+            $scope.getIntelligenceVisualInfo = function (coord) {
+                var criteria = $scope.getIntelligenceCriteria(coord);
+                var bucket = $scope.getIntelligenceSeverityBucket(coord, criteria);
+                var intelligenceStatus = criteria.intelligenceStatus || { status: 'none' };
+
+                if (intelligenceStatus.status === 'sea') {
+                    return {
+                        bucket: 'sea',
+                        criteria: criteria,
+                        severityClass: 'terrain_sea',
+                        stateBackgroundClass: 'terrain_sea',
+                        borderColorClass: '',
+                        textContrastClass: 'intelText_Dark',
+                        borderTierClass: 'intelBorder_Normal',
+                        hasBorder: false,
+                        borderStateCode: ''
+                    };
+                }
+
+                var hasHighlight = criteria.metCriteriaCount > 0;
+
+                var borderColorClassMap = {
+                    critical: 'intelSeverityBorder_Critical',
+                    high: 'intelSeverityBorder_High',
+                    spyHigh: 'intelSeverityBorder_Critical',
+                    mediumHigh: 'intelSeverityBorder_MediumHigh',
+                    medium: 'intelSeverityBorder_Medium',
+                    low: 'intelSeverityBorder_Low',
+                    normal: 'intelSeverityBorder_Normal'
+                };
+
+                var borderStateCode = ((coord && coord.state ? coord.state : '').toString().trim().toUpperCase());
+                var shouldUseSpyVisual = !!criteria.hasSpyReport;
+                var stateBackgroundClass = shouldUseSpyVisual
+                    ? 'intelSpyBg'
+                    : (hasHighlight && borderStateCode ? ('intelStateBg_' + borderStateCode) : 'intelStateBg_Default');
+                var backgroundColor = shouldUseSpyVisual
+                    ? '#000000'
+                    : (hasHighlight && stateColorFactory && stateColorFactory.getColor
+                    ? stateColorFactory.getColor(borderStateCode)
+                    : '#ffffff');
+                var textContrastClass = stateColorFactory && stateColorFactory.getReadableTextClass
+                    ? stateColorFactory.getReadableTextClass(backgroundColor)
+                    : 'intelText_Dark';
+                var borderTierClass = shouldUseSpyVisual
+                    ? 'intelBorder_Spy'
+                    : ('intelBorder_' + $scope.getIntelligenceBorderTier(coord, criteria));
+                var borderColorClass = shouldUseSpyVisual && borderStateCode
+                    ? ('intelStateBorder_' + borderStateCode)
+                    : (borderColorClassMap[bucket] || 'intelSeverityBorder_Normal');
+
+                return {
+                    bucket: bucket,
+                    criteria: criteria,
+                    severityClass: borderColorClass,
+                    stateBackgroundClass: stateBackgroundClass,
+                    borderColorClass: borderColorClass,
+                    textContrastClass: textContrastClass,
+                    borderTierClass: borderTierClass,
+                    hasBorder: hasHighlight,
+                    borderStateCode: borderStateCode
+                };
+            };
+
+            $scope.getIntelligenceClass = function (coord) {
+                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
+                if (!visualInfo) return 'intelStateBg_Default intelText_Dark';
+                return visualInfo.stateBackgroundClass + ' ' + visualInfo.textContrastClass;
             };
 
             $scope.hasIntelligenceStateBorder = function (coord) {
-                var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
-                if (intelligenceStatus.status === 'sea') return false;
+                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
+                return !!(visualInfo && visualInfo.hasBorder);
+            };
 
-                var changeInfo = $scope.getProductionSiteChangeInfo(coord);
-                if (changeInfo.hasPrevious && changeInfo.changed) return true;
-                if ($scope.getIntelligenceNewOwnerStateCode(coord)) return true;
+            $scope.getIntelligenceBorderThicknessClass = function (coord) {
+                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
+                return visualInfo ? (visualInfo.borderTierClass || 'intelBorder_Normal') : 'intelBorder_Normal';
+            };
 
-                return intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh';
+            $scope.getIntelligenceBorderColorClass = function (coord) {
+                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
+                return visualInfo ? (visualInfo.borderColorClass || 'intelSeverityBorder_Normal') : 'intelSeverityBorder_Normal';
             };
 
             $scope.getIntelligenceChangedTooltip = function (coord) {
@@ -272,9 +376,22 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
                 return "New owner is state : '" + ownerStateCode + "'";
             };
 
+            $scope.getIntelligenceSpyReportText = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.spyCoordinateReportByKey) return '';
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.spyCoordinateReportByKey, key)) return '';
+
+                return ($scope.spyCoordinateReportByKey[key] || '').toString().trim();
+            };
+
             $scope.getIntelligenceTooltip = function (coord) {
                 var tooltipParts = [];
-                var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
+                var criteria = $scope.getIntelligenceCriteria(coord);
+                var intelligenceStatus = criteria.intelligenceStatus;
+                if (criteria.metCriteriaCount > 1) {
+                    tooltipParts.push('Critical: multiple intelligence criteria detected');
+                }
+
                 if (intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh') {
                     var siteName = intelligenceStatus.siteName || (coord && coord.productionSite ? coord.productionSite : '');
                     tooltipParts.push("Min/Max for '" + siteName + "' not met");
@@ -285,6 +402,9 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function () {
 
                 var newOwnerText = $scope.getIntelligenceNewOwnerTooltip(coord);
                 if (newOwnerText) tooltipParts.push(newOwnerText);
+
+                var spyReportText = $scope.getIntelligenceSpyReportText(coord);
+                if (spyReportText) tooltipParts.push("Spy report: '" + spyReportText + "'");
 
                 return tooltipParts.join(' | ');
             };

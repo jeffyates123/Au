@@ -157,9 +157,89 @@ namespace Austerlitz.Controllers
                 turnReport.MovementItemList = normalizedMovementItems.ToArray();
                 turnReport.MapCoordinates = GetMapCoordinates(turnId, normalizedMovementItems);
                 turnReport.MathBattles = getTRMathBattles(turnId);
+                turnReport.Errors = getTRTurnOrderErrors(dataContext, turnId);
 
                 return turnReport;
             }
+        }
+
+        private TurnOrderError[] getTRTurnOrderErrors(AusterlitzDbContext dataContext, string turnId)
+        {
+            var turnErrors = new List<TurnOrderError>();
+            var turnErrorsTableExists = dataContext.Database.SqlQuery<int>(
+                @"SELECT COUNT(1)
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'TR_TurnOrderErrors'").SingleOrDefault() > 0;
+            if (!turnErrorsTableExists)
+            {
+                return turnErrors.ToArray();
+            }
+
+            var referenceTableExists = dataContext.Database.SqlQuery<int>(
+                @"SELECT COUNT(1)
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'REF_TurnErrorCodes'").SingleOrDefault() > 0;
+
+            var sql = referenceTableExists
+                ? @"
+SELECT
+    E.TurnOrderErrorId,
+    E.TurnId,
+    E.SectionNo,
+    E.OrderNo,
+    E.ErrorCode,
+    COALESCE(R.[Message], 'Unknown error code') AS ErrorMessage,
+    E.RawToken
+FROM dbo.TR_TurnOrderErrors E
+LEFT JOIN dbo.REF_TurnErrorCodes R
+    ON R.SectionNo = E.SectionNo
+   AND R.ErrorCode = E.ErrorCode
+WHERE E.TurnId = @turnId
+ORDER BY E.SectionNo, E.OrderNo, E.ErrorCode"
+                : @"
+SELECT
+    E.TurnOrderErrorId,
+    E.TurnId,
+    E.SectionNo,
+    E.OrderNo,
+    E.ErrorCode,
+    'Unknown error code' AS ErrorMessage,
+    E.RawToken
+FROM dbo.TR_TurnOrderErrors E
+WHERE E.TurnId = @turnId
+ORDER BY E.SectionNo, E.OrderNo, E.ErrorCode";
+
+            var connection = dataContext.Database.Connection;
+            if (connection.State != System.Data.ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandType = System.Data.CommandType.Text;
+                command.Parameters.Add(new SqlParameter("@turnId", turnId ?? string.Empty));
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        turnErrors.Add(new TurnOrderError
+                        {
+                            TurnOrderErrorId = reader["TurnOrderErrorId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TurnOrderErrorId"]),
+                            TurnId = reader["TurnId"] == DBNull.Value ? string.Empty : reader["TurnId"].ToString(),
+                            SectionNo = reader["SectionNo"] == DBNull.Value ? 0 : Convert.ToInt32(reader["SectionNo"]),
+                            OrderNo = reader["OrderNo"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OrderNo"]),
+                            ErrorCode = reader["ErrorCode"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ErrorCode"]),
+                            Message = reader["ErrorMessage"] == DBNull.Value ? "Unknown error code" : reader["ErrorMessage"].ToString(),
+                            RawToken = reader["RawToken"] == DBNull.Value ? string.Empty : reader["RawToken"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return turnErrors.ToArray();
         }
 
         [HttpGet]

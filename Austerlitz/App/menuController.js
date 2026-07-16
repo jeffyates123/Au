@@ -72,6 +72,16 @@
         return toInt(value, 0) < 0 ? 'text-danger' : 'text-success';
     };
 
+    $scope.getTurnErrorCount = function () {
+        var turnReport = $scope.masterData ? $scope.masterData.turnReport : null;
+        if (!turnReport) {
+            return 0;
+        }
+
+        var errors = turnReport.errors || turnReport.Errors;
+        return errors && errors.length ? errors.length : 0;
+    };
+
     $scope.refreshTopBarBuildFunds = function () {
         var turnId = $scope.masterData ? $scope.masterData.turnId : null;
         if (!turnId || turnId === 'Unknown') {

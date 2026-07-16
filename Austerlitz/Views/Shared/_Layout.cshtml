@@ -70,6 +70,7 @@
     <script src="~/App/seaBattlesEngineFactory.js"></script>
     <script src="~/App/seaBattlesController.js"></script>
     <script src="~/App/sectionPlaceholderController.js"></script>
+    <script src="~/App/errorsController.js"></script>
     <script src="~/App/userSettingsController.js"></script>
     <script src="~/App/navalUnits/navalUnitsStateFactory.js"></script>
     <script src="~/App/navalUnits/navalUnitsModelFactory.js"></script>
@@ -194,6 +195,10 @@
                         <a href="/UserSettings">User Settings</a>
                     </div>
                 </div>
+                <a href="/Section/Errors" ng-class="{ active: isActive('/Section/Errors') }">
+                    <span>Errors</span>
+                    <span class="appSidebarBadge" ng-show="getTurnErrorCount() > 0">{{getTurnErrorCount()}}</span>
+                </a>
                 <button type="button" class="btn btn-default btn-xs appSidebarSave appSidebarTurnsheetAction" ng-click="clearTurnOrders($event)">Clear Turn Orders</button>
                 <button type="button" class="btn btn-default btn-xs appSidebarSave appSidebarTurnsheetAction" ng-click="saveTurnsheetSpreadsheet($event)">Save to Spreadsheet</button>
             </nav>

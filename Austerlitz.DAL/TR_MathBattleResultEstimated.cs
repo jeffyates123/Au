@@ -12,7 +12,7 @@ namespace Austerlitz.DAL
     using System;
     using System.Collections.Generic;
     
-    public partial class TR_MathBattleResultActual
+    public partial class TR_MathBattleResultEstimated
     {
         public string TurnId { get; set; }
         public int MathBattleNo { get; set; }
@@ -58,6 +58,6 @@ namespace Austerlitz.DAL
         public int LR2StateBMen { get; set; }
         public int LR2StateBBattlePoints { get; set; }
         public int LR2StateBLosses { get; set; }
-        public bool IsEstimated { get; set; }
+        public string TerrainType { get; set; }
     }
 }

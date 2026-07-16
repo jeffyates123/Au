@@ -31,5 +31,6 @@ namespace Austerlitz.DAL
         public string BonusSymbol { get; set; }
         public Nullable<int> BonusPercentage { get; set; }
         public int CitizensRequired { get; set; }
+        public Nullable<int> CitizenAttritionPercent { get; set; }
     }
 }

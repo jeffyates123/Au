@@ -28,5 +28,6 @@ namespace Austerlitz.DAL
         public int Money { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+        public Nullable<int> NewFleetNo { get; set; }
     }
 }

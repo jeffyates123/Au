@@ -20,5 +20,6 @@ namespace Austerlitz.DAL
         public int Y { get; set; }
         public Nullable<int> Boarded { get; set; }
         public string Report { get; set; }
+        public Nullable<int> NewFederation { get; set; }
     }
 }

@@ -34,5 +34,9 @@ namespace Austerlitz.DAL
         public bool IsColonial { get; set; }
         public string TroopSpecification { get; set; }
         public bool IsCavalry { get; set; }
+        public string TerrainTroopType { get; set; }
+        public Nullable<int> LR_Points { get; set; }
+        public Nullable<int> HC_Points { get; set; }
+        public Nullable<int> Total_Points { get; set; }
     }
 }

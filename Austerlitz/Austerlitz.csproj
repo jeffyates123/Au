@@ -248,6 +248,7 @@
     <Content Include="App\boardingSharedFactory.js" />
     <Content Include="App\brigadeCalculatorController.js" />
     <Content Include="App\editableCellDirective.js" />
+    <Content Include="App\errorsController.js" />
     <Content Include="App\homeController.js" />
     <Content Include="App\bgModalController.js" />
     <Content Include="App\landUnits\landUnitsStateFactory.js" />
@@ -676,6 +677,7 @@
     <Content Include="Templates\homeTemplate.html" />
     <Content Include="Templates\tradeTemplate.html" />
     <Content Include="Templates\economyTemplate.html" />
+    <Content Include="Templates\errorsTemplate.html" />
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />
     <Content Include="Templates\mathBattlesTemplate.html" />

@@ -260,30 +260,64 @@ textarea {
 .prodSite_Existing {background-color:black; color: rgb(192, 192, 192)}
 .prodSite_BuiltThisTurn {background-color: purple !important; color: white !important;}
 
-.intel_Normal { background-color: #ffffff; color: #000000; }
-.intel_TooHigh { background-color: red; color: #000000; }
-.intel_TooLow { background-color: pink; color: #000000; }
+.intelStateBg_A { background-color: var(--state-color-A); }
+.intelStateBg_B { background-color: var(--state-color-B); }
+.intelStateBg_D { background-color: var(--state-color-D); }
+.intelStateBg_E { background-color: var(--state-color-E); }
+.intelStateBg_F { background-color: var(--state-color-F); }
+.intelStateBg_G { background-color: var(--state-color-G); }
+.intelStateBg_H { background-color: var(--state-color-H); }
+.intelStateBg_I { background-color: var(--state-color-I); }
+.intelStateBg_K { background-color: var(--state-color-K); }
+.intelStateBg_M { background-color: var(--state-color-M); }
+.intelStateBg_N { background-color: var(--state-color-N); }
+.intelStateBg_P { background-color: var(--state-color-P); }
+.intelStateBg_R { background-color: var(--state-color-R); }
+.intelStateBg_S { background-color: var(--state-color-S); }
+.intelStateBg_T { background-color: black; }
+.intelStateBg_W { background-color: var(--state-color-W); }
+.intelStateBg_Default { background-color: #ffffff; }
+.intelSpyBg { background-color: #000000; }
+
+.intelStateBorder_A { border-color: var(--state-color-A) !important; border-style: solid !important; }
+.intelStateBorder_B { border-color: var(--state-color-B) !important; border-style: solid !important; }
+.intelStateBorder_D { border-color: var(--state-color-D) !important; border-style: solid !important; }
+.intelStateBorder_E { border-color: var(--state-color-E) !important; border-style: solid !important; }
+.intelStateBorder_F { border-color: var(--state-color-F) !important; border-style: solid !important; }
+.intelStateBorder_G { border-color: var(--state-color-G) !important; border-style: solid !important; }
+.intelStateBorder_H { border-color: var(--state-color-H) !important; border-style: solid !important; }
+.intelStateBorder_I { border-color: var(--state-color-I) !important; border-style: solid !important; }
+.intelStateBorder_K { border-color: var(--state-color-K) !important; border-style: solid !important; }
+.intelStateBorder_M { border-color: var(--state-color-M) !important; border-style: solid !important; }
+.intelStateBorder_N { border-color: var(--state-color-N) !important; border-style: solid !important; }
+.intelStateBorder_P { border-color: var(--state-color-P) !important; border-style: solid !important; }
+.intelStateBorder_R { border-color: var(--state-color-R) !important; border-style: solid !important; }
+.intelStateBorder_S { border-color: var(--state-color-S) !important; border-style: solid !important; }
+.intelStateBorder_T { border-color: black !important; border-style: solid !important; }
+.intelStateBorder_W { border-color: var(--state-color-W) !important; border-style: solid !important; }
+
+.intelSeverityBorder_Normal { border-color: #ffffff !important; border-style: solid !important; }
+.intelSeverityBorder_Low { border-color: #7ccf8a !important; border-style: solid !important; }
+.intelSeverityBorder_Medium { border-color: #008000 !important; border-style: solid !important; }
+.intelSeverityBorder_MediumHigh { border-color: #ffb703 !important; border-style: solid !important; }
+.intelSeverityBorder_High { border-color: #d62828 !important; border-style: solid !important; }
+.intelSeverityBorder_Critical { border-color: #000000 !important; border-style: solid !important; }
+
+.intelText_Dark { color: #111111; }
+.intelText_Light { color: #ffffff; }
+
+.intelBorder_Normal { border-width: 1px !important; }
+.intelBorder_Alert { border-width: 2px !important; }
+.intelBorder_Spy { border-width: 3px !important; }
+.intelBorder_Critical { border-width: 4px !important; }
+
+/* Compatibility aliases for any legacy references */
+.intel_Normal { background-color: #ffffff; color: #111111; }
+.intel_TooHigh { background-color: #d62828; color: #ffffff; }
+.intel_TooLow { background-color: #d62828; color: #ffffff; }
 .intel_Changed { background-color: #008000; color: #ffffff; }
 .intel_ChangedAndOutOfRange { background-color: #000000; color: #ffffff; }
 .intel_MultiCriteria { background-color: #000000; color: #ffffff; }
-
-.intelBorder_A { border: 2px solid var(--state-color-A) !important; }
-.intelBorder_B { border: 2px solid var(--state-color-B) !important; }
-.intelBorder_D { border: 2px solid var(--state-color-D) !important; }
-.intelBorder_E { border: 2px solid var(--state-color-E) !important; }
-.intelBorder_F { border: 2px solid var(--state-color-F) !important; }
-.intelBorder_G { border: 2px solid var(--state-color-G) !important; }
-.intelBorder_H { border: 2px solid var(--state-color-H) !important; }
-.intelBorder_I { border: 2px solid var(--state-color-I) !important; }
-.intelBorder_K { border: 2px solid var(--state-color-K) !important; }
-.intelBorder_M { border: 2px solid var(--state-color-M) !important; }
-.intelBorder_N { border: 2px solid var(--state-color-N) !important; }
-.intelBorder_P { border: 2px solid var(--state-color-P) !important; }
-.intelBorder_R { border: 2px solid var(--state-color-R) !important; }
-.intelBorder_S { border: 2px solid var(--state-color-S) !important; }
-.intelBorder_T { border: 2px solid black !important; }
-.intelBorder_W { border: 2px solid var(--state-color-W) !important; }
-.intelBorder_Thick { border-width: 4px !important; border-style: solid !important; }
 
 .moveStart {background-color: black; color: rgb(192, 192, 192);}
 .moveDir1 {background-color: darkblue; color: rgb(192, 192, 192);}
@@ -1202,6 +1236,33 @@ textarea {
 .sectionPlaceholderPanel h2 {
     margin-top: 0;
     font-size: 20px;
+}
+
+.errorsToolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.errorsPage .landUnitsTable {
+    min-width: 780px;
+}
+
+.errorsTable th a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.errorsTable th a:hover,
+.errorsTable th a:focus {
+    text-decoration: underline;
+}
+
+.errorsMessageCell {
+    white-space: normal !important;
+    max-width: 620px;
 }
 
 .userSettingsOptionRow {

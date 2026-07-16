@@ -48,6 +48,15 @@
         <EntityTypeShape EntityType="AusterlitzModel.TR_MapCoordinates" Width="1.5" PointX="20.625" PointY="8.875" />
         <EntityTypeShape EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" Width="1.5" PointX="6.5" PointY="0.75" />
         <EntityTypeShape EntityType="AusterlitzModel.TR_TradingPortsAndCities" Width="1.5" PointX="19.5" PointY="2.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_EconomyComputedSummary" Width="1.5" PointX="0.75" PointY="13.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_EconomySummary" Width="1.5" PointX="2.75" PointY="13.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_MathBattleResultEstimated" Width="1.5" PointX="4.75" PointY="13.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_TurnCostSummary" Width="1.5" PointX="6.75" PointY="14.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_Terrain_Factor" Width="1.5" PointX="8.75" PointY="14.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_MathBattleBrigades" Width="1.5" PointX="10.75" PointY="14.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_MathBattleResultActual" Width="1.5" PointX="12.75" PointY="14.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.REF_TurnErrorCodes" Width="1.5" PointX="15.375" PointY="14.75" />
+        <EntityTypeShape EntityType="AusterlitzModel.TR_TurnOrderErrors" Width="1.5" PointX="7.375" PointY="17.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

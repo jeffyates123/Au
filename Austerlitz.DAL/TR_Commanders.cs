@@ -24,5 +24,6 @@ namespace Austerlitz.DAL
         public int CommandCapacity { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+        public Nullable<int> NewFederation { get; set; }
     }
 }

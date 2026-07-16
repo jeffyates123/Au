@@ -12,11 +12,13 @@ namespace Austerlitz.DAL
     using System;
     using System.Collections.Generic;
     
-    public partial class TR_StateRelationships
+    public partial class TR_TurnCostSummary
     {
         public string TurnId { get; set; }
-        public string State { get; set; }
-        public int Relationship { get; set; }
-        public string SourceState { get; set; }
+        public Nullable<decimal> ProdSites { get; set; }
+        public Nullable<decimal> Commanders { get; set; }
+        public Nullable<decimal> Brigades { get; set; }
+        public Nullable<decimal> MerchantShips { get; set; }
+        public Nullable<decimal> Warships { get; set; }
     }
 }

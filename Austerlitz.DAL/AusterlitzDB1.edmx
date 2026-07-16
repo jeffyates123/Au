@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="AusterlitzModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="AusterlitzModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="REF_ArmyList">
           <Key>
             <PropertyRef Name="ItemNo" />
@@ -30,6 +30,10 @@
           <Property Name="IsColonial" Type="bit" Nullable="false" />
           <Property Name="TroopSpecification" Type="varchar" MaxLength="15" />
           <Property Name="IsCavalry" Type="bit" Nullable="false" />
+          <Property Name="TerrainTroopType" Type="varchar" MaxLength="20" />
+          <Property Name="LR_Points" Type="int" />
+          <Property Name="HC_Points" Type="int" />
+          <Property Name="Total_Points" Type="int" />
         </EntityType>
         <EntityType Name="REF_PoliticalMapCoordinates">
           <Key>
@@ -76,6 +80,7 @@
           <Property Name="BonusSymbol" Type="varchar" MaxLength="1" />
           <Property Name="BonusPercentage" Type="int" />
           <Property Name="CitizensRequired" Type="int" Nullable="false" />
+          <Property Name="CitizenAttritionPercent" Type="int" />
         </EntityType>
         <EntityType Name="REF_Ships">
           <Key>
@@ -100,9 +105,9 @@
           <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="StateName" Type="varchar" MaxLength="30" Nullable="false" />
           <Property Name="TaxRate" Type="int" Nullable="false" />
-			<Property Name="FleetMorale" Type="int" Nullable="false" />
-			<Property Name="PoliticalSphere" Type="varchar" MaxLength="30" Nullable="true" />
-		</EntityType>
+          <Property Name="FleetMorale" Type="int" Nullable="false" />
+          <Property Name="PoliticalSphere" Type="varchar" MaxLength="30" />
+        </EntityType>
         <EntityType Name="REF_Terrain">
           <Key>
             <PropertyRef Name="TerrainId" />
@@ -111,6 +116,27 @@
           <Property Name="MaxPopulation" Type="int" />
           <Property Name="MP" Type="int" />
           <Property Name="Attrition" Type="decimal" Precision="3" Scale="2" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.REF_Terrain_Factor' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="REF_Terrain_Factor">
+          <Key>
+            <PropertyRef Name="TerrainId" />
+            <PropertyRef Name="TroopType" />
+          </Key>
+          <Property Name="TerrainId" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="TroopType" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="TF" Type="int" />
+          <Property Name="TerrainTypeId" Type="nchar" MaxLength="10" />
+        </EntityType>
+        <EntityType Name="REF_TurnErrorCodes">
+          <Key>
+            <PropertyRef Name="SectionNo" />
+            <PropertyRef Name="ErrorCode" />
+          </Key>
+          <Property Name="SectionNo" Type="smallint" Nullable="false" />
+          <Property Name="ErrorCode" Type="smallint" Nullable="false" />
+          <Property Name="Message" Type="nvarchar" MaxLength="500" Nullable="false" />
         </EntityType>
         <EntityType Name="REF_UnitWeightsRates">
           <Key>
@@ -137,6 +163,7 @@
           <Property Name="Goods2" Type="int" Nullable="false" />
           <Property Name="Quantity2" Type="int" Nullable="false" />
           <Property Name="Money" Type="int" Nullable="false" />
+          <Property Name="NewFederation" Type="int" />
         </EntityType>
         <EntityType Name="TR_Barracks">
           <Key>
@@ -189,6 +216,7 @@
           <Property Name="Batt7Type" Type="varchar" MaxLength="2" />
           <Property Name="Batt7EF" Type="int" />
           <Property Name="Batt7Size" Type="int" />
+          <Property Name="NewFederation" Type="int" />
         </EntityType>
         <EntityType Name="TR_Commanders">
           <Key>
@@ -205,6 +233,64 @@
           <Property Name="Federation" Type="int" Nullable="false" />
           <Property Name="MP" Type="int" Nullable="false" />
           <Property Name="CommandCapacity" Type="int" Nullable="false" />
+          <Property Name="NewFederation" Type="int" />
+        </EntityType>
+        <EntityType Name="TR_EconomyComputedSummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="Sphere" />
+          </Key>
+          <Property Name="TurnId" Type="nvarchar" MaxLength="16" Nullable="false" />
+          <Property Name="Sphere" Type="nvarchar" MaxLength="16" Nullable="false" />
+          <Property Name="ComputedAtUtc" Type="datetime" />
+          <Property Name="ComputedVersion" Type="int" />
+          <Property Name="StartingRevenueLd" Type="bigint" Nullable="false" />
+          <Property Name="ArmyMaintLd" Type="bigint" Nullable="false" />
+          <Property Name="NavyMaintLd" Type="bigint" Nullable="false" />
+          <Property Name="ProductionMaintLd" Type="bigint" Nullable="false" />
+          <Property Name="ArmyBuildingLd" Type="bigint" Nullable="false" />
+          <Property Name="ArmyTrainingLd" Type="bigint" Nullable="false" />
+          <Property Name="NavyBuildRepairLd" Type="bigint" Nullable="false" />
+          <Property Name="ProductionBuildLd" Type="bigint" Nullable="false" />
+          <Property Name="LdInBarracks" Type="bigint" Nullable="false" />
+          <Property Name="BuildFundsAvailableLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferToEuropeLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferFromEuropeLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferToCaribbeanLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferFromCaribbeanLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferToIndiaLd" Type="bigint" Nullable="false" />
+          <Property Name="TransferFromIndiaLd" Type="bigint" Nullable="false" />
+          <Property Name="DirectSellingLd" Type="bigint" Nullable="false" />
+          <Property Name="DirectBuyingLd" Type="bigint" Nullable="false" />
+          <Property Name="TaxesLd" Type="bigint" Nullable="false" />
+          <Property Name="LdProduction" Type="bigint" Nullable="false" />
+          <Property Name="ProjectedNextMonthLd" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TR_EconomySummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+          </Key>
+          <Property Name="TurnId" Type="nvarchar" MaxLength="16" Nullable="false" />
+          <Property Name="ProductionMaintenanceLd" Type="int" Nullable="false" />
+          <Property Name="EuropeMaintenanceWorkers" Type="int" Nullable="false" />
+          <Property Name="CaribbeanMaintenanceWorkers" Type="int" Nullable="false" />
+          <Property Name="IndiaMaintenanceWorkers" Type="int" Nullable="false" />
+          <Property Name="CommanderPayLd" Type="int" Nullable="false" />
+          <Property Name="BrigadePayLd" Type="int" Nullable="false" />
+          <Property Name="NavyMaintenanceLd" Type="int" Nullable="false" />
+          <Property Name="NavyMaintenanceMarines" Type="int" Nullable="false" />
+          <Property Name="BarracksCount" Type="int" Nullable="false" />
+          <Property Name="FactoriesCount" Type="int" Nullable="false" />
+          <Property Name="WeavingMillsCount" Type="int" Nullable="false" />
+          <Property Name="MintsCount" Type="int" Nullable="false" />
+          <Property Name="EstatesCount" Type="int" Nullable="false" />
+          <Property Name="SheepFarmsCount" Type="int" Nullable="false" />
+          <Property Name="HorseFarmsCount" Type="int" Nullable="false" />
+          <Property Name="LumberCampsCount" Type="int" Nullable="false" />
+          <Property Name="QuarriesCount" Type="int" Nullable="false" />
+          <Property Name="MinesCount" Type="int" Nullable="false" />
+          <Property Name="VineyardsCount" Type="int" Nullable="false" />
+          <Property Name="FreeAreasCount" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="TR_MapCoordinates">
           <Key>
@@ -218,6 +304,197 @@
           <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="ProductionSite" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="Population" Type="varchar" MaxLength="1" Nullable="false" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_MathBattleBrigades' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="TR_MathBattleBrigades">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="State" />
+            <PropertyRef Name="Phase" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="MathBattleBrigadeId" />
+          </Key>
+          <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+          <Property Name="MathBattleNo" Type="int" Nullable="false" />
+          <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Phase" Type="varchar" MaxLength="4" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="16" Nullable="false" />
+          <Property Name="Batt1Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt1EF" Type="int" />
+          <Property Name="Batt1Size" Type="int" />
+          <Property Name="Batt2Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt2EF" Type="int" />
+          <Property Name="Batt2Size" Type="int" />
+          <Property Name="Batt3Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt3EF" Type="int" />
+          <Property Name="Batt3Size" Type="int" />
+          <Property Name="Batt4Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt4EF" Type="int" />
+          <Property Name="Batt4Size" Type="int" />
+          <Property Name="Batt5Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt5EF" Type="int" />
+          <Property Name="Batt5Size" Type="int" />
+          <Property Name="Batt6Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt6EF" Type="int" />
+          <Property Name="Batt6Size" Type="int" />
+          <Property Name="Batt7Type" Type="varchar" MaxLength="2" />
+          <Property Name="Batt7EF" Type="int" />
+          <Property Name="Batt7Size" Type="int" />
+          <Property Name="CalcArtillery" Type="int" />
+          <Property Name="CalclLR" Type="int" />
+          <Property Name="CalclHC" Type="int" />
+          <Property Name="CalcTotal" Type="int" />
+          <Property Name="MathBattleBrigadeId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'Austerlitz.dbo.TR_MathBattleResultActual' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="TR_MathBattleResultActual">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="StateA" />
+            <PropertyRef Name="StateB" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="X" />
+            <PropertyRef Name="Y" />
+            <PropertyRef Name="Terrain" />
+            <PropertyRef Name="StateAMenTotal" />
+            <PropertyRef Name="StateALossesTotal" />
+            <PropertyRef Name="StateABattleRate" />
+            <PropertyRef Name="StateBMenTotal" />
+            <PropertyRef Name="StateBLossesTotal" />
+            <PropertyRef Name="StateBBattleRate" />
+            <PropertyRef Name="ArtStateAMen" />
+            <PropertyRef Name="ArtStateABattlePoints" />
+            <PropertyRef Name="ArtStateALosses" />
+            <PropertyRef Name="ArtStateBMen" />
+            <PropertyRef Name="ArtStateBBattlePoints" />
+            <PropertyRef Name="ArtStateBLosses" />
+            <PropertyRef Name="LR1StateAMen" />
+            <PropertyRef Name="LR1StateABattlePoints" />
+            <PropertyRef Name="LR1StateALosses" />
+            <PropertyRef Name="LR1StateBMen" />
+            <PropertyRef Name="LR1StateBBattlePoints" />
+            <PropertyRef Name="LR1StateBLosses" />
+            <PropertyRef Name="H2H1StateAMen" />
+            <PropertyRef Name="H2H1StateABattlePoints" />
+            <PropertyRef Name="H2H1StateALosses" />
+            <PropertyRef Name="H2H1StateBMen" />
+            <PropertyRef Name="H2H1StateBBattlePoints" />
+            <PropertyRef Name="H2H1StateBLosses" />
+            <PropertyRef Name="H2H2StateAMen" />
+            <PropertyRef Name="H2H2StateABattlePoints" />
+            <PropertyRef Name="H2H2StateALosses" />
+            <PropertyRef Name="H2H2StateBMen" />
+            <PropertyRef Name="H2H2StateBBattlePoints" />
+            <PropertyRef Name="H2H2StateBLosses" />
+            <PropertyRef Name="LR2StateAMen" />
+            <PropertyRef Name="LR2StateABattlePoints" />
+            <PropertyRef Name="LR2StateALosses" />
+            <PropertyRef Name="LR2StateBMen" />
+            <PropertyRef Name="LR2StateBBattlePoints" />
+            <PropertyRef Name="LR2StateBLosses" />
+            <PropertyRef Name="IsEstimated" />
+          </Key>
+          <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+          <Property Name="MathBattleNo" Type="int" Nullable="false" />
+          <Property Name="StateA" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="StateB" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="16" Nullable="false" />
+          <Property Name="X" Type="int" Nullable="false" />
+          <Property Name="Y" Type="int" Nullable="false" />
+          <Property Name="Terrain" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="StateAMenTotal" Type="int" Nullable="false" />
+          <Property Name="StateALossesTotal" Type="int" Nullable="false" />
+          <Property Name="StateABattleRate" Type="int" Nullable="false" />
+          <Property Name="StateBMenTotal" Type="int" Nullable="false" />
+          <Property Name="StateBLossesTotal" Type="int" Nullable="false" />
+          <Property Name="StateBBattleRate" Type="int" Nullable="false" />
+          <Property Name="ArtStateAMen" Type="int" Nullable="false" />
+          <Property Name="ArtStateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="ArtStateALosses" Type="int" Nullable="false" />
+          <Property Name="ArtStateBMen" Type="int" Nullable="false" />
+          <Property Name="ArtStateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="ArtStateBLosses" Type="int" Nullable="false" />
+          <Property Name="LR1StateAMen" Type="int" Nullable="false" />
+          <Property Name="LR1StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR1StateALosses" Type="int" Nullable="false" />
+          <Property Name="LR1StateBMen" Type="int" Nullable="false" />
+          <Property Name="LR1StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR1StateBLosses" Type="int" Nullable="false" />
+          <Property Name="H2H1StateAMen" Type="int" Nullable="false" />
+          <Property Name="H2H1StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H1StateALosses" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBMen" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBLosses" Type="int" Nullable="false" />
+          <Property Name="H2H2StateAMen" Type="int" Nullable="false" />
+          <Property Name="H2H2StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H2StateALosses" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBMen" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBLosses" Type="int" Nullable="false" />
+          <Property Name="LR2StateAMen" Type="int" Nullable="false" />
+          <Property Name="LR2StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR2StateALosses" Type="int" Nullable="false" />
+          <Property Name="LR2StateBMen" Type="int" Nullable="false" />
+          <Property Name="LR2StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR2StateBLosses" Type="int" Nullable="false" />
+          <Property Name="IsEstimated" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TR_MathBattleResultEstimated">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+          <Property Name="MathBattleNo" Type="int" Nullable="false" />
+          <Property Name="StateA" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="StateB" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="Name" Type="varchar" MaxLength="16" Nullable="false" />
+          <Property Name="X" Type="int" Nullable="false" />
+          <Property Name="Y" Type="int" Nullable="false" />
+          <Property Name="Terrain" Type="varchar" MaxLength="1" Nullable="false" />
+          <Property Name="StateAMenTotal" Type="int" Nullable="false" />
+          <Property Name="StateALossesTotal" Type="int" Nullable="false" />
+          <Property Name="StateABattleRate" Type="int" Nullable="false" />
+          <Property Name="StateBMenTotal" Type="int" Nullable="false" />
+          <Property Name="StateBLossesTotal" Type="int" Nullable="false" />
+          <Property Name="StateBBattleRate" Type="int" Nullable="false" />
+          <Property Name="ArtStateAMen" Type="int" Nullable="false" />
+          <Property Name="ArtStateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="ArtStateALosses" Type="int" Nullable="false" />
+          <Property Name="ArtStateBMen" Type="int" Nullable="false" />
+          <Property Name="ArtStateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="ArtStateBLosses" Type="int" Nullable="false" />
+          <Property Name="LR1StateAMen" Type="int" Nullable="false" />
+          <Property Name="LR1StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR1StateALosses" Type="int" Nullable="false" />
+          <Property Name="LR1StateBMen" Type="int" Nullable="false" />
+          <Property Name="LR1StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR1StateBLosses" Type="int" Nullable="false" />
+          <Property Name="H2H1StateAMen" Type="int" Nullable="false" />
+          <Property Name="H2H1StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H1StateALosses" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBMen" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H1StateBLosses" Type="int" Nullable="false" />
+          <Property Name="H2H2StateAMen" Type="int" Nullable="false" />
+          <Property Name="H2H2StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H2StateALosses" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBMen" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="H2H2StateBLosses" Type="int" Nullable="false" />
+          <Property Name="LR2StateAMen" Type="int" Nullable="false" />
+          <Property Name="LR2StateABattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR2StateALosses" Type="int" Nullable="false" />
+          <Property Name="LR2StateBMen" Type="int" Nullable="false" />
+          <Property Name="LR2StateBBattlePoints" Type="int" Nullable="false" />
+          <Property Name="LR2StateBLosses" Type="int" Nullable="false" />
+          <Property Name="TerrainType" Type="varchar" MaxLength="1" />
         </EntityType>
         <EntityType Name="TR_MerchantShips">
           <Key>
@@ -238,6 +515,7 @@
           <Property Name="Goods2" Type="int" Nullable="false" />
           <Property Name="Quantity2" Type="int" Nullable="false" />
           <Property Name="Money" Type="int" Nullable="false" />
+          <Property Name="NewFleetNo" Type="int" />
         </EntityType>
         <EntityType Name="TR_Spies">
           <Key>
@@ -250,13 +528,16 @@
           <Property Name="Y" Type="int" Nullable="false" />
           <Property Name="Boarded" Type="int" />
           <Property Name="Report" Type="varchar" MaxLength="120" Nullable="false" />
+          <Property Name="NewFederation" Type="int" />
         </EntityType>
         <EntityType Name="TR_StateRelationships">
           <Key>
             <PropertyRef Name="TurnId" />
+            <PropertyRef Name="SourceState" />
             <PropertyRef Name="State" />
           </Key>
           <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+          <Property Name="SourceState" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="State" Type="varchar" MaxLength="1" Nullable="false" />
           <Property Name="Relationship" Type="int" Nullable="false" />
         </EntityType>
@@ -282,6 +563,28 @@
           <Property Name="Wool" Type="int" Nullable="false" />
           <Property Name="Gold" Type="int" Nullable="false" />
           <Property Name="Wine" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TR_TurnCostSummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+          </Key>
+          <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
+          <Property Name="ProdSites" Type="money" />
+          <Property Name="Commanders" Type="money" />
+          <Property Name="Brigades" Type="money" />
+          <Property Name="MerchantShips" Type="money" />
+          <Property Name="Warships" Type="money" />
+        </EntityType>
+        <EntityType Name="TR_TurnOrderErrors">
+          <Key>
+            <PropertyRef Name="TurnOrderErrorId" />
+          </Key>
+          <Property Name="TurnOrderErrorId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TurnId" Type="nvarchar" MaxLength="16" Nullable="false" />
+          <Property Name="SectionNo" Type="smallint" Nullable="false" />
+          <Property Name="OrderNo" Type="smallint" Nullable="false" />
+          <Property Name="ErrorCode" Type="smallint" Nullable="false" />
+          <Property Name="RawToken" Type="nvarchar" MaxLength="32" />
         </EntityType>
         <EntityType Name="TR_Warehouses">
           <Key>
@@ -325,6 +628,7 @@
           <Property Name="Marines" Type="int" Nullable="false" />
           <Property Name="Brigade1" Type="int" Nullable="false" />
           <Property Name="Brigade2" Type="int" Nullable="false" />
+          <Property Name="NewFleetNo" Type="int" />
         </EntityType>
         <EntityType Name="TS_00TurnDetails">
           <Key>
@@ -366,9 +670,9 @@
           </Key>
           <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
           <Property Name="OrderNo" Type="int" Nullable="false" />
-			<Property Name="ItemNo" Type="int" />
-			<Property Name="BrigadeNo" Type="int" />
-		</EntityType>
+          <Property Name="ItemNo" Type="int" />
+          <Property Name="BrigadeNo" Type="int" />
+        </EntityType>
         <EntityType Name="TS_03SetUpBrigades">
           <Key>
             <PropertyRef Name="TurnId" />
@@ -570,10 +874,10 @@
           </Key>
           <Property Name="TurnId" Type="varchar" MaxLength="13" Nullable="false" />
           <Property Name="OrderNo" Type="int" Nullable="false" />
-          <Property Name="Command" Type="varchar" MaxLength="1" />
+          <Property Name="Command" Type="nvarchar" MaxLength="1" />
           <Property Name="ItemNo" Type="int" />
           <Property Name="FleetNo" Type="int" />
-          <Property Name="FleetOwner" Type="int" />
+          <Property Name="FleetOwner" Type="nvarchar" MaxLength="1" />
         </EntityType>
         <EntityType Name="TS_21HandOverTerritory">
           <Key>
@@ -615,16 +919,22 @@
           <EntitySet Name="REF_Ships" EntityType="Self.REF_Ships" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_States" EntityType="Self.REF_States" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_Terrain" EntityType="Self.REF_Terrain" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="REF_TurnErrorCodes" EntityType="Self.REF_TurnErrorCodes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="REF_UnitWeightsRates" EntityType="Self.REF_UnitWeightsRates" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_BaggageTrains" EntityType="Self.TR_BaggageTrains" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Barracks" EntityType="Self.TR_Barracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Brigades" EntityType="Self.TR_Brigades" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Commanders" EntityType="Self.TR_Commanders" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TR_EconomyComputedSummary" EntityType="Self.TR_EconomyComputedSummary" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TR_EconomySummary" EntityType="Self.TR_EconomySummary" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_MapCoordinates" EntityType="Self.TR_MapCoordinates" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TR_MathBattleResultEstimated" EntityType="Self.TR_MathBattleResultEstimated" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_MerchantShips" EntityType="Self.TR_MerchantShips" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Spies" EntityType="Self.TR_Spies" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_StateRelationships" EntityType="Self.TR_StateRelationships" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_TradingPortsAndCities" EntityType="Self.TR_TradingPortsAndCities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TR_TurnCostSummary" EntityType="Self.TR_TurnCostSummary" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TR_TurnOrderErrors" EntityType="Self.TR_TurnOrderErrors" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Warehouses" EntityType="Self.TR_Warehouses" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TR_Warships" EntityType="Self.TR_Warships" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TS_00TurnDetails" EntityType="Self.TS_00TurnDetails" Schema="dbo" store:Type="Tables" />
@@ -651,6 +961,98 @@
           <EntitySet Name="TS_21HandOverTerritory" EntityType="Self.TS_21HandOverTerritory" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TS_22ChangeNames" EntityType="Self.TS_22ChangeNames" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TS_23ChangeStateRelationships" EntityType="Self.TS_23ChangeStateRelationships" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="REF_Terrain_Factor" EntityType="Self.REF_Terrain_Factor" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [REF_Terrain_Factor].[TerrainId] AS [TerrainId], 
+    [REF_Terrain_Factor].[TroopType] AS [TroopType], 
+    [REF_Terrain_Factor].[TF] AS [TF], 
+    [REF_Terrain_Factor].[TerrainTypeId] AS [TerrainTypeId]
+    FROM [dbo].[REF_Terrain_Factor] AS [REF_Terrain_Factor]</DefiningQuery>
+          </EntitySet>
+          <EntitySet Name="TR_MathBattleBrigades" EntityType="Self.TR_MathBattleBrigades" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [TR_MathBattleBrigades].[TurnId] AS [TurnId], 
+    [TR_MathBattleBrigades].[MathBattleNo] AS [MathBattleNo], 
+    [TR_MathBattleBrigades].[State] AS [State], 
+    [TR_MathBattleBrigades].[Phase] AS [Phase], 
+    [TR_MathBattleBrigades].[Name] AS [Name], 
+    [TR_MathBattleBrigades].[Batt1Type] AS [Batt1Type], 
+    [TR_MathBattleBrigades].[Batt1EF] AS [Batt1EF], 
+    [TR_MathBattleBrigades].[Batt1Size] AS [Batt1Size], 
+    [TR_MathBattleBrigades].[Batt2Type] AS [Batt2Type], 
+    [TR_MathBattleBrigades].[Batt2EF] AS [Batt2EF], 
+    [TR_MathBattleBrigades].[Batt2Size] AS [Batt2Size], 
+    [TR_MathBattleBrigades].[Batt3Type] AS [Batt3Type], 
+    [TR_MathBattleBrigades].[Batt3EF] AS [Batt3EF], 
+    [TR_MathBattleBrigades].[Batt3Size] AS [Batt3Size], 
+    [TR_MathBattleBrigades].[Batt4Type] AS [Batt4Type], 
+    [TR_MathBattleBrigades].[Batt4EF] AS [Batt4EF], 
+    [TR_MathBattleBrigades].[Batt4Size] AS [Batt4Size], 
+    [TR_MathBattleBrigades].[Batt5Type] AS [Batt5Type], 
+    [TR_MathBattleBrigades].[Batt5EF] AS [Batt5EF], 
+    [TR_MathBattleBrigades].[Batt5Size] AS [Batt5Size], 
+    [TR_MathBattleBrigades].[Batt6Type] AS [Batt6Type], 
+    [TR_MathBattleBrigades].[Batt6EF] AS [Batt6EF], 
+    [TR_MathBattleBrigades].[Batt6Size] AS [Batt6Size], 
+    [TR_MathBattleBrigades].[Batt7Type] AS [Batt7Type], 
+    [TR_MathBattleBrigades].[Batt7EF] AS [Batt7EF], 
+    [TR_MathBattleBrigades].[Batt7Size] AS [Batt7Size], 
+    [TR_MathBattleBrigades].[CalcArtillery] AS [CalcArtillery], 
+    [TR_MathBattleBrigades].[CalclLR] AS [CalclLR], 
+    [TR_MathBattleBrigades].[CalclHC] AS [CalclHC], 
+    [TR_MathBattleBrigades].[CalcTotal] AS [CalcTotal], 
+    [TR_MathBattleBrigades].[MathBattleBrigadeId] AS [MathBattleBrigadeId]
+    FROM [dbo].[TR_MathBattleBrigades] AS [TR_MathBattleBrigades]</DefiningQuery>
+          </EntitySet>
+          <EntitySet Name="TR_MathBattleResultActual" EntityType="Self.TR_MathBattleResultActual" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [TR_MathBattleResultActual].[TurnId] AS [TurnId], 
+    [TR_MathBattleResultActual].[MathBattleNo] AS [MathBattleNo], 
+    [TR_MathBattleResultActual].[StateA] AS [StateA], 
+    [TR_MathBattleResultActual].[StateB] AS [StateB], 
+    [TR_MathBattleResultActual].[Name] AS [Name], 
+    [TR_MathBattleResultActual].[X] AS [X], 
+    [TR_MathBattleResultActual].[Y] AS [Y], 
+    [TR_MathBattleResultActual].[Terrain] AS [Terrain], 
+    [TR_MathBattleResultActual].[StateAMenTotal] AS [StateAMenTotal], 
+    [TR_MathBattleResultActual].[StateALossesTotal] AS [StateALossesTotal], 
+    [TR_MathBattleResultActual].[StateABattleRate] AS [StateABattleRate], 
+    [TR_MathBattleResultActual].[StateBMenTotal] AS [StateBMenTotal], 
+    [TR_MathBattleResultActual].[StateBLossesTotal] AS [StateBLossesTotal], 
+    [TR_MathBattleResultActual].[StateBBattleRate] AS [StateBBattleRate], 
+    [TR_MathBattleResultActual].[ArtStateAMen] AS [ArtStateAMen], 
+    [TR_MathBattleResultActual].[ArtStateABattlePoints] AS [ArtStateABattlePoints], 
+    [TR_MathBattleResultActual].[ArtStateALosses] AS [ArtStateALosses], 
+    [TR_MathBattleResultActual].[ArtStateBMen] AS [ArtStateBMen], 
+    [TR_MathBattleResultActual].[ArtStateBBattlePoints] AS [ArtStateBBattlePoints], 
+    [TR_MathBattleResultActual].[ArtStateBLosses] AS [ArtStateBLosses], 
+    [TR_MathBattleResultActual].[LR1StateAMen] AS [LR1StateAMen], 
+    [TR_MathBattleResultActual].[LR1StateABattlePoints] AS [LR1StateABattlePoints], 
+    [TR_MathBattleResultActual].[LR1StateALosses] AS [LR1StateALosses], 
+    [TR_MathBattleResultActual].[LR1StateBMen] AS [LR1StateBMen], 
+    [TR_MathBattleResultActual].[LR1StateBBattlePoints] AS [LR1StateBBattlePoints], 
+    [TR_MathBattleResultActual].[LR1StateBLosses] AS [LR1StateBLosses], 
+    [TR_MathBattleResultActual].[H2H1StateAMen] AS [H2H1StateAMen], 
+    [TR_MathBattleResultActual].[H2H1StateABattlePoints] AS [H2H1StateABattlePoints], 
+    [TR_MathBattleResultActual].[H2H1StateALosses] AS [H2H1StateALosses], 
+    [TR_MathBattleResultActual].[H2H1StateBMen] AS [H2H1StateBMen], 
+    [TR_MathBattleResultActual].[H2H1StateBBattlePoints] AS [H2H1StateBBattlePoints], 
+    [TR_MathBattleResultActual].[H2H1StateBLosses] AS [H2H1StateBLosses], 
+    [TR_MathBattleResultActual].[H2H2StateAMen] AS [H2H2StateAMen], 
+    [TR_MathBattleResultActual].[H2H2StateABattlePoints] AS [H2H2StateABattlePoints], 
+    [TR_MathBattleResultActual].[H2H2StateALosses] AS [H2H2StateALosses], 
+    [TR_MathBattleResultActual].[H2H2StateBMen] AS [H2H2StateBMen], 
+    [TR_MathBattleResultActual].[H2H2StateBBattlePoints] AS [H2H2StateBBattlePoints], 
+    [TR_MathBattleResultActual].[H2H2StateBLosses] AS [H2H2StateBLosses], 
+    [TR_MathBattleResultActual].[LR2StateAMen] AS [LR2StateAMen], 
+    [TR_MathBattleResultActual].[LR2StateABattlePoints] AS [LR2StateABattlePoints], 
+    [TR_MathBattleResultActual].[LR2StateALosses] AS [LR2StateALosses], 
+    [TR_MathBattleResultActual].[LR2StateBMen] AS [LR2StateBMen], 
+    [TR_MathBattleResultActual].[LR2StateBBattlePoints] AS [LR2StateBBattlePoints], 
+    [TR_MathBattleResultActual].[LR2StateBLosses] AS [LR2StateBLosses], 
+    [TR_MathBattleResultActual].[IsEstimated] AS [IsEstimated]
+    FROM [dbo].[TR_MathBattleResultActual] AS [TR_MathBattleResultActual]</DefiningQuery>
+          </EntitySet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
@@ -681,6 +1083,10 @@
           <Property Name="IsColonial" Type="Boolean" Nullable="false" />
           <Property Name="TroopSpecification" Type="String" MaxLength="15" FixedLength="false" Unicode="false" />
           <Property Name="IsCavalry" Type="Boolean" Nullable="false" />
+          <Property Name="TerrainTroopType" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="LR_Points" Type="Int32" />
+          <Property Name="HC_Points" Type="Int32" />
+          <Property Name="Total_Points" Type="Int32" />
         </EntityType>
         <EntityType Name="REF_Population">
           <Key>
@@ -716,6 +1122,7 @@
           <Property Name="BonusSymbol" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
           <Property Name="BonusPercentage" Type="Int32" />
           <Property Name="CitizensRequired" Type="Int32" Nullable="false" />
+          <Property Name="CitizenAttritionPercent" Type="Int32" />
         </EntityType>
         <EntityType Name="REF_Ships">
           <Key>
@@ -777,6 +1184,7 @@
           <Property Name="Money" Type="Int32" Nullable="false" />
           <Property Name="X" Type="Int32" Nullable="false" />
           <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="NewFederation" Type="Int32" />
         </EntityType>
         <EntityType Name="TR_Barracks">
           <Key>
@@ -829,6 +1237,7 @@
           <Property Name="Batt7Size" Type="Int32" />
           <Property Name="X_OrState" Type="String" Nullable="false" MaxLength="3" FixedLength="false" Unicode="false" />
           <Property Name="Y_OrFleet" Type="String" Nullable="false" MaxLength="3" FixedLength="false" Unicode="false" />
+          <Property Name="NewFederation" Type="Int32" />
         </EntityType>
         <EntityType Name="TR_Commanders">
           <Key>
@@ -845,6 +1254,7 @@
           <Property Name="CommandCapacity" Type="Int32" Nullable="false" />
           <Property Name="X" Type="Int32" Nullable="false" />
           <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="NewFederation" Type="Int32" />
         </EntityType>
         <EntityType Name="TR_MerchantShips">
           <Key>
@@ -865,6 +1275,7 @@
           <Property Name="Money" Type="Int32" Nullable="false" />
           <Property Name="X" Type="Int32" Nullable="false" />
           <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="NewFleetNo" Type="Int32" />
         </EntityType>
         <EntityType Name="TR_Spies">
           <Key>
@@ -877,15 +1288,18 @@
           <Property Name="Y" Type="Int32" Nullable="false" />
           <Property Name="Boarded" Type="Int32" />
           <Property Name="Report" Type="String" Nullable="false" MaxLength="120" FixedLength="false" Unicode="false" />
+          <Property Name="NewFederation" Type="Int32" />
         </EntityType>
         <EntityType Name="TR_StateRelationships">
           <Key>
             <PropertyRef Name="TurnId" />
             <PropertyRef Name="State" />
+            <PropertyRef Name="SourceState" />
           </Key>
           <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="State" Type="String" MaxLength="1" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="Relationship" Type="Int32" Nullable="false" />
+          <Property Name="SourceState" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="TR_Warehouses">
           <Key>
@@ -929,6 +1343,7 @@
           <Property Name="X" Type="Int32" Nullable="false" />
           <Property Name="Y" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="false" />
+          <Property Name="NewFleetNo" Type="Int32" />
         </EntityType>
         <EntityType Name="TS_00TurnDetails">
           <Key>
@@ -1174,10 +1589,10 @@
           </Key>
           <Property Name="TurnId" Type="String" MaxLength="13" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="OrderNo" Type="Int32" Nullable="false" />
-          <Property Name="Command" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Command" Type="String" MaxLength="1" FixedLength="false" Unicode="true" />
           <Property Name="ItemNo" Type="Int32" />
           <Property Name="FleetNo" Type="Int32" />
-          <Property Name="FleetOwner" Type="Int32" />
+          <Property Name="FleetOwner" Type="String" MaxLength="1" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="TS_21HandOverTerritory">
           <Key>
@@ -1255,6 +1670,15 @@
           <EntitySet Name="TR_MapCoordinates" EntityType="AusterlitzModel.TR_MapCoordinates" />
           <EntitySet Name="REF_PoliticalMapCoordinates" EntityType="AusterlitzModel.REF_PoliticalMapCoordinates" />
           <EntitySet Name="TR_TradingPortsAndCities" EntityType="AusterlitzModel.TR_TradingPortsAndCities" />
+          <EntitySet Name="TR_EconomyComputedSummary" EntityType="AusterlitzModel.TR_EconomyComputedSummary" />
+          <EntitySet Name="TR_EconomySummary" EntityType="AusterlitzModel.TR_EconomySummary" />
+          <EntitySet Name="TR_MathBattleResultEstimated" EntityType="AusterlitzModel.TR_MathBattleResultEstimated" />
+          <EntitySet Name="TR_TurnCostSummary" EntityType="AusterlitzModel.TR_TurnCostSummary" />
+          <EntitySet Name="REF_Terrain_Factor" EntityType="AusterlitzModel.REF_Terrain_Factor" />
+          <EntitySet Name="TR_MathBattleBrigades" EntityType="AusterlitzModel.TR_MathBattleBrigades" />
+          <EntitySet Name="TR_MathBattleResultActual" EntityType="AusterlitzModel.TR_MathBattleResultActual" />
+          <EntitySet Name="REF_TurnErrorCodes" EntityType="AusterlitzModel.REF_TurnErrorCodes" />
+          <EntitySet Name="TR_TurnOrderErrors" EntityType="AusterlitzModel.TR_TurnOrderErrors" />
         </EntityContainer>
         <EntityType Name="TR_MapCoordinates">
           <Key>
@@ -1303,6 +1727,291 @@
           <Property Name="Name" Type="String" Nullable="false" MaxLength="25" FixedLength="false" Unicode="false" />
           <Property Name="Textiles" Type="Int32" Nullable="false" />
         </EntityType>
+        <EntityType Name="TR_EconomyComputedSummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="Sphere" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="true" />
+          <Property Name="Sphere" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="true" />
+          <Property Name="ComputedAtUtc" Type="DateTime" Precision="3" />
+          <Property Name="ComputedVersion" Type="Int32" />
+          <Property Name="StartingRevenueLd" Type="Int64" Nullable="false" />
+          <Property Name="ArmyMaintLd" Type="Int64" Nullable="false" />
+          <Property Name="NavyMaintLd" Type="Int64" Nullable="false" />
+          <Property Name="ProductionMaintLd" Type="Int64" Nullable="false" />
+          <Property Name="ArmyBuildingLd" Type="Int64" Nullable="false" />
+          <Property Name="ArmyTrainingLd" Type="Int64" Nullable="false" />
+          <Property Name="NavyBuildRepairLd" Type="Int64" Nullable="false" />
+          <Property Name="ProductionBuildLd" Type="Int64" Nullable="false" />
+          <Property Name="LdInBarracks" Type="Int64" Nullable="false" />
+          <Property Name="BuildFundsAvailableLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferToEuropeLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferFromEuropeLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferToCaribbeanLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferFromCaribbeanLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferToIndiaLd" Type="Int64" Nullable="false" />
+          <Property Name="TransferFromIndiaLd" Type="Int64" Nullable="false" />
+          <Property Name="DirectSellingLd" Type="Int64" Nullable="false" />
+          <Property Name="DirectBuyingLd" Type="Int64" Nullable="false" />
+          <Property Name="TaxesLd" Type="Int64" Nullable="false" />
+          <Property Name="LdProduction" Type="Int64" Nullable="false" />
+          <Property Name="ProjectedNextMonthLd" Type="Int64" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TR_EconomySummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="true" />
+          <Property Name="ProductionMaintenanceLd" Type="Int32" Nullable="false" />
+          <Property Name="EuropeMaintenanceWorkers" Type="Int32" Nullable="false" />
+          <Property Name="CaribbeanMaintenanceWorkers" Type="Int32" Nullable="false" />
+          <Property Name="IndiaMaintenanceWorkers" Type="Int32" Nullable="false" />
+          <Property Name="CommanderPayLd" Type="Int32" Nullable="false" />
+          <Property Name="BrigadePayLd" Type="Int32" Nullable="false" />
+          <Property Name="NavyMaintenanceLd" Type="Int32" Nullable="false" />
+          <Property Name="NavyMaintenanceMarines" Type="Int32" Nullable="false" />
+          <Property Name="BarracksCount" Type="Int32" Nullable="false" />
+          <Property Name="FactoriesCount" Type="Int32" Nullable="false" />
+          <Property Name="WeavingMillsCount" Type="Int32" Nullable="false" />
+          <Property Name="MintsCount" Type="Int32" Nullable="false" />
+          <Property Name="EstatesCount" Type="Int32" Nullable="false" />
+          <Property Name="SheepFarmsCount" Type="Int32" Nullable="false" />
+          <Property Name="HorseFarmsCount" Type="Int32" Nullable="false" />
+          <Property Name="LumberCampsCount" Type="Int32" Nullable="false" />
+          <Property Name="QuarriesCount" Type="Int32" Nullable="false" />
+          <Property Name="MinesCount" Type="Int32" Nullable="false" />
+          <Property Name="VineyardsCount" Type="Int32" Nullable="false" />
+          <Property Name="FreeAreasCount" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TR_MathBattleResultEstimated">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="Name" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="13" FixedLength="false" Unicode="false" />
+          <Property Name="MathBattleNo" Type="Int32" Nullable="false" />
+          <Property Name="StateA" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="StateB" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="false" />
+          <Property Name="X" Type="Int32" Nullable="false" />
+          <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="Terrain" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="StateAMenTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateALossesTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateABattleRate" Type="Int32" Nullable="false" />
+          <Property Name="StateBMenTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateBLossesTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateBBattleRate" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateAMen" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateALosses" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBMen" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="TerrainType" Type="String" MaxLength="1" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="TR_TurnCostSummary">
+          <Key>
+            <PropertyRef Name="TurnId" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="13" FixedLength="false" Unicode="false" />
+          <Property Name="ProdSites" Type="Decimal" Precision="19" Scale="4" />
+          <Property Name="Commanders" Type="Decimal" Precision="19" Scale="4" />
+          <Property Name="Brigades" Type="Decimal" Precision="19" Scale="4" />
+          <Property Name="MerchantShips" Type="Decimal" Precision="19" Scale="4" />
+          <Property Name="Warships" Type="Decimal" Precision="19" Scale="4" />
+        </EntityType>
+        <EntityType Name="REF_Terrain_Factor">
+          <Key>
+            <PropertyRef Name="TerrainId" />
+            <PropertyRef Name="TroopType" />
+          </Key>
+          <Property Name="TerrainId" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="TroopType" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="TF" Type="Int32" />
+          <Property Name="TerrainTypeId" Type="String" MaxLength="10" FixedLength="true" Unicode="true" />
+        </EntityType>
+        <EntityType Name="TR_MathBattleBrigades">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="State" />
+            <PropertyRef Name="Phase" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="MathBattleBrigadeId" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="13" FixedLength="false" Unicode="false" />
+          <Property Name="MathBattleNo" Type="Int32" Nullable="false" />
+          <Property Name="State" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Phase" Type="String" Nullable="false" MaxLength="4" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="false" />
+          <Property Name="Batt1Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt1EF" Type="Int32" />
+          <Property Name="Batt1Size" Type="Int32" />
+          <Property Name="Batt2Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt2EF" Type="Int32" />
+          <Property Name="Batt2Size" Type="Int32" />
+          <Property Name="Batt3Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt3EF" Type="Int32" />
+          <Property Name="Batt3Size" Type="Int32" />
+          <Property Name="Batt4Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt4EF" Type="Int32" />
+          <Property Name="Batt4Size" Type="Int32" />
+          <Property Name="Batt5Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt5EF" Type="Int32" />
+          <Property Name="Batt5Size" Type="Int32" />
+          <Property Name="Batt6Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt6EF" Type="Int32" />
+          <Property Name="Batt6Size" Type="Int32" />
+          <Property Name="Batt7Type" Type="String" MaxLength="2" FixedLength="false" Unicode="false" />
+          <Property Name="Batt7EF" Type="Int32" />
+          <Property Name="Batt7Size" Type="Int32" />
+          <Property Name="CalcArtillery" Type="Int32" />
+          <Property Name="CalclLR" Type="Int32" />
+          <Property Name="CalclHC" Type="Int32" />
+          <Property Name="CalcTotal" Type="Int32" />
+          <Property Name="MathBattleBrigadeId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
+        <EntityType Name="TR_MathBattleResultActual">
+          <Key>
+            <PropertyRef Name="TurnId" />
+            <PropertyRef Name="MathBattleNo" />
+            <PropertyRef Name="StateA" />
+            <PropertyRef Name="StateB" />
+            <PropertyRef Name="Name" />
+            <PropertyRef Name="X" />
+            <PropertyRef Name="Y" />
+            <PropertyRef Name="Terrain" />
+            <PropertyRef Name="StateAMenTotal" />
+            <PropertyRef Name="StateALossesTotal" />
+            <PropertyRef Name="StateABattleRate" />
+            <PropertyRef Name="StateBMenTotal" />
+            <PropertyRef Name="StateBLossesTotal" />
+            <PropertyRef Name="StateBBattleRate" />
+            <PropertyRef Name="ArtStateAMen" />
+            <PropertyRef Name="ArtStateABattlePoints" />
+            <PropertyRef Name="ArtStateALosses" />
+            <PropertyRef Name="ArtStateBMen" />
+            <PropertyRef Name="ArtStateBBattlePoints" />
+            <PropertyRef Name="ArtStateBLosses" />
+            <PropertyRef Name="LR1StateAMen" />
+            <PropertyRef Name="LR1StateABattlePoints" />
+            <PropertyRef Name="LR1StateALosses" />
+            <PropertyRef Name="LR1StateBMen" />
+            <PropertyRef Name="LR1StateBBattlePoints" />
+            <PropertyRef Name="LR1StateBLosses" />
+            <PropertyRef Name="H2H1StateAMen" />
+            <PropertyRef Name="H2H1StateABattlePoints" />
+            <PropertyRef Name="H2H1StateALosses" />
+            <PropertyRef Name="H2H1StateBMen" />
+            <PropertyRef Name="H2H1StateBBattlePoints" />
+            <PropertyRef Name="H2H1StateBLosses" />
+            <PropertyRef Name="H2H2StateAMen" />
+            <PropertyRef Name="H2H2StateABattlePoints" />
+            <PropertyRef Name="H2H2StateALosses" />
+            <PropertyRef Name="H2H2StateBMen" />
+            <PropertyRef Name="H2H2StateBBattlePoints" />
+            <PropertyRef Name="H2H2StateBLosses" />
+            <PropertyRef Name="LR2StateAMen" />
+            <PropertyRef Name="LR2StateABattlePoints" />
+            <PropertyRef Name="LR2StateALosses" />
+            <PropertyRef Name="LR2StateBMen" />
+            <PropertyRef Name="LR2StateBBattlePoints" />
+            <PropertyRef Name="LR2StateBLosses" />
+            <PropertyRef Name="IsEstimated" />
+          </Key>
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="13" FixedLength="false" Unicode="false" />
+          <Property Name="MathBattleNo" Type="Int32" Nullable="false" />
+          <Property Name="StateA" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="StateB" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="false" />
+          <Property Name="X" Type="Int32" Nullable="false" />
+          <Property Name="Y" Type="Int32" Nullable="false" />
+          <Property Name="Terrain" Type="String" Nullable="false" MaxLength="1" FixedLength="false" Unicode="false" />
+          <Property Name="StateAMenTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateALossesTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateABattleRate" Type="Int32" Nullable="false" />
+          <Property Name="StateBMenTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateBLossesTotal" Type="Int32" Nullable="false" />
+          <Property Name="StateBBattleRate" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateAMen" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateALosses" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBMen" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="ArtStateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR1StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H1StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="H2H2StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateAMen" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateABattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateALosses" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBMen" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBBattlePoints" Type="Int32" Nullable="false" />
+          <Property Name="LR2StateBLosses" Type="Int32" Nullable="false" />
+          <Property Name="IsEstimated" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <EntityType Name="REF_TurnErrorCodes">
+          <Key>
+            <PropertyRef Name="SectionNo" />
+            <PropertyRef Name="ErrorCode" />
+          </Key>
+          <Property Name="SectionNo" Type="Int16" Nullable="false" />
+          <Property Name="ErrorCode" Type="Int16" Nullable="false" />
+          <Property Name="Message" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="TR_TurnOrderErrors">
+          <Key>
+            <PropertyRef Name="TurnOrderErrorId" />
+          </Key>
+          <Property Name="TurnOrderErrorId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TurnId" Type="String" Nullable="false" MaxLength="16" FixedLength="false" Unicode="true" />
+          <Property Name="SectionNo" Type="Int16" Nullable="false" />
+          <Property Name="OrderNo" Type="Int16" Nullable="false" />
+          <Property Name="ErrorCode" Type="Int16" Nullable="false" />
+          <Property Name="RawToken" Type="String" MaxLength="32" FixedLength="false" Unicode="true" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1312,7 +2021,11 @@
     <EntitySetMapping Name="REF_ArmyList">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.REF_ArmyList)">
         <MappingFragment StoreEntitySet="REF_ArmyList">
-          <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
+          <ScalarProperty Name="Total_Points" ColumnName="Total_Points" />
+                <ScalarProperty Name="HC_Points" ColumnName="HC_Points" />
+                <ScalarProperty Name="LR_Points" ColumnName="LR_Points" />
+                <ScalarProperty Name="TerrainTroopType" ColumnName="TerrainTroopType" />
+                <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
           <ScalarProperty Name="State" ColumnName="State" />
           <ScalarProperty Name="Name" ColumnName="Name" />
           <ScalarProperty Name="ShortName" ColumnName="ShortName" />
@@ -1349,7 +2062,8 @@
     <EntitySetMapping Name="REF_ProductionSites">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.REF_ProductionSites)">
         <MappingFragment StoreEntitySet="REF_ProductionSites">
-          <ScalarProperty Name="SiteTypeNo" ColumnName="SiteTypeNo" />
+          <ScalarProperty Name="CitizenAttritionPercent" ColumnName="CitizenAttritionPercent" />
+                <ScalarProperty Name="SiteTypeNo" ColumnName="SiteTypeNo" />
           <ScalarProperty Name="Terrain" ColumnName="Terrain" />
           <ScalarProperty Name="SiteType" ColumnName="SiteType" />
           <ScalarProperty Name="Symbol" ColumnName="Symbol" />
@@ -1419,7 +2133,8 @@
     <EntitySetMapping Name="TR_BaggageTrains">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_BaggageTrains)">
         <MappingFragment StoreEntitySet="TR_BaggageTrains">
-          <ScalarProperty Name="Y" ColumnName="Y" />
+          <ScalarProperty Name="NewFederation" ColumnName="NewFederation" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
                 <ScalarProperty Name="X" ColumnName="X" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
@@ -1455,7 +2170,8 @@
     <EntitySetMapping Name="TR_Brigades">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_Brigades)">
         <MappingFragment StoreEntitySet="TR_Brigades">
-          <ScalarProperty Name="Y_OrFleet" ColumnName="Y_OrFleet" />
+          <ScalarProperty Name="NewFederation" ColumnName="NewFederation" />
+                <ScalarProperty Name="Y_OrFleet" ColumnName="Y_OrFleet" />
                 <ScalarProperty Name="X_OrState" ColumnName="X_OrState" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
@@ -1489,7 +2205,8 @@
     <EntitySetMapping Name="TR_Commanders">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_Commanders)">
         <MappingFragment StoreEntitySet="TR_Commanders">
-          <ScalarProperty Name="Y" ColumnName="Y" />
+          <ScalarProperty Name="NewFederation" ColumnName="NewFederation" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
                 <ScalarProperty Name="X" ColumnName="X" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
@@ -1505,7 +2222,8 @@
     <EntitySetMapping Name="TR_MerchantShips">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_MerchantShips)">
         <MappingFragment StoreEntitySet="TR_MerchantShips">
-          <ScalarProperty Name="Y" ColumnName="Y" />
+          <ScalarProperty Name="NewFleetNo" ColumnName="NewFleetNo" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
                 <ScalarProperty Name="X" ColumnName="X" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="ItemNo" ColumnName="ItemNo" />
@@ -1525,6 +2243,7 @@
     <EntitySetMapping Name="TR_Spies">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_Spies)">
         <MappingFragment StoreEntitySet="TR_Spies">
+                <ScalarProperty Name="NewFederation" ColumnName="NewFederation" />
                 <ScalarProperty Name="Report" ColumnName="Report" />
                 <ScalarProperty Name="Boarded" ColumnName="Boarded" />
                 <ScalarProperty Name="Y" ColumnName="Y" />
@@ -1537,7 +2256,8 @@
     <EntitySetMapping Name="TR_StateRelationships">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_StateRelationships)">
         <MappingFragment StoreEntitySet="TR_StateRelationships">
-          <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+          <ScalarProperty Name="SourceState" ColumnName="SourceState" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
           <ScalarProperty Name="State" ColumnName="State" />
           <ScalarProperty Name="Relationship" ColumnName="Relationship" />
         </MappingFragment>
@@ -1570,7 +2290,8 @@
     <EntitySetMapping Name="TR_Warships">
       <EntityTypeMapping TypeName="IsTypeOf(AusterlitzModel.TR_Warships)">
         <MappingFragment StoreEntitySet="TR_Warships">
-          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="NewFleetNo" ColumnName="NewFleetNo" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="Y" ColumnName="Y" />
                 <ScalarProperty Name="X" ColumnName="X" />
                 <ScalarProperty Name="TurnId" ColumnName="TurnId" />
@@ -1914,6 +2635,246 @@
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
+          <EntitySetMapping Name="TR_EconomyComputedSummary">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_EconomyComputedSummary">
+              <MappingFragment StoreEntitySet="TR_EconomyComputedSummary">
+                <ScalarProperty Name="ProjectedNextMonthLd" ColumnName="ProjectedNextMonthLd" />
+                <ScalarProperty Name="LdProduction" ColumnName="LdProduction" />
+                <ScalarProperty Name="TaxesLd" ColumnName="TaxesLd" />
+                <ScalarProperty Name="DirectBuyingLd" ColumnName="DirectBuyingLd" />
+                <ScalarProperty Name="DirectSellingLd" ColumnName="DirectSellingLd" />
+                <ScalarProperty Name="TransferFromIndiaLd" ColumnName="TransferFromIndiaLd" />
+                <ScalarProperty Name="TransferToIndiaLd" ColumnName="TransferToIndiaLd" />
+                <ScalarProperty Name="TransferFromCaribbeanLd" ColumnName="TransferFromCaribbeanLd" />
+                <ScalarProperty Name="TransferToCaribbeanLd" ColumnName="TransferToCaribbeanLd" />
+                <ScalarProperty Name="TransferFromEuropeLd" ColumnName="TransferFromEuropeLd" />
+                <ScalarProperty Name="TransferToEuropeLd" ColumnName="TransferToEuropeLd" />
+                <ScalarProperty Name="BuildFundsAvailableLd" ColumnName="BuildFundsAvailableLd" />
+                <ScalarProperty Name="LdInBarracks" ColumnName="LdInBarracks" />
+                <ScalarProperty Name="ProductionBuildLd" ColumnName="ProductionBuildLd" />
+                <ScalarProperty Name="NavyBuildRepairLd" ColumnName="NavyBuildRepairLd" />
+                <ScalarProperty Name="ArmyTrainingLd" ColumnName="ArmyTrainingLd" />
+                <ScalarProperty Name="ArmyBuildingLd" ColumnName="ArmyBuildingLd" />
+                <ScalarProperty Name="ProductionMaintLd" ColumnName="ProductionMaintLd" />
+                <ScalarProperty Name="NavyMaintLd" ColumnName="NavyMaintLd" />
+                <ScalarProperty Name="ArmyMaintLd" ColumnName="ArmyMaintLd" />
+                <ScalarProperty Name="StartingRevenueLd" ColumnName="StartingRevenueLd" />
+                <ScalarProperty Name="ComputedVersion" ColumnName="ComputedVersion" />
+                <ScalarProperty Name="ComputedAtUtc" ColumnName="ComputedAtUtc" />
+                <ScalarProperty Name="Sphere" ColumnName="Sphere" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_EconomySummary">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_EconomySummary">
+              <MappingFragment StoreEntitySet="TR_EconomySummary">
+                <ScalarProperty Name="FreeAreasCount" ColumnName="FreeAreasCount" />
+                <ScalarProperty Name="VineyardsCount" ColumnName="VineyardsCount" />
+                <ScalarProperty Name="MinesCount" ColumnName="MinesCount" />
+                <ScalarProperty Name="QuarriesCount" ColumnName="QuarriesCount" />
+                <ScalarProperty Name="LumberCampsCount" ColumnName="LumberCampsCount" />
+                <ScalarProperty Name="HorseFarmsCount" ColumnName="HorseFarmsCount" />
+                <ScalarProperty Name="SheepFarmsCount" ColumnName="SheepFarmsCount" />
+                <ScalarProperty Name="EstatesCount" ColumnName="EstatesCount" />
+                <ScalarProperty Name="MintsCount" ColumnName="MintsCount" />
+                <ScalarProperty Name="WeavingMillsCount" ColumnName="WeavingMillsCount" />
+                <ScalarProperty Name="FactoriesCount" ColumnName="FactoriesCount" />
+                <ScalarProperty Name="BarracksCount" ColumnName="BarracksCount" />
+                <ScalarProperty Name="NavyMaintenanceMarines" ColumnName="NavyMaintenanceMarines" />
+                <ScalarProperty Name="NavyMaintenanceLd" ColumnName="NavyMaintenanceLd" />
+                <ScalarProperty Name="BrigadePayLd" ColumnName="BrigadePayLd" />
+                <ScalarProperty Name="CommanderPayLd" ColumnName="CommanderPayLd" />
+                <ScalarProperty Name="IndiaMaintenanceWorkers" ColumnName="IndiaMaintenanceWorkers" />
+                <ScalarProperty Name="CaribbeanMaintenanceWorkers" ColumnName="CaribbeanMaintenanceWorkers" />
+                <ScalarProperty Name="EuropeMaintenanceWorkers" ColumnName="EuropeMaintenanceWorkers" />
+                <ScalarProperty Name="ProductionMaintenanceLd" ColumnName="ProductionMaintenanceLd" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_MathBattleResultEstimated">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_MathBattleResultEstimated">
+              <MappingFragment StoreEntitySet="TR_MathBattleResultEstimated">
+                <ScalarProperty Name="TerrainType" ColumnName="TerrainType" />
+                <ScalarProperty Name="LR2StateBLosses" ColumnName="LR2StateBLosses" />
+                <ScalarProperty Name="LR2StateBBattlePoints" ColumnName="LR2StateBBattlePoints" />
+                <ScalarProperty Name="LR2StateBMen" ColumnName="LR2StateBMen" />
+                <ScalarProperty Name="LR2StateALosses" ColumnName="LR2StateALosses" />
+                <ScalarProperty Name="LR2StateABattlePoints" ColumnName="LR2StateABattlePoints" />
+                <ScalarProperty Name="LR2StateAMen" ColumnName="LR2StateAMen" />
+                <ScalarProperty Name="H2H2StateBLosses" ColumnName="H2H2StateBLosses" />
+                <ScalarProperty Name="H2H2StateBBattlePoints" ColumnName="H2H2StateBBattlePoints" />
+                <ScalarProperty Name="H2H2StateBMen" ColumnName="H2H2StateBMen" />
+                <ScalarProperty Name="H2H2StateALosses" ColumnName="H2H2StateALosses" />
+                <ScalarProperty Name="H2H2StateABattlePoints" ColumnName="H2H2StateABattlePoints" />
+                <ScalarProperty Name="H2H2StateAMen" ColumnName="H2H2StateAMen" />
+                <ScalarProperty Name="H2H1StateBLosses" ColumnName="H2H1StateBLosses" />
+                <ScalarProperty Name="H2H1StateBBattlePoints" ColumnName="H2H1StateBBattlePoints" />
+                <ScalarProperty Name="H2H1StateBMen" ColumnName="H2H1StateBMen" />
+                <ScalarProperty Name="H2H1StateALosses" ColumnName="H2H1StateALosses" />
+                <ScalarProperty Name="H2H1StateABattlePoints" ColumnName="H2H1StateABattlePoints" />
+                <ScalarProperty Name="H2H1StateAMen" ColumnName="H2H1StateAMen" />
+                <ScalarProperty Name="LR1StateBLosses" ColumnName="LR1StateBLosses" />
+                <ScalarProperty Name="LR1StateBBattlePoints" ColumnName="LR1StateBBattlePoints" />
+                <ScalarProperty Name="LR1StateBMen" ColumnName="LR1StateBMen" />
+                <ScalarProperty Name="LR1StateALosses" ColumnName="LR1StateALosses" />
+                <ScalarProperty Name="LR1StateABattlePoints" ColumnName="LR1StateABattlePoints" />
+                <ScalarProperty Name="LR1StateAMen" ColumnName="LR1StateAMen" />
+                <ScalarProperty Name="ArtStateBLosses" ColumnName="ArtStateBLosses" />
+                <ScalarProperty Name="ArtStateBBattlePoints" ColumnName="ArtStateBBattlePoints" />
+                <ScalarProperty Name="ArtStateBMen" ColumnName="ArtStateBMen" />
+                <ScalarProperty Name="ArtStateALosses" ColumnName="ArtStateALosses" />
+                <ScalarProperty Name="ArtStateABattlePoints" ColumnName="ArtStateABattlePoints" />
+                <ScalarProperty Name="ArtStateAMen" ColumnName="ArtStateAMen" />
+                <ScalarProperty Name="StateBBattleRate" ColumnName="StateBBattleRate" />
+                <ScalarProperty Name="StateBLossesTotal" ColumnName="StateBLossesTotal" />
+                <ScalarProperty Name="StateBMenTotal" ColumnName="StateBMenTotal" />
+                <ScalarProperty Name="StateABattleRate" ColumnName="StateABattleRate" />
+                <ScalarProperty Name="StateALossesTotal" ColumnName="StateALossesTotal" />
+                <ScalarProperty Name="StateAMenTotal" ColumnName="StateAMenTotal" />
+                <ScalarProperty Name="Terrain" ColumnName="Terrain" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
+                <ScalarProperty Name="X" ColumnName="X" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="StateB" ColumnName="StateB" />
+                <ScalarProperty Name="StateA" ColumnName="StateA" />
+                <ScalarProperty Name="MathBattleNo" ColumnName="MathBattleNo" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_TurnCostSummary">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_TurnCostSummary">
+              <MappingFragment StoreEntitySet="TR_TurnCostSummary">
+                <ScalarProperty Name="Warships" ColumnName="Warships" />
+                <ScalarProperty Name="MerchantShips" ColumnName="MerchantShips" />
+                <ScalarProperty Name="Brigades" ColumnName="Brigades" />
+                <ScalarProperty Name="Commanders" ColumnName="Commanders" />
+                <ScalarProperty Name="ProdSites" ColumnName="ProdSites" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="REF_Terrain_Factor">
+            <EntityTypeMapping TypeName="AusterlitzModel.REF_Terrain_Factor">
+              <MappingFragment StoreEntitySet="REF_Terrain_Factor">
+                <ScalarProperty Name="TerrainTypeId" ColumnName="TerrainTypeId" />
+                <ScalarProperty Name="TF" ColumnName="TF" />
+                <ScalarProperty Name="TroopType" ColumnName="TroopType" />
+                <ScalarProperty Name="TerrainId" ColumnName="TerrainId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_MathBattleBrigades">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_MathBattleBrigades">
+              <MappingFragment StoreEntitySet="TR_MathBattleBrigades">
+                <ScalarProperty Name="MathBattleBrigadeId" ColumnName="MathBattleBrigadeId" />
+                <ScalarProperty Name="CalcTotal" ColumnName="CalcTotal" />
+                <ScalarProperty Name="CalclHC" ColumnName="CalclHC" />
+                <ScalarProperty Name="CalclLR" ColumnName="CalclLR" />
+                <ScalarProperty Name="CalcArtillery" ColumnName="CalcArtillery" />
+                <ScalarProperty Name="Batt7Size" ColumnName="Batt7Size" />
+                <ScalarProperty Name="Batt7EF" ColumnName="Batt7EF" />
+                <ScalarProperty Name="Batt7Type" ColumnName="Batt7Type" />
+                <ScalarProperty Name="Batt6Size" ColumnName="Batt6Size" />
+                <ScalarProperty Name="Batt6EF" ColumnName="Batt6EF" />
+                <ScalarProperty Name="Batt6Type" ColumnName="Batt6Type" />
+                <ScalarProperty Name="Batt5Size" ColumnName="Batt5Size" />
+                <ScalarProperty Name="Batt5EF" ColumnName="Batt5EF" />
+                <ScalarProperty Name="Batt5Type" ColumnName="Batt5Type" />
+                <ScalarProperty Name="Batt4Size" ColumnName="Batt4Size" />
+                <ScalarProperty Name="Batt4EF" ColumnName="Batt4EF" />
+                <ScalarProperty Name="Batt4Type" ColumnName="Batt4Type" />
+                <ScalarProperty Name="Batt3Size" ColumnName="Batt3Size" />
+                <ScalarProperty Name="Batt3EF" ColumnName="Batt3EF" />
+                <ScalarProperty Name="Batt3Type" ColumnName="Batt3Type" />
+                <ScalarProperty Name="Batt2Size" ColumnName="Batt2Size" />
+                <ScalarProperty Name="Batt2EF" ColumnName="Batt2EF" />
+                <ScalarProperty Name="Batt2Type" ColumnName="Batt2Type" />
+                <ScalarProperty Name="Batt1Size" ColumnName="Batt1Size" />
+                <ScalarProperty Name="Batt1EF" ColumnName="Batt1EF" />
+                <ScalarProperty Name="Batt1Type" ColumnName="Batt1Type" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Phase" ColumnName="Phase" />
+                <ScalarProperty Name="State" ColumnName="State" />
+                <ScalarProperty Name="MathBattleNo" ColumnName="MathBattleNo" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_MathBattleResultActual">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_MathBattleResultActual">
+              <MappingFragment StoreEntitySet="TR_MathBattleResultActual">
+                <ScalarProperty Name="IsEstimated" ColumnName="IsEstimated" />
+                <ScalarProperty Name="LR2StateBLosses" ColumnName="LR2StateBLosses" />
+                <ScalarProperty Name="LR2StateBBattlePoints" ColumnName="LR2StateBBattlePoints" />
+                <ScalarProperty Name="LR2StateBMen" ColumnName="LR2StateBMen" />
+                <ScalarProperty Name="LR2StateALosses" ColumnName="LR2StateALosses" />
+                <ScalarProperty Name="LR2StateABattlePoints" ColumnName="LR2StateABattlePoints" />
+                <ScalarProperty Name="LR2StateAMen" ColumnName="LR2StateAMen" />
+                <ScalarProperty Name="H2H2StateBLosses" ColumnName="H2H2StateBLosses" />
+                <ScalarProperty Name="H2H2StateBBattlePoints" ColumnName="H2H2StateBBattlePoints" />
+                <ScalarProperty Name="H2H2StateBMen" ColumnName="H2H2StateBMen" />
+                <ScalarProperty Name="H2H2StateALosses" ColumnName="H2H2StateALosses" />
+                <ScalarProperty Name="H2H2StateABattlePoints" ColumnName="H2H2StateABattlePoints" />
+                <ScalarProperty Name="H2H2StateAMen" ColumnName="H2H2StateAMen" />
+                <ScalarProperty Name="H2H1StateBLosses" ColumnName="H2H1StateBLosses" />
+                <ScalarProperty Name="H2H1StateBBattlePoints" ColumnName="H2H1StateBBattlePoints" />
+                <ScalarProperty Name="H2H1StateBMen" ColumnName="H2H1StateBMen" />
+                <ScalarProperty Name="H2H1StateALosses" ColumnName="H2H1StateALosses" />
+                <ScalarProperty Name="H2H1StateABattlePoints" ColumnName="H2H1StateABattlePoints" />
+                <ScalarProperty Name="H2H1StateAMen" ColumnName="H2H1StateAMen" />
+                <ScalarProperty Name="LR1StateBLosses" ColumnName="LR1StateBLosses" />
+                <ScalarProperty Name="LR1StateBBattlePoints" ColumnName="LR1StateBBattlePoints" />
+                <ScalarProperty Name="LR1StateBMen" ColumnName="LR1StateBMen" />
+                <ScalarProperty Name="LR1StateALosses" ColumnName="LR1StateALosses" />
+                <ScalarProperty Name="LR1StateABattlePoints" ColumnName="LR1StateABattlePoints" />
+                <ScalarProperty Name="LR1StateAMen" ColumnName="LR1StateAMen" />
+                <ScalarProperty Name="ArtStateBLosses" ColumnName="ArtStateBLosses" />
+                <ScalarProperty Name="ArtStateBBattlePoints" ColumnName="ArtStateBBattlePoints" />
+                <ScalarProperty Name="ArtStateBMen" ColumnName="ArtStateBMen" />
+                <ScalarProperty Name="ArtStateALosses" ColumnName="ArtStateALosses" />
+                <ScalarProperty Name="ArtStateABattlePoints" ColumnName="ArtStateABattlePoints" />
+                <ScalarProperty Name="ArtStateAMen" ColumnName="ArtStateAMen" />
+                <ScalarProperty Name="StateBBattleRate" ColumnName="StateBBattleRate" />
+                <ScalarProperty Name="StateBLossesTotal" ColumnName="StateBLossesTotal" />
+                <ScalarProperty Name="StateBMenTotal" ColumnName="StateBMenTotal" />
+                <ScalarProperty Name="StateABattleRate" ColumnName="StateABattleRate" />
+                <ScalarProperty Name="StateALossesTotal" ColumnName="StateALossesTotal" />
+                <ScalarProperty Name="StateAMenTotal" ColumnName="StateAMenTotal" />
+                <ScalarProperty Name="Terrain" ColumnName="Terrain" />
+                <ScalarProperty Name="Y" ColumnName="Y" />
+                <ScalarProperty Name="X" ColumnName="X" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="StateB" ColumnName="StateB" />
+                <ScalarProperty Name="StateA" ColumnName="StateA" />
+                <ScalarProperty Name="MathBattleNo" ColumnName="MathBattleNo" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="REF_TurnErrorCodes">
+            <EntityTypeMapping TypeName="AusterlitzModel.REF_TurnErrorCodes">
+              <MappingFragment StoreEntitySet="REF_TurnErrorCodes">
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="ErrorCode" ColumnName="ErrorCode" />
+                <ScalarProperty Name="SectionNo" ColumnName="SectionNo" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TR_TurnOrderErrors">
+            <EntityTypeMapping TypeName="AusterlitzModel.TR_TurnOrderErrors">
+              <MappingFragment StoreEntitySet="TR_TurnOrderErrors">
+                <ScalarProperty Name="RawToken" ColumnName="RawToken" />
+                <ScalarProperty Name="ErrorCode" ColumnName="ErrorCode" />
+                <ScalarProperty Name="OrderNo" ColumnName="OrderNo" />
+                <ScalarProperty Name="SectionNo" ColumnName="SectionNo" />
+                <ScalarProperty Name="TurnId" ColumnName="TurnId" />
+                <ScalarProperty Name="TurnOrderErrorId" ColumnName="TurnOrderErrorId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
   </EntityContainerMapping>
 </Mapping></edmx:Mappings>
   </edmx:Runtime>

@@ -95,6 +95,12 @@
     <Compile Include="REF_Terrain.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="REF_Terrain_Factor.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="REF_TurnErrorCodes.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="REF_UnitWeightsRates.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
@@ -110,6 +116,9 @@
     <Compile Include="TR_Commanders.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_EconomyComputedSummary.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_MapCoordinates.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
@@ -119,10 +128,15 @@
     <Compile Include="TR_MathBattleResultActual.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_MathBattleResultEstimated.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_MerchantShips.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
-    <Compile Include="TR_EconomySummary.cs" />
+    <Compile Include="TR_EconomySummary.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_Spies.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
@@ -130,6 +144,12 @@
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
     <Compile Include="TR_TradingPortsAndCities.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_TurnCostSummary.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_TurnOrderErrors.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
     <Compile Include="TR_Warehouses.cs">

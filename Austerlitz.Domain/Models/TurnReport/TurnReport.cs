@@ -108,6 +108,17 @@ namespace Austerlitz.Models.TurnReport
         public MathBattleBrigade[] Brigades { get; set; }
     }
 
+    public class TurnOrderError
+    {
+        public int TurnOrderErrorId { get; set; }
+        public string TurnId { get; set; }
+        public int SectionNo { get; set; }
+        public int OrderNo { get; set; }
+        public int ErrorCode { get; set; }
+        public string Message { get; set; }
+        public string RawToken { get; set; }
+    }
+
     public class TurnReport
     {
         public TR_StateRelationships[] StateRelationships;
@@ -124,5 +135,6 @@ namespace Austerlitz.Models.TurnReport
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;
         public MathBattleDetails[] MathBattles;
+        public TurnOrderError[] Errors;
     }
 }
