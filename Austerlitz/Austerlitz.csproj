@@ -200,14 +200,27 @@
     <Compile Include="Controllers\RulesCatalogApiController.cs" />
     <Compile Include="Controllers\TurnMapsController.cs" />
     <Compile Include="Controllers\TurnReportApiController.cs" />
+    <Compile Include="Controllers\TurnReportApiController.EconomySummary.cs" />
+    <Compile Include="Controllers\TurnReportApiController.MathBattles.Query.cs" />
+    <Compile Include="Controllers\TurnReportApiController.MathBattles.Commands.cs" />
+    <Compile Include="Controllers\TurnReportApiController.MathBattles.Support.cs" />
     <Compile Include="Controllers\TurnSheetApiController.cs" />
+    <Compile Include="Controllers\TurnSheetApiController.Spreadsheet.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\TurnReportImportParsingUtils.cs" />
     <Compile Include="Services\TurnReportImportService.cs" />
+    <Compile Include="Services\TurnReportImportService.Economy.cs" />
+    <Compile Include="Services\TurnReportImportService.Locations.cs" />
+    <Compile Include="Services\TurnReportImportService.Map.cs" />
+    <Compile Include="Services\TurnReportImportService.MathBattles.cs" />
+    <Compile Include="Services\TurnReportImportService.StateRelationships.cs" />
+    <Compile Include="Services\TurnReportImportService.TurnOrderErrors.cs" />
+    <Compile Include="Services\TurnReportImportService.Units.cs" />
     <Compile Include="Services\TurnsheetExcelService.cs" />
+    <Compile Include="Services\TurnsheetExcelService.Read.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\angular.rangeSlider.css" />

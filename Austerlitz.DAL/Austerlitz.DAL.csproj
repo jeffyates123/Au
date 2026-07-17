@@ -152,6 +152,9 @@
     <Compile Include="TR_TurnOrderErrors.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_ArmyPositions.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_Warehouses.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>

@@ -119,6 +119,15 @@ namespace Austerlitz.Models.TurnReport
         public string RawToken { get; set; }
     }
 
+    public class ArmyPosition
+    {
+        public string TurnId { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string State { get; set; }
+        public int Bat { get; set; }
+    }
+
     public class TurnReport
     {
         public TR_StateRelationships[] StateRelationships;
@@ -131,6 +140,7 @@ namespace Austerlitz.Models.TurnReport
         public TR_BaggageTrains[] BaggageTrains;
         public TR_Spies[] Spies;
         public TR_TradingPortsAndCities[] TradingPortsAndCities;
+        public ArmyPosition[] ArmyPositions;
         public TR_EconomySummary EconomySummary;
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;

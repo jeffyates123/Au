@@ -13,6 +13,9 @@ austerlitzModule.controller(
     turnSheetFactory,
     landUnitsStateFactory,
     landUnitsModelFactory,
+    landUnitsLocationCostFactory,
+    landUnitsDisplayFactory,
+    landUnitsFederationSummaryFactory,
     landUnitsEffectsFactory,
     landUnitsTurnSheetFactory,
     landUnitsReplayFactory,
@@ -20,6 +23,8 @@ austerlitzModule.controller(
     landUnitsHeadcountTrainFactory,
     landUnitsBoardingFactory,
     landUnitsBattalionOrdersFactory,
+    landUnitsAddBattalionFactory,
+    landUnitsExchangeMergeFactory,
     unitRenameFactory,
     landUnitsUiFactory,
     landUnitsSetUpBrigadesFactory,
@@ -34,13 +39,18 @@ austerlitzModule.controller(
     angular.extend($scope, landUnitsStateFactory.createInitialState());
 
     landUnitsModelFactory.attach($scope, rulesCatalogFactory);
+    landUnitsLocationCostFactory.attach($scope, rulesCatalogFactory);
+    landUnitsDisplayFactory.attach($scope);
+    landUnitsFederationSummaryFactory.attach($scope);
     landUnitsEffectsFactory.attach($scope);
     landUnitsTurnSheetFactory.attach($scope, turnSheetFactory);
     landUnitsReplayFactory.attach($scope, $q, turnSheetFactory);
     landUnitsFederationFactory.attach($scope, turnSheetFactory);
     landUnitsHeadcountTrainFactory.attach($scope, turnSheetFactory);
     landUnitsBoardingFactory.attach($scope, turnSheetFactory);
-    landUnitsBattalionOrdersFactory.attach($scope, $q, turnSheetFactory);
+    landUnitsBattalionOrdersFactory.attach($scope, $q);
+    landUnitsAddBattalionFactory.attach($scope, turnSheetFactory);
+    landUnitsExchangeMergeFactory.attach($scope, turnSheetFactory);
     unitRenameFactory.attach($scope, turnSheetFactory);
     landUnitsUiFactory.attach($scope);
     landUnitsSetUpBrigadesFactory.attach(

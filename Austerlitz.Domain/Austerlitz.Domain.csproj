@@ -60,6 +60,9 @@
     <Compile Include="ReferenceManager.cs" />
     <Compile Include="TurnReportManager.cs" />
     <Compile Include="TurnSheetManager.cs" />
+    <Compile Include="TurnSheetManager.Reads.Sections00to11.cs" />
+    <Compile Include="TurnSheetManager.Reads.Sections12to23.cs" />
+    <Compile Include="TurnSheetManager.Writes.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
