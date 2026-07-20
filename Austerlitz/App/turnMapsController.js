@@ -70,6 +70,7 @@ austerlitzModule.controller('turnMapsController', function (
     };
     $scope.spyCoordinateReportByKey = {};
     $scope.armyCoordinateByKey = {};
+    $scope.epidemicCoordinateByKey = {};
     $scope.spyTurnReportCacheByTurnId = {};
     $scope.spyLookupRequestId = 0;
     $scope.previousMapCoordinatesByKey = {};
@@ -349,6 +350,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.masterData.turnReport = turnReport;
         $scope.spyTurnReportCacheByTurnId[$scope.masterData.turnId] = turnReport;
         $scope.rebuildArmyCoordinateLookup();
+        $scope.rebuildEpidemicCoordinateLookup();
         $scope.attachUnitsToMapCoordinates();
         $scope.refreshFilteredMovementItemsForMap();
         $scope.refreshMovementGridTypeValues();

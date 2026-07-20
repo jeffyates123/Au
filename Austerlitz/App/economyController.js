@@ -782,7 +782,17 @@ austerlitzModule.controller(
     }
 
     function getProductionRowForRule(rows, rule, coord) {
-      var siteTypeNo = toInt(rule.siteTypeNo != null ? rule.siteTypeNo : rule.SiteTypeNo, 0);
+      function mapEconomySiteTypeNo(rawSiteTypeNo) {
+        // Fortification variants share the same upkeep bucket as barracks in economy totals.
+        if (rawSiteTypeNo === 15 || rawSiteTypeNo === 21) {
+          return 2;
+        }
+        return rawSiteTypeNo;
+      }
+
+      var siteTypeNo = mapEconomySiteTypeNo(
+        toInt(rule.siteTypeNo != null ? rule.siteTypeNo : rule.SiteTypeNo, 0),
+      );
       var productionType = toText(rule.productionType != null ? rule.productionType : rule.ProductionType, "").toLowerCase();
       var cost = toInt(rule.cost != null ? rule.cost : rule.Cost, 0);
       var isPrime = isPrimeCoordinateForRule(rule, coord);
@@ -1434,12 +1444,18 @@ austerlitzModule.controller(
       return taxes;
     }
 
-    function buildFinanceSummary(tabKey, warehouse, productionRows) {
+    function sumProductionMaintenanceLd(rows) {
+      return (rows || []).reduce(function (sum, row) {
+        return sum + toInt(row && row.maintenanceLd, 0);
+      }, 0);
+    }
+
+    function buildFinanceSummary(tabKey, warehouse, productionRows, productionRowsByTab) {
       var economySummary = ($scope.masterData && $scope.masterData.turnReport && ($scope.masterData.turnReport.economySummary || $scope.masterData.turnReport.EconomySummary)) || {};
       var productionTotals = sumResourceRows(productionRows);
       var barracksTotals = sumBarracksGoodsForSphere(tabKey);
       var barracksLd = toInt(barracksTotals.money, 0);
-      var maintenanceLd = productionRows.reduce(function (sum, row) { return sum + toInt(row.maintenanceLd, 0); }, 0);
+      var maintenanceLd = sumProductionMaintenanceLd(productionRows);
       var productionBuildLd = productionRows.reduce(function (sum, row) { return sum + toInt(row.buildLd, 0); }, 0);
 
       function sumTransferGoodsLdForSections(sectionNos, targetTabKey) {
@@ -1465,6 +1481,15 @@ austerlitzModule.controller(
       }
 
       var productionMaintenanceLd = maintenanceLd;
+      if (tabKey === "europe") {
+        productionMaintenanceLd =
+          sumProductionMaintenanceLd((productionRowsByTab && productionRowsByTab.europe) || []) +
+          sumProductionMaintenanceLd((productionRowsByTab && productionRowsByTab.caribbean) || []) +
+          sumProductionMaintenanceLd((productionRowsByTab && productionRowsByTab.india) || []);
+      } else {
+        // All production-site maintenance is paid from Europe warehouse only.
+        productionMaintenanceLd = 0;
+      }
       var includeArmyNavyMaintenance = tabKey === "europe";
       var commanderPay = toInt(economySummary.commanderPayLd != null ? economySummary.commanderPayLd : economySummary.CommanderPayLd, 0);
       var brigadePay = toInt(economySummary.brigadePayLd != null ? economySummary.brigadePayLd : economySummary.BrigadePayLd, 0);
@@ -1527,13 +1552,15 @@ austerlitzModule.controller(
 
       var rows = [
         { label: "Starting Revenue", value: startingRevenue, totalLine: true },
-        { label: "Production Maint.", value: productionMaintenanceLd },
         { label: "Army Building", value: armyBuildingLd },
         { label: "Army Training", value: armyTrainingLd },
         { label: "Navy Build & Repair", value: navyBuildRepairLd },
         { label: "Production Build", value: productionBuildLd },
         { label: "LD (Mny) in Barracks", value: barracksLd },
       ];
+      if (tabKey === "europe") {
+        rows.splice(1, 0, { label: "Production Maint.", value: productionMaintenanceLd });
+      }
       if (includeArmyNavyMaintenance) {
         rows.splice(1, 0, { label: "Army Maint", value: armyMaintTotal }, { label: "Navy Maint", value: navyMaintenance });
       }
@@ -1575,14 +1602,19 @@ austerlitzModule.controller(
         turnId: toText($scope.masterData && $scope.masterData.turnId, ""),
         rows: [],
       };
+      var productionRowsByTab = {
+        europe: buildProductionModel("europe", buildRows || []),
+        caribbean: buildProductionModel("caribbean", buildRows || []),
+        india: buildProductionModel("india", buildRows || []),
+      };
       Object.keys(economyTabs).forEach(function (tabKey) {
         var sphere = getComputedSphereForTab(tabKey);
         if (!sphere) {
           return;
         }
         var warehouse = normalizeWarehouseForDisplay(getWarehouseRowForSphere(tabKey), tabKey);
-        var productionRows = buildProductionModel(tabKey, buildRows || []);
-        var financeRows = buildFinanceSummary(tabKey, warehouse, productionRows);
+        var productionRows = productionRowsByTab[tabKey] || [];
+        var financeRows = buildFinanceSummary(tabKey, warehouse, productionRows, productionRowsByTab);
         payload.rows.push({
           turnId: payload.turnId,
           sphere: sphere,
@@ -2007,13 +2039,21 @@ austerlitzModule.controller(
       $scope.economyWarehouse = normalizeWarehouseForDisplay(warehouseRaw, tabKey);
 
       return getBuildRowsForTurn().then(function (buildRows) {
-        $scope.economyProductionRows = buildProductionModel(tabKey, buildRows);
+        var productionRowsByTab = {
+          europe: buildProductionModel("europe", buildRows || []),
+          caribbean: buildProductionModel("caribbean", buildRows || []),
+          india: buildProductionModel("india", buildRows || []),
+        };
+        $scope.economyProductionRows = productionRowsByTab[tabKey] || [];
         $scope.economyProductionSummaryRows = buildProductionSummaryRows(tabKey, $scope.economyProductionRows);
-        if (hasPersistedEconomySummary($scope.economyComputedSummary)) {
-          $scope.economyFinanceRows = buildFinanceSummaryFromPersisted(tabKey, $scope.economyComputedSummary);
-        } else {
-          $scope.economyFinanceRows = buildFinanceSummary(tabKey, $scope.economyWarehouse, $scope.economyProductionRows);
-        }
+        // Finance pane should always reflect the same live production rows shown on screen.
+        // Persisted summaries are still saved for history/export, but not used as display source.
+        $scope.economyFinanceRows = buildFinanceSummary(
+          tabKey,
+          $scope.economyWarehouse,
+          $scope.economyProductionRows,
+          productionRowsByTab,
+        );
         $scope.economyTotals = buildBalanceRows($scope.economyWarehouse, $scope.economyProductionRows);
       });
     }

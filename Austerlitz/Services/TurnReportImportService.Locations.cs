@@ -17,6 +17,10 @@ namespace Austerlitz.Services
             @"(?<x>\d{1,2})\s*/\s*(?<y>\d{1,2})\s+(?<state>[A-Za-z])\s+(?<bat>\d+)",
             RegexOptions.Compiled);
 
+        private static readonly Regex EpidemicTokenRegex = new Regex(
+            @"(?<x>\d{1,2})\s*/\s*(?<y>\d{1,2})\s+(?<state>[A-Za-z?])",
+            RegexOptions.Compiled);
+
         private int LoadWarehouses(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)
         {
             try
@@ -358,6 +362,118 @@ VALUES (@p0, @p1, @p2, @p3, @p4)",
             }
 
             return parsedArmyPositions;
+        }
+
+        private int LoadEpidemics(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)
+        {
+            try
+            {
+                EnsureEpidemicsTable(auDB);
+                var originalLineLocation = lineLocation;
+                var sectionStart = -1;
+                for (var i = lineLocation; i < lineList.Count; i++)
+                {
+                    var lineToProcess = (lineList[i] ?? string.Empty).ToString();
+                    if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        return originalLineLocation;
+                    }
+
+                    if (lineToProcess.IndexOf("There are epidemics in the following regions", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        sectionStart = i + 1;
+                        break;
+                    }
+                }
+
+                if (sectionStart < 0 || sectionStart >= lineList.Count)
+                {
+                    return originalLineLocation;
+                }
+
+                int cursor;
+                var parsedEpidemics = ParseEpidemics(lineList, sectionStart, out cursor);
+
+                auDB.Database.ExecuteSqlCommand(
+                    "DELETE FROM dbo.TR_Epidemics WHERE TurnId = @p0",
+                    turnId ?? string.Empty);
+
+                if (parsedEpidemics.Count > 0)
+                {
+                    foreach (var parsedEpidemic in parsedEpidemics)
+                    {
+                        auDB.Database.ExecuteSqlCommand(@"
+INSERT INTO dbo.TR_Epidemics (TurnId, X, Y, State)
+VALUES (@p0, @p1, @p2, @p3)",
+                            turnId ?? string.Empty,
+                            parsedEpidemic.Item1,
+                            parsedEpidemic.Item2,
+                            parsedEpidemic.Item3);
+                    }
+                }
+
+                return cursor;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("loadEpidemics: " + ex.Message, ex);
+            }
+        }
+
+        private static List<Tuple<int, int, string>> ParseEpidemics(ArrayList lineList, int sectionStart, out int cursor)
+        {
+            var parsedEpidemics = new List<Tuple<int, int, string>>();
+            var hasLoadedRows = false;
+
+            for (cursor = sectionStart; cursor < lineList.Count; cursor++)
+            {
+                var lineToProcess = (lineList[cursor] ?? string.Empty).ToString();
+                if (string.IsNullOrWhiteSpace(lineToProcess))
+                {
+                    if (hasLoadedRows)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1
+                    || lineToProcess.IndexOf("Occupying Forces", StringComparison.OrdinalIgnoreCase) != -1
+                    || lineToProcess.IndexOf("Army positions", StringComparison.OrdinalIgnoreCase) != -1
+                    || lineToProcess.IndexOf("Page", StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    break;
+                }
+
+                var matches = EpidemicTokenRegex.Matches(lineToProcess);
+                if (matches.Count == 0)
+                {
+                    if (hasLoadedRows)
+                    {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                foreach (Match match in matches)
+                {
+                    if (!match.Success)
+                    {
+                        continue;
+                    }
+
+                    parsedEpidemics.Add(Tuple.Create(
+                        ParseDigitsToInt(match.Groups["x"].Value),
+                        ParseDigitsToInt(match.Groups["y"].Value),
+                        (match.Groups["state"].Value ?? string.Empty).Trim().ToUpperInvariant()));
+                }
+
+                hasLoadedRows = true;
+            }
+
+            return parsedEpidemics;
         }
     }
 }

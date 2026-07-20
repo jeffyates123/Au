@@ -128,6 +128,14 @@ namespace Austerlitz.Models.TurnReport
         public int Bat { get; set; }
     }
 
+    public class EpidemicPosition
+    {
+        public string TurnId { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string State { get; set; }
+    }
+
     public class TurnReport
     {
         public TR_StateRelationships[] StateRelationships;
@@ -141,6 +149,7 @@ namespace Austerlitz.Models.TurnReport
         public TR_Spies[] Spies;
         public TR_TradingPortsAndCities[] TradingPortsAndCities;
         public ArmyPosition[] ArmyPositions;
+        public EpidemicPosition[] Epidemics;
         public TR_EconomySummary EconomySummary;
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;

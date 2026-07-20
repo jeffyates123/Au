@@ -243,6 +243,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 var isLowercaseStateMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
                 var hasSpyReport = !!$scope.getIntelligenceSpyReportText(coord);
                 var hasArmyPosition = ($scope.getArmyPositionsAtCoordinate(coord) || []).length > 0;
+                var hasEpidemic = ($scope.getEpidemicPositionsAtCoordinate(coord) || []).length > 0;
                 var metCriteriaCount = 0;
 
                 if (isOutOfRange) metCriteriaCount++;
@@ -258,6 +259,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                     isLowercaseStateMarker: isLowercaseStateMarker,
                     hasSpyReport: hasSpyReport,
                     hasArmyPosition: hasArmyPosition,
+                    hasEpidemic: hasEpidemic,
                     metCriteriaCount: metCriteriaCount
                 };
             };
@@ -281,6 +283,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
 
             $scope.getIntelligenceBorderTierRank = function (borderTierClass) {
                 var tierClass = (borderTierClass || '').toString();
+                if (tierClass === 'intelBorder_Epidemic') return 4;
                 if (tierClass === 'intelBorder_ArmyFound') return 4;
                 if (tierClass === 'intelBorder_Critical') return 4;
                 if (tierClass === 'intelBorder_Spy') return 3;
@@ -314,7 +317,7 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                     };
                 }
 
-                var hasHighlight = criteria.metCriteriaCount > 0 || criteria.hasArmyPosition;
+                var hasHighlight = criteria.metCriteriaCount > 0 || criteria.hasArmyPosition || criteria.hasEpidemic;
 
                 var borderColorClassMap = {
                     critical: 'intelSeverityBorder_Critical',
@@ -354,6 +357,15 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                         $scope.getIntelligenceBorderTierRank(armyTierClass));
                     borderTierClass = $scope.getIntelligenceBorderTierClassByRank(finalTierRank);
                     borderColorClass = 'intelSeverityBorder_ArmyFound';
+                }
+
+                if (criteria.hasEpidemic) {
+                    var epidemicTierClass = 'intelBorder_Epidemic';
+                    var epidemicTierRank = Math.max(
+                        $scope.getIntelligenceBorderTierRank(borderTierClass),
+                        $scope.getIntelligenceBorderTierRank(epidemicTierClass));
+                    borderTierClass = $scope.getIntelligenceBorderTierClassByRank(epidemicTierRank);
+                    borderColorClass = 'intelSeverityBorder_Epidemic';
                 }
 
                 return {
@@ -419,6 +431,13 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 return $scope.armyCoordinateByKey[key] || [];
             };
 
+            $scope.getEpidemicPositionsAtCoordinate = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.epidemicCoordinateByKey) return [];
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.epidemicCoordinateByKey, key)) return [];
+                return $scope.epidemicCoordinateByKey[key] || [];
+            };
+
             $scope.getIntelligenceTooltip = function (coord) {
                 var tooltipParts = [];
                 var criteria = $scope.getIntelligenceCriteria(coord);
@@ -446,6 +465,11 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                     var bats = parseInt(armyPosition && armyPosition.bats, 10);
                     if (isNaN(bats)) bats = 0;
                     tooltipParts.push("Army found here, State: " + state + " and Bats: " + bats);
+                });
+
+                angular.forEach($scope.getEpidemicPositionsAtCoordinate(coord), function (epidemic) {
+                    var state = (epidemic && epidemic.state != null ? epidemic.state : '').toString().trim().toUpperCase();
+                    tooltipParts.push("Epidemic here, State: " + (state || '?'));
                 });
 
                 return tooltipParts.join(' | ');

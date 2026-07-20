@@ -172,6 +172,32 @@ BEGIN
 END;");
         }
 
+        private void EnsureEpidemicsTable(AusterlitzDbContext auDB)
+        {
+            auDB.Database.ExecuteSqlCommand(@"
+IF OBJECT_ID('dbo.TR_Epidemics', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.TR_Epidemics (
+        TurnId VARCHAR(13) NOT NULL,
+        X INT NOT NULL,
+        Y INT NOT NULL,
+        State VARCHAR(1) NOT NULL,
+        CONSTRAINT PK_TR_Epidemics PRIMARY KEY (TurnId, X, Y, State)
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID('dbo.TR_Epidemics')
+      AND name = 'IX_TR_Epidemics_TurnId'
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_TR_Epidemics_TurnId
+        ON dbo.TR_Epidemics (TurnId);
+END;");
+        }
+
         private class ParsedTurnOrderError
         {
             public int SectionNo { get; set; }

@@ -33,6 +33,7 @@ namespace Austerlitz.DAL
         public virtual DbSet<REF_Terrain> REF_Terrain { get; set; }
         public virtual DbSet<REF_UnitWeightsRates> REF_UnitWeightsRates { get; set; }
         public virtual DbSet<TR_ArmyPositions> TR_ArmyPositions { get; set; }
+        public virtual DbSet<TR_Epidemics> TR_Epidemics { get; set; }
         public virtual DbSet<TR_BaggageTrains> TR_BaggageTrains { get; set; }
         public virtual DbSet<TR_Barracks> TR_Barracks { get; set; }
         public virtual DbSet<TR_Brigades> TR_Brigades { get; set; }

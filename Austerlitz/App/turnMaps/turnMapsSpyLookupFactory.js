@@ -345,6 +345,31 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
         $scope.armyCoordinateByKey = lookup;
     };
 
+    $scope.rebuildEpidemicCoordinateLookup = function () {
+        var report = ($scope.masterData && $scope.masterData.turnReport) || {};
+        var rows = report.epidemics || report.Epidemics || [];
+        var lookup = {};
+
+        angular.forEach(rows, function (row) {
+            var x = $scope.toMapCoordinateInt(row && row.x);
+            var y = $scope.toMapCoordinateInt(row && row.y);
+            var key = $scope.toMapCoordinateKey(x, y);
+            if (!key) return;
+
+            var state = (row && (row.state || row.State) ? (row.state || row.State) : '').toString().trim().toUpperCase();
+
+            if (!Object.prototype.hasOwnProperty.call(lookup, key)) {
+                lookup[key] = [];
+            }
+
+            lookup[key].push({
+                state: state
+            });
+        });
+
+        $scope.epidemicCoordinateByKey = lookup;
+    };
+
     $scope.getCoordinateHoverTooltip = function (coord) {
         if (!coord) return '';
 

@@ -303,6 +303,7 @@ textarea {
 .intelSeverityBorder_High { border-color: #d62828 !important; border-style: solid !important; }
 .intelSeverityBorder_Critical { border-color: #000000 !important; border-style: solid !important; }
 .intelSeverityBorder_ArmyFound { border-color: #B8860B !important; border-style: solid !important; }
+.intelSeverityBorder_Epidemic { border-color: #8B008B !important; border-style: solid !important; }
 
 .intelText_Dark { color: #111111; }
 .intelText_Light { color: #ffffff; }
@@ -312,6 +313,7 @@ textarea {
 .intelBorder_Spy { border-width: 3px !important; }
 .intelBorder_Critical { border-width: 4px !important; }
 .intelBorder_ArmyFound { border-width: 4px !important; }
+.intelBorder_Epidemic { border-width: 4px !important; }
 
 /* Compatibility aliases for any legacy references */
 .intel_Normal { background-color: #ffffff; color: #111111; }

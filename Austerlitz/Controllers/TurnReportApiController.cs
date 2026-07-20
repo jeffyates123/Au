@@ -37,6 +37,7 @@ namespace Austerlitz.Controllers
                 var turnReport = new TurnReport();
                 LoadTurnEntities(dataContext, turnId, turnReport);
                 turnReport.ArmyPositions = getTRArmyPositions(dataContext, turnId);
+                turnReport.Epidemics = getTREpidemics(dataContext, turnId);
                 turnReport.EconomySummary = getTREconomySummary(dataContext, turnId);
 
                 var movementItems = new List<MovementItems>();
@@ -247,6 +248,29 @@ SELECT
     State,
     Bat
 FROM dbo.TR_ArmyPositions
+WHERE TurnId = @turnId
+ORDER BY Y, X, State",
+                new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();
+        }
+
+        private EpidemicPosition[] getTREpidemics(AusterlitzDbContext dataContext, string turnId)
+        {
+            var tableExists = dataContext.Database.SqlQuery<int>(
+                @"SELECT COUNT(1)
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'TR_Epidemics'").SingleOrDefault() > 0;
+            if (!tableExists)
+            {
+                return new EpidemicPosition[0];
+            }
+
+            return dataContext.Database.SqlQuery<EpidemicPosition>(@"
+SELECT
+    TurnId,
+    X,
+    Y,
+    State
+FROM dbo.TR_Epidemics
 WHERE TurnId = @turnId
 ORDER BY Y, X, State",
                 new SqlParameter("@turnId", turnId ?? string.Empty)).ToArray();

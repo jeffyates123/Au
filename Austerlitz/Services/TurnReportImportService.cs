@@ -33,6 +33,7 @@ namespace Austerlitz.Services
                 lineLocation = LoadBaggageTrains(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadSpies(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadArmyPositions(lineList, lineLocation, auDB, turnId);
+                lineLocation = LoadEpidemics(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadStateRelationships(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadTradingPortsAndCities(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadMathBattles(lineList, lineLocation, auDB, turnId);
