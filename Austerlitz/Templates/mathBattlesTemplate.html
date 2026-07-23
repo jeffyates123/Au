@@ -11,7 +11,7 @@
     No mathematical battles found for this turn.
   </div>
 
-  <div ng-if="mathBattles.length">
+  <div>
     <div class="mathBattleSelector">
       <button
         type="button"
@@ -22,7 +22,24 @@
       >
         {{battle.mathBattleNo}}
       </button>
+      <button type="button"
+              class="btn btn-default btn-sm"
+              ng-click="onModelBattleButtonClick()"
+              ng-disabled="modelBattleCreate.isCreating || ((modelBattleCreate.isArming || isSelectedBattleModelBattle()) && !canCreateModelBattle())">
+        {{getModelBattleButtonLabel()}}
+      </button>
     </div>
+    <div class="mathBattleModelCreateRow" ng-if="shouldShowModelBattlePicker()">
+      <span class="mathBattleModelCreateLabel">Army B:</span>
+      <select class="form-control input-sm mathBattleModelStateSelect"
+              ng-model="modelBattleCreate.sideBState"
+              ng-change="onModelBattleSideBChanged()"
+              ng-options="option.state as option.label for option in modelBattleSideBOptions"
+              ng-disabled="modelBattleCreate.isCreating || (isSelectedBattleModelBattle() && isModelBattleEnemyStateLocked())">
+        <option value="">Select Side B</option>
+      </select>
+    </div>
+    <div class="text-danger" ng-if="modelBattleCreate.error">{{modelBattleCreate.error}}</div>
 
     <div class="landUnitsTabs">
       <button type="button" class="landUnitsTabButton" ng-class="{ active: activeBattleTab === 'initial' }" ng-click="selectBattleTab('initial')">Initial</button>
@@ -45,9 +62,9 @@
             </select>
             <button type="button"
                     class="btn btn-default btn-xs mathBattleCalcButton"
-                    ng-if="shouldShowCalculateBattle()"
+                    ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()"
                     ng-click="calculateInitialBrigadeValues()"
-                    ng-disabled="mathBattleCalcBusy || !selectedCalcTerrainId">
+                    ng-disabled="mathBattleCalcBusy || !canCalculateInitialBrigadeValues()">
                 {{mathBattleCalcBusy ? 'Calculating Battle...' : 'Calculate Battle'}}
             </button>
             <button type="button"
@@ -55,46 +72,110 @@
                     ng-if="(activeBattleTab === 'initial' || activeBattleTab === 'final') && !isSelectedBattleEstimated()"
                     ng-click="createEstimatedBattle()"
                     ng-disabled="mathBattleEstimateBusy || !canCreateEstimatedBattle()">
-                {{mathBattleEstimateBusy ? 'Estimating...' : 'Estimate Battle'}}
+                {{mathBattleEstimateBusy ? 'Estimating...' : 'Fight same enemy with your chosen Army'}}
+            </button>
+            <button type="button"
+                    class="btn btn-primary btn-xs mathBattleCalcButton"
+                    ng-if="shouldShowModelBattleBuilder()"
+                    ng-click="saveAndCalculateModelBattle()"
+                    ng-disabled="mathBattleCalcBusy || !canSaveModelBattleBrigades()">
+                {{modelBattleBuilder.isSaving || mathBattleCalcBusy ? 'Saving...' : 'Save and Calculate Battle'}}
             </button>
         </div>
       <div class="text-danger" ng-if="mathBattleCalcError">{{mathBattleCalcError}}</div>
       <div class="text-danger" ng-if="mathBattleEstimateError">{{mathBattleEstimateError}}</div>
+      <div class="text-danger" ng-if="modelBattleBuilder.saveError">{{modelBattleBuilder.saveError}}</div>
+      <div class="text-warning" ng-if="shouldShowModelBattleBuilder() && modelBattleBuilder.isDirty">Unsaved model battle changes.</div>
 
       <div class="landUnitsTableWrap">
-        <table class="table landUnitsTable">
+        <table class="table landUnitsTable mathBattleModelCompactTable">
           <thead>
             <tr>
               <th class="landUnitsNameCol">Brigade</th>
               <th class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">Batt {{slot}}</th>
               <th
                 class="mathBattleCalcCol"
-                ng-if="shouldShowCalculateBattle()"
+                ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()"
                 title="Long-range calc includes all firing battalions, including artillery."
               >
                 LR Calc
               </th>
               <th
                 class="mathBattleCalcCol"
-                ng-if="shouldShowCalculateBattle()"
+                ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()"
                 title="Artillery-only long-range calc (REF_ArmyList item numbers 41-45)."
               >
                 Art Calc
               </th>
-              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">HC Calc</th>
-              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">Total</th>
+              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">HC Calc</th>
+              <th class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">Total</th>
+              <th class="landUnitsMenuCol" ng-if="shouldShowModelBattleBuilder()"></th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="brigade in getVisibleBrigades() track by (brigade.phase + ':' + brigade.state + ':' + brigade.name + ':' + $index)">
               <td class="landUnitsNameCol">{{brigade.name}}</td>
               <td class="landUnitsBattalionCol" ng-repeat="slot in [1,2,3,4,5,6,7] track by slot">
-                <span class="landUnitsBattalionChip">{{formatBattalionDisplay(brigade, slot)}}</span>
+                <button type="button"
+                        class="landUnitsBattalionChip landUnitsBattalionChipButton"
+                        ng-if="isModelBattleBuilderRow(brigade)"
+                        ng-click="paintModelBattleBattalion(brigade, slot)"
+                        ng-dblclick="clearModelBattleBattalion(brigade, slot, $event)"
+                        title="Click adds selected troop. Double-click clears battalion.">
+                    {{formatBattalionDisplay(brigade, slot)}}
+                </button>
+                <span class="landUnitsBattalionChip" ng-if="!isModelBattleBuilderRow(brigade)">{{formatBattalionDisplay(brigade, slot)}}</span>
               </td>
-              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcLR != null ? brigade.calcLR : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcArtillery != null ? brigade.calcArtillery : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcHC != null ? brigade.calcHC : '-'}}</td>
-              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle()">{{brigade.calcTotal != null ? brigade.calcTotal : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">{{brigade.calcLR != null ? brigade.calcLR : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">{{brigade.calcArtillery != null ? brigade.calcArtillery : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">{{brigade.calcHC != null ? brigade.calcHC : '-'}}</td>
+              <td class="mathBattleCalcCol" ng-if="shouldShowCalculateBattle() && !shouldShowModelBattleBuilder()">{{brigade.calcTotal != null ? brigade.calcTotal : '-'}}</td>
+              <td class="landUnitsMenuCol" ng-if="shouldShowModelBattleBuilder()">
+                <button type="button"
+                        class="btn btn-default btn-xs"
+                        ng-click="removeModelBattleBrigade(brigade)">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mathBattleModelArmyPicker landUnitsSetUpPickerWrap" ng-if="shouldShowModelBattleBuilder()">
+        <div class="alert alert-info" ng-show="modelBattleArmyLoading">Loading army list...</div>
+        <div class="alert alert-danger" ng-show="modelBattleArmyLoadError">{{modelBattleArmyLoadError}}</div>
+        <table class="table table-condensed landUnitsArmyListTable" ng-show="!modelBattleArmyLoading && modelBattleArmyRows.length">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Name</th>
+              <th>Short</th>
+              <th>LR</th>
+              <th>RG</th>
+              <th>MP.S</th>
+              <th>MP</th>
+              <th>EF</th>
+              <th>HC</th>
+              <th>Formation</th>
+              <th>Troop Spec</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="armyItem in modelBattleArmyRows track by armyItem.itemNo"
+                ng-class="{ active: isModelBattleArmyItemSelected(armyItem) }"
+                ng-click="pickModelBattleArmyItem(armyItem)">
+              <td>{{armyItem.itemNo}}</td>
+              <td>{{armyItem.name}}</td>
+              <td>{{armyItem.shortName}}</td>
+              <td>{{armyItem.lr}}</td>
+              <td>{{armyItem.rg}}</td>
+              <td>{{armyItem.simMP}}</td>
+              <td>{{armyItem.mp}}</td>
+              <td>{{armyItem.ef}}</td>
+              <td>{{armyItem.hc}}</td>
+              <td>{{armyItem.formation}}</td>
+              <td>{{armyItem.troopSpecification || ''}}</td>
             </tr>
           </tbody>
         </table>
@@ -135,7 +216,7 @@
   <div class="landUnitsModal landUnitsBoardingModal" ng-show="estimateFederationModal.isOpen">
     <div class="landUnitsModalHeader">
       <div>
-        <h3>Estimate Battle: Choose Federation</h3>
+        <h3>{{getEstimateForcesModalTitle()}}</h3>
         <div class="landUnitsModalSubtitle">
           Replace {{estimateFederationModal.replaceState || '-'}} against {{estimateFederationModal.opponentState || '-'}}
         </div>
@@ -150,7 +231,7 @@
 
     <div class="landUnitsModalBody">
       <div class="alert alert-info" ng-show="estimateFederationModal.isLoading">
-        Loading federation candidates...
+        Loading available forces...
       </div>
       <div class="alert alert-danger" ng-show="estimateFederationModal.error">
         {{estimateFederationModal.error}}
@@ -160,7 +241,9 @@
         <table class="table table-condensed landUnitsTable">
           <thead>
             <tr>
-              <th>Federation</th>
+              <th></th>
+              <th>Type</th>
+              <th>Selection</th>
               <th>Position</th>
               <th>Brigades</th>
               <th>Men</th>
@@ -171,10 +254,36 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="candidate in estimateFederationModal.candidates track by candidate.federationNo"
-                ng-class="{ active: estimateFederationModal.selectedFederationNo === candidate.federationNo }"
-                ng-click="selectEstimateFederationCandidate(candidate)">
-              <td>{{candidate.federationNo}}</td>
+            <tr class="active" ng-if="getEstimateFederationCandidatesByType('Federation').length">
+              <td colspan="10"><strong>Federations in same sphere</strong></td>
+            </tr>
+            <tr ng-repeat="candidate in getEstimateFederationCandidatesByType('Federation') track by candidate.candidateKey"
+                ng-class="{ active: isEstimateFederationCandidateSelected(candidate) }"
+                ng-click="toggleEstimateFederationCandidate(candidate)">
+              <td><input type="checkbox"
+                         ng-checked="isEstimateFederationCandidateSelected(candidate)"
+                         ng-click="$event.stopPropagation(); toggleEstimateFederationCandidate(candidate)" /></td>
+              <td>{{candidate.candidateType}}</td>
+              <td>{{candidate.displayName}}</td>
+              <td>{{candidate.position}}</td>
+              <td>{{candidate.brigadeCount}}</td>
+              <td>{{candidate.totalMen}}</td>
+              <td>{{candidate.estimatedLR}}</td>
+              <td>{{candidate.estimatedArtillery}}</td>
+              <td>{{candidate.estimatedHC}}</td>
+              <td>{{candidate.estimatedTotal}}</td>
+            </tr>
+            <tr class="active" ng-if="getEstimateFederationCandidatesByType('Brigade').length">
+              <td colspan="10"><strong>Loose brigades (not in federation)</strong></td>
+            </tr>
+            <tr ng-repeat="candidate in getEstimateFederationCandidatesByType('Brigade') track by candidate.candidateKey"
+                ng-class="{ active: isEstimateFederationCandidateSelected(candidate) }"
+                ng-click="toggleEstimateFederationCandidate(candidate)">
+              <td><input type="checkbox"
+                         ng-checked="isEstimateFederationCandidateSelected(candidate)"
+                         ng-click="$event.stopPropagation(); toggleEstimateFederationCandidate(candidate)" /></td>
+              <td>{{candidate.candidateType}}</td>
+              <td>{{candidate.displayName}}</td>
               <td>{{candidate.position}}</td>
               <td>{{candidate.brigadeCount}}</td>
               <td>{{candidate.totalMen}}</td>
@@ -198,8 +307,8 @@
       <button type="button"
               class="btn btn-primary btn-sm"
               ng-click="confirmEstimateFederationSelection()"
-              ng-disabled="estimateFederationModal.isLoading || estimateFederationModal.isCreating || !estimateFederationModal.selectedFederationNo">
-        {{estimateFederationModal.isCreating ? 'Creating...' : 'Create Estimate'}}
+              ng-disabled="estimateFederationModal.isLoading || estimateFederationModal.isCreating || !hasSelectedEstimateFederationCandidates()">
+        {{estimateFederationModal.isCreating ? 'Creating...' : (estimateFederationModal.flowType === 'model' ? 'Create Model Battle' : 'Create Estimate')}}
       </button>
     </div>
   </div>

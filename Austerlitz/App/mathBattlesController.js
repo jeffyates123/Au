@@ -1,5 +1,9 @@
 austerlitzModule.controller("mathBattlesController", function ($scope, $q, masterData, turnReportFactory, rulesCatalogFactory, mathBattlesCombatHelperFactory) {
     var RECRUITS_PER_BATTALION = 800;
+    var MODEL_BATTLE_NAME = "MODEL BATTLE";
+    var MODEL_BATTLE_BATT_SLOTS = [1, 2, 3, 4, 5, 6, 7];
+    var MODEL_BATTLE_EMPTY_BATT = "--";
+    var MODEL_BATTLE_MIN_EMPTY_ROWS = 4;
 
     $scope.masterData = masterData;
     $scope.mathBattles = [];
@@ -23,11 +27,34 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         isCreating: false,
         error: "",
         candidates: [],
-        selectedFederationNo: null,
+        selectedCandidateKeys: {},
         sourceMathBattleNo: null,
         sourcePhase: "PRE",
+        flowType: "fight",
         replaceState: "",
         opponentState: ""
+    };
+    $scope.modelBattleCreate = {
+        isCreating: false,
+        error: "",
+        sideBState: "",
+        isArming: false
+    };
+    $scope.modelBattleSideBOptions = [];
+    $scope.modelBattleBuilder = {
+        sourceBattleNo: null,
+        rows: [],
+        isDirty: false,
+        isSaving: false,
+        saveError: ""
+    };
+    $scope.modelBattleArmyRows = [];
+    $scope.modelBattleArmyLoadError = "";
+    $scope.modelBattleArmyLoading = false;
+    $scope.selectedModelBattleArmyItem = null;
+
+    $scope.normalizeStateCode = function (value) {
+        return ((value || "") + "").trim().toUpperCase();
     };
     $scope.getSelectedBattle = function () {
         for (var i = 0; i < $scope.mathBattles.length; i++) {
@@ -44,6 +71,8 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         $scope.ensureSelectedState();
         $scope.activeBattleTab = "initial";
         $scope.ensureSelectedCalcTerrain();
+        $scope.ensureModelBattleBuilder();
+        $scope.refreshModelBattleArmyRows();
     };
 
     $scope.selectBattleTab = function (tabName) {
@@ -66,6 +95,205 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         return sides;
     };
 
+    $scope.isSelectedBattleModelBattle = function () {
+        var battle = $scope.getSelectedBattle();
+        var winnerText = (battle && battle.winner ? battle.winner : "");
+        return !!(battle && battle.isEstimated && winnerText.toString().trim().toUpperCase() === MODEL_BATTLE_NAME);
+    };
+
+    $scope.getRulesCatalogStates = function () {
+        var rulesCatalog = ($scope.masterData && $scope.masterData.rulesCatalog) || {};
+        return rulesCatalog.States || rulesCatalog.states || [];
+    };
+
+    $scope.getModelBattleSideAState = function () {
+        return $scope.normalizeStateCode($scope.masterData && $scope.masterData.selectedState);
+    };
+
+    $scope.rebuildModelBattleSideBOptions = function () {
+        var sideA = $scope.getModelBattleSideAState();
+        var options = [];
+        angular.forEach($scope.getRulesCatalogStates(), function (stateRow) {
+            var stateCode = $scope.normalizeStateCode(stateRow && (stateRow.State || stateRow.state));
+            if (!stateCode || stateCode === sideA) {
+                return;
+            }
+
+            var stateName = ((stateRow && (stateRow.StateName || stateRow.stateName)) || stateCode).toString().trim();
+            options.push({
+                state: stateCode,
+                label: stateCode + " - " + stateName
+            });
+        });
+        options.sort(function (left, right) {
+            return left.label.localeCompare(right.label);
+        });
+        $scope.modelBattleSideBOptions = options;
+    };
+
+    $scope.syncModelBattleSideBSelection = function () {
+        var selectedBattle = $scope.getSelectedBattle();
+        if (selectedBattle && $scope.isSelectedBattleModelBattle()) {
+            var selectedBattleStateB = $scope.normalizeStateCode(selectedBattle.stateB);
+            if (selectedBattleStateB) {
+                $scope.modelBattleCreate.sideBState = selectedBattleStateB;
+                return;
+            }
+        }
+
+        var options = $scope.modelBattleSideBOptions || [];
+        if (!options.length) {
+            $scope.modelBattleCreate.sideBState = "";
+            return;
+        }
+
+        var selected = $scope.normalizeStateCode($scope.modelBattleCreate.sideBState);
+        var hasSelected = options.some(function (option) {
+            return option.state === selected;
+        });
+        if (!hasSelected) {
+            $scope.modelBattleCreate.sideBState = options[0].state;
+        }
+    };
+
+    $scope.canCreateModelBattle = function () {
+        var sideA = $scope.getModelBattleSideAState();
+        var sideB = $scope.normalizeStateCode($scope.modelBattleCreate.sideBState);
+        var terrain = (($scope.selectedCalcTerrainId || "") + "").trim().toUpperCase();
+        return !!(sideA && sideB && sideA !== sideB && terrain);
+    };
+
+    $scope.resetModelBattleBuilder = function () {
+        $scope.modelBattleBuilder.sourceBattleNo = null;
+        $scope.modelBattleBuilder.rows = [];
+        $scope.modelBattleBuilder.isDirty = false;
+        $scope.modelBattleBuilder.isSaving = false;
+        $scope.modelBattleBuilder.saveError = "";
+        $scope.modelBattleArmyRows = [];
+        $scope.modelBattleArmyLoadError = "";
+        $scope.modelBattleArmyLoading = false;
+        $scope.selectedModelBattleArmyItem = null;
+    };
+
+    $scope.readBrigadeSlotField = function (row, slot, suffix) {
+        return row["batt" + slot + suffix];
+    };
+
+    $scope.writeBrigadeSlotField = function (row, slot, suffix, value) {
+        row["batt" + slot + suffix] = value;
+    };
+
+    $scope.createEmptyModelBattleBrigadeRow = function (stateCode, brigadeName) {
+        var row = {
+            isModelBuilder: true,
+            state: stateCode,
+            phase: "PRE",
+            name: brigadeName
+        };
+        angular.forEach(MODEL_BATTLE_BATT_SLOTS, function (slot) {
+            $scope.writeBrigadeSlotField(row, slot, "Type", MODEL_BATTLE_EMPTY_BATT);
+            $scope.writeBrigadeSlotField(row, slot, "EF", null);
+            $scope.writeBrigadeSlotField(row, slot, "Size", null);
+        });
+        return row;
+    };
+
+    $scope.cloneModelBattleBrigadeFromDb = function (brigade) {
+        var cloned = {
+            isModelBuilder: true,
+            state: brigade.state,
+            phase: "PRE",
+            name: brigade.name
+        };
+        angular.forEach(MODEL_BATTLE_BATT_SLOTS, function (slot) {
+            var type = $scope.readBrigadeSlotField(brigade, slot, "Type");
+            $scope.writeBrigadeSlotField(cloned, slot, "Type", type || MODEL_BATTLE_EMPTY_BATT);
+            $scope.writeBrigadeSlotField(cloned, slot, "EF", $scope.readBrigadeSlotField(brigade, slot, "EF"));
+            $scope.writeBrigadeSlotField(cloned, slot, "Size", $scope.readBrigadeSlotField(brigade, slot, "Size"));
+        });
+        return cloned;
+    };
+
+    $scope.getModelBattleRowsForState = function (stateCode) {
+        var normalizedState = $scope.normalizeStateCode(stateCode);
+        return ($scope.modelBattleBuilder.rows || []).filter(function (row) {
+            return row && $scope.normalizeStateCode(row.state) === normalizedState;
+        });
+    };
+
+    $scope.getNextModelBattleBrigadeName = function (stateCode) {
+        var rows = $scope.getModelBattleRowsForState(stateCode);
+        return "Brigade " + (rows.length + 1);
+    };
+
+    $scope.hasAnyModelBattleBattalion = function (row) {
+        if (!row) {
+            return false;
+        }
+
+        for (var i = 1; i <= 7; i++) {
+            var type = (($scope.readBrigadeSlotField(row, i, "Type") || "") + "").trim();
+            if (type && type !== MODEL_BATTLE_EMPTY_BATT) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.ensureModelBattleInputRowsForState = function (stateCode) {
+        var normalizedState = $scope.normalizeStateCode(stateCode);
+        if (!normalizedState) {
+            return;
+        }
+
+        var rows = $scope.getModelBattleRowsForState(normalizedState);
+        var emptyCount = rows.filter(function (row) {
+            return !$scope.hasAnyModelBattleBattalion(row);
+        }).length;
+
+        while (emptyCount < MODEL_BATTLE_MIN_EMPTY_ROWS) {
+            $scope.modelBattleBuilder.rows.push($scope.createEmptyModelBattleBrigadeRow(normalizedState, $scope.getNextModelBattleBrigadeName(normalizedState)));
+            emptyCount++;
+        }
+    };
+
+    $scope.ensureModelBattleInputRows = function () {
+        var battle = $scope.getSelectedBattle();
+        if (!battle || !$scope.isSelectedBattleModelBattle()) {
+            return;
+        }
+
+        var stateA = $scope.normalizeStateCode(battle.stateA);
+        var stateB = $scope.normalizeStateCode(battle.stateB);
+        $scope.ensureModelBattleInputRowsForState(stateA);
+        $scope.ensureModelBattleInputRowsForState(stateB);
+    };
+
+    $scope.ensureModelBattleBuilder = function () {
+        var battle = $scope.getSelectedBattle();
+        if (!battle || !$scope.isSelectedBattleModelBattle()) {
+            $scope.resetModelBattleBuilder();
+            return;
+        }
+
+        if ($scope.modelBattleBuilder.sourceBattleNo === battle.mathBattleNo) {
+            return;
+        }
+
+        var preBrigades = (battle.brigades || []).filter(function (brigade) {
+            return ((brigade.phase || "") + "").trim().toUpperCase() === "PRE";
+        });
+        $scope.modelBattleBuilder.sourceBattleNo = battle.mathBattleNo;
+        $scope.modelBattleBuilder.rows = preBrigades.map($scope.cloneModelBattleBrigadeFromDb);
+        $scope.ensureModelBattleInputRows();
+        $scope.modelBattleBuilder.isDirty = false;
+        $scope.modelBattleBuilder.saveError = "";
+        $scope.refreshModelBattleArmyRows();
+        $scope.modelBattleCreate.sideBState = $scope.normalizeStateCode(battle.stateB);
+        $scope.modelBattleCreate.isArming = false;
+    };
+
     $scope.isSelectedBattleEstimated = function () {
         var battle = $scope.getSelectedBattle();
         return !!(battle && battle.isEstimated);
@@ -73,6 +301,18 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
     $scope.shouldShowCalculateBattle = function () {
         return $scope.activeBattleTab === "initial" && $scope.isSelectedBattleEstimated();
+    };
+
+    $scope.canCalculateInitialBrigadeValues = function () {
+        if (!$scope.shouldShowCalculateBattle()) {
+            return false;
+        }
+
+        if ($scope.isSelectedBattleModelBattle() && $scope.modelBattleBuilder.isDirty) {
+            return false;
+        }
+
+        return !!$scope.selectedCalcTerrainId;
     };
 
     $scope.canCreateEstimatedBattle = function () {
@@ -87,10 +327,326 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         return $scope.getBattleSides().length >= 2;
     };
 
+    $scope.shouldShowModelBattlePicker = function () {
+        return $scope.modelBattleCreate.isArming || $scope.isSelectedBattleModelBattle();
+    };
+
+    $scope.isModelBattleEnemyStateLocked = function () {
+        if (!$scope.isSelectedBattleModelBattle()) {
+            return false;
+        }
+
+        var battle = $scope.getSelectedBattle();
+        if (!battle) {
+            return false;
+        }
+
+        var enemyState = $scope.normalizeStateCode(battle.stateB);
+        if (!enemyState) {
+            return false;
+        }
+
+        var enemyRows = $scope.getModelBattleRowsForState(enemyState);
+        for (var i = 0; i < enemyRows.length; i++) {
+            if ($scope.hasAnyModelBattleBattalion(enemyRows[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.getModelBattleButtonLabel = function () {
+        if ($scope.modelBattleCreate.isCreating) {
+            return "Creating Model New Battle...";
+        }
+        if ($scope.modelBattleCreate.isArming && !$scope.isSelectedBattleModelBattle()) {
+            return "Create Model New Battle";
+        }
+
+        return "Model New Battle";
+    };
+
+    $scope.onModelBattleButtonClick = function () {
+        if (!$scope.modelBattleCreate.isArming && !$scope.isSelectedBattleModelBattle()) {
+            $scope.modelBattleCreate.isArming = true;
+            $scope.modelBattleCreate.error = "";
+            $scope.rebuildModelBattleSideBOptions();
+            $scope.syncModelBattleSideBSelection();
+            return;
+        }
+
+        $scope.createModelBattle();
+    };
+
+    $scope.createModelBattle = function () {
+        $scope.modelBattleCreate.error = "";
+        var sourceBattle = $scope.getSelectedBattle();
+        if (!sourceBattle || !sourceBattle.mathBattleNo) {
+            $scope.modelBattleCreate.error = "Select a source battle first.";
+            return;
+        }
+        var sideA = $scope.getModelBattleSideAState();
+        var sideB = $scope.normalizeStateCode($scope.modelBattleCreate.sideBState);
+        var terrain = (($scope.selectedCalcTerrainId || "") + "").trim().toUpperCase();
+        if (!sideA) {
+            $scope.modelBattleCreate.error = "Select a current state before creating a model battle.";
+            return;
+        }
+        if (!sideB || sideA === sideB) {
+            $scope.modelBattleCreate.error = "Pick one different state for Side B.";
+            return;
+        }
+        if (!terrain) {
+            $scope.modelBattleCreate.error = "Pick terrain before creating a model battle.";
+            return;
+        }
+
+        $scope.openEstimateFederationModal(sourceBattle, "PRE", "model", sideA, sideB);
+    };
+
+    $scope.shouldShowModelBattleBuilder = function () {
+        return $scope.activeBattleTab === "initial" && $scope.isSelectedBattleModelBattle();
+    };
+
+    $scope.isModelBattleBuilderRow = function (brigade) {
+        return $scope.shouldShowModelBattleBuilder() && !!(brigade && brigade.isModelBuilder);
+    };
+
+    $scope.removeModelBattleBrigade = function (brigade) {
+        if (!$scope.isModelBattleBuilderRow(brigade)) {
+            return;
+        }
+
+        var idx = ($scope.modelBattleBuilder.rows || []).indexOf(brigade);
+        if (idx < 0) {
+            return;
+        }
+
+        $scope.modelBattleBuilder.rows.splice(idx, 1);
+        $scope.modelBattleBuilder.isDirty = true;
+        $scope.ensureModelBattleInputRowsForState(brigade.state);
+    };
+
+    $scope.refreshModelBattleArmyRows = function () {
+        $scope.modelBattleArmyLoadError = "";
+        $scope.modelBattleArmyRows = [];
+        $scope.selectedModelBattleArmyItem = null;
+
+        if (!$scope.shouldShowModelBattleBuilder() || !$scope.selectedState) {
+            return $q.when([]);
+        }
+
+        $scope.modelBattleArmyLoading = true;
+        return rulesCatalogFactory.getArmyList($scope.selectedState).then(function (rows) {
+            var mapped = (rows || []).map(function (row) {
+                return {
+                    itemNo: row.itemNo != null ? row.itemNo : row.ItemNo,
+                    name: row.name != null ? row.name : row.Name,
+                    shortName: row.shortName != null ? row.shortName : row.ShortName,
+                    rg: row.rg != null ? row.rg : row.RG,
+                    simMP: row.simMP != null ? row.simMP : row.SimMP,
+                    mp: row.mp != null ? row.mp : row.MP,
+                    ef: row.ef != null ? row.ef : row.EF,
+                    hc: row.hc != null ? row.hc : row.HC,
+                    lr: row.lr != null ? row.lr : row.LR,
+                    formation: row.formation != null ? row.formation : row.Formation,
+                    troopSpecification: row.troopSpecification != null ? row.troopSpecification : row.TroopSpecification
+                };
+            }).filter(function (row) {
+                return row.shortName;
+            });
+            mapped.sort(function (left, right) {
+                return ((left.itemNo || 0) - (right.itemNo || 0));
+            });
+            $scope.modelBattleArmyRows = mapped;
+            if (mapped.length > 0) {
+                $scope.selectedModelBattleArmyItem = mapped[0];
+            }
+            return mapped;
+        }, function () {
+            $scope.modelBattleArmyLoadError = "Could not load army list for selected side.";
+            return [];
+        }).finally(function () {
+            $scope.modelBattleArmyLoading = false;
+        });
+    };
+
+    $scope.pickModelBattleArmyItem = function (armyItem) {
+        if (!armyItem) {
+            return;
+        }
+
+        $scope.selectedModelBattleArmyItem = armyItem;
+    };
+
+    $scope.onModelBattleArmyItemSelectionChanged = function () {
+        if (!$scope.selectedModelBattleArmyItem) {
+            return;
+        }
+    };
+
+    $scope.isModelBattleArmyItemSelected = function (armyItem) {
+        return $scope.selectedModelBattleArmyItem === armyItem;
+    };
+
+    $scope.paintModelBattleBattalion = function (brigade, battalionNo) {
+        if (!$scope.isModelBattleBuilderRow(brigade) || !$scope.selectedModelBattleArmyItem) {
+            return;
+        }
+
+        var type = (($scope.selectedModelBattleArmyItem.shortName || "") + "").trim();
+        if (!type) {
+            return;
+        }
+
+        var ef = parseInt($scope.selectedModelBattleArmyItem.ef, 10);
+        if (isNaN(ef) || ef <= 0) {
+            ef = 3;
+        }
+
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "Type", type);
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "EF", ef);
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "Size", RECRUITS_PER_BATTALION);
+        $scope.modelBattleBuilder.isDirty = true;
+        $scope.ensureModelBattleInputRowsForState(brigade.state);
+    };
+
+    $scope.clearModelBattleBattalion = function (brigade, battalionNo, $event) {
+        if ($event && $event.stopPropagation) {
+            $event.stopPropagation();
+        }
+        if (!$scope.isModelBattleBuilderRow(brigade)) {
+            return;
+        }
+
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "Type", MODEL_BATTLE_EMPTY_BATT);
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "EF", null);
+        $scope.writeBrigadeSlotField(brigade, battalionNo, "Size", null);
+        $scope.modelBattleBuilder.isDirty = true;
+    };
+
+    $scope.addModelBattleBrigade = function () {
+        if (!$scope.shouldShowModelBattleBuilder() || !$scope.selectedState) {
+            return;
+        }
+
+        $scope.modelBattleBuilder.rows.push($scope.createEmptyModelBattleBrigadeRow($scope.selectedState, $scope.getNextModelBattleBrigadeName($scope.selectedState)));
+        $scope.modelBattleBuilder.isDirty = true;
+    };
+
+    $scope.buildModelBattleSaveRows = function () {
+        return ($scope.modelBattleBuilder.rows || []).filter(function (row) {
+            return $scope.hasAnyModelBattleBattalion(row);
+        }).map(function (row) {
+            return {
+                state: row.state,
+                name: row.name,
+                batt1Type: (row.batt1Type && row.batt1Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt1Type : null,
+                batt2Type: (row.batt2Type && row.batt2Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt2Type : null,
+                batt3Type: (row.batt3Type && row.batt3Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt3Type : null,
+                batt4Type: (row.batt4Type && row.batt4Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt4Type : null,
+                batt5Type: (row.batt5Type && row.batt5Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt5Type : null,
+                batt6Type: (row.batt6Type && row.batt6Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt6Type : null,
+                batt7Type: (row.batt7Type && row.batt7Type !== MODEL_BATTLE_EMPTY_BATT) ? row.batt7Type : null
+            };
+        });
+    };
+
+    $scope.onModelBattleSideBChanged = function () {
+        var selectedStateB = $scope.normalizeStateCode($scope.modelBattleCreate.sideBState);
+        if (!selectedStateB) {
+            return;
+        }
+
+        if ($scope.modelBattleCreate.isArming && !$scope.isSelectedBattleModelBattle()) {
+            $scope.createModelBattle();
+            return;
+        }
+
+        var battle = $scope.getSelectedBattle();
+        if (!battle || !$scope.isSelectedBattleModelBattle()) {
+            return;
+        }
+        if ($scope.isModelBattleEnemyStateLocked()) {
+            $scope.modelBattleCreate.sideBState = $scope.normalizeStateCode(battle.stateB);
+            return;
+        }
+
+        var stateA = $scope.normalizeStateCode(battle.stateA);
+        var oldStateB = $scope.normalizeStateCode(battle.stateB);
+        if (!stateA || selectedStateB === stateA) {
+            return;
+        }
+        if (selectedStateB === oldStateB) {
+            return;
+        }
+
+        battle.stateB = selectedStateB;
+        angular.forEach($scope.modelBattleBuilder.rows || [], function (row) {
+            if ($scope.normalizeStateCode(row && row.state) === oldStateB) {
+                row.state = selectedStateB;
+            }
+        });
+
+        if ($scope.normalizeStateCode($scope.selectedState) === oldStateB) {
+            $scope.selectedState = selectedStateB;
+        }
+
+        $scope.ensureModelBattleInputRowsForState(selectedStateB);
+        $scope.modelBattleBuilder.isDirty = true;
+        $scope.refreshModelBattleArmyRows();
+    };
+
+    $scope.canSaveModelBattleBrigades = function () {
+        return $scope.shouldShowModelBattleBuilder() && !$scope.modelBattleBuilder.isSaving;
+    };
+
+    $scope.saveModelBattleBrigades = function () {
+        $scope.modelBattleBuilder.saveError = "";
+        if (!$scope.canSaveModelBattleBrigades()) {
+            return $q.when();
+        }
+
+        var battle = $scope.getSelectedBattle();
+        if (!battle || !battle.mathBattleNo) {
+            $scope.modelBattleBuilder.saveError = "Select model battle first.";
+            return $q.when();
+        }
+
+        $scope.modelBattleBuilder.isSaving = true;
+        return turnReportFactory.saveTRModelBattleBrigades(
+            $scope.masterData.turnId,
+            battle.mathBattleNo,
+            battle.stateA,
+            battle.stateB,
+            $scope.buildModelBattleSaveRows()
+        ).then(function () {
+            $scope.modelBattleBuilder.isDirty = false;
+            return $scope.loadMathBattles(battle.mathBattleNo);
+        }, function (error) {
+            $scope.modelBattleBuilder.saveError = (error && error.data) ? error.data : "Could not save model battle brigades.";
+        }).finally(function () {
+            $scope.modelBattleBuilder.isSaving = false;
+        });
+    };
+
+    $scope.saveAndCalculateModelBattle = function () {
+        if (!$scope.canSaveModelBattleBrigades()) {
+            return $q.when();
+        }
+
+        return $scope.saveModelBattleBrigades().then(function () {
+            $scope.calculateInitialBrigadeValues();
+        });
+    };
+
     $scope.ensureSelectedState = function () {
         var sides = $scope.getBattleSides();
         if (!sides.length) {
-            $scope.selectedState = "";
+            if ($scope.selectedState) {
+                $scope.selectedState = "";
+            }
             return;
         }
 
@@ -102,7 +658,13 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
     };
 
     $scope.setSelectedState = function (stateCode) {
-        $scope.selectedState = stateCode;
+        var nextState = stateCode || "";
+        if (($scope.selectedState || "") === nextState) {
+            return;
+        }
+
+        $scope.selectedState = nextState;
+        $scope.refreshModelBattleArmyRows();
     };
 
     $scope.onCalcTerrainSelectionChanged = function (selectedCalcTerrainId) {
@@ -175,11 +737,15 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
 
     $scope.getVisibleBrigades = function () {
         var battle = $scope.getSelectedBattle();
-        if (!battle || !battle.brigades || !$scope.selectedState) {
-            $scope.ensureSelectedState();
+        if (!battle || !$scope.selectedState) {
+            return [];
         }
 
-        if (!battle || !battle.brigades || !$scope.selectedState) {
+        if ($scope.shouldShowModelBattleBuilder()) {
+            return $scope.getModelBattleRowsForState($scope.selectedState);
+        }
+
+        if (!battle.brigades) {
             return [];
         }
 
@@ -409,6 +975,11 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             return;
         }
 
+        if ($scope.isSelectedBattleModelBattle() && $scope.modelBattleBuilder.isDirty) {
+            $scope.mathBattleCalcError = "Save model battle brigades before calculating.";
+            return;
+        }
+
         var battle = $scope.getSelectedBattle();
         var selectedBattleNo = battle && battle.mathBattleNo;
         var sides = $scope.getBattleSides();
@@ -475,28 +1046,78 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         $scope.estimateFederationModal.isCreating = false;
         $scope.estimateFederationModal.error = "";
         $scope.estimateFederationModal.candidates = [];
-        $scope.estimateFederationModal.selectedFederationNo = null;
+        $scope.estimateFederationModal.selectedCandidateKeys = {};
         $scope.estimateFederationModal.sourceMathBattleNo = null;
         $scope.estimateFederationModal.sourcePhase = "PRE";
+        $scope.estimateFederationModal.flowType = "fight";
         $scope.estimateFederationModal.replaceState = "";
         $scope.estimateFederationModal.opponentState = "";
+    };
+
+    $scope.getEstimateForcesModalTitle = function () {
+        return $scope.estimateFederationModal.flowType === "model"
+            ? "Model Battle: Choose Own Forces"
+            : "Estimate Battle: Choose Own Forces";
     };
 
     $scope.closeEstimateFederationModal = function () {
         $scope.resetEstimateFederationModal();
     };
 
-    $scope.selectEstimateFederationCandidate = function (candidate) {
-        if (!candidate || candidate.federationNo == null || $scope.estimateFederationModal.isCreating) {
+    $scope.toggleEstimateFederationCandidate = function (candidate, forceChecked) {
+        if (!candidate || !candidate.candidateKey || $scope.estimateFederationModal.isCreating) {
             return;
         }
 
-        $scope.estimateFederationModal.selectedFederationNo = candidate.federationNo;
+        var current = !!$scope.estimateFederationModal.selectedCandidateKeys[candidate.candidateKey];
+        var next = forceChecked == null ? !current : !!forceChecked;
+        $scope.estimateFederationModal.selectedCandidateKeys[candidate.candidateKey] = next;
     };
 
-    $scope.openEstimateFederationModal = function (battle, sourcePhase) {
+    $scope.isEstimateFederationCandidateSelected = function (candidate) {
+        if (!candidate || !candidate.candidateKey) {
+            return false;
+        }
+
+        return !!$scope.estimateFederationModal.selectedCandidateKeys[candidate.candidateKey];
+    };
+
+    $scope.getEstimateFederationCandidatesByType = function (candidateType) {
+        var normalized = ((candidateType || "") + "").trim().toUpperCase();
+        return ($scope.estimateFederationModal.candidates || []).filter(function (candidate) {
+            return (((candidate && candidate.candidateType) || "") + "").trim().toUpperCase() === normalized;
+        });
+    };
+
+    $scope.hasSelectedEstimateFederationCandidates = function () {
+        var candidates = $scope.estimateFederationModal.candidates || [];
+        for (var i = 0; i < candidates.length; i++) {
+            if ($scope.isEstimateFederationCandidateSelected(candidates[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.buildEstimateFederationSelections = function () {
+        return ($scope.estimateFederationModal.candidates || []).filter(function (candidate) {
+            return $scope.isEstimateFederationCandidateSelected(candidate);
+        }).map(function (candidate) {
+            return {
+                candidateType: candidate.candidateType,
+                federationNo: candidate.federationNo > 0 ? candidate.federationNo : null,
+                brigadeItemNo: candidate.brigadeItemNo || null
+            };
+        });
+    };
+
+    $scope.openEstimateFederationModal = function (battle, sourcePhase, flowType, replaceStateOverride, opponentStateOverride) {
         var preferredState = (($scope.masterData && $scope.masterData.selectedState) || "").toString().trim().toUpperCase();
         var replaceState = $scope.selectedState || "";
+        if (replaceStateOverride) {
+            replaceState = replaceStateOverride;
+        }
         if (battle && preferredState && (preferredState === battle.stateA || preferredState === battle.stateB)) {
             replaceState = preferredState;
         }
@@ -511,15 +1132,19 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
                 opponentState = battle.stateB || "";
             }
         }
+        if (opponentStateOverride !== undefined && opponentStateOverride !== null) {
+            opponentState = opponentStateOverride;
+        }
 
         $scope.estimateFederationModal.isOpen = true;
         $scope.estimateFederationModal.isLoading = true;
         $scope.estimateFederationModal.isCreating = false;
         $scope.estimateFederationModal.error = "";
         $scope.estimateFederationModal.candidates = [];
-        $scope.estimateFederationModal.selectedFederationNo = null;
+        $scope.estimateFederationModal.selectedCandidateKeys = {};
         $scope.estimateFederationModal.sourceMathBattleNo = battle.mathBattleNo;
         $scope.estimateFederationModal.sourcePhase = sourcePhase;
+        $scope.estimateFederationModal.flowType = flowType || "fight";
         $scope.estimateFederationModal.replaceState = replaceState;
         $scope.estimateFederationModal.opponentState = opponentState;
 
@@ -530,9 +1155,13 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         ).then(function (candidates) {
             $scope.estimateFederationModal.candidates = candidates || [];
             if ($scope.estimateFederationModal.candidates.length > 0) {
-                $scope.estimateFederationModal.selectedFederationNo = $scope.estimateFederationModal.candidates[0].federationNo;
+                angular.forEach($scope.estimateFederationModal.candidates, function (candidate) {
+                    if (candidate && candidate.candidateKey) {
+                        $scope.estimateFederationModal.selectedCandidateKeys[candidate.candidateKey] = false;
+                    }
+                });
             } else {
-                $scope.estimateFederationModal.error = "No federation candidates were found in this sphere.";
+                $scope.estimateFederationModal.error = "No selectable federations or brigades were found in this sphere.";
             }
         }, function () {
             $scope.estimateFederationModal.error = "Could not load federation candidates.";
@@ -545,35 +1174,66 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         $scope.mathBattleEstimateError = "";
         $scope.estimateFederationModal.error = "";
 
-        var federationNo = parseInt($scope.estimateFederationModal.selectedFederationNo, 10);
-        if (isNaN(federationNo) || federationNo <= 0) {
-            $scope.estimateFederationModal.error = "Select a federation to continue.";
+        var selections = $scope.buildEstimateFederationSelections();
+        if (!selections.length) {
+            $scope.estimateFederationModal.error = "Select at least one federation or brigade to continue.";
             return;
         }
 
+        var isModelFlow = $scope.estimateFederationModal.flowType === "model";
         $scope.estimateFederationModal.isCreating = true;
         $scope.mathBattleEstimateBusy = true;
+        if (isModelFlow) {
+            $scope.modelBattleCreate.isCreating = true;
+        }
 
-        turnReportFactory.createTRFederationEstimatedMathBattle(
-            $scope.masterData.turnId,
-            $scope.estimateFederationModal.sourceMathBattleNo,
-            $scope.estimateFederationModal.sourcePhase,
-            $scope.estimateFederationModal.replaceState,
-            federationNo
-        ).then(function (response) {
+        var createPromise;
+        if (isModelFlow) {
+            createPromise = turnReportFactory.createTRModelEstimatedMathBattle(
+                $scope.masterData.turnId,
+                $scope.estimateFederationModal.replaceState,
+                $scope.modelBattleCreate.sideBState,
+                $scope.selectedCalcTerrainId,
+                $scope.estimateFederationModal.sourceMathBattleNo,
+                selections
+            );
+        } else {
+            createPromise = turnReportFactory.createTRFederationEstimatedMathBattle(
+                $scope.masterData.turnId,
+                $scope.estimateFederationModal.sourceMathBattleNo,
+                $scope.estimateFederationModal.sourcePhase,
+                $scope.estimateFederationModal.replaceState,
+                0,
+                selections
+            );
+        }
+
+        createPromise.then(function (response) {
             var createdBattleNo = response && response.mathBattleNo;
             return $scope.loadMathBattles(createdBattleNo).then(function () {
                 $scope.activeBattleTab = "initial";
-                $scope.calculateInitialBrigadeValues();
+                if (isModelFlow) {
+                    $scope.modelBattleCreate.isArming = false;
+                    $scope.ensureModelBattleBuilder();
+                } else {
+                    $scope.calculateInitialBrigadeValues();
+                }
                 $scope.closeEstimateFederationModal();
             });
         }, function (error) {
             var message = (error && error.data) ? error.data : "Could not create estimated battle.";
             $scope.estimateFederationModal.error = message;
-            $scope.mathBattleEstimateError = message;
+            if (isModelFlow) {
+                $scope.modelBattleCreate.error = message;
+            } else {
+                $scope.mathBattleEstimateError = message;
+            }
         }).finally(function () {
             $scope.estimateFederationModal.isCreating = false;
             $scope.mathBattleEstimateBusy = false;
+            if (isModelFlow) {
+                $scope.modelBattleCreate.isCreating = false;
+            }
         });
     };
 
@@ -590,9 +1250,13 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             $scope.mathBattleEstimateError = "Estimated battles require two armies on the Initial or Final tab.";
             return;
         }
+        if (battle.isEstimated) {
+            $scope.mathBattleEstimateError = "Fight same enemy requires a real (non-estimated) source battle.";
+            return;
+        }
 
         var sourcePhase = $scope.activeBattleTab === "final" ? "POST" : "PRE";
-        $scope.openEstimateFederationModal(battle, sourcePhase);
+        $scope.openEstimateFederationModal(battle, sourcePhase, "fight");
     };
 
     $scope.normalizeLoadedCalcFields = function (battles) {
@@ -619,6 +1283,9 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         $scope.mathBattleLoading = true;
         $scope.mathBattleLoadError = "";
         $scope.mathBattleEstimateError = "";
+        $scope.modelBattleCreate.error = "";
+        $scope.rebuildModelBattleSideBOptions();
+        $scope.syncModelBattleSideBSelection();
         return turnReportFactory.getTRMathBattles($scope.masterData.turnId).then(function (battles) {
             $scope.mathBattles = battles || [];
             $scope.normalizeLoadedCalcFields($scope.mathBattles);
@@ -637,12 +1304,14 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
             } else {
                 $scope.selectedBattleNo = null;
                 $scope.selectedState = "";
+                $scope.resetModelBattleBuilder();
             }
         }, function () {
             $scope.mathBattleLoadError = "Could not load mathematical battle data.";
             $scope.mathBattles = [];
             $scope.selectedBattleNo = null;
             $scope.selectedState = "";
+            $scope.resetModelBattleBuilder();
         }).finally(function () {
             $scope.mathBattleLoading = false;
         });
@@ -656,6 +1325,23 @@ austerlitzModule.controller("mathBattlesController", function ($scope, $q, maste
         }
     });
 
+    $scope.$watch(function () {
+        return $scope.masterData && $scope.masterData.selectedState;
+    }, function () {
+        $scope.rebuildModelBattleSideBOptions();
+        $scope.syncModelBattleSideBSelection();
+    });
+
+    $scope.$watch(function () {
+        var states = $scope.getRulesCatalogStates();
+        return states ? states.length : 0;
+    }, function () {
+        $scope.rebuildModelBattleSideBOptions();
+        $scope.syncModelBattleSideBSelection();
+    });
+
     $scope.loadMathBattles();
     $scope.resetEstimateFederationModal();
+    $scope.rebuildModelBattleSideBOptions();
+    $scope.syncModelBattleSideBSelection();
 });

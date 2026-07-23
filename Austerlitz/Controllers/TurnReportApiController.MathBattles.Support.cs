@@ -289,6 +289,7 @@ namespace Austerlitz.Controllers
 
         private class FederationBrigadeSourceRow
         {
+            public int ItemNo { get; set; }
             public int FederationNo { get; set; }
             public string X_OrState { get; set; }
             public string Y_OrFleet { get; set; }
@@ -363,6 +364,14 @@ namespace Austerlitz.Controllers
             public string SourcePhase { get; set; }
             public string ReplaceState { get; set; }
             public int FederationNo { get; set; }
+            public MathBattleEstimateSelection[] Selections { get; set; }
+        }
+
+        public class MathBattleEstimateSelection
+        {
+            public string CandidateType { get; set; }
+            public int? FederationNo { get; set; }
+            public int? BrigadeItemNo { get; set; }
         }
 
         public class CreateEstimatedMathBattleResponse
@@ -370,9 +379,45 @@ namespace Austerlitz.Controllers
             public int MathBattleNo { get; set; }
         }
 
+        public class CreateModelEstimatedMathBattleRequest
+        {
+            public string TurnId { get; set; }
+            public string StateA { get; set; }
+            public string StateB { get; set; }
+            public string Terrain { get; set; }
+            public int SourceMathBattleNo { get; set; }
+            public MathBattleEstimateSelection[] Selections { get; set; }
+        }
+
+        public class SaveModelBattleBrigadesRequest
+        {
+            public string TurnId { get; set; }
+            public int MathBattleNo { get; set; }
+            public string StateA { get; set; }
+            public string StateB { get; set; }
+            public ModelBattleBrigadeSaveRow[] Rows { get; set; }
+        }
+
+        public class ModelBattleBrigadeSaveRow
+        {
+            public string State { get; set; }
+            public string Name { get; set; }
+            public string Batt1Type { get; set; }
+            public string Batt2Type { get; set; }
+            public string Batt3Type { get; set; }
+            public string Batt4Type { get; set; }
+            public string Batt5Type { get; set; }
+            public string Batt6Type { get; set; }
+            public string Batt7Type { get; set; }
+        }
+
         public class MathBattleFederationCandidateRow
         {
+            public string CandidateKey { get; set; }
+            public string CandidateType { get; set; }
+            public string DisplayName { get; set; }
             public int FederationNo { get; set; }
+            public int? BrigadeItemNo { get; set; }
             public string Position { get; set; }
             public int BrigadeCount { get; set; }
             public int TotalMen { get; set; }
@@ -389,6 +434,13 @@ namespace Austerlitz.Controllers
             public int? CalcArtileery { get; set; }
             public int? CalcHC { get; set; }
             public int? CalcTotal { get; set; }
+        }
+
+        private class ArmyListTypeEfRow
+        {
+            public string State { get; set; }
+            public string ShortName { get; set; }
+            public int EF { get; set; }
         }
     }
 }

@@ -110,16 +110,10 @@ WHERE TurnId = @turnId
                     return BadRequest("Source battle was not found.");
                 }
 
-                var stateA = NormalizeStateCode(sourceBattle.StateA);
-                var stateB = NormalizeStateCode(sourceBattle.StateB);
-                if (replaceState != stateA && replaceState != stateB)
-                {
-                    return BadRequest("Replace state must be one of the source battle states.");
-                }
-
                 var battleSphere = CalcSphere(sourceBattle.X, sourceBattle.Y);
                 var federationRows = dataContext.Database.SqlQuery<FederationBrigadeSourceRow>(@"
 SELECT
+    ItemNo,
     ISNULL(Federation, 0) AS FederationNo,
     X_OrState,
     Y_OrFleet,
@@ -132,8 +126,7 @@ SELECT
     Batt6Type, Batt6EF, Batt6Size,
     Batt7Type, Batt7EF, Batt7Size
 FROM dbo.TR_Brigades
-WHERE TurnId = @turnId
-  AND ISNULL(Federation, 0) BETWEEN 61 AND 90",
+WHERE TurnId = @turnId",
                     new SqlParameter("@turnId", request.TurnId)).ToArray();
 
                 var armyRows = dataContext.Database.SqlQuery<ArmyListCalcRow>(@"
@@ -148,14 +141,18 @@ WHERE State = @state",
                     new SqlParameter("@state", replaceState)).ToArray();
                 var armyLookup = BuildArmyCalcLookup(armyRows);
 
-                var grouped = federationRows
-                    .Where(row => row != null && row.FederationNo > 0)
+                var sphereRows = federationRows
+                    .Where(row => row != null)
                     .Where(row => CalcSphere(ParseAxisText(row.X_OrState), ParseAxisText(row.Y_OrFleet)) == battleSphere)
+                    .ToArray();
+
+                var grouped = sphereRows
+                    .Where(row => row != null && row.FederationNo > 0)
                     .GroupBy(row => row.FederationNo)
                     .OrderBy(group => group.Key)
                     .ToArray();
 
-                var candidates = grouped.Select(group =>
+                var federationCandidates = grouped.Select(group =>
                 {
                     var calc = new FederationCalcAccumulator();
                     var first = group.FirstOrDefault();
@@ -167,7 +164,11 @@ WHERE State = @state",
 
                     return new MathBattleFederationCandidateRow
                     {
+                        CandidateKey = "FED:" + group.Key,
+                        CandidateType = "Federation",
+                        DisplayName = "Federation " + group.Key,
                         FederationNo = group.Key,
+                        BrigadeItemNo = null,
                         Position = position,
                         BrigadeCount = group.Count(),
                         TotalMen = calc.TotalMen,
@@ -177,6 +178,34 @@ WHERE State = @state",
                         EstimatedTotal = (int)Math.Round(calc.Total)
                     };
                 }).ToArray();
+
+                var looseBrigadeCandidates = sphereRows
+                    .Where(row => row.FederationNo <= 0)
+                    .OrderBy(row => row.ItemNo)
+                    .Select(row =>
+                    {
+                        var calc = new FederationCalcAccumulator();
+                        AddBrigadeToFederationCalc(calc, row, armyLookup);
+                        var position = FormatPosition(ParseAxisText(row.X_OrState), ParseAxisText(row.Y_OrFleet));
+                        var brigadeName = string.IsNullOrWhiteSpace(row.Name) ? ("Brigade " + row.ItemNo) : row.Name.Trim();
+                        return new MathBattleFederationCandidateRow
+                        {
+                            CandidateKey = "BDE:" + row.ItemNo,
+                            CandidateType = "Brigade",
+                            DisplayName = row.ItemNo + " - " + brigadeName,
+                            FederationNo = 0,
+                            BrigadeItemNo = row.ItemNo,
+                            Position = position,
+                            BrigadeCount = 1,
+                            TotalMen = calc.TotalMen,
+                            EstimatedLR = (int)Math.Round(calc.LR),
+                            EstimatedArtillery = (int)Math.Round(calc.Artillery),
+                            EstimatedHC = (int)Math.Round(calc.HC),
+                            EstimatedTotal = (int)Math.Round(calc.Total)
+                        };
+                    }).ToArray();
+
+                var candidates = federationCandidates.Concat(looseBrigadeCandidates).ToArray();
 
                 return Ok(candidates);
             }

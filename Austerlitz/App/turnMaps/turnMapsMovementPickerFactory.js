@@ -252,7 +252,7 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     if (resolvedTransportNo != null && resolvedTransportNo > 0) {
                         ts20LockedFleetByFleetNo[resolvedTransportNo] = true;
                     }
-                } else if (isTs20LoadOrder && (landedKind === 'commander' || landedKind === 'spy')) {
+                } else if (isTs20LoadOrder && landedKind === 'commander') {
                     if (resolvedTransportNo != null && resolvedTransportNo > 0) {
                         ts20LockedShipByItemNo[resolvedTransportNo] = true;
                     }
@@ -567,7 +567,11 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     && opts.boardingLookups.ts20LoadByUnitItemNo
                     && opts.boardingLookups.ts20LoadByUnitItemNo[rowItemId] === true;
                 if (isLoadedLandUnit) {
-                    row.isSelectable = isLoadedThisTurnByTs20;
+                    if ((row.movementDetail && row.movementDetail.unitKind) === 'spy') {
+                        row.isSelectable = false;
+                    } else {
+                        row.isSelectable = isLoadedThisTurnByTs20;
+                    }
                 }
                 var isTs20LockedNaval = isTs20NavalMovementLocked(
                     row,

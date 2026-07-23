@@ -566,7 +566,7 @@
         <table class="table table-condensed" style="font-size:11px">
           <thead>
             <tr>
-              <th></th><th>No</th><th>Type</th><th>Name</th><th>x/y</th><th>Fleet</th><th>MP</th>
+              <th></th><th>No</th><th>Type</th><th>Name</th><th>x/y</th><th>Fleet</th><th></th><th>MP</th>
             </tr>
           </thead>
           <tbody>
@@ -577,6 +577,7 @@
                   class="btn btn-xs"
                   ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
                   ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
+                  ng-disabled="!isNavyShipStaged(ship) && !canStageNavyShip(ship)"
                 >{{isNavyShipStaged(ship) ? 'Added' : 'Add Ship'}}</button>
               </td>
               <td>{{ship.id}}</td>
@@ -584,6 +585,15 @@
               <td>{{ship.name}}</td>
               <td>{{ship.position}}</td>
               <td>{{ship.fleet || '-'}}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-xs"
+                  ng-class="isNavyFleetGroupLocked(ship) ? 'btn-primary' : 'btn-default'"
+                  ng-click="stageNavyFleetForFleet(ship)"
+                  ng-disabled="!canStageNavyFleet(ship)"
+                >{{isNavyFleetGroupLocked(ship) ? 'Added Fed' : 'Add Fed'}}</button>
+              </td>
               <td>{{ship.mp}}</td>
             </tr>
             <tr ng-repeat="ship in getNavyFederationMerchants()">
@@ -593,6 +603,7 @@
                   class="btn btn-xs"
                   ng-class="isNavyShipStaged(ship) ? 'btn-primary' : 'btn-default'"
                   ng-click="isNavyShipStaged(ship) ? unstageNavyFleetForShip(ship) : stageNavyFleetForShip(ship)"
+                  ng-disabled="!isNavyShipStaged(ship) && !canStageNavyShip(ship)"
                 >{{isNavyShipStaged(ship) ? 'Added' : 'Add Ship'}}</button>
               </td>
               <td>{{ship.id}}</td>
@@ -600,6 +611,15 @@
               <td>(merchant)</td>
               <td>{{ship.position}}</td>
               <td>{{ship.fleet || '-'}}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-xs"
+                  ng-class="isNavyFleetGroupLocked(ship) ? 'btn-primary' : 'btn-default'"
+                  ng-click="stageNavyFleetForFleet(ship)"
+                  ng-disabled="!canStageNavyFleet(ship)"
+                >{{isNavyFleetGroupLocked(ship) ? 'Added Fed' : 'Add Fed'}}</button>
+              </td>
               <td>{{ship.mp}}</td>
             </tr>
           </tbody>
@@ -610,7 +630,9 @@
         <strong>Staged orders:</strong>
         <ul style="font-size:11px;margin:4px 0 0">
           <li ng-repeat="o in navyFormFederationModal.stagedOrders">
-            Ship {{o.shipId || o.itemNo}} &rarr; Fleet {{o.federation_Fleet}}
+            {{o.orderType === 'fleet'
+              ? ('Fleet ' + o.sourceFleetNo + ' -> Fleet ' + o.federation_Fleet)
+              : ('Ship ' + (o.shipId || o.itemNo) + ' -> Fleet ' + o.federation_Fleet)}}
           </li>
         </ul>
       </div>

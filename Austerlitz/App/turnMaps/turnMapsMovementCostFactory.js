@@ -40,7 +40,7 @@ austerlitzModule.factory('turnMapsMovementCostFactory', function () {
             moveCost = opts.getTerrainMP(terrain);
         }
 
-        if (isColonialCoordinate(coord) && moveCost > 0 && moveCost < 999) {
+        if (!isShip && isColonialCoordinate(coord) && moveCost > 0 && moveCost < 999) {
             moveCost = moveCost * 2;
         }
 

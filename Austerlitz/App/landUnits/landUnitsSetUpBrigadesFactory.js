@@ -65,6 +65,18 @@ austerlitzModule.factory(
       return text;
     }
 
+    function getCurrentSetUpSphere($scope) {
+      var selectedSphere = normalizeSphereName($scope && $scope.selectedSphere);
+      if (
+        !selectedSphere ||
+        selectedSphere === SPHERE_ALL ||
+        selectedSphere === SPHERE_UNKNOWN
+      ) {
+        return null;
+      }
+      return selectedSphere;
+    }
+
     function hasPositiveIntValue(value) {
       return turnSheetValueRulesFactory.hasPositiveIntValue(value);
     }
@@ -131,6 +143,9 @@ austerlitzModule.factory(
 
     return {
       attach: function ($scope, rulesCatalogFactory, turnSheetFactory) {
+        $scope.lastSetUpDepotBySphere = $scope.lastSetUpDepotBySphere || {};
+        $scope.lastSetUpDepotItemNo = toInt($scope.lastSetUpDepotItemNo, 0) || null;
+
         // SECTION: Shared sort and normalization helpers.
         $scope.getTsTypeSortOrder = function (tsType) {
           var idx = TS_COST_TYPE_ORDER.indexOf(tsType);
@@ -463,8 +478,113 @@ austerlitzModule.factory(
               return;
             }
           }
+          if (selectedDepot > 0) {
+            $scope.lastSetUpDepotItemNo = selectedDepot;
+            var selectedDepotOption = $scope.getSetUpDepotOptionByItemNo(
+              selectedDepot,
+            );
+            var selectedDepotSphere = normalizeSphereName(
+              (selectedDepotOption && selectedDepotOption.sphere) ||
+                $scope.getSphereFromDepotItemNo(selectedDepot),
+            );
+            if (
+              selectedDepotSphere &&
+              selectedDepotSphere !== SPHERE_ALL &&
+              selectedDepotSphere !== SPHERE_UNKNOWN
+            ) {
+              $scope.lastSetUpDepotBySphere[selectedDepotSphere] = selectedDepot;
+            }
+          }
           $scope.queueSetUpTsSave("SetUpBrigades");
           $scope.recalculateTransferGoodsForSetUpBrigades();
+        };
+
+        $scope.tryAutoSelectSetUpDepotForBattalion = function (row, armyItemNo) {
+          if (!row || hasPositiveIntValue(row.depot)) {
+            return { attempted: false, selected: hasPositiveIntValue(row.depot) };
+          }
+
+          var currentSphere = getCurrentSetUpSphere($scope);
+          var candidateDepotNos = [];
+          var currentOrderNo = toInt(row.orderNo, 0);
+
+          function addCandidateDepot(itemNo) {
+            var normalized = toInt(itemNo, 0);
+            if (!normalized) return;
+            if (candidateDepotNos.indexOf(normalized) >= 0) return;
+            candidateDepotNos.push(normalized);
+          }
+
+          if (currentSphere) {
+            addCandidateDepot(
+              toInt(($scope.lastSetUpDepotBySphere || {})[currentSphere], 0),
+            );
+          }
+          addCandidateDepot(toInt($scope.lastSetUpDepotItemNo, 0));
+
+          var nearestPriorDepot = null;
+          var nearestPriorOrderNo = 0;
+          angular.forEach($scope.tsSetUpBrigadesRows || [], function (candidateRow) {
+            if (!candidateRow) return;
+            var candidateOrderNo = toInt(candidateRow.orderNo, 0);
+            if (!candidateOrderNo || candidateOrderNo >= currentOrderNo) return;
+            var candidateDepotNo = toInt(candidateRow.depot, 0);
+            if (!candidateDepotNo) return;
+            if (currentSphere) {
+              var candidateSphere = normalizeSphereName(
+                $scope.getSphereFromDepotItemNo(candidateDepotNo),
+              );
+              if (candidateSphere !== currentSphere) return;
+            }
+            if (candidateOrderNo <= nearestPriorOrderNo) return;
+            nearestPriorOrderNo = candidateOrderNo;
+            nearestPriorDepot = candidateDepotNo;
+          });
+          addCandidateDepot(nearestPriorDepot);
+
+          if (!nearestPriorDepot) {
+            var latestAnyPriorDepot = null;
+            angular.forEach(
+              ($scope.tsSetUpBrigadesRows || []).slice().reverse(),
+              function (candidateRow) {
+                if (latestAnyPriorDepot != null) return;
+                if (!candidateRow) return;
+                var candidateOrderNo = toInt(candidateRow.orderNo, 0);
+                if (!candidateOrderNo || candidateOrderNo >= currentOrderNo)
+                  return;
+                var candidateDepotNo = toInt(candidateRow.depot, 0);
+                if (!candidateDepotNo) return;
+                latestAnyPriorDepot = candidateDepotNo;
+              },
+            );
+            addCandidateDepot(latestAnyPriorDepot);
+          }
+
+          var preferredDepot = null;
+          for (var i = 0; i < candidateDepotNos.length; i++) {
+            var candidateDepotNo = toInt(candidateDepotNos[i], 0);
+            if (!candidateDepotNo) continue;
+            var candidateDepotOption = $scope.getSetUpDepotOptionByItemNo(
+              candidateDepotNo,
+            );
+            if (!candidateDepotOption) continue;
+            var candidateSphere = normalizeSphereName(
+              candidateDepotOption.sphere,
+            );
+            if (currentSphere && candidateSphere !== currentSphere) continue;
+            if (
+              !$scope.canAddArmyItemToDepotSphere(armyItemNo, candidateSphere)
+            ) {
+              continue;
+            }
+            preferredDepot = candidateDepotNo;
+            break;
+          }
+          if (!preferredDepot) return { attempted: false, selected: false };
+
+          row.depot = preferredDepot;
+          $scope.setSetUpDepot(row);
+          return { attempted: true, selected: hasPositiveIntValue(row.depot) };
         };
 
         $scope.paintSetUpBattalion = function (row, battField) {
@@ -474,13 +594,29 @@ austerlitzModule.factory(
             !$scope.selectedSetUpArmyItem
           )
             return;
+          var itemNo = toInt($scope.selectedSetUpArmyItem.itemNo, 0);
+          if (!hasPositiveIntValue(row.depot)) {
+            var autoDepotResult = $scope.tryAutoSelectSetUpDepotForBattalion(
+              row,
+              itemNo,
+            );
+            if (autoDepotResult.selected) {
+              // Depot was auto-assigned from last sphere selection; continue.
+            } else if (autoDepotResult.attempted) {
+              return;
+            } else {
+              alert(
+                "Select a barracks/shipyard for this row before adding battalions.",
+              );
+              return;
+            }
+          }
           if (!hasPositiveIntValue(row.depot)) {
             alert(
               "Select a barracks/shipyard for this row before adding battalions.",
             );
             return;
           }
-          var itemNo = toInt($scope.selectedSetUpArmyItem.itemNo, 0);
           var rowSphere = normalizeSphereName(
             $scope.getSphereFromDepotItemNo(row.depot),
           );
@@ -522,6 +658,49 @@ austerlitzModule.factory(
           row.brigadeName = "";
           $scope.queueSetUpTsSave("SetUpBrigades");
           $scope.recalculateTransferGoodsForSetUpBrigades();
+        };
+
+        $scope.repeatSetUpBrigadesRow = function (row) {
+          if (!row) return;
+          var currentOrderNo = toInt(row.orderNo, 0);
+          if (currentOrderNo <= 0) return;
+          if (currentOrderNo >= MAX_SET_UP_BRIGADES_ROWS) {
+            alert("cant repeat last row");
+            return;
+          }
+
+          var nextRow = null;
+          angular.forEach($scope.tsSetUpBrigadesRows || [], function (candidate) {
+            if (nextRow) return;
+            if (toInt(candidate && candidate.orderNo, 0) === currentOrderNo + 1) {
+              nextRow = candidate;
+            }
+          });
+
+          if (!nextRow) {
+            alert("cant repeat last row");
+            return;
+          }
+
+          if (hasAnySetUpRowData(nextRow)) {
+            alert("cant repeat row because next row is already specified");
+            return;
+          }
+
+          nextRow.depot = toInt(row.depot, null);
+          angular.forEach(BATT_FIELDS, function (field) {
+            nextRow[field] = toInt(row[field], null);
+          });
+          nextRow.brigadeName = hasMeaningfulText(row.brigadeName)
+            ? row.brigadeName.toString().trim()
+            : "";
+
+          if (hasPositiveIntValue(nextRow.depot)) {
+            $scope.setSetUpDepot(nextRow);
+          } else {
+            $scope.queueSetUpTsSave("SetUpBrigades");
+            $scope.recalculateTransferGoodsForSetUpBrigades();
+          }
         };
 
         $scope.isBrigadeSetupIncomplete = function (setUpRow) {

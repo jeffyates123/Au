@@ -63,14 +63,38 @@
             }).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         },
-        createTRFederationEstimatedMathBattle: function (turnId, sourceMathBattleNo, sourcePhase, replaceState, federationNo) {
+        createTRFederationEstimatedMathBattle: function (turnId, sourceMathBattleNo, sourcePhase, replaceState, federationNo, selections) {
             var deferred = $q.defer();
             $http.post('/Api/TurnReportApi/createTRFederationEstimatedMathBattle', {
                 turnId: turnId,
                 sourceMathBattleNo: sourceMathBattleNo,
                 sourcePhase: sourcePhase,
                 replaceState: replaceState,
-                federationNo: federationNo
+                federationNo: federationNo,
+                selections: selections || []
+            }).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        createTRModelEstimatedMathBattle: function (turnId, stateA, stateB, terrain, sourceMathBattleNo, selections) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/createTRModelEstimatedMathBattle', {
+                turnId: turnId,
+                stateA: stateA,
+                stateB: stateB,
+                terrain: terrain,
+                sourceMathBattleNo: sourceMathBattleNo || 0,
+                selections: selections || []
+            }).success(deferred.resolve).error(deferred.reject);
+            return deferred.promise;
+        },
+        saveTRModelBattleBrigades: function (turnId, mathBattleNo, stateA, stateB, rows) {
+            var deferred = $q.defer();
+            $http.post('/Api/TurnReportApi/saveTRModelBattleBrigades', {
+                turnId: turnId,
+                mathBattleNo: mathBattleNo,
+                stateA: stateA,
+                stateB: stateB,
+                rows: rows || []
             }).success(deferred.resolve).error(deferred.reject);
             return deferred.promise;
         }

@@ -253,7 +253,7 @@
               ng-class="{ economyHighlightRow: item.highlight, economyTotalLineRow: item.totalLine }"
             >
               <td>{{item.label}}</td>
-              <td>
+              <td ng-class="getFinanceValueClass(item)">
                 <input
                   ng-if="item.editable"
                   type="text"
@@ -263,7 +263,7 @@
                   ng-model-options="{ updateOn: 'default blur' }"
                   ng-change="onEconomyFinanceRowInputChanged(item)"
                 />
-                <span ng-if="!item.editable">{{formatNumber(item.value)}}</span>
+                <span ng-if="!item.editable">{{formatNumber(getFinanceDisplayValue(item))}}</span>
               </td>
             </tr>
           </tbody>

@@ -13,6 +13,15 @@ namespace Austerlitz
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
             routes.IgnoreRoute("Templates/{*pathInfo}");
+            routes.IgnoreRoute("Content/{*pathInfo}");
+            routes.IgnoreRoute("Scripts/{*pathInfo}");
+
+            routes.MapRoute(
+                name: "SpaFallback",
+                url: "{*path}",
+                defaults: new { controller = "Home", action = "Index" },
+                constraints: new { path = @"^(?!api/).*$" }
+            );
 
             routes.MapRoute(
                 name: "Default",

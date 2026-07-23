@@ -1714,30 +1714,35 @@ textarea {
 }
 
 .landUnitsSetUpTable .landUnitsIdCol {
-    width: 42px;
+    width: 12px;
 }
 
 .landUnitsSetUpTable .landUnitsSetUpDepotCol {
-    min-width: 120px;
-    width: 120px;
+    min-width: 88px;
+    width: 88px;
 }
 
 .landUnitsSetUpTable .landUnitsPositionCol {
-    width: 48px;
+    width: 34px;
 }
 
 .landUnitsSetUpTable .landUnitsBattalionCol {
-    width: 92px;
+    width: 48px;
     text-align: center;
 }
 
 .landUnitsSetUpTable .landUnitsNameCol {
-    min-width: 150px;
-    width: 150px;
+    min-width: 68px;
+    width: 68px;
 }
 
 .landUnitsSetUpTable .landUnitsMenuCol {
-    width: 58px;
+    width: 86px;
+}
+
+.landUnitsSetUpTable > thead > tr > th,
+.landUnitsSetUpTable > tbody > tr > td {
+    white-space: normal;
 }
 
 .landUnitsExistingArmyTable {
@@ -2037,12 +2042,43 @@ textarea {
 }
 
 .landUnitsSetUpTable > thead > tr > th {
-    padding: 8px 8px;
+    padding: 4px 4px;
 }
 
 .landUnitsSetUpTable > tbody > tr > td {
-    padding: 7px 8px;
+    padding: 4px 4px;
     vertical-align: middle;
+}
+
+.landUnitsSetUpTable .landUnitsIdCol,
+.landUnitsSetUpTable .landUnitsBattalionCol,
+.mathBattleModelCompactTable .landUnitsIdCol,
+.mathBattleModelCompactTable .landUnitsBattalionCol {
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
+
+.landUnitsSetUpTable .landUnitsIdCol {
+    padding-right: 0 !important;
+}
+
+.landUnitsSetUpTable .landUnitsSetUpDepotSelect,
+.landUnitsSetUpTable .landUnitsRenameInput {
+    height: 24px;
+    font-size: 11px;
+    padding: 1px 4px;
+}
+
+.landUnitsSetUpTable .btn.btn-default.btn-xs {
+    font-size: 11px;
+    padding: 1px 4px;
+}
+
+.landUnitsSetUpRowActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
 }
 
 .landUnitsSetUpBrushBar {
@@ -2098,6 +2134,13 @@ textarea {
     color: #555;
     font-size: 11px;
     line-height: 1.25;
+}
+
+.landUnitsSetUpTable .landUnitsBattalionChip,
+.mathBattleModelCompactTable .landUnitsBattalionChip {
+    min-width: 40px;
+    padding: 1px 2px;
+    font-size: 11px;
 }
 
 .landUnitsFederationChip {
@@ -2539,6 +2582,27 @@ textarea {
     margin-right: 6px;
 }
 
+.mathBattleModelCreateRow {
+    margin: 4px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mathBattleModelCreateLabel {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.mathBattleModelStateSelect {
+    max-width: 220px;
+}
+
+.mathBattleModelTroopSelect {
+    min-width: 260px;
+    max-width: 360px;
+}
+
 .mathBattleSelector .btn.mathBattleEstimatedButton {
     background-color: #fff3cd;
     border-color: #d5b96c;
@@ -2589,6 +2653,51 @@ textarea {
 .mathBattleResultBlock {
     font-family: "Courier New", monospace;
     line-height: 1.45;
+}
+
+.mathBattleModelArmyPicker {
+    margin-top: 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.mathBattleModelArmyPicker .landUnitsArmyListTable {
+    table-layout: fixed;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.landUnitsSetUpPickerWrap .landUnitsArmyListTable,
+.mathBattleModelArmyPicker .landUnitsArmyListTable {
+    width: 100%;
+}
+
+.landUnitsSetUpPickerWrap .landUnitsArmyListTable > thead > tr > th,
+.landUnitsSetUpPickerWrap .landUnitsArmyListTable > tbody > tr > td,
+.mathBattleModelArmyPicker .landUnitsArmyListTable > thead > tr > th,
+.mathBattleModelArmyPicker .landUnitsArmyListTable > tbody > tr > td {
+    padding: 4px 4px;
+}
+
+.mathBattleModelCompactTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+    font-size: 12px;
+}
+
+.mathBattleModelCompactTable .landUnitsNameCol {
+    width: 88px;
+}
+
+.mathBattleModelCompactTable .landUnitsBattalionCol {
+    width: 74px;
+}
+
+.mathBattleModelCompactTable > thead > tr > th,
+.mathBattleModelCompactTable > tbody > tr > td {
+    padding: 4px 4px;
 }
 
 .mathBattlesStatsSubtitle {

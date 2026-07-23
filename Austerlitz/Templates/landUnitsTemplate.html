@@ -46,7 +46,7 @@
               class="landUnitsBattalionCol"
               ng-repeat="index in [1,2,3,4,5,6,7]"
             >
-              Battalion {{index}}
+              Batt {{index}}
             </th>
             <th class="landUnitsNameCol">Brigade Name</th>
             <th class="landUnitsMenuCol"></th>
@@ -98,14 +98,24 @@
               />
             </td>
             <td class="landUnitsMenuCol">
-              <button
-                type="button"
-                class="btn btn-default btn-xs"
-                ng-click="clearSetUpBrigadesRow(setUpRow)"
-                title="Delete row"
-              >
-                Delete
-              </button>
+              <div class="landUnitsSetUpRowActions">
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs"
+                  ng-click="repeatSetUpBrigadesRow(setUpRow)"
+                  title="Repeat row"
+                >
+                  Repeat
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs"
+                  ng-click="clearSetUpBrigadesRow(setUpRow)"
+                  title="Delete row"
+                >
+                  Delete
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -574,7 +584,7 @@
               class="landUnitsBattalionCol"
               ng-repeat="index in [1,2,3,4,5,6,7]"
             >
-              Battalion {{index}}
+              Batt {{index}}
             </th>
             <th class="landUnitsToggleCol">H/C</th>
             <th class="landUnitsToggleCol">Train</th>

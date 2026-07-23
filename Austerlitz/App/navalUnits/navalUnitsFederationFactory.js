@@ -21,6 +21,51 @@ austerlitzModule.factory(
         return ($scope.warshipRows || []).concat($scope.merchantRows || []);
       }
 
+      function getShipEffectiveFleetNo(ship) {
+        var fleetNo = navyFleetValidationFactory.toInt(ship && ship.fleet);
+        return navyFleetValidationFactory.isPlayableFleetNo(fleetNo) ? fleetNo : null;
+      }
+
+      function getLockedFleetGroups() {
+        return (
+          ($scope.navyFormFederationModal &&
+            $scope.navyFormFederationModal.lockedFleetGroups) ||
+          {}
+        );
+      }
+
+      function lockFleetGroup(fleetNo) {
+        if (!navyFleetValidationFactory.isPlayableFleetNo(fleetNo)) {
+          return;
+        }
+        $scope.navyFormFederationModal.lockedFleetGroups =
+          $scope.navyFormFederationModal.lockedFleetGroups || {};
+        $scope.navyFormFederationModal.lockedFleetGroups[fleetNo] = true;
+      }
+
+      function unlockFleetGroup(fleetNo) {
+        if (!navyFleetValidationFactory.isPlayableFleetNo(fleetNo)) {
+          return;
+        }
+        if (
+          !$scope.navyFormFederationModal ||
+          !$scope.navyFormFederationModal.lockedFleetGroups
+        ) {
+          return;
+        }
+        delete $scope.navyFormFederationModal.lockedFleetGroups[fleetNo];
+      }
+
+      function getShipsByEffectiveFleetNo(fleetNo) {
+        var parsedFleetNo = navyFleetValidationFactory.toInt(fleetNo);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(parsedFleetNo)) {
+          return [];
+        }
+        return getAllShips().filter(function (ship) {
+          return $scope.sameNullableInt(getShipEffectiveFleetNo(ship), parsedFleetNo);
+        });
+      }
+
       function getShipsByOriginalFleetNo(fleetNo) {
         return getAllShips().filter(function (ship) {
           var sourceFleet =
@@ -312,6 +357,7 @@ austerlitzModule.factory(
         $scope.navyFormFederationModal.targetFleetNo = targetFleetNo;
         $scope.navyFormFederationModal.validationError = "";
         $scope.navyFormFederationModal.stagedOrders = [];
+        $scope.navyFormFederationModal.lockedFleetGroups = {};
         $scope.stageNavyFleetForShip(ship);
       };
 
@@ -321,12 +367,55 @@ austerlitzModule.factory(
         $scope.navyFormFederationModal.targetFleetNo = null;
         $scope.navyFormFederationModal.validationError = "";
         $scope.navyFormFederationModal.stagedOrders = [];
+        $scope.navyFormFederationModal.lockedFleetGroups = {};
+      };
+
+      $scope.isNavyFleetGroupLocked = function (ship) {
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) {
+          return false;
+        }
+        return !!getLockedFleetGroups()[sourceFleetNo];
+      };
+
+      $scope.canStageNavyShip = function (ship) {
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) {
+          return true;
+        }
+        return !$scope.isNavyFleetGroupLocked(ship);
+      };
+
+      $scope.isNavyFleetOrderStagedForShip = function (ship) {
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) {
+          return false;
+        }
+
+        return ($scope.navyFormFederationModal.stagedOrders || []).some(
+          function (order) {
+            return (
+              order &&
+              order.orderType === "fleet" &&
+              $scope.sameNullableInt(order.sourceFleetNo, sourceFleetNo)
+            );
+          },
+        );
+      };
+
+      $scope.canStageNavyFleet = function (ship) {
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) {
+          return false;
+        }
+        return !$scope.isNavyFleetGroupLocked(ship);
       };
 
       $scope.stageNavyFleetForShip = function (ship) {
         if (!ship) return;
         var targetFleetNo = $scope.getNavyFederationTargetNo();
         if (!$scope.isValidNavyFleetNo(targetFleetNo)) return;
+        if (!$scope.canStageNavyShip(ship)) return;
 
         var shipId = parseInt(ship.id, 10);
         if (isNaN(shipId)) return;
@@ -344,6 +433,83 @@ austerlitzModule.factory(
           shipId: ship.id,
         });
         $scope.navyFormFederationModal.stagedOrders = stagedOrders;
+      };
+
+      $scope.stageNavyFleetForFleet = function (ship) {
+        if (!ship) return;
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) return;
+        if (!$scope.canStageNavyFleet(ship)) return;
+
+        var targetFleetNo = $scope.getNavyFederationTargetNo();
+        if (!$scope.isValidNavyFleetNo(targetFleetNo)) return;
+
+        var stagedOrders = $scope.navyFormFederationModal.stagedOrders || [];
+        stagedOrders = stagedOrders.filter(function (order) {
+          if (!order) {
+            return false;
+          }
+
+          if (order.orderType === "fleet") {
+            return true;
+          }
+
+          var stagedShip = $scope.getShipById(order.itemNo);
+          if (!stagedShip) {
+            return true;
+          }
+
+          return !$scope.sameNullableInt(
+            getShipEffectiveFleetNo(stagedShip),
+            sourceFleetNo,
+          );
+        });
+
+        var existingFleetOrder = null;
+        for (var i = 0; i < stagedOrders.length; i++) {
+          var stagedOrder = stagedOrders[i];
+          if (
+            stagedOrder &&
+            stagedOrder.orderType === "fleet" &&
+            $scope.sameNullableInt(stagedOrder.sourceFleetNo, sourceFleetNo)
+          ) {
+            existingFleetOrder = stagedOrder;
+            break;
+          }
+        }
+
+        if (existingFleetOrder) {
+          existingFleetOrder.federation_Fleet = targetFleetNo;
+        } else {
+          stagedOrders.push({
+            orderType: "fleet",
+            itemNo: sourceFleetNo,
+            sourceFleetNo: sourceFleetNo,
+            federation_Fleet: targetFleetNo,
+            shipId: null,
+          });
+        }
+
+        $scope.navyFormFederationModal.stagedOrders = stagedOrders;
+        lockFleetGroup(sourceFleetNo);
+      };
+
+      $scope.unstageNavyFleetForFleet = function (ship) {
+        if (!ship) return;
+        var sourceFleetNo = getShipEffectiveFleetNo(ship);
+        if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) return;
+
+        $scope.navyFormFederationModal.stagedOrders = (
+          $scope.navyFormFederationModal.stagedOrders || []
+        ).filter(function (order) {
+          return !(
+            order &&
+            order.orderType === "fleet" &&
+            $scope.sameNullableInt(order.sourceFleetNo, sourceFleetNo)
+          );
+        });
+
+        unlockFleetGroup(sourceFleetNo);
       };
 
       $scope.unstageNavyFleetForShip = function (ship) {
@@ -440,13 +606,43 @@ austerlitzModule.factory(
               .postTSRecords(rows, "FormFederations")
               .then(function () {
                 $scope.navyFormFederationRows = rows;
+                var shipsByFleetAtSave = {};
                 angular.forEach(stagedOrders, function (order) {
+                  if (!(order && order.orderType === "fleet")) {
+                    return;
+                  }
+                  var sourceFleetNo = navyFleetValidationFactory.toInt(
+                    order.sourceFleetNo,
+                  );
+                  if (!navyFleetValidationFactory.isPlayableFleetNo(sourceFleetNo)) {
+                    return;
+                  }
+                  if (!shipsByFleetAtSave[sourceFleetNo]) {
+                    shipsByFleetAtSave[sourceFleetNo] =
+                      getShipsByEffectiveFleetNo(sourceFleetNo).slice();
+                  }
+                });
+
+                angular.forEach(stagedOrders, function (order) {
+                  var formatted =
+                    navyFleetValidationFactory.isAssignedFleetNo(order.federation_Fleet)
+                      ? turnAssignmentResolverFactory.toInt(order.federation_Fleet)
+                      : "";
+
+                  if (order && order.orderType === "fleet") {
+                    var sourceFleetNo = navyFleetValidationFactory.toInt(
+                      order.sourceFleetNo,
+                    );
+                    applyFleetToShips(
+                      shipsByFleetAtSave[sourceFleetNo] || [],
+                      formatted,
+                      true,
+                    );
+                    return;
+                  }
+
                   var ship = $scope.getShipById(order.itemNo);
                   if (ship) {
-                    var formatted =
-                      navyFleetValidationFactory.isAssignedFleetNo(order.federation_Fleet)
-                        ? turnAssignmentResolverFactory.toInt(order.federation_Fleet)
-                        : "";
                     ship.fleet = formatted;
                     ship.fleetChanged = true;
                   }

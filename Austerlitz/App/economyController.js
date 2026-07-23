@@ -1454,7 +1454,7 @@ austerlitzModule.controller(
       var economySummary = ($scope.masterData && $scope.masterData.turnReport && ($scope.masterData.turnReport.economySummary || $scope.masterData.turnReport.EconomySummary)) || {};
       var productionTotals = sumResourceRows(productionRows);
       var barracksTotals = sumBarracksGoodsForSphere(tabKey);
-      var barracksLd = toInt(barracksTotals.money, 0);
+      var barracksLd = Math.abs(toInt(barracksTotals.money, 0));
       var maintenanceLd = sumProductionMaintenanceLd(productionRows);
       var productionBuildLd = productionRows.reduce(function (sum, row) { return sum + toInt(row.buildLd, 0); }, 0);
 
@@ -1525,6 +1525,7 @@ austerlitzModule.controller(
         taxes +
         interSphereTransferTotals.transferFromLd -
         interSphereTransferTotals.transferToLd +
+        barracksLd +
         toInt(productionTotals.money, 0) -
         productionMaintenanceLd -
         productionBuildLd -
@@ -1534,6 +1535,8 @@ austerlitzModule.controller(
         navyMaintenance -
         navyBuildRepairLd;
       var startingRevenue = toInt(warehouse.money, 0);
+      var transferToLd = Math.max(0, toInt(interSphereTransferTotals.transferToLd, 0));
+      var transferFromLd = Math.max(0, toInt(interSphereTransferTotals.transferFromLd, 0));
       var buildFundsDeductions =
         armyMaintTotal +
         navyMaintenance +
@@ -1541,13 +1544,13 @@ austerlitzModule.controller(
         armyBuildingLd +
         armyTrainingLd +
         navyBuildRepairLd +
-        productionBuildLd +
-        barracksLd;
+        productionBuildLd;
       var buildFundsAvailable =
         startingRevenue -
         buildFundsDeductions +
-        interSphereTransferTotals.transferFromLd -
-        interSphereTransferTotals.transferToLd;
+        barracksLd +
+        transferFromLd -
+        transferToLd;
       var interSphereTransferRows = buildTs01InterSphereTransferRows(tabKey);
 
       var rows = [
@@ -1595,6 +1598,20 @@ austerlitzModule.controller(
         }
       }
       return 0;
+    }
+
+    function isFinanceDebitLabel(label) {
+      return (
+        label === "Army Maint" ||
+        label === "Navy Maint" ||
+        label === "Production Maint." ||
+        label === "Army Building" ||
+        label === "Army Training" ||
+        label === "Navy Build & Repair" ||
+        label === "Production Build" ||
+        label === "Direct Buying" ||
+        toText(label, "").indexOf("Transfer TO ") === 0
+      );
     }
 
     function buildEconomyComputedSummaryPayload(buildRows) {
@@ -1707,6 +1724,8 @@ austerlitzModule.controller(
       var productionBuildLd = getValue("productionBuildLd", "ProductionBuildLd");
       var ldInBarracks = getValue("ldInBarracks", "LdInBarracks");
       var interSphereTransferTotals = getInterSphereTransferTotals(tabKey);
+      var transferToLd = Math.max(0, toInt(interSphereTransferTotals.transferToLd, 0));
+      var transferFromLd = Math.max(0, toInt(interSphereTransferTotals.transferFromLd, 0));
       var buildFundsDeductions =
         armyMaintLd +
         navyMaintLd +
@@ -1714,13 +1733,13 @@ austerlitzModule.controller(
         armyBuildingLd +
         armyTrainingLd +
         navyBuildRepairLd +
-        productionBuildLd +
-        ldInBarracks;
+        productionBuildLd;
       var buildFundsAvailable =
         startingRevenue -
         buildFundsDeductions +
-        interSphereTransferTotals.transferFromLd -
-        interSphereTransferTotals.transferToLd;
+        Math.abs(ldInBarracks) +
+        transferFromLd -
+        transferToLd;
 
       var financeRows = [
         { label: "Starting Revenue", value: startingRevenue, totalLine: true },
@@ -2233,6 +2252,28 @@ austerlitzModule.controller(
         return "text-danger";
       }
       return "";
+    };
+
+    $scope.getFinanceDisplayValue = function (item) {
+      var numeric = toInt(item && item.value, 0);
+      if (item && isFinanceDebitLabel(item.label)) {
+        return -Math.abs(numeric);
+      }
+      return numeric;
+    };
+
+    $scope.getFinanceValueClass = function (item) {
+      if (!item) {
+        return "";
+      }
+      if (item.editable) {
+        var editableNumeric = toInt(item.inputValue, toInt(item.value, 0));
+        if (isFinanceDebitLabel(item.label)) {
+          editableNumeric = -Math.abs(editableNumeric);
+        }
+        return $scope.getProductionValueClass(editableNumeric);
+      }
+      return $scope.getProductionValueClass($scope.getFinanceDisplayValue(item));
     };
 
     $scope.getVisibleProductionRows = function () {
