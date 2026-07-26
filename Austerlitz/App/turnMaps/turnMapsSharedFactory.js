@@ -217,6 +217,7 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
 
                 switch ($scope.selectedDisplayOption.name) {
                     case 'Movement':
+                    case 'Movement X':
                     case 'Boarding':
                         baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
                         if (displayField) {

@@ -9,6 +9,10 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         $scope.refreshItemGridRows();
         $scope.refreshMovementPickerDisplayMode();
 
+        if ($scope.isMovementXMode()) {
+            $scope.closeMovementPickerModal();
+        }
+
         if ($scope.isProductionSiteMode()) {
             $scope.pendingRouteSelection = null;
             $scope.selectedMovementRow = null;
@@ -30,6 +34,10 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
 
     $scope.isIntelligenceMode = function () {
         return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'Intelligence');
+    };
+
+    $scope.isMovementXMode = function () {
+        return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'Movement X');
     };
 
     $scope.toggleSelection = function toggleSelection(mapOption) {
@@ -92,6 +100,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
 
             if (selectedRoute) {
                 $scope.applyRouteToMovementRow(movementRow, selectedRoute.segments);
+                $scope.queueAutoSaveTsGrid('Movement');
             }
 
             $scope.pendingRouteSelection = null;
@@ -111,11 +120,24 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         $scope.selectedItemGridCoordinate = { x: x, y: y };
         $scope.refreshItemGridRows();
 
-        if (!$scope.isProductionSiteMode() && coord && coord.units && coord.units.length > 0) {
+        if ($scope.isMovementXMode()) {
+            var hasUnitsAtCoordinate =
+                $scope.hasMovementXArmyUnitAtCoordinate(x, y);
+            $scope.movementXPickerPositionFilter = hasUnitsAtCoordinate
+                ? x + '/' + y
+                : null;
+            $scope.movementXPickerSphereFilter =
+                $scope.getMovementPickerSphereFromCoordinates(x, y);
+            $scope.movementXPickerShowCurrentSelection = false;
+        }
+
+        if (!$scope.isProductionSiteMode()
+            && coord
+            && ($scope.isMovementXMode() || (coord.units && coord.units.length > 0))) {
             if ($scope.orderUi.suppressCoordinatePickerOpenUntil > new Date().getTime()) {
                 return;
             }
-            $scope.openMovementPickerModal();
+            $scope.openMovementPickerModal($scope.isMovementXMode());
         }
     };
 
@@ -163,6 +185,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             $scope.clearDisplayField();
             $scope.clearRouteCandidates();
             $scope.pendingRouteSelection = null;
+            $scope.queueAutoSaveTsGrid('Movement');
             return;
         }
 

@@ -305,8 +305,21 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         return $scope.getCurrentOrderIndexForMode(mode) === index;
     };
 
-    $scope.openMovementPickerModal = function () {
+    $scope.openMovementPickerModal = function (preserveCoordinateFilter) {
         if ($scope.isProductionSiteMode()) return;
+
+        if ($scope.isMovementXMode() && !preserveCoordinateFilter) {
+            $scope.movementXPickerPositionFilter = null;
+            $scope.movementXPickerShowCurrentSelection = false;
+            if ($scope.selectedMapChoice) {
+                $scope.movementXPickerSphereFilter =
+                    $scope.getMovementPickerSphereFromCoordinates(
+                        $scope.selectedMapChoice.minX,
+                        $scope.selectedMapChoice.minY
+                    );
+            }
+        }
+
         $scope.refreshMovementPickerDisplayMode();
         $scope.orderUi.movementPickerModal.isOpen = true;
     };
@@ -334,6 +347,7 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         angular.forEach($scope.tsMovementList, function (movementRow, idx) {
             if (foundIndex !== -1) return;
             if (!$scope.hasMovementItemNo(movementRow)) return;
+            if (!$scope.hasAnyMovementDirectionOrDistance(movementRow)) return;
 
             if (movementRow.itemNo == itemNo) {
                 foundIndex = idx;
@@ -369,7 +383,8 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         if (!isNaN(currentIndex)
             && currentIndex >= 0
             && currentIndex < $scope.tsMovementList.length
-            && !$scope.hasMovementItemNo($scope.tsMovementList[currentIndex])) {
+            && (!$scope.hasMovementItemNo($scope.tsMovementList[currentIndex])
+                || $scope.shouldAutoClearUnroutedMovementOrder($scope.tsMovementList[currentIndex]))) {
             return currentIndex;
         }
 
@@ -448,7 +463,6 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         targetRow.xy = selectedXy;
         $scope.clearMovementRouteSegments(targetRow);
 
-        $scope.queueAutoSaveTsGrid('Movement');
         if (!$scope.isMovementPickerPanelMode()) {
             $scope.closeMovementPickerModal();
         }

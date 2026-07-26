@@ -406,6 +406,17 @@ textarea {
     max-height: calc(100vh - 190px);
 }
 
+.turnMapsMovementXPaneBody {
+    max-height: calc(100vh - 150px);
+    padding: 8px;
+    overflow: auto;
+}
+
+.turnMapsMovementXPaneBody > existing-army > .landUnitsTabPane {
+    min-width: 1050px;
+    margin-bottom: 0;
+}
+
 .turnMapsPickerPaneEmpty {
     padding: 16px;
 }
@@ -1515,6 +1526,21 @@ textarea {
     color: #222;
 }
 
+.landUnitsTabCheckboxLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    margin-bottom: 0;
+    font-size: 11px;
+    font-weight: normal;
+}
+
+.landUnitsTabCheckboxLabel input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+}
+
 .landUnitsTabPane {
     border: 1px solid #ddd;
     border-top: none;
@@ -2326,6 +2352,62 @@ textarea {
 .landUnitsBoardingModal {
     width: 900px;
     margin-left: -450px;
+}
+
+.existingArmyHostModal {
+    top: 30px;
+    right: 30px;
+    bottom: 30px;
+    left: 30px;
+    width: auto;
+    margin-left: 0;
+}
+
+.existingArmyHostModalBody {
+    max-height: calc(100vh - 110px);
+    padding: 10px;
+    overflow: auto;
+}
+
+.existingArmyHostModalBody > existing-army > .landUnitsTabPane {
+    margin-bottom: 0;
+}
+
+.landUnitsMovementSelectionRow {
+    cursor: pointer;
+}
+
+.landUnitsMovementSelectionRow.landUnitsMovementOrderExists > td {
+    background-color: #d9edf7;
+}
+
+.landUnitsMovementSelectionRow:hover > td,
+.landUnitsMovementSelectionRow.itemGridRowSelected > td {
+    background-color: #f7f0c7;
+}
+
+.landUnitsMovementFederationCol {
+    min-width: 105px;
+    white-space: nowrap;
+}
+
+.landUnitsMovementFederationCol .btn {
+    margin-left: 4px;
+}
+
+.landUnitsMovementSelectionTable .landUnitsColName,
+.landUnitsMovementSelectionTable .landUnitsNameCol {
+    width: 105px;
+}
+
+.landUnitsMovementSelectionTable .landUnitsColFed,
+.landUnitsMovementSelectionTable .landUnitsFedCol {
+    width: 115px;
+}
+
+.landUnitsMovementSelectionTable .landUnitsColMp,
+.landUnitsMovementSelectionTable .landUnitsMpCol {
+    width: 48px;
 }
 
 .landUnitsModal.mapOrdersMovementPickerModal {

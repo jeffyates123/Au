@@ -74,6 +74,12 @@ austerlitzModule.controller('turnMapsController', function (
     $scope.spyTurnReportCacheByTurnId = {};
     $scope.spyLookupRequestId = 0;
     $scope.previousMapCoordinatesByKey = {};
+    $scope.movementXModalMode = true;
+    $scope.movementXPickerPositionFilter = null;
+    $scope.movementXPickerSphereFilter = null;
+    $scope.movementXPickerShowCurrentSelection = false;
+    $scope.movementXSelectedItemNo = null;
+    $scope.movementXSelectedType = null;
 
     $scope.getViewportWidth = function () {
         if ($window && $window.innerWidth) {
@@ -103,7 +109,9 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.orderUi.movementPickerDisplayMode = shouldUsePanel ? 'panel' : 'modal';
 
         if ($scope.orderUi.movementPickerDisplayMode === 'panel') {
-            $scope.orderUi.movementPickerModal.isOpen = true;
+            if (!$scope.isMovementXMode()) {
+                $scope.orderUi.movementPickerModal.isOpen = true;
+            }
             return;
         }
 
@@ -116,12 +124,120 @@ austerlitzModule.controller('turnMapsController', function (
         return $scope.orderUi.movementPickerDisplayMode === 'panel';
     };
 
+    $scope.shouldUseMovementPickerPanelLayout = function () {
+        return $scope.isMovementPickerPanelMode()
+            && (!$scope.isMovementXMode() || $scope.orderUi.movementPickerModal.isOpen);
+    };
+
     $scope.shouldShowMovementPickerModal = function () {
         return $scope.orderUi.movementPickerModal.isOpen && !$scope.isMovementPickerPanelMode();
     };
 
     $scope.shouldShowMovementPickerPanel = function () {
         return $scope.orderUi.movementPickerModal.isOpen && $scope.isMovementPickerPanelMode();
+    };
+
+    $scope.shouldShowMovementXPickerModal = function () {
+        return $scope.orderUi.movementPickerModal.isOpen
+            && $scope.isMovementXMode()
+            && !$scope.isMovementPickerPanelMode();
+    };
+
+    $scope.shouldShowMovementXPickerPanel = function () {
+        return $scope.orderUi.movementPickerModal.isOpen
+            && $scope.isMovementXMode()
+            && $scope.isMovementPickerPanelMode();
+    };
+
+    $scope.hasMovementXArmyUnitAtCoordinate = function (x, y) {
+        return ($scope.filteredMovementItemsForMap || []).some(function (item) {
+            return (item.itemTypeName === "Brigade" || item.itemTypeName === "Commander")
+                && item.x == x
+                && item.y == y;
+        });
+    };
+
+    $scope.selectMovementXArmyUnit = function (unit, selectionType) {
+        if (!unit || unit.id == null) {
+            return;
+        }
+
+        var movementItem = null;
+        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
+            if (movementItem) {
+                return;
+            }
+
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            if (itemNo == unit.id) {
+                movementItem = item;
+            }
+        });
+
+        if (!movementItem) {
+            $scope.selectedCoordinateDetails =
+                "Movement item " + unit.id + " is not available.";
+            return;
+        }
+
+        if (selectionType === "fed") {
+            $scope.movementXPickerPositionFilter = null;
+            $scope.movementXPickerSphereFilter = "All";
+            $scope.movementXSelectedItemNo = unit.fed;
+            $scope.movementXSelectedType = "Fed";
+        } else {
+            $scope.movementXSelectedItemNo = unit.id;
+            $scope.movementXSelectedType = "Item";
+        }
+
+        $scope.movementXPickerShowCurrentSelection = true;
+        $scope.selectMovementOrderItem(
+            movementItem,
+            selectionType === "fed" ? "fed" : "item",
+        );
+    };
+
+    $scope.isMovementXArmyUnitMoved = function (unit) {
+        if (!unit || unit.id == null) {
+            return false;
+        }
+
+        var movementItem = null;
+        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
+            if (movementItem) {
+                return;
+            }
+
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            if (itemNo == unit.id) {
+                movementItem = item;
+            }
+        });
+
+        var effectiveFederationNo = movementItem
+            ? $scope.getEffectiveMovementFederationNoForItem(movementItem)
+            : unit.fed;
+        var hasMovementOrder = false;
+        angular.forEach($scope.tsMovementList || [], function (movementRow) {
+            if (hasMovementOrder
+                || !$scope.hasMovementItemNo(movementRow)
+                || !$scope.hasAnyMovementDirectionOrDistance(movementRow)) {
+                return;
+            }
+
+            var movementItemNo = parseInt(movementRow.itemNo, 10);
+            var isLandFederationOrder = movementItemNo >= 61
+                && movementItemNo <= 90
+                && effectiveFederationNo != null
+                && effectiveFederationNo !== ""
+                && movementRow.itemNo == effectiveFederationNo;
+            var isUnitOrder = !isLandFederationOrder
+                && movementRow.itemNo == unit.id;
+
+            hasMovementOrder = isUnitOrder || isLandFederationOrder;
+        });
+
+        return hasMovementOrder;
     };
 
     $scope.queueAutoSaveTsGrid = function (tsType) {

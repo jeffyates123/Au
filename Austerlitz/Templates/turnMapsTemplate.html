@@ -1,12 +1,12 @@
 <div class="turn-maps-page">
-    <div class="window" ng-class="{ 'turnMapsWideWindow': isMovementPickerPanelMode() }">
+    <div class="window" ng-class="{ 'turnMapsWideWindow': shouldUseMovementPickerPanelLayout() }">
         <!-- Map and controls -->
         <div class="detail turnMapsMainDetail">
 
             <div class="map-toolbar-row">
                 <span class="map-control-item">
                     <label class="control-label-sm">Mode</label>
-                    <select ng-class="{ 'map-mode-movement-highlight': selectedDisplayOption && selectedDisplayOption.name === 'Movement' }"
+                    <select ng-class="{ 'map-mode-movement-highlight': selectedDisplayOption && (selectedDisplayOption.name === 'Movement' || selectedDisplayOption.name === 'Movement X') }"
                             ng-options="(do.name === 'ProductionSite' ? 'Prod.Site' : do.name) for do in displayOptions"
                             ng-model="selectedDisplayOption"
                             ng-change="changeDisplayOption()">
@@ -164,14 +164,14 @@
 
         </div>
 
-        <aside class="turnMapsPickerPane" ng-if="isMovementPickerPanelMode()">
-            <div class="turnMapsPickerPaneEmpty" ng-if="!shouldShowMovementPickerPanel()">
+        <aside class="turnMapsPickerPane" ng-if="shouldUseMovementPickerPanelLayout()">
+            <div class="turnMapsPickerPaneEmpty" ng-if="!isMovementXMode() && !shouldShowMovementPickerPanel()">
                 <h4>Movement Picker</h4>
                 <p class="text-muted">Movement picker is closed.</p>
                 <button type="button" class="btn btn-default btn-sm" ng-click="openMovementPickerModal()">Open Picker</button>
             </div>
 
-            <div ng-if="shouldShowMovementPickerPanel()">
+            <div ng-if="!isMovementXMode() && shouldShowMovementPickerPanel()">
                 <div class="landUnitsModalHeader turnMapsPaneHeader">
                     <div>
                         <h3>Movement Picker (Fed/Fleet)</h3>
@@ -183,6 +183,29 @@
                     <div class="table-responsive mapOrdersModalBody">
                         <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
                     </div>
+                </div>
+            </div>
+
+            <div class="turnMapsMovementXPane" ng-if="shouldShowMovementXPickerPanel()">
+                <div class="landUnitsModalHeader turnMapsPaneHeader">
+                    <div>
+                        <h3>Movement X</h3>
+                        <div class="landUnitsModalSubtitle">Select an army unit or its federation to move.</div>
+                    </div>
+                    <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
+                </div>
+                <div class="turnMapsMovementXPaneBody">
+                    <existing-army
+                        master-data="masterData"
+                        modal-mode="movementXModalMode"
+                        movement-selection="true"
+                        selected-movement-item-no="movementXPickerShowCurrentSelection ? movementXSelectedItemNo : null"
+                        selected-movement-type="movementXPickerShowCurrentSelection ? movementXSelectedType : null"
+                        picker-position-filter="movementXPickerPositionFilter"
+                        picker-sphere-filter="movementXPickerSphereFilter"
+                        is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
+                        on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
+                    </existing-army>
                 </div>
             </div>
         </aside>
@@ -219,8 +242,8 @@
         </div>
     </div>
 
-    <div class="landUnitsModalBackdrop" ng-show="shouldShowMovementPickerModal()" ng-click="closeMovementPickerModal()"></div>
-    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="shouldShowMovementPickerModal()">
+    <div class="landUnitsModalBackdrop" ng-show="shouldShowMovementPickerModal() && !isMovementXMode()" ng-click="closeMovementPickerModal()"></div>
+    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="shouldShowMovementPickerModal() && !isMovementXMode()">
         <div class="landUnitsModalHeader">
             <div>
                 <h3>Movement Picker (Fed/Fleet)</h3>
@@ -232,6 +255,38 @@
             <div class="table-responsive mapOrdersModalBody">
                 <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
             </div>
+        </div>
+    </div>
+
+    <div
+        class="landUnitsModalBackdrop"
+        ng-if="shouldShowMovementXPickerModal()"
+        ng-click="closeMovementPickerModal()">
+    </div>
+    <div
+        class="landUnitsModal existingArmyHostModal"
+        ng-if="shouldShowMovementXPickerModal()">
+        <div class="landUnitsModalHeader">
+            <div>
+                <h3>Movement X</h3>
+                <div class="landUnitsModalSubtitle">Select an army unit or its federation to move.</div>
+            </div>
+            <button type="button" class="close" ng-click="closeMovementPickerModal()">
+                <span>&times;</span>
+            </button>
+        </div>
+        <div class="existingArmyHostModalBody">
+            <existing-army
+                master-data="masterData"
+                modal-mode="movementXModalMode"
+                movement-selection="true"
+                selected-movement-item-no="movementXPickerShowCurrentSelection ? movementXSelectedItemNo : null"
+                selected-movement-type="movementXPickerShowCurrentSelection ? movementXSelectedType : null"
+                picker-position-filter="movementXPickerPositionFilter"
+                picker-sphere-filter="movementXPickerSphereFilter"
+                is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
+                on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
+            </existing-army>
         </div>
     </div>
 </div>

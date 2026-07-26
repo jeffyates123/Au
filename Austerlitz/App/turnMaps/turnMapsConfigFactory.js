@@ -18,7 +18,8 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
         { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
         { name: 'Intelligence', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
-        { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
+        { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
+        { name: 'Movement X', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
     ];
     var wideScreenMinViewportWidth = 1500;
 
@@ -34,7 +35,7 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
                 mapOptions: ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'],
                 selectedMapOptions: ['State', 'Population', 'ProductionSite'],
                 displayOptions: displays,
-                selectedDisplayOption: displays[3],
+                selectedDisplayOption: displays[5],
                 wideScreenMinViewportWidth: wideScreenMinViewportWidth
             };
         },
