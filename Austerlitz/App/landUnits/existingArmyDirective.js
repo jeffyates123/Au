@@ -37,6 +37,7 @@ austerlitzModule.directive("existingArmy", function () {
       landUnitsExchangeMergeFactory,
       unitRenameFactory,
       landUnitsUiFactory,
+      intelligenceBoardingFactory,
     ) {
       var loadedTurnId = null;
 
@@ -59,6 +60,7 @@ austerlitzModule.directive("existingArmy", function () {
       landUnitsExchangeMergeFactory.attach($scope, turnSheetFactory);
       unitRenameFactory.attach($scope, turnSheetFactory);
       landUnitsUiFactory.attach($scope);
+      intelligenceBoardingFactory.attach($scope, turnSheetFactory);
 
       $scope.isModalMode = function () {
         return !!$scope.modalMode;
@@ -117,13 +119,64 @@ austerlitzModule.directive("existingArmy", function () {
         });
       }
 
+      function applySpyMovementPoints() {
+        var movementItems =
+          ($scope.masterData &&
+            $scope.masterData.turnReport &&
+            $scope.masterData.turnReport.movementItemList) ||
+          [];
+        var movementItemMpBySpyId = {};
+
+        angular.forEach(movementItems, function (item) {
+          if (!item) {
+            return;
+          }
+
+          if (item.itemTypeName !== "Spy" && item.itemType !== 5) {
+            return;
+          }
+
+          var itemNo =
+            item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+          if (itemNo == null) {
+            return;
+          }
+
+          movementItemMpBySpyId[itemNo] =
+            item.originalMP != null ? item.originalMP : item.mp;
+        });
+
+        angular.forEach($scope.spyRows || [], function (spy) {
+          spy.mp = Object.prototype.hasOwnProperty.call(
+            movementItemMpBySpyId,
+            spy.id,
+          )
+            ? movementItemMpBySpyId[spy.id]
+            : null;
+        });
+      }
+
+      function refreshSpyBoardingState() {
+        return turnSheetFactory.getTSBoarding($scope.masterData.turnId).then(
+          function (rows) {
+            $scope.replaySpyBoardingFromRows(rows || []);
+          },
+          function () {
+            $scope.replaySpyBoardingFromRows([]);
+          },
+        );
+      }
+
       function refreshExistingArmyData() {
         $scope.refreshBrigadeRows();
         $scope.refreshCommanderRows();
+        $scope.refreshSpyRows();
+        applySpyMovementPoints();
         return $scope
           .loadArmyListForHeadcountCosts()
           .then($scope.replayBrigadeTurnOrders)
-          .then(replayLandUnitRenames);
+          .then(replayLandUnitRenames)
+          .then(refreshSpyBoardingState);
       }
 
       $scope.initExistingArmy = function (forceReload) {
@@ -135,6 +188,7 @@ austerlitzModule.directive("existingArmy", function () {
           $scope.federationSummaryRows = [];
           $scope.federationSummaryPairRows = [];
           $scope.commanderRows = [];
+          $scope.spyRows = [];
           loadedTurnId = null;
           return $q.when();
         }
@@ -165,6 +219,7 @@ austerlitzModule.directive("existingArmy", function () {
               $scope.federationSummaryRows = [];
               $scope.federationSummaryPairRows = [];
               $scope.commanderRows = [];
+              $scope.spyRows = [];
             },
           )
           .finally(function () {
@@ -209,6 +264,7 @@ austerlitzModule.directive("existingArmy", function () {
           return [
             (turnReport.brigades || []).length,
             (turnReport.commanders || []).length,
+            (turnReport.spies || []).length,
           ].join("|");
         },
         function (newRowCounts, oldRowCounts) {

@@ -190,12 +190,17 @@
                 <div class="landUnitsModalHeader turnMapsPaneHeader">
                     <div>
                         <h3>Movement X</h3>
-                        <div class="landUnitsModalSubtitle">Select an army unit or its federation to move.</div>
+                        <div class="landUnitsModalSubtitle">Select an army unit, ship, federation, or fleet to move.</div>
                     </div>
                     <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
                 </div>
                 <div class="turnMapsMovementXPaneBody">
+                    <div class="turnMapsShipyardPicker" ng-if="movementXPickerIsShipyard">
+                        <label><input type="radio" ng-model="movementXPickerView" value="army" ng-change="selectMovementXPickerView('army')" /> Army</label>
+                        <label><input type="radio" ng-model="movementXPickerView" value="navy" ng-change="selectMovementXPickerView('navy')" /> Navy</label>
+                    </div>
                     <existing-army
+                        ng-if="movementXPickerView === 'army'"
                         master-data="masterData"
                         modal-mode="movementXModalMode"
                         movement-selection="true"
@@ -206,6 +211,18 @@
                         is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
                         on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
                     </existing-army>
+                    <existing-navy
+                        ng-if="movementXPickerView === 'navy'"
+                        master-data="masterData"
+                        modal-mode="movementXModalMode"
+                        movement-selection="true"
+                        selected-movement-item-no="movementXPickerShowCurrentSelection ? movementXSelectedItemNo : null"
+                        selected-movement-type="movementXPickerShowCurrentSelection ? movementXSelectedType : null"
+                        picker-position-filter="movementXPickerPositionFilter"
+                        picker-sphere-filter="movementXPickerSphereFilter"
+                        is-movement-unit-moved="isMovementXNavyShipMoved(ship)"
+                        on-movement-select="selectMovementXNavyShip(ship, selectionType)">
+                    </existing-navy>
                 </div>
             </div>
         </aside>
@@ -269,14 +286,19 @@
         <div class="landUnitsModalHeader">
             <div>
                 <h3>Movement X</h3>
-                <div class="landUnitsModalSubtitle">Select an army unit or its federation to move.</div>
+                <div class="landUnitsModalSubtitle">Select an army unit, ship, federation, or fleet to move.</div>
             </div>
             <button type="button" class="close" ng-click="closeMovementPickerModal()">
                 <span>&times;</span>
             </button>
         </div>
         <div class="existingArmyHostModalBody">
+            <div class="turnMapsShipyardPicker" ng-if="movementXPickerIsShipyard">
+                <label><input type="radio" ng-model="movementXPickerView" value="army" ng-change="selectMovementXPickerView('army')" /> Army</label>
+                <label><input type="radio" ng-model="movementXPickerView" value="navy" ng-change="selectMovementXPickerView('navy')" /> Navy</label>
+            </div>
             <existing-army
+                ng-if="movementXPickerView === 'army'"
                 master-data="masterData"
                 modal-mode="movementXModalMode"
                 movement-selection="true"
@@ -287,6 +309,18 @@
                 is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
                 on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
             </existing-army>
+            <existing-navy
+                ng-if="movementXPickerView === 'navy'"
+                master-data="masterData"
+                modal-mode="movementXModalMode"
+                movement-selection="true"
+                selected-movement-item-no="movementXPickerShowCurrentSelection ? movementXSelectedItemNo : null"
+                selected-movement-type="movementXPickerShowCurrentSelection ? movementXSelectedType : null"
+                picker-position-filter="movementXPickerPositionFilter"
+                picker-sphere-filter="movementXPickerSphereFilter"
+                is-movement-unit-moved="isMovementXNavyShipMoved(ship)"
+                on-movement-select="selectMovementXNavyShip(ship, selectionType)">
+            </existing-navy>
         </div>
     </div>
 </div>

@@ -47,6 +47,16 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
         return $scope.getBrigadeById(id) || $scope.getCommanderById(id);
       };
 
+      $scope.getSpyById = function (id) {
+        for (var i = 0; i < ($scope.spyRows || []).length; i++) {
+          if ($scope.sameNullableInt($scope.spyRows[i].id, id)) {
+            return $scope.spyRows[i];
+          }
+        }
+
+        return null;
+      };
+
       $scope.getLandUnitKey = function (unit) {
         if (!unit) {
           return "";
@@ -305,6 +315,48 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
         $scope.refreshFederationSummaryPairRows();
       };
 
+      $scope.refreshSpyRows = function () {
+        var spies =
+          $scope.masterData &&
+          $scope.masterData.turnReport &&
+          $scope.masterData.turnReport.spies
+            ? $scope.masterData.turnReport.spies
+            : [];
+
+        $scope.spyRows = spies
+          .map(function (spy, index) {
+            var reportBoarded = parseInt(spy.boarded, 10);
+            return {
+              kind: "spy",
+              id: spy.itemNo,
+              itemNo: spy.itemNo,
+              loadedOrder: index,
+              x: spy.x,
+              y: spy.y,
+              position: $scope.formatPosition({
+                x_OrState: spy.x,
+                y_OrFleet: spy.y,
+              }),
+              report: $scope.trimValue(spy.report),
+              reportBoarded:
+                !isNaN(reportBoarded) && reportBoarded > 0
+                  ? reportBoarded
+                  : null,
+              boardingSelected: !isNaN(reportBoarded) && reportBoarded > 0,
+              boardingFleetNo:
+                !isNaN(reportBoarded) && reportBoarded > 0
+                  ? reportBoarded
+                  : null,
+              unloadDirection: null,
+              mp: null,
+              source: spy,
+            };
+          })
+          .sort(function (left, right) {
+            return $scope.getUnitSortNo(left) - $scope.getUnitSortNo(right);
+          });
+      };
+
       $scope.filteredBrigadeRows = function () {
         if (!$scope.selectedSphere || $scope.selectedSphere === "All") {
           return ($scope.brigadeRows || []).filter(function (brigade) {
@@ -335,6 +387,21 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
         });
       };
 
+      $scope.filteredSpyRows = function () {
+        if (!$scope.selectedSphere || $scope.selectedSphere === "All") {
+          return ($scope.spyRows || []).filter(function (spy) {
+            return $scope.matchesPositionFilter(spy);
+          });
+        }
+
+        return ($scope.spyRows || []).filter(function (spy) {
+          return (
+            $scope.getSpySphere(spy) === $scope.selectedSphere &&
+            $scope.matchesPositionFilter(spy)
+          );
+        });
+      };
+
       $scope.onSphereChanged = function () {
         try {
           window.localStorage.setItem(
@@ -352,6 +419,16 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
           window.localStorage.setItem(
             "austerlitz.landUnits.commandersSectionCollapsed",
             $scope.commandersSectionCollapsed ? "true" : "false",
+          );
+        } catch (e) {}
+      };
+
+      $scope.toggleBrigadesSection = function () {
+        $scope.brigadesSectionCollapsed = !$scope.brigadesSectionCollapsed;
+        try {
+          window.localStorage.setItem(
+            "austerlitz.landUnits.brigadesSectionCollapsed",
+            $scope.brigadesSectionCollapsed ? "true" : "false",
           );
         } catch (e) {}
       };

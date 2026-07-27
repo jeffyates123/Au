@@ -285,15 +285,15 @@
 
     <div
       class="landUnitsModalBackdrop"
-      ng-show="boardingModal.isOpen"
+      ng-show="spyBoardingModal.isOpen"
       ng-click="closeSpyBoardingModal()"
     ></div>
-    <div class="landUnitsModal landUnitsBoardingModal" ng-show="boardingModal.isOpen">
+    <div class="landUnitsModal landUnitsBoardingModal" ng-show="spyBoardingModal.isOpen">
       <div class="landUnitsModalHeader">
         <div>
           <h3>Board Spy</h3>
           <div class="landUnitsModalSubtitle">
-            {{boardingModal.spy.id}} - {{boardingModal.spy.x}}/{{boardingModal.spy.y}}
+            {{spyBoardingModal.spy.id}} - {{spyBoardingModal.spy.x}}/{{spyBoardingModal.spy.y}}
           </div>
         </div>
         <button type="button" class="close" ng-click="closeSpyBoardingModal()">
@@ -302,20 +302,20 @@
       </div>
 
       <div class="landUnitsModalBody">
-        <div class="alert alert-info" ng-show="boardingModal.isLoading">
+        <div class="alert alert-info" ng-show="spyBoardingModal.isLoading">
           Loading ship boarding usage...
         </div>
 
         <div
           class="alert alert-warning"
-          ng-show="!boardingModal.isLoading && (!boardingModal.fleets || boardingModal.fleets.length === 0)"
+          ng-show="!spyBoardingModal.isLoading && (!spyBoardingModal.fleets || spyBoardingModal.fleets.length === 0)"
         >
           No eligible ships are available for this spy.
         </div>
 
         <div
           class="landUnitsBoardingTableWrap"
-          ng-show="boardingModal.fleets && boardingModal.fleets.length > 0"
+          ng-show="spyBoardingModal.fleets && spyBoardingModal.fleets.length > 0"
         >
           <table class="table table-condensed landUnitsTable">
             <thead>
@@ -331,7 +331,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="ship in boardingModal.fleets track by ship.fleetNo">
+              <tr ng-repeat="ship in spyBoardingModal.fleets track by ship.fleetNo">
                 <td>{{ship.fleetNo}}</td>
                 <td>{{ship.typeLabel}}</td>
                 <td>{{ship.position}}</td>
@@ -364,7 +364,7 @@
         <button
           type="button"
           class="btn btn-danger btn-sm"
-          ng-show="boardingModal.spy.boardingSelected"
+          ng-show="spyBoardingModal.spy.boardingSelected"
           ng-click="removeSpyBoardingFromModal()"
         >
           Remove

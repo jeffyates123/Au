@@ -23,6 +23,17 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
     return stored === "true";
   }
 
+  function getInitialBrigadesSectionCollapsed() {
+    var stored = null;
+    try {
+      stored = window.localStorage.getItem(
+        "austerlitz.landUnits.brigadesSectionCollapsed",
+      );
+    } catch (e) {}
+
+    return stored === "true";
+  }
+
   function emptyResources() {
     return {
       ld: "",
@@ -62,8 +73,10 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
       federationSummaryRows: [],
       federationSummaryPairRows: [],
       commanderRows: [],
+      spyRows: [],
       commanderOverflowCount: 0,
       commandersSectionCollapsed: getInitialCommandersSectionCollapsed(),
+      brigadesSectionCollapsed: getInitialBrigadesSectionCollapsed(),
       isLoading: false,
       loadError: null,
       replayWarnings: [],

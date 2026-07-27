@@ -92,6 +92,38 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         $scope.rebuildSpyCoordinateReportLookup();
     };
 
+    function isSeaCoordinate(coord) {
+        var terrain = coord && (coord.terrain || coord.Terrain);
+        if (terrain == null) return false;
+
+        terrain = terrain.toString().trim().toUpperCase();
+        return terrain === '*' ||
+            terrain === '+' ||
+            terrain === '.' ||
+            terrain === 'SEA' ||
+            terrain === 'WATER';
+    }
+
+    function isCoastalBarracks(x, y) {
+        var report = $scope.masterData && $scope.masterData.turnReport;
+        var hasBarracks = (report && report.barracks || []).some(function (barracks) {
+            return barracks.x == x && barracks.y == y;
+        });
+        if (!hasBarracks) return false;
+
+        return [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]
+            .some(function (position) {
+                return isSeaCoordinate(
+                    $scope.getCoordinateByXY(position[0], position[1]),
+                );
+            });
+    }
+
+    $scope.selectMovementXPickerView = function (view) {
+        if (!$scope.movementXPickerIsShipyard) return;
+        $scope.movementXPickerView = view === 'navy' ? 'navy' : 'army';
+    };
+
     $scope.coordinateClick = function (x, y) {
         if ($scope.pendingRouteSelection && !$scope.isProductionSiteMode()) {
             var routeKey = x + '_' + y;
@@ -121,9 +153,23 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         $scope.refreshItemGridRows();
 
         if ($scope.isMovementXMode()) {
-            var hasUnitsAtCoordinate =
+            var isSea = isSeaCoordinate(coord);
+            var isShipyard = !isSea && isCoastalBarracks(x, y);
+            var hasArmyAtCoordinate =
                 $scope.hasMovementXArmyUnitAtCoordinate(x, y);
-            $scope.movementXPickerPositionFilter = hasUnitsAtCoordinate
+            var hasShipsAtCoordinate =
+                $scope.hasMovementXShipAtCoordinate(x, y);
+            var hasRelevantUnits = isSea
+                ? hasShipsAtCoordinate
+                : hasArmyAtCoordinate || (isShipyard && hasShipsAtCoordinate);
+
+            $scope.movementXPickerIsShipyard = isShipyard;
+            $scope.movementXPickerView = isSea
+                ? 'navy'
+                : isShipyard && !hasArmyAtCoordinate && hasShipsAtCoordinate
+                    ? 'navy'
+                    : 'army';
+            $scope.movementXPickerPositionFilter = hasRelevantUnits
                 ? x + '/' + y
                 : null;
             $scope.movementXPickerSphereFilter =

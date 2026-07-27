@@ -80,6 +80,8 @@ austerlitzModule.controller('turnMapsController', function (
     $scope.movementXPickerShowCurrentSelection = false;
     $scope.movementXSelectedItemNo = null;
     $scope.movementXSelectedType = null;
+    $scope.movementXPickerView = 'army';
+    $scope.movementXPickerIsShipyard = false;
 
     $scope.getViewportWidth = function () {
         if ($window && $window.innerWidth) {
@@ -150,10 +152,66 @@ austerlitzModule.controller('turnMapsController', function (
     };
 
     $scope.hasMovementXArmyUnitAtCoordinate = function (x, y) {
-        return ($scope.filteredMovementItemsForMap || []).some(function (item) {
-            return (item.itemTypeName === "Brigade" || item.itemTypeName === "Commander")
-                && item.x == x
-                && item.y == y;
+        var report = ($scope.masterData && $scope.masterData.turnReport) || {};
+        return ['brigades', 'commanders', 'spies'].some(function (collectionName) {
+            return (report[collectionName] || []).some(function (item) {
+                return item.x == x && item.y == y;
+            });
+        });
+    };
+
+    $scope.hasMovementXShipAtCoordinate = function (x, y) {
+        var report = ($scope.masterData && $scope.masterData.turnReport) || {};
+        return ['warships', 'merchantShips'].some(function (collectionName) {
+            return (report[collectionName] || []).some(function (ship) {
+                return ship.x == x && ship.y == y;
+            });
+        });
+    };
+
+    $scope.selectMovementXNavyShip = function (ship, selectionType) {
+        if (!ship || ship.id == null) return;
+
+        var movementItem = null;
+        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            if (!movementItem && itemNo == ship.id) movementItem = item;
+        });
+        if (!movementItem) {
+            $scope.selectedCoordinateDetails = "Movement ship " + ship.id + " is not available.";
+            return;
+        }
+
+        if (selectionType === 'fleet') {
+            var fleetNo = parseInt(ship.fleet, 10);
+            if (isNaN(fleetNo) || fleetNo < 11 || fleetNo > 30) return;
+            movementItem = angular.extend({}, movementItem, {
+                itemNo: fleetNo,
+                originalItemNo: fleetNo,
+                itemTypeName: 'Fleet',
+                mp: ship.mp,
+                xy: ship.position,
+                fed: null
+            });
+            $scope.movementXSelectedItemNo = fleetNo;
+            $scope.movementXSelectedType = 'Fleet';
+        } else {
+            $scope.movementXSelectedItemNo = ship.id;
+            $scope.movementXSelectedType = 'Item';
+        }
+
+        $scope.movementXPickerShowCurrentSelection = true;
+        $scope.selectMovementOrderItem(movementItem, 'item');
+    };
+
+    $scope.isMovementXNavyShipMoved = function (ship) {
+        if (!ship || ship.id == null) return false;
+        return ($scope.tsMovementList || []).some(function (movementRow) {
+            if (!$scope.hasMovementItemNo(movementRow)
+                || !$scope.hasAnyMovementDirectionOrDistance(movementRow)) {
+                return false;
+            }
+            return movementRow.itemNo == ship.id || movementRow.itemNo == ship.fleet;
         });
     };
 
