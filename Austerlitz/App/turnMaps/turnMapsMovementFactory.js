@@ -14,7 +14,10 @@ austerlitzModule.factory('turnMapsMovementFactory', function (
                 $scope.selectedMovementItemCoordinate = null;
 
                 if (row.entity.itemNo != null) {
-                    var selectedItem = $scope.getItemFromItemNo(row.entity.itemNo, row.entity.type === 'Fed');
+                    var selectedItem = $scope.getItemFromItemNo(
+                        row.entity.itemNo,
+                        row.entity.type === 'Fed' || row.entity.type === 'Fleet'
+                    );
                     var item = {
                         itemNo: selectedItem.itemNo,
                         mpUsed: 0,
@@ -147,7 +150,10 @@ austerlitzModule.factory('turnMapsMovementFactory', function (
 
                 angular.forEach($scope.tsMovementList, function (movementRow) {
                     if (movementRow.itemNo != null) {
-                        var selectedItem = $scope.getItemFromItemNo(movementRow.itemNo, movementRow.type === 'Fed');
+                        var selectedItem = $scope.getItemFromItemNo(
+                            movementRow.itemNo,
+                            movementRow.type === 'Fed' || movementRow.type === 'Fleet'
+                        );
                         if (selectedItem && selectedItem.itemNo != null) {
                             movementRow.type = $scope.getItemTypeAbbrev(selectedItem);
                             movementRow.mp = selectedItem.originalMP != null ? selectedItem.originalMP : selectedItem.mp;

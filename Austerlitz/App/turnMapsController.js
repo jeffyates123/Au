@@ -169,6 +169,24 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
+    $scope.isMovementXArmyUnitBoarded = function (unit) {
+        if (!unit || unit.id == null) return false;
+
+        return ($scope.filteredMovementItemsForMap || []).some(function (item) {
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            return itemNo == unit.id && item.hasBoarding === true;
+        });
+    };
+
+    $scope.isMovementXArmyUnitDisabled = function (unit) {
+        if (!unit || unit.id == null) return false;
+
+        return ($scope.filteredMovementItemsForMap || []).some(function (item) {
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            return itemNo == unit.id && item.isSelectable === false;
+        });
+    };
+
     $scope.selectMovementXNavyShip = function (ship, selectionType) {
         if (!ship || ship.id == null) return;
 
@@ -183,14 +201,15 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         if (selectionType === 'fleet') {
-            var fleetNo = parseInt(ship.fleet, 10);
+            var fleetNo = parseInt(
+                movementItem.fed != null ? movementItem.fed : ship.fleet,
+                10
+            );
             if (isNaN(fleetNo) || fleetNo < 11 || fleetNo > 30) return;
             movementItem = angular.extend({}, movementItem, {
                 itemNo: fleetNo,
                 originalItemNo: fleetNo,
-                itemTypeName: 'Fleet',
-                mp: ship.mp,
-                xy: ship.position,
+                itemTypeName: 'Fed',
                 fed: null
             });
             $scope.movementXSelectedItemNo = fleetNo;
@@ -205,6 +224,7 @@ austerlitzModule.controller('turnMapsController', function (
     };
 
     $scope.isMovementXNavyShipMoved = function (ship) {
+
         if (!ship || ship.id == null) return false;
         return ($scope.tsMovementList || []).some(function (movementRow) {
             if (!$scope.hasMovementItemNo(movementRow)

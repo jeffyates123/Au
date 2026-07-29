@@ -2476,6 +2476,23 @@ textarea {
     background-color: #f7f0c7;
 }
 
+.landUnitsMovementSelectionRow.landUnitsMovementDisabled > td {
+    background-color: #eeeeee;
+    color: #777777;
+    cursor: not-allowed;
+}
+
+.landUnitsMovementBoardedBadge {
+    display: inline-block;
+    margin-right: 4px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background-color: #d9edf7;
+    color: #31708f;
+    font-size: 10px;
+    font-weight: bold;
+}
+
 .landUnitsMovementFederationCol {
     min-width: 105px;
     white-space: nowrap;

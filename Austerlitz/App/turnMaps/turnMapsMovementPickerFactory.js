@@ -161,8 +161,6 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
         var loadedFleetLookup = {};
         var ts20LoadByUnitItemNo = {};
         var unloadDirectionByUnitItemNo = {};
-        var ts20LockedShipByItemNo = {};
-        var ts20LockedFleetByFleetNo = {};
         var transportCoordinateByNo = {};
         var shipFleetNoByShipId = {};
         var inferredFleetRemapByFleetNo = {};
@@ -248,16 +246,6 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     resolvedTransportNo = inferredFleetRemapByFleetNo[boardedFleetNo];
                 }
 
-                if (isTs20LoadOrder && landedKind === 'brigade') {
-                    if (resolvedTransportNo != null && resolvedTransportNo > 0) {
-                        ts20LockedFleetByFleetNo[resolvedTransportNo] = true;
-                    }
-                } else if (isTs20LoadOrder && landedKind === 'commander') {
-                    if (resolvedTransportNo != null && resolvedTransportNo > 0) {
-                        ts20LockedShipByItemNo[resolvedTransportNo] = true;
-                    }
-                }
-
                 if ((landedKind === 'commander' || landedKind === 'spy')
                     && !Object.prototype.hasOwnProperty.call(transportCoordinateByNo, resolvedTransportNo)
                     && Object.prototype.hasOwnProperty.call(shipFleetNoByShipId, resolvedTransportNo)) {
@@ -299,9 +287,7 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
             transportCoordinateByNo: transportCoordinateByNo,
             loadedFleetLookup: loadedFleetLookup,
             ts20LoadByUnitItemNo: ts20LoadByUnitItemNo,
-            unloadDirectionByUnitItemNo: unloadDirectionByUnitItemNo,
-            ts20LockedShipByItemNo: ts20LockedShipByItemNo,
-            ts20LockedFleetByFleetNo: ts20LockedFleetByFleetNo
+            unloadDirectionByUnitItemNo: unloadDirectionByUnitItemNo
         };
     }
 
@@ -332,37 +318,6 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
 
     function isMovementPickerLandUnitKind(unitKind) {
         return unitKind === 'brigade' || unitKind === 'commander' || unitKind === 'spy';
-    }
-
-    function isMovementPickerNavalUnitKind(unitKind) {
-        return unitKind === 'warship' || unitKind === 'merchant';
-    }
-
-    function isTs20NavalMovementLocked(itemRow, detail, boardingLookups, effectiveFedLookupByItemNo, toMovementPickerItemId, movementUnitKindResolver) {
-        var unitKind = (detail && detail.unitKind) || movementUnitKindResolver(itemRow && itemRow.itemTypeName);
-        if (!isMovementPickerNavalUnitKind(unitKind)) return false;
-
-        var itemId = toMovementPickerItemId(itemRow && itemRow.itemNo);
-        if (itemId == null) return false;
-
-        if (boardingLookups
-            && boardingLookups.ts20LockedShipByItemNo
-            && boardingLookups.ts20LockedShipByItemNo[itemId]) {
-            return true;
-        }
-
-        var effectiveFleetNo = Object.prototype.hasOwnProperty.call(effectiveFedLookupByItemNo || {}, itemId)
-            ? toMovementPickerItemId(effectiveFedLookupByItemNo[itemId])
-            : null;
-        if ((effectiveFleetNo == null || effectiveFleetNo <= 0) && detail && detail.fleet != null) {
-            effectiveFleetNo = toMovementPickerItemId(detail.fleet);
-        }
-
-        return effectiveFleetNo != null
-            && effectiveFleetNo > 0
-            && boardingLookups
-            && boardingLookups.ts20LockedFleetByFleetNo
-            && boardingLookups.ts20LockedFleetByFleetNo[effectiveFleetNo] === true;
     }
 
     function resolveMovementPickerBoardingDisplayText(itemRow, detail, boardingLookups, toMovementPickerItemId, movementUnitKindResolver) {
@@ -567,24 +522,7 @@ austerlitzModule.factory('turnMapsMovementPickerFactory', function (turnAssignme
                     && opts.boardingLookups.ts20LoadByUnitItemNo
                     && opts.boardingLookups.ts20LoadByUnitItemNo[rowItemId] === true;
                 if (isLoadedLandUnit) {
-                    if ((row.movementDetail && row.movementDetail.unitKind) === 'spy') {
-                        row.isSelectable = false;
-                    } else {
-                        row.isSelectable = isLoadedThisTurnByTs20;
-                    }
-                }
-                var isTs20LockedNaval = isTs20NavalMovementLocked(
-                    row,
-                    row.movementDetail,
-                    opts.boardingLookups,
-                    opts.effectiveFedLookupByItemNo,
-                    opts.toMovementPickerItemId,
-                    opts.getMovementPickerUnitKind
-                );
-                if (isTs20LockedNaval) {
-                    row.isSelectable = false;
-                    row.disableReasonCode = 'B';
-                    row.disableReasonTooltip = 'Loaded this turn (TS20), cannot move';
+                    row.isSelectable = isLoadedThisTurnByTs20;
                 }
 
                 if (!isInSelectedMap && isLoadedLandUnit) {

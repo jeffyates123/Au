@@ -467,6 +467,7 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
             $scope.closeMovementPickerModal();
         }
         $scope.focusCurrentMovementOrder();
+        $scope.queueAutoSaveTsGrid('Movement');
     };
 
     $scope.selectMovementOrderItemFromPickerRow = function (itemRow) {
