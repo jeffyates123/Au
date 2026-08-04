@@ -10,200 +10,37 @@ austerlitzModule.controller(
     turnReportFactory,
     turnSheetFactory,
     rulesCatalogFactory,
+    economyConfigFactory,
+    economyParseUtilsFactory,
+    economyResourceFactory,
+    economySphereFactory,
+    economyProductionFactory,
+    economyTradeFactory,
   ) {
-    var sphereByTab = {
-      europe: { minX: 1, maxX: 80, minY: 1, maxY: 65 },
-      caribbean: { minX: 1, maxX: 40, minY: 70, maxY: 99 },
-      india: { minX: 51, maxX: 90, minY: 70, maxY: 99 },
-    };
-    var economyTabs = { europe: true, caribbean: true, india: true };
-    var economyWarehouseNos = [1, 2, 3];
-    var economyComputedVersion = 2;
-    var resourceKeys = [
-      "money",
-      "citizens",
-      "ecPts",
-      "food",
-      "stone",
-      "wood",
-      "ore",
-      "zinc",
-      "horses",
-      "textiles",
-      "wool",
-      "gold",
-      "wine",
-    ];
-    var productionRowConfig = [
-      { key: "barracks", label: "2. Barracks", siteTypeNo: 2 },
-      { key: "factories", label: "4. Factories", siteTypeNo: 4 },
-      { key: "weaving", label: "5. Weaving Mills", siteTypeNo: 5 },
-      { key: "mints", label: "6. Mints", siteTypeNo: 6 },
-      { key: "primeEstates", label: "7. Prime Estates", siteTypeNo: 7, prime: true },
-      { key: "estates", label: "7. Estates", siteTypeNo: 7, prime: false },
-      { key: "primeSheep", label: "8. Prime Sheep Farm", siteTypeNo: 8, prime: true },
-      { key: "sheep", label: "8. Sheep Farm", siteTypeNo: 8, prime: false },
-      { key: "primeHorse", label: "9. Prime Horse Farm", siteTypeNo: 9, prime: true },
-      { key: "horse", label: "9. Horse Farm", siteTypeNo: 9, prime: false },
-      { key: "lumber", label: "10. Lumber Camp", siteTypeNo: 10 },
-      { key: "quarries", label: "11. Quarries", siteTypeNo: 11 },
-      { key: "goldMine", label: "12. Gold Mine", siteTypeNo: 12, productionType: "gold" },
-      { key: "oreMine", label: "12. Ore Mine", siteTypeNo: 12, productionType: "ore" },
-      { key: "zincMine", label: "12. Zinc Mine", siteTypeNo: 12, productionType: "zinc" },
-      { key: "vineyards", label: "13. Vineyards", siteTypeNo: 13 },
-    ];
-    var productionResourceColumnsByRowKey = {
-      factories: { ecPts: true, wood: true, ore: true, zinc: true, textiles: true },
-      weaving: { textiles: true },
-      mints: { gold: true },
-      primeEstates: { food: true },
-      estates: { food: true },
-      primeSheep: { wool: true },
-      sheep: { wool: true },
-      primeHorse: { horses: true },
-      horse: { horses: true },
-      lumber: { wood: true },
-      quarries: { stone: true },
-      goldMine: { gold: true },
-      oreMine: { ore: true },
-      zincMine: { zinc: true },
-      vineyards: { wine: true },
-    };
-    var tradeEstimateGoodsConfig = [
-      { cityKey: "ectPts", goodsFactor: 6 },
-      { cityKey: "food", goodsFactor: 4 },
-      { cityKey: "stone", goodsFactor: 1 },
-      { cityKey: "wood", goodsFactor: 3 },
-      { cityKey: "ore", goodsFactor: 30 },
-      { cityKey: "zinc", goodsFactor: 45 },
-      { cityKey: "horses", goodsFactor: 2 },
-      { cityKey: "textiles", goodsFactor: 5 },
-      { cityKey: "wool", goodsFactor: 2 },
-      { cityKey: "gold", goodsFactor: 35 },
-      { cityKey: "wine", goodsFactor: 8 },
-    ];
-    var tradeGoodsIdToKey = {
-      13: "ectPts",
-      16: "food",
-      18: "stone",
-      19: "wood",
-      20: "ore",
-      21: "zinc",
-      22: "horses",
-      23: "textiles",
-      24: "wool",
-      29: "gold",
-      30: "wine",
-    };
-    var goodsFactorByKey = {};
-    (tradeEstimateGoodsConfig || []).forEach(function (item) {
-      goodsFactorByKey[item.cityKey] = item.goodsFactor;
-    });
-    var populationCitizensByDensity = {
-      1: 4000,
-      2: 10000,
-      3: 20000,
-      4: 40000,
-      5: 60000,
-      6: 90000,
-      7: 120000,
-      8: 160000,
-      9: 200000,
-    };
-    var mintGoldPerSiteCap = 20;
+    var sphereByTab = economyConfigFactory.sphereByTab;
+    var economyTabs = economyConfigFactory.economyTabs;
+    var economyWarehouseNos = economyConfigFactory.economyWarehouseNos;
+    var economyComputedVersion = economyConfigFactory.economyComputedVersion;
+    var resourceKeys = economyConfigFactory.resourceKeys;
+    var productionResourceColumnsByRowKey = economyConfigFactory.productionResourceColumnsByRowKey;
+    var populationCitizensByDensity = economyConfigFactory.populationCitizensByDensity;
 
-    function toInt(value, fallback) {
-      var parsed = parseInt(value, 10);
-      return isNaN(parsed) ? fallback : parsed;
-    }
-
-    function toFloat(value, fallback) {
-      var parsed = parseFloat(value);
-      return isNaN(parsed) ? fallback : parsed;
-    }
-
-    function toText(value, fallback) {
-      if (value == null) {
-        return fallback;
-      }
-      var text = value.toString().trim();
-      return text ? text : fallback;
-    }
-
-    function normalizeStateCode(value) {
-      var text = toText(value, "").toUpperCase();
-      if (!text) {
-        return "";
-      }
-      return text.charAt(0);
-    }
-
-    function normalizeStrictUpperStateCode(value) {
-      var raw = toText(value, "");
-      if (!raw) {
-        return "";
-      }
-      var first = raw.charAt(0);
-      // Economy production counting should ignore lower-case state markers.
-      if (first < "A" || first > "Z") {
-        return "";
-      }
-      return first;
-    }
-
-    function createEmptyResourceBag() {
-      var bag = {};
-      resourceKeys.forEach(function (key) {
-        bag[key] = 0;
-      });
-      return bag;
-    }
-
-    function createProductionRow(config) {
-      return {
-        key: config.key,
-        label: config.label,
-        siteTypeNo: config.siteTypeNo,
-        productionType: config.productionType || null,
-        prime: config.prime,
-        fortressCost: config.fortressCost || null,
-        buildCount: 0,
-        workCount: 0,
-        maintenanceLd: 0,
-        maintenanceWorkers: 0,
-        buildLd: 0,
-        buildCitizens: 0,
-        resources: createEmptyResourceBag(),
-      };
-    }
-
-    function createProductionSummaryRow(key, label) {
-      return {
-        key: key,
-        label: label,
-        citizens: 0,
-        resources: createEmptyResourceBag(),
-      };
-    }
-
-    function createProductionSummaryRows() {
-      return [
-        createProductionSummaryRow("goodsInBarracks", "Goods in Barracks"),
-        createProductionSummaryRow("productionBuildMaintenance", "Prod. Build/Maintain"),
-        createProductionSummaryRow("populationBuildMaintenance", "Pop. Build/Maintain"),
-        createProductionSummaryRow("armyBuildMaintenance", "Army Build/Maintain"),
-        createProductionSummaryRow("navyBuildRepair", "Navy Build & Repair"),
-        createProductionSummaryRow("baggageTrainBuildRepair", "Bag. T Build/Repair"),
-        createProductionSummaryRow("directTrade", "Direct Trade"),
-      ];
-    }
-
-    function mapTradeResourceKey(key) {
-      if (key === "ectPts") {
-        return "ecPts";
-      }
-      return key;
-    }
+    var toInt = economyParseUtilsFactory.toInt;
+    var toFloat = economyParseUtilsFactory.toFloat;
+    var toText = economyParseUtilsFactory.toText;
+    var normalizeStateCode = economyParseUtilsFactory.normalizeStateCode;
+    var createEmptyResourceBag = economyResourceFactory.createEmptyResourceBag;
+    var createProductionSummaryRows = economyResourceFactory.createProductionSummaryRows;
+    var sumResourceRows = economyResourceFactory.sumResourceRows;
+    var sumProductionCitizens = economyResourceFactory.sumProductionCitizens;
+    var getWarehouseNoForTab = economySphereFactory.getWarehouseNoForTab;
+    var getSphereLabelForWarehouseNo = economySphereFactory.getSphereLabelForWarehouseNo;
+    var inBounds = economySphereFactory.inBounds;
+    var getComputedSphereForTab = economySphereFactory.getComputedSphereForTab;
+    var isEuropeCoordinate = economySphereFactory.isEuropeCoordinate;
+    var createProductionRows = economyProductionFactory.createProductionRows;
+    var mapProductionTypeToResourceKey = economyProductionFactory.mapProductionTypeToResourceKey;
+    var normalizeBuildRows = economyProductionFactory.normalizeBuildRows;
 
     function getSectionNoFromTs01Row(row) {
       var sectionNo = toText(
@@ -260,32 +97,6 @@ austerlitzModule.controller(
         totals.textiles += toInt(row && (row.textiles != null ? row.textiles : row.Textiles), 0);
       });
       return totals;
-    }
-
-    function getWarehouseNoForTab(tabKey) {
-      if (tabKey === "europe") {
-        return 1;
-      }
-      if (tabKey === "caribbean") {
-        return 2;
-      }
-      if (tabKey === "india") {
-        return 3;
-      }
-      return 0;
-    }
-
-    function getSphereLabelForWarehouseNo(warehouseNo) {
-      if (warehouseNo === 1) {
-        return "Europe";
-      }
-      if (warehouseNo === 2) {
-        return "Caribbean";
-      }
-      if (warehouseNo === 3) {
-        return "India";
-      }
-      return "";
     }
 
     function getInterSphereTransferKey(fromWarehouseNo, toWarehouseNo) {
@@ -527,88 +338,18 @@ austerlitzModule.controller(
       });
     }
 
+    function createTradeEstimationInput(tabKey) {
+      var masterDataForTrade = $scope.masterData || {};
+      return {
+        tabKey: tabKey,
+        sphereByTab: sphereByTab,
+        turnSheet: masterDataForTrade.turnSheet || {},
+        turnReport: masterDataForTrade.turnReport || {},
+      };
+    }
+
     function buildTradeDirectByGoodForSphere(tabKey) {
-      var totals = createEmptyResourceBag();
-      var bounds = sphereByTab[tabKey];
-      if (!bounds) {
-        return totals;
-      }
-
-      var turnSheet = ($scope.masterData && $scope.masterData.turnSheet) || {};
-      var ts17Rows = turnSheet.tsTradeAndLoading1 || turnSheet.TSTradeAndLoading1 || [];
-      var ts19Rows = turnSheet.tsTradeAndLoading2 || turnSheet.TSTradeAndLoading2 || [];
-      var allRows = (ts17Rows || []).concat(ts19Rows || []);
-      if (!allRows.length) {
-        return totals;
-      }
-
-      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
-      var tradingCities = turnReport.tradingPortsAndCities || turnReport.TradingPortsAndCities || [];
-      var cityLookup = {};
-      (tradingCities || []).forEach(function (city) {
-        var itemNo = toInt(city.itemNo != null ? city.itemNo : city.ItemNo, 0);
-        if (itemNo > 0) {
-          cityLookup[itemNo] = city;
-        }
-      });
-
-      var grouped = {};
-      (allRows || []).forEach(function (row) {
-        var marker = toText(row.rowMarker != null ? row.rowMarker : row.RowMarker, "").toUpperCase();
-        if (marker && marker !== "TRADE") {
-          return;
-        }
-        var goodsId = toInt(row.goods != null ? row.goods : row.Goods, 0);
-        var qty = Math.max(0, toInt(row.quantity != null ? row.quantity : row.Quantity, 0));
-        if (goodsId <= 0 || qty <= 0) {
-          return;
-        }
-        var fromNo = toInt(row.from != null ? row.from : row.From, toInt(row.source != null ? row.source : row.Source, 0));
-        var toNo = toInt(row.to != null ? row.to : row.To, toInt(row.destination != null ? row.destination : row.Destination, 0));
-        if (fromNo <= 0 || toNo <= 0) {
-          return;
-        }
-        var fromCity = cityLookup[fromNo];
-        var toCity = cityLookup[toNo];
-        var fromIsTradeCity = !!fromCity;
-        var toIsTradeCity = !!toCity;
-        if (fromIsTradeCity === toIsTradeCity) {
-          return;
-        }
-        var city = fromIsTradeCity ? fromCity : toCity;
-        var cityX = toInt(city && (city.x != null ? city.x : city.X), 0);
-        var cityY = toInt(city && (city.y != null ? city.y : city.Y), 0);
-        if (!inBounds(cityX, cityY, bounds)) {
-          return;
-        }
-        var cityItemNo = fromIsTradeCity ? fromNo : toNo;
-        var key = cityItemNo + "|" + goodsId;
-        if (!grouped[key]) {
-          grouped[key] = { cityItemNo: cityItemNo, goodsId: goodsId, directBuyQty: 0, sellTotalQty: 0 };
-        }
-        // Direction rule: TO trade city = sell, FROM trade city = buy.
-        if (toIsTradeCity) {
-          grouped[key].sellTotalQty += qty;
-        } else {
-          grouped[key].directBuyQty += qty;
-        }
-      });
-
-      Object.keys(grouped).forEach(function (groupKey) {
-        var item = grouped[groupKey];
-        var cityKey = tradeGoodsIdToKey[item.goodsId];
-        if (!cityKey) {
-          return;
-        }
-        var resourceKey = mapTradeResourceKey(cityKey);
-        if (!Object.prototype.hasOwnProperty.call(totals, resourceKey)) {
-          return;
-        }
-        var netGoods = toInt(item.directBuyQty, 0) - toInt(item.sellTotalQty, 0);
-        totals[resourceKey] += netGoods;
-      });
-
-      return totals;
+      return economyTradeFactory.buildTradeDirectByGoodForSphere(createTradeEstimationInput(tabKey));
     }
 
     function buildProductionSummaryRows(tabKey, productionRows) {
@@ -681,32 +422,6 @@ austerlitzModule.controller(
       return rows;
     }
 
-    function mapProductionTypeToResourceKey(productionType) {
-      var key = toText(productionType, "").toLowerCase();
-      if (!key) {
-        return null;
-      }
-      if (key === "louisdore") {
-        return "money";
-      }
-      if (key === "ecpts") {
-        return "ecPts";
-      }
-      if (key === "citizens") {
-        return "citizens";
-      }
-      return key;
-    }
-
-    function inBounds(x, y, bounds) {
-      return (
-        x >= bounds.minX &&
-        x <= bounds.maxX &&
-        y >= bounds.minY &&
-        y <= bounds.maxY
-      );
-    }
-
     function getWarehouseRowForSphere(tabKey) {
       var itemNoBySphere = { europe: 1, caribbean: 2, india: 3 };
       var targetItemNo = itemNoBySphere[tabKey] || 1;
@@ -753,164 +468,6 @@ austerlitzModule.controller(
       return fromCatalog || [];
     }
 
-    function buildProductionSiteLookup(productionSites) {
-      var lookup = {};
-      (productionSites || []).forEach(function (site) {
-        var symbol = toText(site.symbol != null ? site.symbol : site.Symbol, "");
-        var secondarySymbol = toText(site.secondarySymbol != null ? site.secondarySymbol : site.SecondarySymbol, "");
-        if (symbol) {
-          lookup[symbol] = lookup[symbol] || [];
-          lookup[symbol].push(site);
-        }
-        if (secondarySymbol) {
-          lookup[secondarySymbol] = lookup[secondarySymbol] || [];
-          lookup[secondarySymbol].push(site);
-        }
-      });
-      return lookup;
-    }
-
-    function createProductionRows() {
-      return productionRowConfig.map(createProductionRow);
-    }
-
-    function isPrimeCoordinateForRule(rule, coord) {
-      var bonusSymbol = toText(rule.bonusSymbol != null ? rule.bonusSymbol : rule.BonusSymbol, "");
-      var bonusPercent = toInt(rule.bonusPercentage != null ? rule.bonusPercentage : rule.BonusPercentage, 0);
-      var coordBonus = toText(coord && (coord.bonus != null ? coord.bonus : coord.Bonus), "");
-      return !!(bonusSymbol && bonusPercent > 0 && coordBonus && bonusSymbol.toLowerCase() === coordBonus.toLowerCase());
-    }
-
-    function getProductionRowForRule(rows, rule, coord) {
-      function mapEconomySiteTypeNo(rawSiteTypeNo) {
-        // Fortification variants share the same upkeep bucket as barracks in economy totals.
-        if (rawSiteTypeNo === 15 || rawSiteTypeNo === 21) {
-          return 2;
-        }
-        return rawSiteTypeNo;
-      }
-
-      var siteTypeNo = mapEconomySiteTypeNo(
-        toInt(rule.siteTypeNo != null ? rule.siteTypeNo : rule.SiteTypeNo, 0),
-      );
-      var productionType = toText(rule.productionType != null ? rule.productionType : rule.ProductionType, "").toLowerCase();
-      var cost = toInt(rule.cost != null ? rule.cost : rule.Cost, 0);
-      var isPrime = isPrimeCoordinateForRule(rule, coord);
-
-      for (var i = 0; i < (rows || []).length; i++) {
-        var row = rows[i];
-        if (toInt(row.siteTypeNo, 0) !== siteTypeNo) {
-          continue;
-        }
-        if (row.productionType && row.productionType.toLowerCase() !== productionType) {
-          continue;
-        }
-        if (row.fortressCost && row.fortressCost !== cost) {
-          continue;
-        }
-        if (row.prime === true && !isPrime) {
-          continue;
-        }
-        if (row.prime === false && isPrime) {
-          continue;
-        }
-        return row;
-      }
-
-      for (var j = 0; j < (rows || []).length; j++) {
-        if (toInt(rows[j].siteTypeNo, 0) === siteTypeNo) {
-          return rows[j];
-        }
-      }
-      return null;
-    }
-
-    function selectMatchingProductionRule(rules, coord) {
-      if (!rules || !rules.length) {
-        return null;
-      }
-      if (rules.length === 1) {
-        return rules[0];
-      }
-
-      var bonus = toText(coord.bonus != null ? coord.bonus : coord.Bonus, "");
-      if (bonus) {
-        for (var i = 0; i < rules.length; i++) {
-          var bonusSymbol = toText(rules[i].bonusSymbol != null ? rules[i].bonusSymbol : rules[i].BonusSymbol, "");
-          if (bonusSymbol && bonusSymbol.toLowerCase() === bonus.toLowerCase()) {
-            return rules[i];
-          }
-        }
-      }
-
-      var terrain = toText(coord.terrain != null ? coord.terrain : coord.Terrain, "");
-      if (terrain) {
-        for (var j = 0; j < rules.length; j++) {
-          var terrains = toText(rules[j].terrain != null ? rules[j].terrain : rules[j].Terrain, "");
-          if (terrains && terrains.indexOf(terrain) >= 0) {
-            return rules[j];
-          }
-        }
-      }
-
-      return rules[0];
-    }
-
-    function applyProductionRuleToRow(row, rule, coord) {
-      if (!row || !rule) {
-        return;
-      }
-
-      function getMaintenanceCitizens(ruleRow) {
-        var citizensPerSite = toInt(
-          ruleRow.citizensRequired != null
-            ? ruleRow.citizensRequired
-            : ruleRow.CitizensRequired,
-          0,
-        );
-        var attritionPercent = toFloat(
-          ruleRow.citizenAttritionPercent != null
-            ? ruleRow.citizenAttritionPercent
-            : ruleRow.CitizenAttritionPercent,
-          100,
-        );
-        return Math.round(citizensPerSite * (attritionPercent / 100));
-      }
-
-      row.workCount += 1;
-      row.maintenanceLd += toInt(rule.maintenance != null ? rule.maintenance : rule.Maintenance, 0);
-      row.maintenanceWorkers += getMaintenanceCitizens(rule);
-
-      var resourceKey = mapProductionTypeToResourceKey(rule.productionType != null ? rule.productionType : rule.ProductionType);
-      if (!resourceKey || !Object.prototype.hasOwnProperty.call(row.resources, resourceKey)) {
-        return;
-      }
-
-      var minProduction = toInt(rule.minProduction != null ? rule.minProduction : rule.MinProduction, 0);
-      var maxProduction = toInt(rule.maxProduction != null ? rule.maxProduction : rule.MaxProduction, 0);
-      var siteProduction = 0;
-      if (minProduction > 0 && maxProduction > 0) {
-        siteProduction = Math.round((minProduction + maxProduction) / 2);
-      } else {
-        siteProduction = Math.max(minProduction, maxProduction);
-      }
-
-      // Factories EcPts should always be shown as a positive contribution.
-      if (row.key === "factories" && resourceKey === "ecPts") {
-        siteProduction = Math.abs(siteProduction);
-      }
-      row.resources[resourceKey] += siteProduction;
-    }
-
-    function normalizeBuildRows(rows) {
-      return (rows || []).filter(function (row) {
-        var siteTypeNo = toInt(row && (row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType), 0);
-        var x = toInt(row && (row.x != null ? row.x : row.X), 0);
-        var y = toInt(row && (row.y != null ? row.y : row.Y), 0);
-        return siteTypeNo > 0 && x > 0 && y > 0;
-      });
-    }
-
     function getBuildRowsForTurn() {
       var turnSheet = ($scope.masterData && $scope.masterData.turnSheet) || {};
       var inMemoryRows = turnSheet.tsBuildProductionSites || turnSheet.TSBuildProductionSites || [];
@@ -928,197 +485,17 @@ austerlitzModule.controller(
       );
     }
 
-    function buildProductionModel(tabKey, buildRows) {
-      var rows = createProductionRows();
-
-      var bounds = sphereByTab[tabKey];
-      var selectedState = normalizeStateCode($scope.masterData && $scope.masterData.selectedState);
-      var mapRows = ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.mapCoordinates) ||
-        ($scope.masterData && $scope.masterData.turnReport && $scope.masterData.turnReport.MapCoordinates) || [];
-      var refProductionSites = getRulesProductionSites();
-      var rulesBySymbol = buildProductionSiteLookup(refProductionSites);
-      var coordLookup = {};
-
-      (mapRows || []).forEach(function (mapRow) {
-        (mapRow || []).forEach(function (coord) {
-          if (!coord) {
-            return;
-          }
-
-          var x = toInt(coord.x != null ? coord.x : coord.X, 0);
-          var y = toInt(coord.y != null ? coord.y : coord.Y, 0);
-          if (!inBounds(x, y, bounds)) {
-            return;
-          }
-
-          var state = normalizeStrictUpperStateCode(coord.state != null ? coord.state : coord.State);
-          if (!state || state !== selectedState) {
-            return;
-          }
-
-          coordLookup[x + "," + y] = coord;
-
-          var symbol = toText(coord.productionSite != null ? coord.productionSite : coord.ProductionSite, "");
-          if (!symbol || symbol === "." || symbol === " ") {
-            return;
-          }
-
-          var matchingRules = rulesBySymbol[symbol] || [];
-          var selectedRule = selectMatchingProductionRule(matchingRules, coord);
-          if (!selectedRule) {
-            return;
-          }
-
-          var targetRow = getProductionRowForRule(rows, selectedRule, coord);
-          if (!targetRow) {
-            return;
-          }
-
-          applyProductionRuleToRow(targetRow, selectedRule, coord);
-        });
-      });
-
-      (buildRows || []).forEach(function (row) {
-        var x = toInt(row.x != null ? row.x : row.X, 0);
-        var y = toInt(row.y != null ? row.y : row.Y, 0);
-        if (!inBounds(x, y, bounds)) {
-          return;
-        }
-        var siteTypeNo = toInt(row.prodSiteType != null ? row.prodSiteType : row.ProdSiteType, 0);
-        var coord = coordLookup[x + "," + y] || { x: x, y: y };
-        var siteTypeRules = (refProductionSites || []).filter(function (siteRule) {
-          return toInt(siteRule.siteTypeNo != null ? siteRule.siteTypeNo : siteRule.SiteTypeNo, 0) === siteTypeNo;
-        });
-        var selectedRule = selectMatchingProductionRule(siteTypeRules, coord) || { SiteTypeNo: siteTypeNo };
-        var target = getProductionRowForRule(rows, selectedRule, coord);
-        if (target) {
-          target.buildCount += 1;
-          target.buildLd += toInt(selectedRule.cost != null ? selectedRule.cost : selectedRule.Cost, 0);
-          target.buildCitizens += toInt(
-            selectedRule.citizensRequired != null ? selectedRule.citizensRequired : selectedRule.CitizensRequired,
-            0,
-          );
-        }
-      });
-
-      function applyFactoryInputConsumption(productionRows, warehouse) {
-        var factoriesRow = null;
-        var producedInputs = { wood: 0, ore: 0, zinc: 0, textiles: 0 };
-        (productionRows || []).forEach(function (row) {
-          if (row && row.key === "factories") {
-            factoriesRow = row;
-            return;
-          }
-          if (!row || !row.resources) {
-            return;
-          }
-          // Factory can use same-turn resource outputs from other production rows.
-          producedInputs.wood += Math.max(0, toInt(row.resources.wood, 0));
-          producedInputs.ore += Math.max(0, toInt(row.resources.ore, 0));
-          producedInputs.zinc += Math.max(0, toInt(row.resources.zinc, 0));
-          producedInputs.textiles += Math.max(0, toInt(row.resources.textiles, 0));
-        });
-        if (!factoriesRow) {
-          return;
-        }
-
-        // Factory rule: every 100 EcPts consumes 1 ore, 1 zinc, 5 textiles, 20 wood.
-        var plannedEcPts = Math.max(0, toInt(factoriesRow.resources && factoriesRow.resources.ecPts, 0));
-        var plannedBlocks = Math.floor(plannedEcPts / 100);
-        var availableOre = Math.max(0, toInt(warehouse && warehouse.ore, 0) + producedInputs.ore);
-        var availableZinc = Math.max(0, toInt(warehouse && warehouse.zinc, 0) + producedInputs.zinc);
-        var availableTextiles = Math.max(0, toInt(warehouse && warehouse.textiles, 0) + producedInputs.textiles);
-        var availableWood = Math.max(0, toInt(warehouse && warehouse.wood, 0) + producedInputs.wood);
-        var maxBlocksByInputs = Math.min(
-          Math.floor(availableOre / 1),
-          Math.floor(availableZinc / 1),
-          Math.floor(availableTextiles / 5),
-          Math.floor(availableWood / 20),
-        );
-        var actualBlocks = Math.max(0, Math.min(plannedBlocks, maxBlocksByInputs));
-
-        factoriesRow.resources.ecPts = actualBlocks * 100;
-        factoriesRow.resources.ore = -(actualBlocks * 1);
-        factoriesRow.resources.zinc = -(actualBlocks * 1);
-        factoriesRow.resources.textiles = -(actualBlocks * 5);
-        factoriesRow.resources.wood = -(actualBlocks * 20);
-      }
-
-      function applyMintGoldConstraint(productionRows, warehouse) {
-        var mintsRow = null;
-        var producedGold = 0;
-        (productionRows || []).forEach(function (row) {
-          if (!row || !row.resources) {
-            return;
-          }
-          if (row.key === "mints") {
-            mintsRow = row;
-            return;
-          }
-          producedGold += Math.max(0, toInt(row.resources.gold, 0));
-        });
-        if (!mintsRow) {
-          return;
-        }
-        var plannedLd = Math.max(0, toInt(mintsRow.resources.money, 0));
-        if (plannedLd <= 0) {
-          mintsRow.resources.money = 0;
-          mintsRow.resources.gold = 0;
-          return;
-        }
-
-        var warehouseGold = Math.max(0, toInt(warehouse && warehouse.gold, 0));
-        var availableGold = Math.max(0, warehouseGold + producedGold);
-        var mintSiteCount = Math.max(0, toInt(mintsRow.workCount, 0));
-        if (mintSiteCount <= 0 || availableGold <= 0) {
-          mintsRow.resources.money = 0;
-          mintsRow.resources.gold = 0;
-          return;
-        }
-
-        var maxGoldNeeded = mintSiteCount * mintGoldPerSiteCap;
-        var ldPerMintSite = plannedLd / mintSiteCount;
-        var fullMintLd = plannedLd;
-        // Spreadsheet formula mirror:
-        // =IF((G18*F18)+W3>G9*20,G9*F9,(W3+W18)*F9/20)
-        // Mapping:
-        // - (G18*F18)+W3 -> producedGold + warehouseGold
-        // - G9*20        -> mintSiteCount * 20
-        // - G9*F9        -> fullMintLd (mint work * average produce per mint site)
-        // - (W3+W18)*F9/20 -> availableGold * ldPerMintSite / 20
-        var actualLd =
-          availableGold > maxGoldNeeded
-            ? fullMintLd
-            : Math.round((availableGold * ldPerMintSite) / mintGoldPerSiteCap);
-        var actualGoldUsed = Math.max(0, Math.min(availableGold, maxGoldNeeded));
-        mintsRow.resources.money = actualLd;
-        mintsRow.resources.gold = -Math.round(actualGoldUsed);
-      }
-
-      var warehouseForConstraints = normalizeWarehouseForDisplay(
-        getWarehouseRowForSphere(tabKey),
-        tabKey,
-      );
-      applyFactoryInputConsumption(rows, warehouseForConstraints);
-      applyMintGoldConstraint(rows, warehouseForConstraints);
-
-      return rows;
-    }
-
-    function sumResourceRows(rows) {
-      var total = createEmptyResourceBag();
-      (rows || []).forEach(function (row) {
-        resourceKeys.forEach(function (key) {
-          total[key] += toInt(row.resources && row.resources[key], 0);
-        });
-      });
-      return total;
-    }
-
-    function sumProductionCitizens(rows) {
-      return (rows || []).reduce(function (sum, row) {
-        return sum + toInt(row.maintenanceWorkers, 0) + toInt(row.buildCitizens, 0);
-      }, 0);
+    function createProductionModelInput(tabKey, buildRows) {
+      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+      return {
+        tabKey: tabKey,
+        buildRows: buildRows || [],
+        mapRows: turnReport.mapCoordinates || turnReport.MapCoordinates || [],
+        productionSiteRules: getRulesProductionSites(),
+        selectedState: normalizeStateCode($scope.masterData && $scope.masterData.selectedState),
+        sphereByTab: sphereByTab,
+        warehouse: normalizeWarehouseForDisplay(getWarehouseRowForSphere(tabKey), tabKey),
+      };
     }
 
     function getTurnSheetRows(camelKey, pascalKey) {
@@ -1129,10 +506,6 @@ austerlitzModule.controller(
     function getTurnReportBrigades() {
       var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
       return turnReport.brigades || turnReport.Brigades || [];
-    }
-
-    function isEuropeCoordinate(x, y) {
-      return inBounds(x, y, sphereByTab.europe);
     }
 
     function getArmyItemByShortName(shortName) {
@@ -1577,19 +950,6 @@ austerlitzModule.controller(
       return rows;
     }
 
-    function getComputedSphereForTab(tabKey) {
-      if (tabKey === "europe") {
-        return "Europe";
-      }
-      if (tabKey === "caribbean") {
-        return "Caribbean";
-      }
-      if (tabKey === "india") {
-        return "India";
-      }
-      return "";
-    }
-
     function getFinanceRowValueByLabel(rows, label) {
       var list = rows || [];
       for (var i = 0; i < list.length; i++) {
@@ -1620,9 +980,9 @@ austerlitzModule.controller(
         rows: [],
       };
       var productionRowsByTab = {
-        europe: buildProductionModel("europe", buildRows || []),
-        caribbean: buildProductionModel("caribbean", buildRows || []),
-        india: buildProductionModel("india", buildRows || []),
+        europe: economyProductionFactory.buildProductionModel(createProductionModelInput("europe", buildRows)),
+        caribbean: economyProductionFactory.buildProductionModel(createProductionModelInput("caribbean", buildRows)),
+        india: economyProductionFactory.buildProductionModel(createProductionModelInput("india", buildRows)),
       };
       Object.keys(economyTabs).forEach(function (tabKey) {
         var sphere = getComputedSphereForTab(tabKey);
@@ -1819,213 +1179,7 @@ austerlitzModule.controller(
     }
 
     function estimateTradeSummaryForSphere(tabKey) {
-      var fromTurnSheet = estimateTradeSummaryFromTurnSheet(tabKey);
-      if (fromTurnSheet !== null) {
-        return fromTurnSheet;
-      }
-
-      return estimateTradeSummaryHeuristic(tabKey);
-    }
-
-    function estimateTradeSummaryFromTurnSheet(tabKey) {
-      var bounds = sphereByTab[tabKey];
-      if (!bounds) {
-        return null;
-      }
-
-      var turnSheet = ($scope.masterData && $scope.masterData.turnSheet) || {};
-      var ts17Rows = turnSheet.tsTradeAndLoading1 || turnSheet.TSTradeAndLoading1 || [];
-      var ts19Rows = turnSheet.tsTradeAndLoading2 || turnSheet.TSTradeAndLoading2 || [];
-      var allRows = (ts17Rows || []).concat(ts19Rows || []);
-      if (!allRows.length) {
-        return null;
-      }
-
-      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
-      var tradingCities = turnReport.tradingPortsAndCities || turnReport.TradingPortsAndCities || [];
-      var cityLookup = {};
-      (tradingCities || []).forEach(function (city) {
-        var itemNo = toInt(city.itemNo != null ? city.itemNo : city.ItemNo, 0);
-        if (itemNo > 0) {
-          cityLookup[itemNo] = city;
-        }
-      });
-
-      var grouped = {};
-      var relevantCount = 0;
-      var hasAnyTradeMarkerRows = false;
-
-      (allRows || []).forEach(function (row) {
-        var marker = toText(row.rowMarker != null ? row.rowMarker : row.RowMarker, "").toUpperCase();
-        if (marker && marker !== "TRADE") {
-          return;
-        }
-        hasAnyTradeMarkerRows = true;
-
-        var goodsId = toInt(row.goods != null ? row.goods : row.Goods, 0);
-        var qty = Math.max(0, toInt(row.quantity != null ? row.quantity : row.Quantity, 0));
-        if (goodsId <= 0 || qty <= 0) {
-          return;
-        }
-
-        var fromNo = toInt(row.from != null ? row.from : row.From, toInt(row.source != null ? row.source : row.Source, 0));
-        var toNo = toInt(row.to != null ? row.to : row.To, toInt(row.destination != null ? row.destination : row.Destination, 0));
-        if (fromNo <= 0 || toNo <= 0) {
-          return;
-        }
-
-        var fromCity = cityLookup[fromNo];
-        var toCity = cityLookup[toNo];
-        var fromIsTradeCity = !!fromCity;
-        var toIsTradeCity = !!toCity;
-        if (fromIsTradeCity === toIsTradeCity) {
-          return;
-        }
-
-        var city = fromIsTradeCity ? fromCity : toCity;
-        var cityX = toInt(city && (city.x != null ? city.x : city.X), 0);
-        var cityY = toInt(city && (city.y != null ? city.y : city.Y), 0);
-        if (!inBounds(cityX, cityY, bounds)) {
-          return;
-        }
-
-        var cityItemNo = fromIsTradeCity ? fromNo : toNo;
-
-        relevantCount += 1;
-        var key = cityItemNo + "|" + goodsId;
-        if (!grouped[key]) {
-          grouped[key] = {
-            cityItemNo: cityItemNo,
-            goodsId: goodsId,
-            directBuyQty: 0,
-            sellQty: 0,
-            sellN: 0,
-          };
-        }
-
-        // Direction rule: TO trade city = sell, FROM trade city = buy.
-        if (toIsTradeCity) {
-          grouped[key].sellN += 1;
-          if (!grouped[key].sellQty) {
-            grouped[key].sellQty = qty;
-          }
-        } else {
-          grouped[key].directBuyQty += qty;
-        }
-      });
-
-      if (!relevantCount) {
-        // If TRADE rows exist but none target this sphere's warehouse,
-        // net trade for this sphere is explicitly zero.
-        if (hasAnyTradeMarkerRows) {
-          return { directSelling: 0, directBuying: 0 };
-        }
-        return null;
-      }
-
-      var totalDirectSelling = 0;
-      var totalDirectBuying = 0;
-      Object.keys(grouped).forEach(function (groupKey) {
-        var item = grouped[groupKey];
-        var city = cityLookup[item.cityItemNo];
-        var cityRate = Math.max(0, toInt(city.rate != null ? city.rate : city.Rate, 0));
-        if (cityRate <= 0) {
-          return;
-        }
-
-        var cityKey = tradeGoodsIdToKey[item.goodsId];
-        if (!cityKey) {
-          return;
-        }
-
-        var goodsFactor = Math.max(0, toInt(goodsFactorByKey[cityKey], 0));
-        var cityStock = Math.max(
-          0,
-          toInt(
-            city[cityKey] != null
-              ? city[cityKey]
-              : city[cityKey.charAt(0).toUpperCase() + cityKey.slice(1)],
-            0,
-          ),
-        );
-        var directBuyQty = Math.max(0, item.directBuyQty);
-        var qty = Math.max(0, item.sellQty);
-        var n = Math.max(0, item.sellN);
-        var qtyS = qty * n;
-        var netStock = Math.max(0, cityStock - directBuyQty);
-
-        var buyPerUnit = (1600 * goodsFactor * cityRate) / Math.sqrt(cityStock + 10);
-        var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-        var totalSell = 0;
-        if (qty > 0 && n > 0) {
-          for (var i = 0; i < n; i++) {
-            var existingQtyForRound = netStock + i * qty;
-            var sellPerUnit = (1500 * goodsFactor * cityRate) / (Math.sqrt(existingQtyForRound + 10) + Math.sqrt(qty));
-            totalSell += Math.floor(sellPerUnit * qty);
-          }
-        }
-
-        if (qtyS > 0 || directBuyQty > 0) {
-          totalDirectSelling += totalSell;
-          totalDirectBuying += totalDirect;
-        }
-      });
-
-      return {
-        directSelling: totalDirectSelling,
-        directBuying: totalDirectBuying,
-      };
-    }
-
-    function estimateTradeSummaryHeuristic(tabKey) {
-      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
-      var tradingCities = turnReport.tradingPortsAndCities || turnReport.TradingPortsAndCities || [];
-      var bounds = sphereByTab[tabKey];
-      if (!bounds || !tradingCities || !tradingCities.length) {
-        return { directSelling: 0, directBuying: 0 };
-      }
-
-      var totalDirectSelling = 0;
-      var totalDirectBuying = 0;
-      var tradeFraction = 0.1;
-
-      (tradingCities || []).forEach(function (city) {
-        var x = toInt(city.x != null ? city.x : city.X, 0);
-        var y = toInt(city.y != null ? city.y : city.Y, 0);
-        if (!inBounds(x, y, bounds)) {
-          return;
-        }
-
-        var rate = Math.max(0, toInt(city.rate != null ? city.rate : city.Rate, 0));
-        if (rate <= 0) {
-          return;
-        }
-
-        (tradeEstimateGoodsConfig || []).forEach(function (good) {
-          var stock = toInt(city[good.cityKey] != null ? city[good.cityKey] : city[good.cityKey.charAt(0).toUpperCase() + good.cityKey.slice(1)], 0);
-          if (stock <= 0) {
-            return;
-          }
-
-          var qtyC = Math.max(0, stock);
-          var tradeQty = Math.max(1, Math.round(qtyC * tradeFraction));
-          var directBuyQty = tradeQty;
-          var netStock = Math.max(0, qtyC - directBuyQty);
-          var goodsFactor = Math.max(0, toInt(good.goodsFactor, 0));
-
-          var buyPerUnit = (1600 * goodsFactor * rate) / Math.sqrt(qtyC + 10);
-          var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-          var sellPerUnit = (1500 * goodsFactor * rate) / (Math.sqrt(netStock + 10) + Math.sqrt(tradeQty));
-          var totalSell = Math.floor(sellPerUnit * tradeQty);
-          totalDirectSelling += totalSell;
-          totalDirectBuying += totalDirect;
-        });
-      });
-
-      return {
-        directSelling: totalDirectSelling,
-        directBuying: totalDirectBuying,
-      };
+      return economyTradeFactory.estimateTradeSummaryForSphere(createTradeEstimationInput(tabKey));
     }
 
     function buildBalanceRows(warehouse, productionRows) {
@@ -2059,9 +1213,9 @@ austerlitzModule.controller(
 
       return getBuildRowsForTurn().then(function (buildRows) {
         var productionRowsByTab = {
-          europe: buildProductionModel("europe", buildRows || []),
-          caribbean: buildProductionModel("caribbean", buildRows || []),
-          india: buildProductionModel("india", buildRows || []),
+          europe: economyProductionFactory.buildProductionModel(createProductionModelInput("europe", buildRows)),
+          caribbean: economyProductionFactory.buildProductionModel(createProductionModelInput("caribbean", buildRows)),
+          india: economyProductionFactory.buildProductionModel(createProductionModelInput("india", buildRows)),
         };
         $scope.economyProductionRows = productionRowsByTab[tabKey] || [];
         $scope.economyProductionSummaryRows = buildProductionSummaryRows(tabKey, $scope.economyProductionRows);

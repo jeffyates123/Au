@@ -35,6 +35,14 @@
         >
           Intelligence
         </button>
+        <button
+          type="button"
+          class="landUnitsTabButton"
+          ng-class="{ active: activeArmyTab === 'taxRevenue' }"
+          ng-click="selectArmyTab('taxRevenue')"
+        >
+          Tax Revenue
+        </button>
       </div>
     </div>
     <div class="landUnitsTurnInfo">
@@ -424,6 +432,177 @@
         >
           Close
         </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="landUnitsTabPane landUnitsTaxRevenuePane"
+    ng-show="activeArmyTab === 'taxRevenue'"
+    ng-controller="intelligenceTaxRevenueController"
+    ng-init="initTaxRevenue()"
+  >
+    <div class="alert alert-info" ng-show="isTaxRevenueLoading">
+      Loading tax revenue...
+    </div>
+    <div class="alert alert-danger" ng-show="taxRevenueLoadError">
+      {{taxRevenueLoadError}}
+    </div>
+
+    <div class="landUnitsTaxRevenueSphereSelector" ng-show="!isTaxRevenueLoading">
+      <label class="radio-inline">
+        <input
+          type="radio"
+          name="productionSphere"
+          ng-model="selectedProductionSphere"
+          value="total"
+          ng-change="selectProductionSphere(selectedProductionSphere)"
+        />
+        Total
+      </label>
+      <label class="radio-inline">
+        <input
+          type="radio"
+          name="productionSphere"
+          ng-model="selectedProductionSphere"
+          value="europe"
+          ng-change="selectProductionSphere(selectedProductionSphere)"
+        />
+        Europe
+      </label>
+      <label class="radio-inline">
+        <input
+          type="radio"
+          name="productionSphere"
+          ng-model="selectedProductionSphere"
+          value="caribbean"
+          ng-change="selectProductionSphere(selectedProductionSphere)"
+        />
+        Caribbean
+      </label>
+      <label class="radio-inline">
+        <input
+          type="radio"
+          name="productionSphere"
+          ng-model="selectedProductionSphere"
+          value="india"
+          ng-change="selectProductionSphere(selectedProductionSphere)"
+        />
+        India
+      </label>
+    </div>
+
+    <div class="landUnitsTableWrap" ng-show="!isTaxRevenueLoading">
+      <table class="table landUnitsTable landUnitsTaxRevenueTable">
+        <thead>
+          <tr>
+            <th class="landUnitsTaxRevenueLabelCol">Region</th>
+            <th
+              class="landUnitsTaxRevenueCountryCol"
+              ng-repeat="country in taxRevenueCountries track by country.state"
+              title="Tax rate: {{country.taxRate}}"
+            >
+              {{country.stateName}} ({{country.state}})
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="row in taxRevenueRows track by row.key"
+            ng-class="{
+              landUnitsProductionMatrixTotal: row.totalLine,
+              landUnitsProductionMatrixCosts: row.costLine
+            }"
+          >
+            <td class="landUnitsTaxRevenueLabelCol">{{row.label}}</td>
+            <td
+              class="landUnitsTaxRevenueCountryCol"
+              ng-repeat="country in taxRevenueCountries track by country.state"
+            >
+              {{formatTaxRevenueValue(getTaxRevenueValue(row, country))}}
+            </td>
+          </tr>
+          <tr ng-if="!taxRevenueRows || taxRevenueRows.length === 0">
+            <td
+              class="text-muted"
+              colspan="{{1 + ((taxRevenueCountries && taxRevenueCountries.length) || 0)}}"
+            >
+              No tax rows available for this turn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsTaxRevenueProductionSection" ng-if="selectedProductionMatrix">
+      <h3 class="landUnitsTaxRevenueProductionTitle">
+        Working {{selectedProductionMatrix.sphereLabel}} Production Sites
+      </h3>
+      <div class="landUnitsTableWrap">
+        <table class="table landUnitsTable landUnitsTaxRevenueTable landUnitsProductionMatrixTable">
+          <thead>
+            <tr>
+              <th class="landUnitsTaxRevenueLabelCol">Production Site</th>
+              <th
+                class="landUnitsTaxRevenueCountryCol"
+                ng-repeat="country in taxRevenueCountries track by country.state"
+              >
+                {{country.stateName}}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              ng-repeat="row in selectedProductionMatrix.workingRows track by row.key"
+              ng-class="{
+                landUnitsProductionMatrixTotal: row.totalLine,
+                landUnitsProductionMatrixCosts: row.costLine
+              }"
+            >
+              <td class="landUnitsTaxRevenueLabelCol">{{row.label}}</td>
+              <td
+                class="landUnitsTaxRevenueCountryCol"
+                ng-repeat="country in taxRevenueCountries track by country.state"
+              >
+                {{formatTaxRevenueValue(getTaxRevenueValue(row, country))}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="landUnitsTaxRevenueProductionTitle">
+        UNDERPOPULATED {{selectedProductionMatrix.sphereLabel}} Production Sites
+      </h3>
+      <div class="landUnitsTableWrap">
+        <table class="table landUnitsTable landUnitsTaxRevenueTable landUnitsProductionMatrixTable">
+          <thead>
+            <tr>
+              <th class="landUnitsTaxRevenueLabelCol">Production Site</th>
+              <th
+                class="landUnitsTaxRevenueCountryCol"
+                ng-repeat="country in taxRevenueCountries track by country.state"
+              >
+                {{country.stateName}}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              ng-repeat="row in selectedProductionMatrix.underpopulatedRows track by row.key"
+              ng-class="{ landUnitsProductionMatrixTotal: row.totalLine }"
+              ng-if="hasProductionSiteCount(row)"
+            >
+              <td class="landUnitsTaxRevenueLabelCol">{{row.label}}</td>
+              <td
+                class="landUnitsTaxRevenueCountryCol"
+                ng-repeat="country in taxRevenueCountries track by country.state"
+              >
+                {{formatTaxRevenueValue(getTaxRevenueValue(row, country))}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

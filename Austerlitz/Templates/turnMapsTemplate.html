@@ -211,6 +211,7 @@
                         is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
                         is-movement-unit-boarded="isMovementXArmyUnitBoarded(unit)"
                         is-movement-unit-disabled="isMovementXArmyUnitDisabled(unit)"
+                        on-form-federation-saved="refreshMovementXFormFederations()"
                         on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
                     </existing-army>
                     <existing-navy
@@ -311,6 +312,7 @@
                 is-movement-unit-moved="isMovementXArmyUnitMoved(unit)"
                 is-movement-unit-boarded="isMovementXArmyUnitBoarded(unit)"
                 is-movement-unit-disabled="isMovementXArmyUnitDisabled(unit)"
+                on-form-federation-saved="refreshMovementXFormFederations()"
                 on-movement-select="selectMovementXArmyUnit(unit, selectionType)">
             </existing-army>
             <existing-navy

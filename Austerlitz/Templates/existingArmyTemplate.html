@@ -381,7 +381,15 @@
           <td class="landUnitsNameCol">{{commander.name}}</td>
           <td class="landUnitsPositionCol">{{commander.position || '-'}}</td>
           <td class="landUnitsFedCol landUnitsMovementFederationCol">
-            <span class="landUnitsFederationChip">{{commander.fed || '-'}}</span>
+            <button
+              type="button"
+              class="landUnitsFederationChip"
+              ng-class="{ landUnitsFederationChipChanged: commander.fedChanged }"
+              ng-click="openFormFederationModal(commander, $event)"
+              title="Click to form or change federation"
+            >
+              {{commander.fed || '-'}}
+            </button>
             <button
               type="button"
               class="btn btn-default btn-xs"
@@ -516,12 +524,15 @@
             >
               {{brigade.fed || '-'}}
             </button>
-            <span
+            <button
               ng-if="isMovementSelectionMode()"
               class="landUnitsFederationChip"
+              ng-class="{ landUnitsFederationChipChanged: brigade.fedChanged }"
+              ng-click="openFormFederationModal(brigade, $event)"
+              title="Click to form or change federation"
             >
               {{brigade.fed || '-'}}
-            </span>
+            </button>
             <button
               ng-if="isMovementSelectionMode()"
               type="button"

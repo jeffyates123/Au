@@ -37,8 +37,7 @@ austerlitzModule.factory(
     }
 
     function toFloat(value, fallback) {
-      var parsed = parseFloat(value);
-      return isNaN(parsed) ? fallback || 0 : parsed;
+      return setUpBrigadesSharedFactory.toFloat(value, fallback);
     }
 
     function hasMeaningfulText(value) {
@@ -82,21 +81,11 @@ austerlitzModule.factory(
     }
 
     function getSectionNumber(sectionNo) {
-      var text = (sectionNo || "").toString().trim().toUpperCase();
-      if (!text) return null;
-      if (text.indexOf("TS") === 0) text = text.substring(2);
-      var parsed = parseInt(text, 10);
-      return isNaN(parsed) ? null : parsed;
+      return setUpBrigadesSharedFactory.getSectionNoFromTsType(sectionNo);
     }
 
     function getSectionNoFromTsType(tsType) {
-      var text = (tsType || "").toString().trim().toUpperCase();
-      if (!text) return null;
-      if (text.indexOf("TS") === 0) {
-        text = text.substring(2);
-      }
-      var parsed = parseInt(text, 10);
-      return isNaN(parsed) ? null : parsed;
+      return setUpBrigadesSharedFactory.getSectionNoFromTsType(tsType);
     }
 
     function hasAnySetUpBattalion(row) {
@@ -132,13 +121,10 @@ austerlitzModule.factory(
     }
 
     function normalizeSetUpBrigadeRow(row) {
-      angular.forEach(["depot"].concat(BATT_FIELDS), function (field) {
-        row[field] = turnSheetValueRulesFactory.toPositiveIntOrNull(row[field]);
-      });
-      if (!row.depot || !hasMeaningfulText(row.brigadeName)) {
-        row.brigadeName = "";
-      }
-      return row;
+      return setUpBrigadesSharedFactory.normalizeSetUpBrigadeRow(
+        row,
+        turnSheetValueRulesFactory,
+      );
     }
 
     return {
@@ -148,8 +134,7 @@ austerlitzModule.factory(
 
         // SECTION: Shared sort and normalization helpers.
         $scope.getTsTypeSortOrder = function (tsType) {
-          var idx = TS_COST_TYPE_ORDER.indexOf(tsType);
-          return idx >= 0 ? idx : TS_COST_TYPE_ORDER.length + 99;
+          return setUpBrigadesSharedFactory.getTsTypeSortOrder(tsType);
         };
 
         $scope.normalizeSetUpBrigadesRows = function (rows) {
@@ -157,27 +142,10 @@ austerlitzModule.factory(
         };
 
         $scope.normalizeTransferGoodsRows = function (rows) {
-          return (rows || []).map(function (row) {
-            row.from = turnSheetValueRulesFactory.toPositiveIntOrNull(row.from);
-            row.to = turnSheetValueRulesFactory.toPositiveIntOrNull(row.to);
-            row.louisdore = turnSheetValueRulesFactory.toPositiveIntOrNull(
-              row.louisdore,
-            );
-            row.citizens = turnSheetValueRulesFactory.toPositiveIntOrNull(
-              row.citizens,
-            );
-            row.ecPts = turnSheetValueRulesFactory.toPositiveIntOrNull(
-              row.ecPts,
-            );
-            row.wood = turnSheetValueRulesFactory.toPositiveIntOrNull(row.wood);
-            row.horses = turnSheetValueRulesFactory.toPositiveIntOrNull(
-              row.horses,
-            );
-            row.textiles = turnSheetValueRulesFactory.toPositiveIntOrNull(
-              row.textiles,
-            );
-            return row;
-          });
+          return setUpBrigadesSharedFactory.normalizeTransferGoodsRows(
+            rows,
+            turnSheetValueRulesFactory,
+          );
         };
 
         // SECTION: TS03 rows and row-edit actions.
@@ -414,21 +382,14 @@ austerlitzModule.factory(
         };
 
         $scope.calculateHeadcountEfDrop = function (missingMen, size) {
-          if (missingMen <= 0) return 0;
-          if (missingMen > size) return 2;
-          if (missingMen > size * 0.5) return 1;
-          return 0;
+          return setUpBrigadesSharedFactory.calculateHeadcountEfDrop(
+            missingMen,
+            size,
+          );
         };
 
         $scope.isMountedArmyItem = function (armyItem) {
-          if (!armyItem) return false;
-          var shortName = (armyItem.shortName || "").toString();
-          var name = (armyItem.name || "").toString();
-          return (
-            !!armyItem.isCavalry ||
-            /mounted/i.test(name) ||
-            /^mc$/i.test(shortName)
-          );
+          return setUpBrigadesSharedFactory.isMountedArmyItem(armyItem);
         };
 
         $scope.pickSetUpArmyItem = function (armyItem) {
@@ -872,18 +833,10 @@ austerlitzModule.factory(
         };
 
         $scope.refreshTransferGoodsCostRows = function () {
-          $scope.tsTransferGoodsCostRows = (
-            $scope.tsTransferGoodsList || []
-          ).filter(function (row) {
-            return (
-              row.from != null ||
-              row.to != null ||
-              row.louisdore != null ||
-              row.citizens != null ||
-              row.ecPts != null ||
-              row.horses != null
+          $scope.tsTransferGoodsCostRows =
+            setUpBrigadesSharedFactory.getTransferGoodsCostRows(
+              $scope.tsTransferGoodsList,
             );
-          });
         };
 
         $scope.loadManagedTransferGoodsRowsFromStorage = function () {
@@ -965,18 +918,11 @@ austerlitzModule.factory(
             hasAnyGoods: hasAnyGoods,
             getTsTypeSortOrder: $scope.getTsTypeSortOrder,
             getSortedFilledRows: function (rows, requiredFields) {
-              return (rows || [])
-                .filter(function (row) {
-                  return requiredFields.every(function (field) {
-                    return row && row[field] != null && row[field] !== "";
-                  });
-                })
-                .sort(function (left, right) {
-                  return (
-                    toInt(left && left.orderNo, 0) -
-                    toInt(right && right.orderNo, 0)
-                  );
-                });
+              return setUpBrigadesSharedFactory.getSortedFilledRows(
+                rows,
+                requiredFields,
+                toInt,
+              );
             },
             getSphereFromDepotItemNo: $scope.getSphereFromDepotItemNo,
             getWarehouseNoFromSphere: $scope.getWarehouseNoFromSphere,

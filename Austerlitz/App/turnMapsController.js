@@ -187,6 +187,14 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
+    $scope.refreshMovementXFormFederations = function () {
+        return turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (rows) {
+            $scope.movementFormFederationRows = rows || [];
+            $scope.refreshFilteredMovementItemsForMap();
+            $scope.refreshMovementGridTypeValues();
+        });
+    };
+
     $scope.selectMovementXNavyShip = function (ship, selectionType) {
         if (!ship || ship.id == null) return;
 

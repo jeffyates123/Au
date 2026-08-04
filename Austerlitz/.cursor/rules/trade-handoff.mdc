@@ -1,0 +1,11 @@
+---
+description: Trade and shared boarding handoff guidance
+globs: "{App/trade/**,App/tradeController.js,Templates/tradeTemplate.html,App/boardingSharedFactory.js}"
+alwaysApply: false
+---
+
+# Trade and boarding
+
+Before changing Trade behavior, read `docs/handoffs/trade.md`.
+
+For TS20 capacity, boarding, or unloading changes, also read `docs/handoffs/boarding-ts20.md`. Preserve the distinction between TS17 and TS19 trade/loading orders.

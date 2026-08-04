@@ -45,6 +45,87 @@ austerlitzModule.factory("setUpBrigadesSharedFactory", function () {
     );
   }
 
+  function toFloat(value, fallback) {
+    var parsed = parseFloat(value);
+    return isNaN(parsed) ? fallback || 0 : parsed;
+  }
+
+  function getSectionNoFromTsType(tsType) {
+    var text = (tsType || "").toString().trim().toUpperCase();
+    if (!text) return null;
+    if (text.indexOf("TS") === 0) text = text.substring(2);
+    var parsed = parseInt(text, 10);
+    return isNaN(parsed) ? null : parsed;
+  }
+
+  function getTsTypeSortOrder(tsType) {
+    var idx = TS_COST_TYPE_ORDER.indexOf(tsType);
+    return idx >= 0 ? idx : TS_COST_TYPE_ORDER.length + 99;
+  }
+
+  function getSortedFilledRows(rows, requiredFields, toInt) {
+    return (rows || [])
+      .filter(function (row) {
+        return requiredFields.every(function (field) {
+          return row && row[field] != null && row[field] !== "";
+        });
+      })
+      .sort(function (left, right) {
+        return toInt(left && left.orderNo, 0) - toInt(right && right.orderNo, 0);
+      });
+  }
+
+  function normalizeSetUpBrigadeRow(row, valueRules) {
+    angular.forEach(["depot"].concat(BATT_FIELDS), function (field) {
+      row[field] = valueRules.toPositiveIntOrNull(row[field]);
+    });
+    if (!row.depot || !hasMeaningfulText(row.brigadeName)) {
+      row.brigadeName = "";
+    }
+    return row;
+  }
+
+  function normalizeTransferGoodsRows(rows, valueRules) {
+    return (rows || []).map(function (row) {
+      angular.forEach(
+        ["from", "to", "louisdore", "citizens", "ecPts", "wood", "horses", "textiles"],
+        function (field) {
+          row[field] = valueRules.toPositiveIntOrNull(row[field]);
+        },
+      );
+      return row;
+    });
+  }
+
+  function getTransferGoodsCostRows(rows) {
+    return (rows || []).filter(function (row) {
+      return (
+        row.from != null ||
+        row.to != null ||
+        row.louisdore != null ||
+        row.citizens != null ||
+        row.ecPts != null ||
+        row.horses != null
+      );
+    });
+  }
+
+  function calculateHeadcountEfDrop(missingMen, size) {
+    if (missingMen <= 0) return 0;
+    if (missingMen > size) return 2;
+    if (missingMen > size * 0.5) return 1;
+    return 0;
+  }
+
+  function isMountedArmyItem(armyItem) {
+    if (!armyItem) return false;
+    var shortName = (armyItem.shortName || "").toString();
+    var name = (armyItem.name || "").toString();
+    return (
+      !!armyItem.isCavalry || /mounted/i.test(name) || /^mc$/i.test(shortName)
+    );
+  }
+
   return {
     TS_COST_TYPE_ORDER: TS_COST_TYPE_ORDER,
     TS_COST_LABELS: TS_COST_LABELS,
@@ -55,5 +136,14 @@ austerlitzModule.factory("setUpBrigadesSharedFactory", function () {
     MANAGED_TS01_ROW_LIMIT: MANAGED_TS01_ROW_LIMIT,
     hasMeaningfulText: hasMeaningfulText,
     hasAnyGoods: hasAnyGoods,
+    toFloat: toFloat,
+    getSectionNoFromTsType: getSectionNoFromTsType,
+    getTsTypeSortOrder: getTsTypeSortOrder,
+    getSortedFilledRows: getSortedFilledRows,
+    normalizeSetUpBrigadeRow: normalizeSetUpBrigadeRow,
+    normalizeTransferGoodsRows: normalizeTransferGoodsRows,
+    getTransferGoodsCostRows: getTransferGoodsCostRows,
+    calculateHeadcountEfDrop: calculateHeadcountEfDrop,
+    isMountedArmyItem: isMountedArmyItem,
   };
 });

@@ -1,0 +1,11 @@
+---
+description: Turnsheet API, viewer, and spreadsheet handoff guidance
+globs: "{Controllers/TurnSheetApiController*.cs,App/turnSheet/**,App/turnSheetFactory.js,Services/TurnsheetExcelService*.cs}"
+alwaysApply: false
+---
+
+# Turnsheet changes
+
+Before changing TS01–TS23 behavior, read `docs/handoffs/02-turnsheet-api-and-sections.md`.
+
+Also read `docs/handoffs/03-turnsheet-excel.md` for spreadsheet work, or `docs/handoffs/home-and-turnsheet-viewer.md` for read-only viewer work. Preserve section ownership, row limits, and order numbering.

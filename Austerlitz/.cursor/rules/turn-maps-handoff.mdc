@@ -1,0 +1,11 @@
+---
+description: Turn Maps and TS18 movement handoff guidance
+globs: "{App/turnMaps/**,App/turnMapsController.js,Templates/turnMapsTemplate.html}"
+alwaysApply: false
+---
+
+# Turn Maps
+
+Before changing maps or TS18 movement, read `docs/handoffs/turn-maps.md`.
+
+For Movement X or reusable unit pickers, also read `movement-x-handoff.md`, then the relevant `docs/handoffs/army.md` or `docs/handoffs/navy.md`. Preserve provisional-selection and routed-order autosave behavior.

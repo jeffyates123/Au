@@ -1,0 +1,11 @@
+---
+description: Entity Framework schema and migration handoff guidance
+globs: "{Austerlitz.DAL/**/*.edmx,Austerlitz.DAL/TR_*.cs,Austerlitz.DAL/TS_*.cs,Austerlitz.DAL/REF_*.cs,database/**/*.sql,Web.config}"
+alwaysApply: false
+---
+
+# Database changes
+
+Before changing entities, schema, migrations, or the database connection, read `docs/handoffs/database-schema.md`.
+
+Preserve the `TR_*` imported report, `TS_*` editable order, and `REF_*` reference-data ownership boundary. Update migrations and the Entity Framework model together.

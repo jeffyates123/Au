@@ -1,0 +1,15 @@
+---
+description: Shared TS01, TS14, and TS20 workflow handoff guidance
+globs: "{App/boardingSharedFactory.js,App/setUpTransferPipelineFactory.js,App/ts01TransferGoodsUtilsFactory.js,App/turnAssignmentResolverFactory.js}"
+alwaysApply: false
+---
+
+# Shared turn workflows
+
+Before changing a shared boarding, managed-transfer, or assignment resolver factory, read the matching handoff:
+
+- TS20: `docs/handoffs/boarding-ts20.md`
+- TS01: `docs/handoffs/managed-ts01-transfers.md`
+- TS14: `docs/handoffs/federation-assignment-replay.md`
+
+These factories serve multiple screens. Verify at least two affected hosts after a behavior change.

@@ -1,0 +1,11 @@
+---
+description: Turn report import handoff guidance
+globs: "{Controllers/FileLoadApiController.cs,Services/TurnReportImportService*.cs,App/homeController.js,Templates/homeTemplate.html}"
+alwaysApply: false
+---
+
+# Turn report import
+
+Before changing report upload, parsing, or import status, read `docs/handoffs/01-turn-report-import.md`.
+
+For shared load state or route behavior, also read `docs/handoffs/00-platform-architecture.md`. Preserve parser ordering and validate with a representative turn report.

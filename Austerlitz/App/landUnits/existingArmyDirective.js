@@ -11,6 +11,7 @@ austerlitzModule.directive("existingArmy", function () {
       isMovementUnitMoved: "&",
       isMovementUnitBoarded: "&",
       isMovementUnitDisabled: "&",
+      onFormFederationSaved: "&",
       selectedMovementItemNo: "=?",
       selectedMovementType: "=?",
       pickerPositionFilter: "=?",
@@ -213,7 +214,11 @@ austerlitzModule.directive("existingArmy", function () {
           return $q.when();
         }
 
-        if (currentMasterData.turnReport && currentMasterData.turnReport.brigades) {
+        if (
+          !$scope.isMovementSelectionMode() &&
+          currentMasterData.turnReport &&
+          currentMasterData.turnReport.brigades
+        ) {
           loadedTurnId = currentTurnId;
           return refreshExistingArmyData();
         }

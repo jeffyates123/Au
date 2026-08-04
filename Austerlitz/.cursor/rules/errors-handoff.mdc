@@ -1,0 +1,11 @@
+---
+description: Turn order error handoff guidance
+globs: "{App/errorsController.js,Services/TurnReportImportService.TurnOrderErrors.cs,Austerlitz.DAL/TR_TurnOrderErrors.cs,Austerlitz.DAL/REF_TurnErrorCodes.cs}"
+alwaysApply: false
+---
+
+# Turn order errors
+
+Before changing parsed error behavior or the Errors screen, read `docs/handoffs/turn-order-errors.md`.
+
+Keep the boundary clear: these are imported report errors, with messages supplied by reference error codes.

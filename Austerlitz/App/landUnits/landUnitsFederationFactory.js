@@ -86,6 +86,9 @@ austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentR
               .postTSRecords(rows, "FormFederations")
               .then(function () {
                 $scope.applyStagedFormFederationChanges(stagedOrders);
+                if (typeof $scope.onFormFederationSaved === "function") {
+                  $scope.onFormFederationSaved();
+                }
                 $scope.closeFormFederationModal();
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);

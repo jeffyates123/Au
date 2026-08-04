@@ -203,6 +203,8 @@
     <Compile Include="Controllers\TurnReportApiController.EconomySummary.cs" />
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Query.cs" />
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Commands.cs" />
+    <Compile Include="Controllers\TurnReportApiController.MathBattles.Calculator.cs" />
+    <Compile Include="Controllers\TurnReportApiController.MathBattles.Recalculation.cs" />
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Support.cs" />
     <Compile Include="Controllers\TurnSheetApiController.cs" />
     <Compile Include="Controllers\TurnSheetApiController.Spreadsheet.cs" />
@@ -282,8 +284,15 @@
     <Content Include="App\menuController.js" />
     <Content Include="App\intelligence\intelligenceBoardingFactory.js" />
     <Content Include="App\intelligenceController.js" />
+    <Content Include="App\intelligenceTaxRevenueController.js" />
     <Content Include="App\trade\tradeBoardingFactory.js" />
     <Content Include="App\tradeController.js" />
+    <Content Include="App\economy\economyConfigFactory.js" />
+    <Content Include="App\economy\economyParseUtilsFactory.js" />
+    <Content Include="App\economy\economyResourceFactory.js" />
+    <Content Include="App\economy\economySphereFactory.js" />
+    <Content Include="App\economy\economyProductionFactory.js" />
+    <Content Include="App\economy\economyTradeFactory.js" />
     <Content Include="App\economyController.js" />
     <Content Include="App\simBattleFactory.js" />
     <Content Include="App\rulesCatalogFactory.js" />
@@ -298,7 +307,6 @@
     <Content Include="App\turnMaps\turnMapsMovementFactory.js" />
     <Content Include="App\turnMaps\turnMapsProductionSitesFactory.js" />
     <Content Include="App\turnMaps\turnMapsTransferGoodsStorageFactory.js" />
-    <Content Include="App\turnMaps\turnMapsSetUpBrigadesFactory.js" />
     <Content Include="App\turnMaps\turnMapsSharedFactory.js" />
     <Content Include="App\turnMaps\turnMapsTsTransferBuilderFactory.js" />
     <Content Include="App\turnMapsController.js" />

@@ -33,6 +33,7 @@ austerlitzModule.controller(
       setUpBrigades: true,
       existingArmy: true,
       intelligence: true,
+      taxRevenue: true,
     };
 
     $scope.masterData = masterData;
@@ -107,8 +108,8 @@ austerlitzModule.controller(
 
     $scope.initLandUnits = function () {
       var requestedTab = ($location.search() && $location.search().tab) || "";
-      if (requestedTab === "intelligence") {
-        $scope.selectArmyTab("intelligence");
+      if (requestedTab === "intelligence" || requestedTab === "taxRevenue") {
+        $scope.selectArmyTab(requestedTab);
         $location.search("tab", null);
       }
 

@@ -1,0 +1,11 @@
+---
+description: Rules catalog and reference data handoff guidance
+globs: "{Controllers/RulesCatalogApiController.cs,Austerlitz.Domain/ReferenceManager.cs,Austerlitz.DAL/Management/RefManager.cs,Austerlitz.DAL/REF_*.cs,App/rulesCatalogFactory.js}"
+alwaysApply: false
+---
+
+# Rules and reference data
+
+Before changing rules catalog, reference data, or regional-map uploads, read `docs/handoffs/rules-and-reference-data.md`.
+
+Treat `REF_*` data as game-wide rules, and verify every affected lookup or calculation after a change.

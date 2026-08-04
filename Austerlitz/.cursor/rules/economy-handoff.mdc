@@ -1,0 +1,11 @@
+---
+description: Economy screen and computed summary handoff guidance
+globs: "{App/economyController.js,Templates/economyTemplate.html,Controllers/TurnReportApiController.EconomySummary.cs,Services/TurnReportImportService.Economy.cs,Austerlitz.DAL/TR_Economy*.cs}"
+alwaysApply: false
+---
+
+# Economy
+
+Before changing Economy, read `docs/handoffs/economy.md`.
+
+Preserve Europe/Caribbean/India sphere behavior, computed-summary ownership, and the `economyBuildFundsChanged` banner update.

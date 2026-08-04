@@ -1,0 +1,11 @@
+---
+description: Navy and fleet handoff guidance
+globs: "{App/navalUnits/**,App/navalUnitsController.js,Templates/navalUnitsTemplate.html,Templates/existingNavyTemplate.html}"
+alwaysApply: false
+---
+
+# Navy
+
+Before changing Navy behavior, read `docs/handoffs/navy.md`.
+
+Read `docs/handoffs/managed-ts01-transfers.md` for managed costs and `docs/handoffs/federation-assignment-replay.md` for TS14. For Existing Navy or Movement X integration, also read `existing-navy-handoff.md` and `movement-x-handoff.md`.

@@ -1,0 +1,11 @@
+---
+description: Math and sea battle handoff guidance
+globs: "{App/mathBattles*,App/mathBattles/**,App/seaBattles*,Controllers/TurnReportApiController.MathBattles*.cs,Services/TurnReportImportService.MathBattles.cs,Austerlitz.DAL/TR_MathBattle*.cs,Templates/mathBattlesTemplate.html,Templates/mathBattlesStatsTemplate.html,Templates/seaBattlesTemplate.html}"
+alwaysApply: false
+---
+
+# Battle screens
+
+Before changing Math Battles, read `docs/handoffs/math-battles.md`. Before changing Sea Battles, read `docs/handoffs/sea-battles.md`.
+
+Preserve battle provenance and JSON compatibility in Math Battles. Sea Battles is client-only and has no persistence API.

@@ -1622,6 +1622,67 @@ textarea {
     max-width: 520px;
 }
 
+.landUnitsTaxRevenuePane {
+    padding-top: 8px;
+}
+
+.landUnitsTaxRevenuePane .landUnitsTaxRevenueTable {
+    min-width: 0;
+    width: max-content;
+    table-layout: auto;
+}
+
+.landUnitsTaxRevenuePane .landUnitsTaxRevenueTable > thead > tr > th,
+.landUnitsTaxRevenuePane .landUnitsTaxRevenueTable > tbody > tr > td {
+    padding: 6px 8px;
+    text-align: right;
+}
+
+.landUnitsTaxRevenuePane .landUnitsTaxRevenueLabelCol {
+    min-width: 190px;
+    text-align: left !important;
+    font-weight: bold;
+}
+
+.landUnitsTaxRevenuePane .landUnitsTaxRevenueCountryCol {
+    min-width: 130px;
+    white-space: nowrap;
+}
+
+.landUnitsTaxRevenueSphereSelector {
+    margin-bottom: 12px;
+}
+
+.landUnitsTaxRevenueSphereSelector .radio-inline {
+    margin-right: 12px;
+}
+
+.landUnitsTaxRevenueProductionSection {
+    margin-top: 18px;
+}
+
+.landUnitsTaxRevenueProductionTitle {
+    margin: 18px 0 6px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.landUnitsProductionMatrixTable .landUnitsTaxRevenueLabelCol {
+    min-width: 140px;
+}
+
+.landUnitsProductionMatrixTotal > td {
+    border-top: 2px solid #777 !important;
+    background: #eeeeee;
+    font-weight: bold;
+}
+
+.landUnitsProductionMatrixCosts > td {
+    background: #faf4e8;
+    font-weight: bold;
+}
+
 .landUnitsSectionHeader {
     display: flex;
     align-items: center;
