@@ -529,7 +529,7 @@ austerlitzModule.controller('turnMapsController', function (
     });
 
     var onViewportResize = function () {
-        $scope.$applyAsync(function () {
+        $scope.$evalAsync(function () {
             $scope.refreshMovementPickerDisplayMode();
         });
     };
