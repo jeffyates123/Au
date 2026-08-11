@@ -35,15 +35,40 @@ austerlitzModule.factory(
         return ($scope.masterData && $scope.masterData.rulesCatalog) || {};
       }
 
+      function getArmyLookupForWeight() {
+        // Existing Army loads REF_ArmyList into armyListByShortName.
+        // masterData.rulesCatalog does not include armyList, so do not rely on it.
+        if (
+          $scope.armyListByShortName &&
+          Object.keys($scope.armyListByShortName).length > 0
+        ) {
+          return $scope.armyListByShortName;
+        }
+
+        return boardingSharedFactory.buildArmyListLookupByShortName(
+          getRulesCatalog(),
+        );
+      }
+
       function getBoardedItemLoadCapacity(itemNo) {
         var liveBrigadeWeight = getLiveBrigadeRawWeight(itemNo);
         if (liveBrigadeWeight > 0) {
           return boardingSharedFactory.toLoadCapacityUnits(liveBrigadeWeight);
         }
 
+        var rulesCatalog = getRulesCatalog();
+        var armyLookup = getArmyLookupForWeight();
+        if (Object.keys(armyLookup).length > 0) {
+          rulesCatalog = angular.extend({}, rulesCatalog, {
+            armyList: Object.keys(armyLookup).map(function (key) {
+              return armyLookup[key];
+            }),
+          });
+        }
+
         return boardingSharedFactory.getBoardedItemLoadCapacity(
           getTurnReport(),
-          getRulesCatalog(),
+          rulesCatalog,
           itemNo,
           $scope.sameNullableInt,
         );
@@ -63,9 +88,7 @@ austerlitzModule.factory(
           return 0;
         }
 
-        var armyLookup = boardingSharedFactory.buildArmyListLookupByShortName(
-          getRulesCatalog(),
-        );
+        var armyLookup = getArmyLookupForWeight();
         var totalWeight = 0;
         angular.forEach(brigade.battalions, function (battalion) {
           var type = (battalion && battalion.type ? battalion.type : "")

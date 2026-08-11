@@ -223,9 +223,10 @@ austerlitzModule.factory("boardingSharedFactory", function () {
   }
 
   function getBattalionWeightPerMan(armyItem) {
-    if (!armyItem) return 0;
-    var itemNo = parseInt(armyItem.itemNo, 10);
-    if (armyItem.isCavalry) return 400;
+    // Unknown/missing army-list rows still board as infantry weight.
+    if (!armyItem) return 200;
+    var itemNo = parseInt(armyItem.itemNo || armyItem.ItemNo, 10);
+    if (armyItem.isCavalry || armyItem.IsCavalry) return 400;
     if (!isNaN(itemNo) && itemNo >= 40) return 600;
     return 200;
   }

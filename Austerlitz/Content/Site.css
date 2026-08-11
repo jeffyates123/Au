@@ -1548,21 +1548,6 @@ textarea {
     color: #222;
 }
 
-.landUnitsTabCheckboxLabel {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 8px;
-    margin-bottom: 0;
-    font-size: 11px;
-    font-weight: normal;
-}
-
-.landUnitsTabCheckboxLabel input[type="checkbox"] {
-    margin: 0;
-    vertical-align: middle;
-}
-
 .landUnitsTabPane {
     border: 1px solid #ddd;
     border-top: none;

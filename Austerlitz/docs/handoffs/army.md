@@ -20,11 +20,16 @@ Route `/Military/Brigades` has Set-Up Brigades, Existing Army, and Intelligence 
 - TS20: boarding.
 - TS22: renames.
 
-Existing Army is reusable: it can run in the normal tab, a modal, or Turn Maps Movement X. Preserve those modes and do not add screen-only assumptions to the directive.
+Existing Army is reusable. Preserve these hosts:
+
+- Army tab inline view
+- Turn Maps Movement X modal/pane with `movement-selection="true"` (the map “army modal”)
+
+Do not add screen-only assumptions to the directive. Map Movement X behavior lives in [Movement X](../../movement-x-handoff.md).
 
 ## Verify
 
-Create an order in each changed action, reload the turn, and confirm replay on Existing Army. For directive changes, also open Turn Maps Movement X.
+Create an order in each changed action, reload the turn, and confirm replay on Existing Army. For directive changes, also open Turn Maps Movement X in both modal and wide pane layouts. Confirm Federation Summary **Load Cap** is non-zero for federations with brigades once the army list has loaded.
 
 ## Related handoffs
 
@@ -32,3 +37,4 @@ Create an order in each changed action, reload the turn, and confirm replay on E
 - [Managed TS01 transfers](managed-ts01-transfers.md)
 - [Federation assignment replay](federation-assignment-replay.md)
 - [Movement X](../../movement-x-handoff.md)
+- [Turn maps](turn-maps.md)

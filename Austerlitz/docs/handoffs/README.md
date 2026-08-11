@@ -14,7 +14,7 @@ Use this index before changing an application feature. Read only the matching sc
 | Route or screen | Handoff |
 | --- | --- |
 | Load/Import | [Home and turnsheet viewer](home-and-turnsheet-viewer.md) |
-| Economy | [Economy](economy.md) |
+| Economy: Europe, Caribbean, India, Tax Revenue | [Economy](economy.md) |
 | Army: Set-Up Brigades, Existing Army, Intelligence | [Army](army.md) |
 | Navy: Set-Up Navy, Existing Navy | [Navy](navy.md) |
 | Trade: Trading, Baggage Trains, Trading Cities | [Trade](trade.md) |

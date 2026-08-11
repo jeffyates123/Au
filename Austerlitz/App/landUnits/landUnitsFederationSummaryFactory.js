@@ -1,8 +1,39 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsFederationSummaryFactory", function () {
+austerlitzModule.factory(
+  "landUnitsFederationSummaryFactory",
+  function (boardingSharedFactory) {
   return {
     attach: function ($scope) {
+      function getBrigadeLoadingCapacity(brigade) {
+        if (!brigade || !brigade.battalions) {
+          return 0;
+        }
+
+        var armyLookup = $scope.armyListByShortName || {};
+        var totalWeight = 0;
+        angular.forEach(brigade.battalions, function (battalion) {
+          var type = (battalion && battalion.type ? battalion.type : "")
+            .toString()
+            .trim()
+            .toUpperCase();
+          var size = parseInt(
+            battalion && battalion.size != null && battalion.size !== ""
+              ? battalion.size
+              : battalion && battalion.baseSize,
+            10,
+          ) || 0;
+          if (!type || type === "--" || size <= 0) {
+            return;
+          }
+
+          totalWeight +=
+            size *
+            boardingSharedFactory.getBattalionWeightPerMan(armyLookup[type]);
+        });
+
+        return boardingSharedFactory.toLoadCapacityUnits(totalWeight);
+      }
 
       $scope.getBattalionSummaryType = function (battalion) {
         if (!battalion || !battalion.type) {
@@ -92,10 +123,7 @@ austerlitzModule.factory("landUnitsFederationSummaryFactory", function () {
           if (!isNaN(mp)) {
             summary._minMp = summary._minMp == null ? mp : Math.min(summary._minMp, mp);
           }
-          summary.totalLoadingCapacityRaw +=
-            typeof $scope.getBoardingUnitRequiredCapacity === "function"
-              ? $scope.getBoardingUnitRequiredCapacity(brigade) || 0
-              : 0;
+          summary.totalLoadingCapacityRaw += getBrigadeLoadingCapacity(brigade);
 
           angular.forEach((brigade && brigade.battalions) || [], function (battalion) {
             if (!battalion || !battalion.type) {
@@ -136,10 +164,6 @@ austerlitzModule.factory("landUnitsFederationSummaryFactory", function () {
           if (!isNaN(mp)) {
             summary._minMp = summary._minMp == null ? mp : Math.min(summary._minMp, mp);
           }
-          summary.totalLoadingCapacityRaw +=
-            typeof $scope.getBoardingUnitRequiredCapacity === "function"
-              ? $scope.getBoardingUnitRequiredCapacity(commander) || 0
-              : 0;
 
           var maxCcCandidate = parseInt(commander.commandCapacity, 10);
           if (isNaN(maxCcCandidate)) {

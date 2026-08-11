@@ -5,6 +5,7 @@ austerlitzModule.controller(
   function (
     $scope,
     $q,
+    $location,
     masterData,
     turnDataLoaderService,
     turnReportFactory,
@@ -984,7 +985,7 @@ austerlitzModule.controller(
         caribbean: economyProductionFactory.buildProductionModel(createProductionModelInput("caribbean", buildRows)),
         india: economyProductionFactory.buildProductionModel(createProductionModelInput("india", buildRows)),
       };
-      Object.keys(economyTabs).forEach(function (tabKey) {
+      Object.keys(sphereByTab).forEach(function (tabKey) {
         var sphere = getComputedSphereForTab(tabKey);
         if (!sphere) {
           return;
@@ -1028,7 +1029,7 @@ austerlitzModule.controller(
         return false;
       }
       var rows = summary.rows || summary.Rows || [];
-      return Object.keys(economyTabs).every(function (tabKey) {
+      return Object.keys(sphereByTab).every(function (tabKey) {
         var sphere = getComputedSphereForTab(tabKey);
         if (!sphere) {
           return false;
@@ -1341,6 +1342,9 @@ austerlitzModule.controller(
     $scope.selectEconomyTab = function (tabKey) {
       var nextTab = economyTabs[tabKey] ? tabKey : "europe";
       $scope.activeEconomyTab = nextTab;
+      if (nextTab === "taxRevenue") {
+        return;
+      }
       refreshEconomyViewForTab(nextTab).catch(function (error) {
         $scope.economyLoadError = (error && error.data) || "Unable to load economy data.";
       });
@@ -1377,7 +1381,11 @@ austerlitzModule.controller(
           return ensurePersistedEconomySummary();
         })
         .then(function () {
-          return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
+          return refreshEconomyViewForTab(
+            $scope.activeEconomyTab === "taxRevenue"
+              ? "europe"
+              : $scope.activeEconomyTab || "europe",
+          );
         })
         .then(function () {
           $scope.$emit("economyBuildFundsChanged");
@@ -1474,6 +1482,12 @@ austerlitzModule.controller(
     };
 
     $scope.initEconomy = function () {
+      var requestedTab = ($location.search() && $location.search().tab) || "";
+      if (economyTabs[requestedTab]) {
+        $scope.activeEconomyTab = requestedTab;
+        $location.search("tab", null);
+      }
+
       if (!$scope.masterData || !$scope.masterData.turnId || $scope.masterData.turnId === "Unknown") {
         $scope.economyProductionRows = createProductionRows();
         $scope.economyFinanceRows = [];
@@ -1493,6 +1507,9 @@ austerlitzModule.controller(
           return ensurePersistedEconomySummary();
         })
         .then(function () {
+          if ($scope.activeEconomyTab === "taxRevenue") {
+            return $q.when();
+          }
           return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
         })
         .then(function () {

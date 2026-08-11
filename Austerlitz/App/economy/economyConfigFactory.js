@@ -25,7 +25,7 @@ austerlitzModule.factory("economyConfigFactory", function () {
       caribbean: { minX: 1, maxX: 40, minY: 70, maxY: 99 },
       india: { minX: 51, maxX: 90, minY: 70, maxY: 99 },
     },
-    economyTabs: { europe: true, caribbean: true, india: true },
+    economyTabs: { europe: true, caribbean: true, india: true, taxRevenue: true },
     economyWarehouseNos: [1, 2, 3],
     economyComputedVersion: 2,
     resourceKeys: [
