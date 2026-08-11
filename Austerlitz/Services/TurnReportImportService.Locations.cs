@@ -256,11 +256,6 @@ namespace Austerlitz.Services
                 for (var i = lineLocation; i < lineList.Count; i++)
                 {
                     var lineToProcess = (lineList[i] ?? string.Empty).ToString();
-                    if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1)
-                    {
-                        return originalLineLocation;
-                    }
-
                     if (lineToProcess.IndexOf("Army positions in your empire", StringComparison.OrdinalIgnoreCase) != -1)
                     {
                         sectionStart = i + 1;
@@ -374,11 +369,6 @@ VALUES (@p0, @p1, @p2, @p3, @p4)",
                 for (var i = lineLocation; i < lineList.Count; i++)
                 {
                     var lineToProcess = (lineList[i] ?? string.Empty).ToString();
-                    if (lineToProcess.IndexOf("Relationship of", StringComparison.OrdinalIgnoreCase) != -1)
-                    {
-                        return originalLineLocation;
-                    }
-
                     if (lineToProcess.IndexOf("There are epidemics in the following regions", StringComparison.OrdinalIgnoreCase) != -1)
                     {
                         sectionStart = i + 1;

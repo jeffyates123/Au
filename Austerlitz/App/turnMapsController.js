@@ -69,10 +69,14 @@ austerlitzModule.controller('turnMapsController', function (
         }
     };
     $scope.spyCoordinateReportByKey = {};
+    $scope.spyCoordinatePresenceByKey = {};
+    $scope.spyCoordinateStateByKey = {};
     $scope.armyCoordinateByKey = {};
+    $scope.navyCoordinateByKey = {};
     $scope.epidemicCoordinateByKey = {};
     $scope.spyTurnReportCacheByTurnId = {};
     $scope.spyLookupRequestId = 0;
+    $scope.unitLookupRequestId = 0;
     $scope.previousMapCoordinatesByKey = {};
     $scope.movementXModalMode = true;
     $scope.movementXPickerPositionFilter = null;
@@ -104,6 +108,12 @@ austerlitzModule.controller('turnMapsController', function (
     };
 
     $scope.refreshMovementPickerDisplayMode = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) {
+            $scope.orderUi.movementPickerDisplayMode = 'modal';
+            $scope.orderUi.movementPickerModal.isOpen = false;
+            return;
+        }
+
         var shouldUsePanel = $scope.isWideScreenEnabled()
             && !$scope.isProductionSiteMode()
             && $scope.getViewportWidth() >= $scope.wideScreenMinViewportWidth;
@@ -127,25 +137,30 @@ austerlitzModule.controller('turnMapsController', function (
     };
 
     $scope.shouldUseMovementPickerPanelLayout = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
         return $scope.isMovementPickerPanelMode()
             && (!$scope.isMovementXMode() || $scope.orderUi.movementPickerModal.isOpen);
     };
 
     $scope.shouldShowMovementPickerModal = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
         return $scope.orderUi.movementPickerModal.isOpen && !$scope.isMovementPickerPanelMode();
     };
 
     $scope.shouldShowMovementPickerPanel = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
         return $scope.orderUi.movementPickerModal.isOpen && $scope.isMovementPickerPanelMode();
     };
 
     $scope.shouldShowMovementXPickerModal = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
         return $scope.orderUi.movementPickerModal.isOpen
             && $scope.isMovementXMode()
             && !$scope.isMovementPickerPanelMode();
     };
 
     $scope.shouldShowMovementXPickerPanel = function () {
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
         return $scope.orderUi.movementPickerModal.isOpen
             && $scope.isMovementXMode()
             && $scope.isMovementPickerPanelMode();
@@ -479,6 +494,7 @@ austerlitzModule.controller('turnMapsController', function (
     $scope.$watch('masterData.turnsList', function () {
         $scope.loadPreviousMapCoordinates();
         $scope.rebuildSpyCoordinateReportLookup();
+        $scope.rebuildArmyCoordinateLookup();
     }, true);
 
     $scope.$watch('masterData.turnReport.movementItemList', function () {

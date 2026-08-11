@@ -4,6 +4,31 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
     return {
         attach: function ($scope) {
             $scope.selectedProductionSiteRow = null;
+            $scope.getDefaultIntelligenceFilterState = function () {
+                return {
+                    spyReports: false,
+                    changeOfState: false,
+                    armyNavyPositions: false,
+                    productionPopulation: false
+                };
+            };
+            $scope.intelligenceFilterState = $scope.getDefaultIntelligenceFilterState();
+
+            $scope.resetIntelligenceFilters = function () {
+                $scope.intelligenceFilterState = $scope.getDefaultIntelligenceFilterState();
+            };
+
+            $scope.toggleIntelligenceFilter = function (filterKey) {
+                if (!$scope.intelligenceFilterState || !Object.prototype.hasOwnProperty.call($scope.intelligenceFilterState, filterKey)) {
+                    return;
+                }
+
+                $scope.intelligenceFilterState[filterKey] = !$scope.intelligenceFilterState[filterKey];
+            };
+
+            $scope.isIntelligenceFilterEnabled = function (filterKey) {
+                return !!($scope.intelligenceFilterState && $scope.intelligenceFilterState[filterKey]);
+            };
 
             $scope.normalizeBuildProductionSiteRows = function (rows) {
                 return rows || [];
@@ -237,147 +262,121 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
 
             $scope.getIntelligenceCriteria = function (coord) {
                 var intelligenceStatus = $scope.getCoordinateIntelligenceStatus(coord);
-                var changeInfo = $scope.getProductionSiteChangeInfo(coord);
+                var stateChangeCode = $scope.getIntelligenceNewOwnerStateCode(coord);
+                var spyReportText = $scope.getIntelligenceSpyReportText(coord);
+                var hasSpyPresence = $scope.hasSpyAtCoordinate(coord);
+                var armyPositions = $scope.getArmyPositionsAtCoordinate(coord);
+                var navyPositions = $scope.getNavyPositionsAtCoordinate ? $scope.getNavyPositionsAtCoordinate(coord) : [];
                 var isOutOfRange = intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh';
-                var isProdSiteChanged = !!(changeInfo.hasPrevious && changeInfo.changed);
-                var isLowercaseStateMarker = !!$scope.getIntelligenceNewOwnerStateCode(coord);
-                var hasSpyReport = !!$scope.getIntelligenceSpyReportText(coord);
-                var hasArmyPosition = ($scope.getArmyPositionsAtCoordinate(coord) || []).length > 0;
-                var hasEpidemic = ($scope.getEpidemicPositionsAtCoordinate(coord) || []).length > 0;
-                var metCriteriaCount = 0;
+                var hasStateChange = !!stateChangeCode;
+                var hasSpyReport = hasSpyPresence;
+                var hasArmyOrNavy = armyPositions.length > 0 || navyPositions.length > 0;
 
-                if (isOutOfRange) metCriteriaCount++;
-                if (isProdSiteChanged) metCriteriaCount++;
-                if (isLowercaseStateMarker) metCriteriaCount++;
-                if (hasSpyReport) metCriteriaCount++;
+                var enabledSpyReport = $scope.isIntelligenceFilterEnabled('spyReports') && hasSpyReport;
+                var enabledStateChange = $scope.isIntelligenceFilterEnabled('changeOfState') && hasStateChange;
+                var enabledArmyNavy = $scope.isIntelligenceFilterEnabled('armyNavyPositions') && hasArmyOrNavy;
+                var enabledPopulation = $scope.isIntelligenceFilterEnabled('productionPopulation') && isOutOfRange;
+
+                var matchedEnabledOptionCount = 0;
+                if (enabledSpyReport) matchedEnabledOptionCount++;
+                if (enabledStateChange) matchedEnabledOptionCount++;
+                if (enabledArmyNavy) matchedEnabledOptionCount++;
+                if (enabledPopulation) matchedEnabledOptionCount++;
+
+                var borderRings = [];
+                if (enabledSpyReport) borderRings.push({ color: '#000000', baseWidth: 2 });
+                if (enabledArmyNavy) borderRings.push({ color: '#ff0000', baseWidth: 2 });
+                if (enabledPopulation) borderRings.push({ color: '#555555', baseWidth: 3 });
 
                 return {
                     intelligenceStatus: intelligenceStatus,
-                    changeInfo: changeInfo,
+                    stateChangeCode: stateChangeCode,
+                    spyReportText: spyReportText,
+                    hasSpyPresence: hasSpyPresence,
+                    armyPositions: armyPositions,
+                    navyPositions: navyPositions,
                     isOutOfRange: isOutOfRange,
-                    isProdSiteChanged: isProdSiteChanged,
-                    isLowercaseStateMarker: isLowercaseStateMarker,
+                    hasStateChange: hasStateChange,
                     hasSpyReport: hasSpyReport,
-                    hasArmyPosition: hasArmyPosition,
-                    hasEpidemic: hasEpidemic,
-                    metCriteriaCount: metCriteriaCount
+                    hasArmyOrNavy: hasArmyOrNavy,
+                    enabledSpyReport: enabledSpyReport,
+                    enabledStateChange: enabledStateChange,
+                    enabledArmyNavy: enabledArmyNavy,
+                    enabledPopulation: enabledPopulation,
+                    matchedEnabledOptionCount: matchedEnabledOptionCount,
+                    additionalThicknessPx: matchedEnabledOptionCount > 1 ? (matchedEnabledOptionCount - 1) * 2 : 0,
+                    borderRings: borderRings
                 };
             };
 
-            $scope.getIntelligenceSeverityBucket = function (coord, criteria) {
-                var resolvedCriteria = criteria || $scope.getIntelligenceCriteria(coord);
-                if (resolvedCriteria.metCriteriaCount > 1) return 'critical';
-                if (resolvedCriteria.isOutOfRange) return 'high';
-                if (resolvedCriteria.hasSpyReport) return 'spyHigh';
-                if (resolvedCriteria.isLowercaseStateMarker) return 'mediumHigh';
-                if (resolvedCriteria.isProdSiteChanged) return 'medium';
-                return 'normal';
-            };
+            $scope.buildIntelligenceOverlayStyle = function (criteria) {
+                var ringDefinitions = (criteria && criteria.borderRings) || [];
+                if (!ringDefinitions.length) {
+                    return {};
+                }
 
-            $scope.getIntelligenceBorderTier = function (coord, criteria) {
-                var resolvedCriteria = criteria || $scope.getIntelligenceCriteria(coord);
-                if (resolvedCriteria.metCriteriaCount >= 2) return 'Critical';
-                if (resolvedCriteria.metCriteriaCount === 1) return 'Alert';
-                return 'Normal';
-            };
+                var extraThickness = criteria.additionalThicknessPx || 0;
+                var cumulativeWidth = 0;
+                var ringParts = [];
 
-            $scope.getIntelligenceBorderTierRank = function (borderTierClass) {
-                var tierClass = (borderTierClass || '').toString();
-                if (tierClass === 'intelBorder_Epidemic') return 4;
-                if (tierClass === 'intelBorder_ArmyFound') return 4;
-                if (tierClass === 'intelBorder_Critical') return 4;
-                if (tierClass === 'intelBorder_Spy') return 3;
-                if (tierClass === 'intelBorder_Alert') return 2;
-                return 1;
-            };
+                angular.forEach(ringDefinitions, function (ring) {
+                    if (!ring) return;
+                    var baseWidth = parseInt(ring.baseWidth, 10);
+                    if (isNaN(baseWidth) || baseWidth <= 0) return;
 
-            $scope.getIntelligenceBorderTierClassByRank = function (rank) {
-                if (rank >= 4) return 'intelBorder_Critical';
-                if (rank === 3) return 'intelBorder_Spy';
-                if (rank === 2) return 'intelBorder_Alert';
-                return 'intelBorder_Normal';
+                    var finalWidth = baseWidth + extraThickness;
+                    cumulativeWidth += finalWidth;
+                    ringParts.push('inset 0 0 0 ' + cumulativeWidth + 'px ' + ring.color);
+                });
+
+                if (!ringParts.length) {
+                    return {};
+                }
+
+                return { 'box-shadow': ringParts.join(', ') };
             };
 
             $scope.getIntelligenceVisualInfo = function (coord) {
                 var criteria = $scope.getIntelligenceCriteria(coord);
-                var bucket = $scope.getIntelligenceSeverityBucket(coord, criteria);
-                var intelligenceStatus = criteria.intelligenceStatus || { status: 'none' };
-
-                if (intelligenceStatus.status === 'sea') {
+                if (criteria.intelligenceStatus && criteria.intelligenceStatus.status === 'sea') {
                     return {
-                        bucket: 'sea',
                         criteria: criteria,
-                        severityClass: 'terrain_sea',
                         stateBackgroundClass: 'terrain_sea',
-                        borderColorClass: '',
                         textContrastClass: 'intelText_Dark',
-                        borderTierClass: 'intelBorder_Normal',
-                        hasBorder: false,
-                        borderStateCode: ''
+                        overlayStyle: {},
+                        hasEnabledMatch: false
                     };
                 }
 
-                var hasHighlight = criteria.metCriteriaCount > 0 || criteria.hasArmyPosition || criteria.hasEpidemic;
-
-                var borderColorClassMap = {
-                    critical: 'intelSeverityBorder_Critical',
-                    high: 'intelSeverityBorder_High',
-                    spyHigh: 'intelSeverityBorder_Critical',
-                    mediumHigh: 'intelSeverityBorder_MediumHigh',
-                    medium: 'intelSeverityBorder_Medium',
-                    low: 'intelSeverityBorder_Low',
-                    normal: 'intelSeverityBorder_Normal'
-                };
-
-                var borderStateCode = ((coord && coord.state ? coord.state : '').toString().trim().toUpperCase());
-                var shouldUseSpyVisual = !!criteria.hasSpyReport;
-                var stateBackgroundClass = shouldUseSpyVisual
-                    ? 'intelSpyBg'
-                    : (hasHighlight && borderStateCode ? ('intelStateBg_' + borderStateCode) : 'intelStateBg_Default');
-                var backgroundColor = shouldUseSpyVisual
-                    ? '#000000'
-                    : (hasHighlight && stateColorFactory && stateColorFactory.getColor
-                    ? stateColorFactory.getColor(borderStateCode)
-                    : '#ffffff');
+                var hasEnabledMatch = criteria.matchedEnabledOptionCount > 0;
+                var stateCode = (coord && coord.state ? coord.state : '').toString().trim().toUpperCase();
+                if (criteria.enabledSpyReport) {
+                    var spyStateCode = $scope.getSpyStateCodeAtCoordinate(coord);
+                    if (spyStateCode) {
+                        stateCode = spyStateCode;
+                    }
+                } else if (criteria.enabledArmyNavy) {
+                    var armyNavyStateCode = $scope.getArmyNavyStateCodeAtCoordinate(coord);
+                    if (armyNavyStateCode) {
+                        stateCode = armyNavyStateCode;
+                    }
+                }
+                var stateBackgroundClass = hasEnabledMatch && stateCode
+                    ? ('intelStateBg_' + stateCode)
+                    : 'intelStateBg_Default';
+                var backgroundColor = hasEnabledMatch && stateCode && stateColorFactory && stateColorFactory.getColor
+                    ? stateColorFactory.getColor(stateCode)
+                    : '#ffffff';
                 var textContrastClass = stateColorFactory && stateColorFactory.getReadableTextClass
                     ? stateColorFactory.getReadableTextClass(backgroundColor)
                     : 'intelText_Dark';
-                var baseBorderTierClass = shouldUseSpyVisual
-                    ? 'intelBorder_Spy'
-                    : ('intelBorder_' + $scope.getIntelligenceBorderTier(coord, criteria));
-                var borderTierClass = baseBorderTierClass;
-                var borderColorClass = shouldUseSpyVisual && borderStateCode
-                    ? ('intelStateBorder_' + borderStateCode)
-                    : (borderColorClassMap[bucket] || 'intelSeverityBorder_Normal');
-
-                if (criteria.hasArmyPosition) {
-                    var armyTierClass = 'intelBorder_ArmyFound';
-                    var finalTierRank = Math.max(
-                        $scope.getIntelligenceBorderTierRank(baseBorderTierClass),
-                        $scope.getIntelligenceBorderTierRank(armyTierClass));
-                    borderTierClass = $scope.getIntelligenceBorderTierClassByRank(finalTierRank);
-                    borderColorClass = 'intelSeverityBorder_ArmyFound';
-                }
-
-                if (criteria.hasEpidemic) {
-                    var epidemicTierClass = 'intelBorder_Epidemic';
-                    var epidemicTierRank = Math.max(
-                        $scope.getIntelligenceBorderTierRank(borderTierClass),
-                        $scope.getIntelligenceBorderTierRank(epidemicTierClass));
-                    borderTierClass = $scope.getIntelligenceBorderTierClassByRank(epidemicTierRank);
-                    borderColorClass = 'intelSeverityBorder_Epidemic';
-                }
 
                 return {
-                    bucket: bucket,
                     criteria: criteria,
-                    severityClass: borderColorClass,
                     stateBackgroundClass: stateBackgroundClass,
-                    borderColorClass: borderColorClass,
                     textContrastClass: textContrastClass,
-                    borderTierClass: borderTierClass,
-                    hasBorder: hasHighlight,
-                    borderStateCode: borderStateCode
+                    overlayStyle: $scope.buildIntelligenceOverlayStyle(criteria),
+                    hasEnabledMatch: hasEnabledMatch
                 };
             };
 
@@ -387,19 +386,9 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 return visualInfo.stateBackgroundClass + ' ' + visualInfo.textContrastClass;
             };
 
-            $scope.hasIntelligenceStateBorder = function (coord) {
+            $scope.getIntelligenceCellStyle = function (coord) {
                 var visualInfo = $scope.getIntelligenceVisualInfo(coord);
-                return !!(visualInfo && visualInfo.hasBorder);
-            };
-
-            $scope.getIntelligenceBorderThicknessClass = function (coord) {
-                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
-                return visualInfo ? (visualInfo.borderTierClass || 'intelBorder_Normal') : 'intelBorder_Normal';
-            };
-
-            $scope.getIntelligenceBorderColorClass = function (coord) {
-                var visualInfo = $scope.getIntelligenceVisualInfo(coord);
-                return visualInfo ? (visualInfo.borderColorClass || 'intelSeverityBorder_Normal') : 'intelSeverityBorder_Normal';
+                return visualInfo ? (visualInfo.overlayStyle || {}) : {};
             };
 
             $scope.getIntelligenceChangedTooltip = function (coord) {
@@ -424,11 +413,59 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 return ($scope.spyCoordinateReportByKey[key] || '').toString().trim();
             };
 
+            $scope.hasSpyAtCoordinate = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.spyCoordinatePresenceByKey) return false;
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key) return false;
+                return !!$scope.spyCoordinatePresenceByKey[key];
+            };
+
+            $scope.getSpyStateCodeAtCoordinate = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.spyCoordinateStateByKey) return '';
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.spyCoordinateStateByKey, key)) return '';
+
+                var states = $scope.spyCoordinateStateByKey[key] || [];
+                if (!states.length) return '';
+                return states.map(function (stateCode) {
+                    return (stateCode || '').toString().trim().toUpperCase();
+                }).filter(function (stateCode) {
+                    return stateCode.length > 0;
+                }).sort()[0] || '';
+            };
+
+            $scope.getArmyNavyStateCodeAtCoordinate = function (coord) {
+                var armyStates = ($scope.getArmyPositionsAtCoordinate(coord) || []).map(function (armyPosition) {
+                    return (armyPosition && armyPosition.state != null ? armyPosition.state : '').toString().trim().toUpperCase();
+                }).filter(function (stateCode) {
+                    return stateCode.length > 0;
+                });
+
+                if (armyStates.length) {
+                    return armyStates.sort()[0];
+                }
+
+                var navyStates = ($scope.getNavyPositionsAtCoordinate(coord) || []).map(function (navyPosition) {
+                    return (navyPosition && navyPosition.state != null ? navyPosition.state : '').toString().trim().toUpperCase();
+                }).filter(function (stateCode) {
+                    return stateCode.length > 0;
+                });
+
+                return navyStates.length ? navyStates.sort()[0] : '';
+            };
+
             $scope.getArmyPositionsAtCoordinate = function (coord) {
                 if (!coord || !$scope.toMapCoordinateKey || !$scope.armyCoordinateByKey) return [];
                 var key = $scope.toMapCoordinateKey(coord.x, coord.y);
                 if (!key || !Object.prototype.hasOwnProperty.call($scope.armyCoordinateByKey, key)) return [];
                 return $scope.armyCoordinateByKey[key] || [];
+            };
+
+            $scope.getNavyPositionsAtCoordinate = function (coord) {
+                if (!coord || !$scope.toMapCoordinateKey || !$scope.navyCoordinateByKey) return [];
+                var key = $scope.toMapCoordinateKey(coord.x, coord.y);
+                if (!key || !Object.prototype.hasOwnProperty.call($scope.navyCoordinateByKey, key)) return [];
+                return $scope.navyCoordinateByKey[key] || [];
             };
 
             $scope.getEpidemicPositionsAtCoordinate = function (coord) {
@@ -442,34 +479,39 @@ austerlitzModule.factory('turnMapsProductionSitesFactory', function (stateColorF
                 var tooltipParts = [];
                 var criteria = $scope.getIntelligenceCriteria(coord);
                 var intelligenceStatus = criteria.intelligenceStatus;
-                if (criteria.metCriteriaCount > 1) {
-                    tooltipParts.push('Critical: multiple intelligence criteria detected');
-                }
 
-                if (intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh') {
+                if (criteria.enabledPopulation && (intelligenceStatus.status === 'tooLow' || intelligenceStatus.status === 'tooHigh')) {
                     var siteName = intelligenceStatus.siteName || (coord && coord.productionSite ? coord.productionSite : '');
                     tooltipParts.push("Min/Max for '" + siteName + "' not met");
                 }
 
-                var changedText = $scope.getIntelligenceChangedTooltip(coord);
-                if (changedText) tooltipParts.push(changedText);
+                if (criteria.enabledStateChange) {
+                    var newOwnerText = $scope.getIntelligenceNewOwnerTooltip(coord);
+                    if (newOwnerText) tooltipParts.push(newOwnerText);
+                }
 
-                var newOwnerText = $scope.getIntelligenceNewOwnerTooltip(coord);
-                if (newOwnerText) tooltipParts.push(newOwnerText);
+                if (criteria.enabledSpyReport) {
+                    if (criteria.spyReportText) {
+                        tooltipParts.push("Spy report: '" + criteria.spyReportText + "'");
+                    } else {
+                        tooltipParts.push('Spy present (no report text)');
+                    }
+                }
 
-                var spyReportText = $scope.getIntelligenceSpyReportText(coord);
-                if (spyReportText) tooltipParts.push("Spy report: '" + spyReportText + "'");
-
-                angular.forEach($scope.getArmyPositionsAtCoordinate(coord), function (armyPosition) {
+                angular.forEach(criteria.enabledArmyNavy ? criteria.armyPositions : [], function (armyPosition) {
                     var state = (armyPosition && armyPosition.state != null ? armyPosition.state : '').toString().trim().toUpperCase();
                     var bats = parseInt(armyPosition && armyPosition.bats, 10);
                     if (isNaN(bats)) bats = 0;
                     tooltipParts.push("Army found here, State: " + state + " and Bats: " + bats);
                 });
 
-                angular.forEach($scope.getEpidemicPositionsAtCoordinate(coord), function (epidemic) {
-                    var state = (epidemic && epidemic.state != null ? epidemic.state : '').toString().trim().toUpperCase();
-                    tooltipParts.push("Epidemic here, State: " + (state || '?'));
+                angular.forEach(criteria.enabledArmyNavy ? criteria.navyPositions : [], function (navyPosition) {
+                    var navyState = (navyPosition && navyPosition.state != null ? navyPosition.state : '').toString().trim().toUpperCase();
+                    var shipType = (navyPosition && navyPosition.shipType ? navyPosition.shipType : '').toString().trim();
+                    var fleetNo = parseInt(navyPosition && navyPosition.fleetNo, 10);
+                    var fleetText = isNaN(fleetNo) ? '?' : fleetNo;
+                    var typeText = shipType || 'Ship';
+                    tooltipParts.push(typeText + " found here, State: " + (navyState || '?') + " and Fleet: " + fleetText);
                 });
 
                 return tooltipParts.join(' | ');

@@ -247,18 +247,6 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                         baseClass = $scope.getIntelligenceClass
                             ? $scope.getIntelligenceClass(intelligenceCoord)
                             : 'intelStateBg_Default intelText_Dark';
-
-                        if ($scope.hasIntelligenceStateBorder && $scope.hasIntelligenceStateBorder(intelligenceCoord)) {
-                            var borderColorClass = $scope.getIntelligenceBorderColorClass
-                                ? $scope.getIntelligenceBorderColorClass(intelligenceCoord)
-                                : 'intelSeverityBorder_Normal';
-                            var borderThicknessClass = $scope.getIntelligenceBorderThicknessClass
-                                ? $scope.getIntelligenceBorderThicknessClass(intelligenceCoord)
-                                : 'intelBorder_Alert';
-
-                            baseClass = (baseClass ? baseClass + ' ' : '') + borderColorClass;
-                            baseClass = (baseClass ? baseClass + ' ' : '') + borderThicknessClass;
-                        }
                         break;
                 }
 

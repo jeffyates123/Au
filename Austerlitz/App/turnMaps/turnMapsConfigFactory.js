@@ -34,6 +34,12 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
                 selectedMapChoice: choices[1],
                 mapOptions: ['State', 'Population', 'ProductionSite', 'Owner', 'Terrain', 'Bonus'],
                 selectedMapOptions: ['State', 'Population', 'ProductionSite'],
+                intelligenceFilterOptions: [
+                    { key: 'spyReports', label: 'Spy Reports' },
+                    { key: 'changeOfState', label: 'Change of State' },
+                    { key: 'armyNavyPositions', label: 'Army/Navy Positions' },
+                    { key: 'productionPopulation', label: 'Production Population' }
+                ],
                 displayOptions: displays,
                 selectedDisplayOption: displays[5],
                 wideScreenMinViewportWidth: wideScreenMinViewportWidth

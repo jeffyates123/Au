@@ -260,17 +260,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.csdl" Condition="Exists('$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.csdl')">
-      <LogicalName>AusterlitzDB1.csdl</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.ssdl" Condition="Exists('$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.ssdl')">
-      <LogicalName>AusterlitzDB1.ssdl</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.msl" Condition="Exists('$(IntermediateOutputPath)edmxResourcesToEmbed\AusterlitzDB1.msl')">
-      <LogicalName>AusterlitzDB1.msl</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\EntityFrameworkTools\Microsoft.Data.Entity.Design.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\EntityFrameworkTools\Microsoft.Data.Entity.Design.targets')" />

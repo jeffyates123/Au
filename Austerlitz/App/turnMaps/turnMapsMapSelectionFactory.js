@@ -21,6 +21,18 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             $scope.clearRouteCandidates();
         }
 
+        if ($scope.isIntelligenceMode()) {
+            $scope.pendingRouteSelection = null;
+            $scope.selectedMovementRow = null;
+            $scope.selectedMovementItemCoordinate = null;
+            $scope.clearDisplayField();
+            $scope.clearRouteCandidates();
+            $scope.closeMovementPickerModal();
+            if (typeof $scope.resetIntelligenceFilters === 'function') {
+                $scope.resetIntelligenceFilters();
+            }
+        }
+
         if (!$scope.isProductionSiteMode()) {
             $scope.tryApplyInitialMovementOrderSelection();
         }
@@ -90,6 +102,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         $scope.applyMapChoiceForSelectedState();
         $scope.loadPreviousMapCoordinates();
         $scope.rebuildSpyCoordinateReportLookup();
+        $scope.rebuildArmyCoordinateLookup();
     };
 
     function isSeaCoordinate(coord) {
@@ -125,6 +138,17 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
     };
 
     $scope.coordinateClick = function (x, y) {
+        var coord = $scope.getCoordinateByXY(x, y);
+        if (!coord) return;
+
+        $scope.selectedCoordinateDetails = '(X:' + x + ',Y: ' + y + ') ' + coord.state + coord.population + coord.productionSite + ' - ' + coord.owner + coord.terrain + coord.bonus;
+        $scope.selectedItemGridCoordinate = { x: x, y: y };
+        $scope.refreshItemGridRows();
+
+        if ($scope.isIntelligenceMode()) {
+            return;
+        }
+
         if ($scope.pendingRouteSelection && !$scope.isProductionSiteMode()) {
             var routeKey = x + '_' + y;
             var selectedRoute = $scope.pendingRouteSelection.routesByCoord[routeKey];
@@ -146,11 +170,6 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         if ($scope.isProductionSiteMode()) {
             $scope.selectProductionSiteRowAtCoordinate(x, y);
         }
-
-        var coord = $scope.getCoordinateByXY(x, y);
-        $scope.selectedCoordinateDetails = '(X:' + x + ',Y: ' + y + ') ' + coord.state + coord.population + coord.productionSite + ' - ' + coord.owner + coord.terrain + coord.bonus;
-        $scope.selectedItemGridCoordinate = { x: x, y: y };
-        $scope.refreshItemGridRows();
 
         if ($scope.isMovementXMode()) {
             var isSea = isSeaCoordinate(coord);
@@ -188,6 +207,10 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
     };
 
     $scope.coordinateDblClick = function (x, y) {
+        if ($scope.isIntelligenceMode()) {
+            return;
+        }
+
         if ($scope.isProductionSiteMode()) {
             var prodCoord = $scope.getCoordinateByXY(x, y);
             if (!prodCoord) return;

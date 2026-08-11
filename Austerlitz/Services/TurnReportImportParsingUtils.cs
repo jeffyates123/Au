@@ -38,24 +38,43 @@ namespace Austerlitz.Services
         {
             switch (stateName)
             {
-                case "France":
-                    return "F";
+                case "Austria":
+                case "Austria-Hungary":
+                    return "A";
+                case "Conf. of the Rhine":
+                case "Confederation of Rhine":
+                case "Confederation of the Rhine":
+                    return "B";
+                case "Denmark":
+                    return "D";
                 case "Spain":
                     return "E";
-                case "Portugal":
-                    return "K";
-                case "Holland":
-                    return "H";
-                case "Russia":
-                    return "R";
-                case "Austria":
-                    return "A";
-                case "Ottoman Empire":
-                    return "T";
-                case "Confederation of Rhine":
-                    return "B";
+                case "France":
+                    return "F";
                 case "Great Britain":
                     return "G";
+                case "Holland":
+                    return "H";
+                case "Italy":
+                    return "I";
+                case "Portugal":
+                case "Kingdom of Portugal":
+                    return "K";
+                case "Morocco":
+                    return "M";
+                case "Naples":
+                    return "N";
+                case "Prussia":
+                    return "P";
+                case "Russia":
+                    return "R";
+                case "Sweden":
+                    return "S";
+                case "Ottoman Empire":
+                    return "T";
+                case "Warsaw":
+                case "Duchy of Warsaw":
+                    return "W";
                 default:
                     return "E";
             }

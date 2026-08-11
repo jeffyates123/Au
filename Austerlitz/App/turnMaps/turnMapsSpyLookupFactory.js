@@ -106,15 +106,16 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
         var report = turnReport || {};
         var byShipItemNo = {};
         var byFleetNo = {};
+        var shipRows = (report.warships || report.Warships || []).concat(report.merchantShips || report.MerchantShips || []);
 
-        angular.forEach((report.warships || []).concat(report.merchantShips || []), function (ship) {
-            var x = $scope.toMapCoordinateInt(ship && ship.x);
-            var y = $scope.toMapCoordinateInt(ship && ship.y);
+        angular.forEach(shipRows, function (ship) {
+            var x = $scope.toMapCoordinateInt(ship && (ship.x != null ? ship.x : ship.X));
+            var y = $scope.toMapCoordinateInt(ship && (ship.y != null ? ship.y : ship.Y));
             if (x == null || y == null || x <= 0 || y <= 0) return;
 
             var coordinate = { x: x, y: y };
-            var shipItemNo = $scope.toMapCoordinateInt(ship && ship.itemNo);
-            var fleetNo = $scope.toMapCoordinateInt(ship && ship.fleetNo);
+            var shipItemNo = $scope.toMapCoordinateInt(ship && (ship.itemNo != null ? ship.itemNo : ship.ItemNo));
+            var fleetNo = $scope.toMapCoordinateInt(ship && (ship.fleetNo != null ? ship.fleetNo : ship.FleetNo));
 
             if (shipItemNo != null && shipItemNo > 0 && !Object.prototype.hasOwnProperty.call(byShipItemNo, shipItemNo)) {
                 byShipItemNo[shipItemNo] = coordinate;
@@ -163,7 +164,7 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
     };
 
     $scope.resolveSpyReportCoordinate = function (spy, ts20TransportBySpyItemNo, transportLookups) {
-        var spyItemNo = $scope.toMapCoordinateInt(spy && spy.itemNo);
+        var spyItemNo = $scope.toMapCoordinateInt(spy && (spy.itemNo != null ? spy.itemNo : spy.ItemNo));
         var ts20TransportNo = spyItemNo != null && ts20TransportBySpyItemNo
             && Object.prototype.hasOwnProperty.call(ts20TransportBySpyItemNo, spyItemNo)
             ? ts20TransportBySpyItemNo[spyItemNo]
@@ -172,11 +173,11 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
         var ts20TransportCoordinate = $scope.getTransportCoordinateByNo(ts20TransportNo, transportLookups);
         if (ts20TransportCoordinate) return ts20TransportCoordinate;
 
-        var reportBoardedCoordinate = $scope.getTransportCoordinateByNo(spy && spy.boarded, transportLookups);
+        var reportBoardedCoordinate = $scope.getTransportCoordinateByNo(spy && (spy.boarded != null ? spy.boarded : spy.Boarded), transportLookups);
         if (reportBoardedCoordinate) return reportBoardedCoordinate;
 
-        var spyX = $scope.toMapCoordinateInt(spy && spy.x);
-        var spyY = $scope.toMapCoordinateInt(spy && spy.y);
+        var spyX = $scope.toMapCoordinateInt(spy && (spy.x != null ? spy.x : spy.X));
+        var spyY = $scope.toMapCoordinateInt(spy && (spy.y != null ? spy.y : spy.Y));
         if (spyX == null || spyY == null || spyX <= 0 || spyY <= 0) return null;
 
         return {
@@ -198,21 +199,52 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
         lookup[key] = existing + ' || ' + reportText;
     };
 
-    $scope.addSpyReportsFromTurnReport = function (turnReport, spyCoordinateReportByKey, ts20TransportBySpyItemNo) {
+    $scope.markSpyCoordinatePresence = function (lookup, key) {
+        if (!lookup || !key) return;
+        lookup[key] = true;
+    };
+
+    $scope.markSpyCoordinateState = function (lookup, key, stateCode) {
+        if (!lookup || !key || !stateCode) return;
+        if (!Object.prototype.hasOwnProperty.call(lookup, key) || !lookup[key]) {
+            lookup[key] = [];
+        }
+
+        if (lookup[key].indexOf(stateCode) === -1) {
+            lookup[key].push(stateCode);
+        }
+    };
+
+    $scope.getStateCodeFromTurnId = function (turnId) {
+        var normalizedTurnId = (turnId || '').toString().trim();
+        if (normalizedTurnId.length < 4) return '';
+        var stateCode = normalizedTurnId.charAt(3).toUpperCase();
+        return /^[A-Z]$/.test(stateCode) ? stateCode : '';
+    };
+
+    $scope.addSpyReportsFromTurnReport = function (turnReport, sourceTurnId, spyCoordinateReportByKey, spyCoordinatePresenceByKey, spyCoordinateStateByKey, ts20TransportBySpyItemNo) {
         var report = turnReport || {};
         var transportLookups = $scope.buildSpyTransportCoordinateLookup(report);
         var ts20Lookup = ts20TransportBySpyItemNo || null;
+        var spies = report.spies || report.Spies || [];
+        var sourceStateCode = $scope.getStateCodeFromTurnId(sourceTurnId);
 
-        angular.forEach(report.spies || [], function (spy) {
-            var reportText = (spy && spy.report != null ? spy.report : '').toString().trim();
-            if (!reportText) return;
-
+        angular.forEach(spies, function (spy) {
             var coordinate = $scope.resolveSpyReportCoordinate(spy, ts20Lookup, transportLookups);
             if (!coordinate) return;
 
             var key = $scope.toMapCoordinateKey(coordinate.x, coordinate.y);
             if (!key) return;
 
+            $scope.markSpyCoordinatePresence(spyCoordinatePresenceByKey, key);
+            var spyState = (spy && (spy.state != null ? spy.state : spy.State)
+                ? (spy.state != null ? spy.state : spy.State)
+                : sourceStateCode).toString().trim().toUpperCase();
+            $scope.markSpyCoordinateState(spyCoordinateStateByKey, key, spyState);
+
+            var reportValue = spy ? (spy.report != null ? spy.report : spy.Report) : '';
+            var reportText = (reportValue != null ? reportValue : '').toString().trim();
+            if (!reportText) return;
             $scope.appendSpyReportText(spyCoordinateReportByKey, key, reportText);
         });
     };
@@ -260,22 +292,8 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
         return turnIds;
     };
 
-    $scope.rebuildSpyCoordinateReportLookup = function () {
-        var requestId = ++$scope.spyLookupRequestId;
-        var spyCoordinateReportByKey = {};
-        var ts20TransportBySpyItemNo = $scope.buildTs20SpyTransportLookup($scope.movementBoardingRows || []);
-        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
-        var currentStateTurnId = $scope.getComparisonTurnIdForSelectedState
-            ? $scope.getComparisonTurnIdForSelectedState(currentTurnId)
-            : currentTurnId;
-        var turnIds = $scope.getAllStateTurnIdsForCurrentTurn();
-
-        if (!turnIds.length) {
-            $scope.spyCoordinateReportByKey = {};
-            return;
-        }
-
-        var reportPromises = turnIds.map(function (turnId) {
+    $scope.loadTurnReportsForTurnIds = function (turnIds, currentTurnId) {
+        var reportPromises = (turnIds || []).map(function (turnId) {
             var normalizedTurnId = (turnId || '').toString().trim();
             if (!normalizedTurnId) return $q.when({ turnId: '', report: null });
 
@@ -298,7 +316,29 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
             });
         });
 
-        $q.all(reportPromises).then(function (results) {
+        return $q.all(reportPromises);
+    };
+
+    $scope.rebuildSpyCoordinateReportLookup = function () {
+        var requestId = ++$scope.spyLookupRequestId;
+        var spyCoordinateReportByKey = {};
+        var spyCoordinatePresenceByKey = {};
+        var spyCoordinateStateByKey = {};
+        var ts20TransportBySpyItemNo = $scope.buildTs20SpyTransportLookup($scope.movementBoardingRows || []);
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
+        var currentStateTurnId = $scope.getComparisonTurnIdForSelectedState
+            ? $scope.getComparisonTurnIdForSelectedState(currentTurnId)
+            : currentTurnId;
+        var turnIds = $scope.getAllStateTurnIdsForCurrentTurn();
+
+        if (!turnIds.length) {
+            $scope.spyCoordinateReportByKey = {};
+            $scope.spyCoordinatePresenceByKey = {};
+            $scope.spyCoordinateStateByKey = {};
+            return;
+        }
+
+        $scope.loadTurnReportsForTurnIds(turnIds, currentTurnId).then(function (results) {
             if (requestId !== $scope.spyLookupRequestId) return;
 
             angular.forEach(results || [], function (resultRow) {
@@ -308,41 +348,98 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
                     && resultRow.turnId.toUpperCase() === currentStateTurnId.toUpperCase()
                     ? ts20TransportBySpyItemNo
                     : null;
-                $scope.addSpyReportsFromTurnReport(resultRow.report, spyCoordinateReportByKey, useTs20Lookup);
+                $scope.addSpyReportsFromTurnReport(
+                    resultRow.report,
+                    resultRow.turnId,
+                    spyCoordinateReportByKey,
+                    spyCoordinatePresenceByKey,
+                    spyCoordinateStateByKey,
+                    useTs20Lookup
+                );
             });
 
             $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+            $scope.spyCoordinatePresenceByKey = spyCoordinatePresenceByKey;
+            $scope.spyCoordinateStateByKey = spyCoordinateStateByKey;
         }, function () {
             if (requestId !== $scope.spyLookupRequestId) return;
             $scope.spyCoordinateReportByKey = spyCoordinateReportByKey;
+            $scope.spyCoordinatePresenceByKey = spyCoordinatePresenceByKey;
+            $scope.spyCoordinateStateByKey = spyCoordinateStateByKey;
         });
     };
 
     $scope.rebuildArmyCoordinateLookup = function () {
-        var report = ($scope.masterData && $scope.masterData.turnReport) || {};
-        var rows = report.armyPositions || report.ArmyPositions || [];
-        var lookup = {};
+        var requestId = ++$scope.unitLookupRequestId;
+        var armyLookup = {};
+        var navyLookup = {};
+        var turnIds = $scope.getAllStateTurnIdsForCurrentTurn();
+        var currentTurnId = ($scope.masterData && $scope.masterData.turnId ? $scope.masterData.turnId : '').toString().trim();
 
-        angular.forEach(rows, function (row) {
-            var x = $scope.toMapCoordinateInt(row && row.x);
-            var y = $scope.toMapCoordinateInt(row && row.y);
-            var key = $scope.toMapCoordinateKey(x, y);
-            if (!key) return;
+        if (!turnIds.length) {
+            $scope.armyCoordinateByKey = {};
+            $scope.navyCoordinateByKey = {};
+            return;
+        }
 
-            var state = (row && (row.state || row.State) ? (row.state || row.State) : '').toString().trim().toUpperCase();
-            var bats = $scope.toMapCoordinateInt(row && (row.bat || row.Bat));
+        $scope.loadTurnReportsForTurnIds(turnIds, currentTurnId).then(function (results) {
+            if (requestId !== $scope.unitLookupRequestId) return;
 
-            if (!Object.prototype.hasOwnProperty.call(lookup, key)) {
-                lookup[key] = [];
-            }
+            angular.forEach(results || [], function (resultRow) {
+                var report = (resultRow && resultRow.report) || {};
+                var armyRows = report.armyPositions || report.ArmyPositions || [];
+                var shipRows = (report.warships || report.Warships || []).concat(report.merchantShips || report.MerchantShips || []);
 
-            lookup[key].push({
-                state: state,
-                bats: bats == null ? 0 : bats
+                angular.forEach(armyRows, function (row) {
+                    var x = $scope.toMapCoordinateInt(row && row.x);
+                    var y = $scope.toMapCoordinateInt(row && row.y);
+                    var key = $scope.toMapCoordinateKey(x, y);
+                    if (!key) return;
+
+                    var state = (row && (row.state || row.State) ? (row.state || row.State) : '').toString().trim().toUpperCase();
+                    var bats = $scope.toMapCoordinateInt(row && (row.bat || row.Bat));
+
+                    if (!Object.prototype.hasOwnProperty.call(armyLookup, key)) {
+                        armyLookup[key] = [];
+                    }
+
+                    armyLookup[key].push({
+                        state: state,
+                        bats: bats == null ? 0 : bats
+                    });
+                });
+
+                angular.forEach(shipRows, function (ship) {
+                    var x = $scope.toMapCoordinateInt(ship && ship.x);
+                    var y = $scope.toMapCoordinateInt(ship && ship.y);
+                    var key = $scope.toMapCoordinateKey(x, y);
+                    if (!key) return;
+
+                    var state = (ship && (ship.state || ship.State) ? (ship.state || ship.State) : '').toString().trim().toUpperCase();
+                    var fleetNo = $scope.toMapCoordinateInt(ship && (ship.fleetNo || ship.FleetNo));
+                    var shipType = (ship && (ship.shipType || ship.ShipType || ship.itemTypeName || ship.ItemTypeName)
+                        ? (ship.shipType || ship.ShipType || ship.itemTypeName || ship.ItemTypeName)
+                        : '').toString().trim();
+
+                    if (!Object.prototype.hasOwnProperty.call(navyLookup, key)) {
+                        navyLookup[key] = [];
+                    }
+
+                    navyLookup[key].push({
+                        state: state,
+                        fleetNo: fleetNo,
+                        shipType: shipType || 'Ship'
+                    });
+                });
             });
-        });
 
-        $scope.armyCoordinateByKey = lookup;
+            $scope.armyCoordinateByKey = armyLookup;
+            $scope.navyCoordinateByKey = navyLookup;
+        }, function () {
+            if (requestId !== $scope.unitLookupRequestId) return;
+            $scope.armyCoordinateByKey = {};
+            $scope.navyCoordinateByKey = {};
+        });
     };
 
     $scope.rebuildEpidemicCoordinateLookup = function () {

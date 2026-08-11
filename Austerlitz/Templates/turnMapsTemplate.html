@@ -42,7 +42,7 @@
                 </span>
             </div>
 
-            <div class="map-orders-row" ng-if="!isProductionSiteMode() && currentMovementOrderRow">
+            <div class="map-orders-row" ng-if="!isProductionSiteMode() && !isIntelligenceMode() && currentMovementOrderRow">
                 <span class="map-orders-group map-orders-group-order">
                     <button type="button" class="btn btn-default btn-xs map-orders-nav-btn" ng-click="navigateCurrentOrder(-1)">&lt;</button>
                     <button type="button" class="btn btn-default btn-xs map-orders-order-picker-btn" ng-click="openAllOrdersModal()">Order #{{(getCurrentOrderIndexForMode('movement') || 0) + 1}}</button>
@@ -88,6 +88,15 @@
                 </span>
             </div>
 
+            <div class="map-orders-row" ng-if="isIntelligenceMode()">
+                <span class="map-orders-label">Intelligence Filters</span>
+                <label ng-repeat="filterOption in intelligenceFilterOptions" class="map-overlay-toggle">
+                    <input type="checkbox"
+                           ng-checked="isIntelligenceFilterEnabled(filterOption.key)"
+                           ng-click="toggleIntelligenceFilter(filterOption.key)" /> {{filterOption.label}}
+                </label>
+            </div>
+
             <div class="map-orders-row" ng-if="isProductionSiteMode() && currentProductionOrderRow">
                 <span class="map-orders-label">Production Order</span>
                 <span class="map-orders-index">#{{(getCurrentOrderIndexForMode('production') || 0) + 1}}</span>
@@ -130,7 +139,8 @@
                                         ng-dblclick="coordinateDblClick(col.x, col.y)"
                                         ng-click="coordinateClick(col.x, col.y)"
                                         ng-attr-title="{{getCoordinateHoverTooltip(col) || undefined}}"
-                                        ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.owner, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)">
+                                        ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.owner, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)"
+                                        ng-style="isIntelligenceMode() ? getIntelligenceCellStyle(col) : {}">
                                         <div ng-show="col.y>0 && col.x>0">
                                             {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? getMapProductionSiteText(col) : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
                                         </div>
@@ -164,7 +174,7 @@
 
         </div>
 
-        <aside class="turnMapsPickerPane" ng-if="shouldUseMovementPickerPanelLayout()">
+        <aside class="turnMapsPickerPane" ng-if="!isIntelligenceMode() && shouldUseMovementPickerPanelLayout()">
             <div class="turnMapsPickerPaneEmpty" ng-if="!isMovementXMode() && !shouldShowMovementPickerPanel()">
                 <h4>Movement Picker</h4>
                 <p class="text-muted">Movement picker is closed.</p>
@@ -231,8 +241,8 @@
         </aside>
     </div>
 
-    <div class="landUnitsModalBackdrop" ng-show="orderUi.allOrdersModal.isOpen" ng-click="closeAllOrdersModal()"></div>
-    <div class="landUnitsModal mapOrdersModal" ng-show="orderUi.allOrdersModal.isOpen">
+    <div class="landUnitsModalBackdrop" ng-show="!isIntelligenceMode() && orderUi.allOrdersModal.isOpen" ng-click="closeAllOrdersModal()"></div>
+    <div class="landUnitsModal mapOrdersModal" ng-show="!isIntelligenceMode() && orderUi.allOrdersModal.isOpen">
         <div class="landUnitsModalHeader">
             <div>
                 <h3>All {{orderUi.allOrdersModal.mode === 'production' ? 'Production' : 'Movement'}} Orders</h3>
@@ -262,8 +272,8 @@
         </div>
     </div>
 
-    <div class="landUnitsModalBackdrop" ng-show="shouldShowMovementPickerModal() && !isMovementXMode()" ng-click="closeMovementPickerModal()"></div>
-    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="shouldShowMovementPickerModal() && !isMovementXMode()">
+    <div class="landUnitsModalBackdrop" ng-show="!isIntelligenceMode() && shouldShowMovementPickerModal() && !isMovementXMode()" ng-click="closeMovementPickerModal()"></div>
+    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="!isIntelligenceMode() && shouldShowMovementPickerModal() && !isMovementXMode()">
         <div class="landUnitsModalHeader">
             <div>
                 <h3>Movement Picker (Fed/Fleet)</h3>
@@ -280,12 +290,12 @@
 
     <div
         class="landUnitsModalBackdrop"
-        ng-if="shouldShowMovementXPickerModal()"
+        ng-if="!isIntelligenceMode() && shouldShowMovementXPickerModal()"
         ng-click="closeMovementPickerModal()">
     </div>
     <div
         class="landUnitsModal existingArmyHostModal"
-        ng-if="shouldShowMovementXPickerModal()">
+        ng-if="!isIntelligenceMode() && shouldShowMovementXPickerModal()">
         <div class="landUnitsModalHeader">
             <div>
                 <h3>Movement X</h3>

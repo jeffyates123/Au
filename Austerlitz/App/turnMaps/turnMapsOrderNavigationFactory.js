@@ -87,6 +87,14 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         var row = $scope.getCurrentMovementOrderRow();
         $scope.currentMovementOrderRow = row || null;
         $scope.movementOrderPickerIndex = $scope.getCurrentOrderIndexForMode('movement');
+        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) {
+            $scope.selectedMovementRow = null;
+            $scope.selectedMovementItemCoordinate = null;
+            $scope.pendingRouteSelection = null;
+            $scope.clearDisplayField();
+            $scope.clearRouteCandidates();
+            return;
+        }
         if (row) {
             $scope.movementClickRow({ entity: row });
         } else {

@@ -16,7 +16,7 @@ austerlitzModule.factory('stateColorFactory', function ($window) {
         P: 'rgb(128, 128, 128)',
         R: 'rgb(192, 192, 192)',
         S: 'rgb(255, 255, 153)',
-        T: 'black',
+        T: '#6F2DA8',
         W: 'rgb(0, 128, 0)'
     };
 
@@ -42,7 +42,7 @@ austerlitzModule.factory('stateColorFactory', function ($window) {
     }
 
     function getTextColor(stateCode) {
-        return normalizeStateCode(stateCode) === 'T' ? 'rgb(192, 192, 192)' : '#111111';
+        return getReadableTextColor(getColor(stateCode));
     }
 
     function parseColorToRgb(colorValue) {

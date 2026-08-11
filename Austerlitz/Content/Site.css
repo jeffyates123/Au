@@ -17,7 +17,7 @@
     --state-color-P: rgb(128, 128, 128);
     --state-color-R: rgb(192, 192, 192);
     --state-color-S: rgb(255, 255, 153);
-    --state-color-T: black;
+    --state-color-T: #6F2DA8;
     --state-color-W: rgb(0, 128, 0);
 }
 
@@ -263,7 +263,7 @@ textarea {
 .state_P {border:none; background-color:var(--state-color-P);}
 .state_R {border:none; background-color:var(--state-color-R);}
 .state_S {border:none; background-color:var(--state-color-S);}
-.state_T {border:none; background-color:black; color: rgb(192, 192, 192)}
+.state_T {border:none; background-color:var(--state-color-T); color: #ffffff}
 .state_W {border:none; background-color:var(--state-color-W);}
 .state_ {border: 1px rgb(192, 192, 192) solid; background-color:rgb(204, 255, 255);}
 
@@ -287,7 +287,7 @@ textarea {
 .intelStateBg_P { background-color: var(--state-color-P); }
 .intelStateBg_R { background-color: var(--state-color-R); }
 .intelStateBg_S { background-color: var(--state-color-S); }
-.intelStateBg_T { background-color: black; }
+.intelStateBg_T { background-color: var(--state-color-T); }
 .intelStateBg_W { background-color: var(--state-color-W); }
 .intelStateBg_Default { background-color: #ffffff; }
 .intelSpyBg { background-color: #000000; }
@@ -306,7 +306,7 @@ textarea {
 .intelStateBorder_P { border-color: var(--state-color-P) !important; border-style: solid !important; }
 .intelStateBorder_R { border-color: var(--state-color-R) !important; border-style: solid !important; }
 .intelStateBorder_S { border-color: var(--state-color-S) !important; border-style: solid !important; }
-.intelStateBorder_T { border-color: black !important; border-style: solid !important; }
+.intelStateBorder_T { border-color: var(--state-color-T) !important; border-style: solid !important; }
 .intelStateBorder_W { border-color: var(--state-color-W) !important; border-style: solid !important; }
 
 .intelSeverityBorder_Normal { border-color: #ffffff !important; border-style: solid !important; }
