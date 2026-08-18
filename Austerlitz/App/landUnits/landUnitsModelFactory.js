@@ -57,6 +57,14 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
         return null;
       };
 
+      $scope.getBaggageTrainSphere = function (baggageTrain) {
+        if (!baggageTrain) {
+          return "Unknown";
+        }
+
+        return $scope.getSphereFromCoordinates(baggageTrain.x, baggageTrain.y);
+      };
+
       $scope.getLandUnitKey = function (unit) {
         if (!unit) {
           return "";
@@ -357,6 +365,42 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
           });
       };
 
+      $scope.refreshBaggageTrainRows = function () {
+        var baggageTrains =
+          $scope.masterData &&
+          $scope.masterData.turnReport &&
+          $scope.masterData.turnReport.baggageTrains
+            ? $scope.masterData.turnReport.baggageTrains
+            : [];
+
+        $scope.baggageTrainRows = baggageTrains
+          .map(function (baggageTrain, index) {
+            return {
+              kind: "baggageTrain",
+              id: baggageTrain.itemNo,
+              itemNo: baggageTrain.itemNo,
+              loadedOrder: index,
+              x: baggageTrain.x,
+              y: baggageTrain.y,
+              position: $scope.formatPosition({
+                x_OrState: baggageTrain.x,
+                y_OrFleet: baggageTrain.y,
+              }),
+              mp: null,
+              condition: baggageTrain.condition,
+              goods1: $scope.trimValue(baggageTrain.goods1),
+              quantity1: baggageTrain.quantity1,
+              goods2: $scope.trimValue(baggageTrain.goods2),
+              quantity2: baggageTrain.quantity2,
+              money: baggageTrain.money,
+              source: baggageTrain,
+            };
+          })
+          .sort(function (left, right) {
+            return $scope.getUnitSortNo(left) - $scope.getUnitSortNo(right);
+          });
+      };
+
       $scope.filteredBrigadeRows = function () {
         if (!$scope.selectedSphere || $scope.selectedSphere === "All") {
           return ($scope.brigadeRows || []).filter(function (brigade) {
@@ -398,6 +442,22 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
           return (
             $scope.getSpySphere(spy) === $scope.selectedSphere &&
             $scope.matchesPositionFilter(spy)
+          );
+        });
+      };
+
+      $scope.filteredBaggageTrainRows = function () {
+        if (!$scope.selectedSphere || $scope.selectedSphere === "All") {
+          return ($scope.baggageTrainRows || []).filter(function (baggageTrain) {
+            return $scope.matchesPositionFilter(baggageTrain);
+          });
+        }
+
+        return ($scope.baggageTrainRows || []).filter(function (baggageTrain) {
+          return (
+            $scope.getBaggageTrainSphere(baggageTrain) ===
+              $scope.selectedSphere &&
+            $scope.matchesPositionFilter(baggageTrain)
           );
         });
       };

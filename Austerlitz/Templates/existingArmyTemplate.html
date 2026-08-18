@@ -745,6 +745,58 @@
     </table>
   </div>
 
+  <div class="landUnitsSectionHeader" ng-show="baggageTrainRows.length > 0">
+    <span class="landUnitsSectionTitle">Baggage Trains</span>
+    <span class="landUnitsSectionMeta">{{filteredBaggageTrainRows().length}}</span>
+  </div>
+
+  <div
+    class="alert alert-info landUnitsAlert"
+    ng-show="!isLoading && !loadError && baggageTrainRows.length === 0"
+  >
+    No baggage trains are available for the selected turn.
+  </div>
+
+  <div class="landUnitsTableWrap" ng-show="baggageTrainRows.length > 0">
+    <table
+      class="table landUnitsTable"
+      ng-class="{ landUnitsMovementSelectionTable: isMovementSelectionMode() }"
+    >
+      <thead>
+        <tr>
+          <th class="landUnitsIdCol">Train</th>
+          <th class="landUnitsPositionCol">Pos</th>
+          <th class="landUnitsMpCol">MP</th>
+          <th>Condition</th>
+          <th>Goods 1</th>
+          <th>Qty 1</th>
+          <th>Goods 2</th>
+          <th>Qty 2</th>
+          <th>Money</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          ng-repeat="baggageTrain in filteredBaggageTrainRows() track by baggageTrain.id"
+          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(baggageTrain), itemGridRowSelected: isMovementUnitSelected(baggageTrain), landUnitsMovementBoarded: isMovementUnitBoardedForMovement(baggageTrain), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(baggageTrain) }"
+          ng-click="isMovementSelectionMode() && selectMovementUnit(baggageTrain, 'item')"
+        >
+          <td class="landUnitsIdCol">{{baggageTrain.itemNo}}</td>
+          <td class="landUnitsPositionCol">{{baggageTrain.position || '-'}}</td>
+          <td class="landUnitsMpCol">
+            {{baggageTrain.mp != null ? baggageTrain.mp : '-'}}
+          </td>
+          <td>{{baggageTrain.condition != null ? baggageTrain.condition : '-'}}</td>
+          <td>{{baggageTrain.goods1 || '-'}}</td>
+          <td>{{baggageTrain.quantity1 != null ? baggageTrain.quantity1 : '-'}}</td>
+          <td>{{baggageTrain.goods2 || '-'}}</td>
+          <td>{{baggageTrain.quantity2 != null ? baggageTrain.quantity2 : '-'}}</td>
+          <td>{{baggageTrain.money != null ? baggageTrain.money : '-'}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <div
     class="landUnitsModalBackdrop"
     ng-show="spyBoardingModal.isOpen"

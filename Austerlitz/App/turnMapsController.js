@@ -168,7 +168,7 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.hasMovementXArmyUnitAtCoordinate = function (x, y) {
         var report = ($scope.masterData && $scope.masterData.turnReport) || {};
-        return ['brigades', 'commanders', 'spies'].some(function (collectionName) {
+        return ['brigades', 'commanders', 'spies', 'baggageTrains'].some(function (collectionName) {
             return (report[collectionName] || []).some(function (item) {
                 return item.x == x && item.y == y;
             });

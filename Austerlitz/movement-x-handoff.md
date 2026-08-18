@@ -12,7 +12,7 @@ Movement X reuses ordinary Movement behavior:
 - order navigation
 - autosave
 
-Supported selectable items: brigades, commanders, spies, warships, merchant ships, land federations, and fleets.
+Supported selectable items: brigades, commanders, spies, baggage trains, warships, merchant ships, land federations, and fleets.
 
 ## Army modal on the map
 
@@ -55,7 +55,7 @@ This is separate from Army > Existing Army, which always renders inline (no moda
   - `panel` when wide-screen setting is on, not Production Site mode, and viewport width ≥ `wideScreenMinViewportWidth` (1500 from `turnMapsConfigFactory`)
   - otherwise `modal` overlay
 - Intelligence mode forces the picker closed and does not show Movement X hosts.
-- Row click selects the individual unit (brigade / commander / spy / ship).
+- Row click selects the individual unit (brigade / commander / spy / baggage train / ship).
 - `Move Fed` beside Fed selects land federation movement (disabled when no fed).
 - `Move Fleet` beside Fleet selects fleet movement (disabled when no fleet).
 - Current selection: yellow (`itemGridRowSelected`).

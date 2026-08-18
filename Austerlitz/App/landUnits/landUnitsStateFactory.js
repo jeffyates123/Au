@@ -74,6 +74,7 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
       federationSummaryPairRows: [],
       commanderRows: [],
       spyRows: [],
+      baggageTrainRows: [],
       commanderOverflowCount: 0,
       commandersSectionCollapsed: getInitialCommandersSectionCollapsed(),
       brigadesSectionCollapsed: getInitialBrigadesSectionCollapsed(),

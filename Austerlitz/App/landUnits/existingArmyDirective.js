@@ -136,20 +136,23 @@ austerlitzModule.directive("existingArmy", function () {
         });
       }
 
-      function applySpyMovementPoints() {
+      function buildMovementItemMpLookup(targetItemTypeName, targetItemType) {
         var movementItems =
           ($scope.masterData &&
             $scope.masterData.turnReport &&
             $scope.masterData.turnReport.movementItemList) ||
           [];
-        var movementItemMpBySpyId = {};
+        var movementItemMpById = {};
 
         angular.forEach(movementItems, function (item) {
           if (!item) {
             return;
           }
 
-          if (item.itemTypeName !== "Spy" && item.itemType !== 5) {
+          if (
+            item.itemTypeName !== targetItemTypeName &&
+            item.itemType !== targetItemType
+          ) {
             return;
           }
 
@@ -159,9 +162,15 @@ austerlitzModule.directive("existingArmy", function () {
             return;
           }
 
-          movementItemMpBySpyId[itemNo] =
+          movementItemMpById[itemNo] =
             item.originalMP != null ? item.originalMP : item.mp;
         });
+
+        return movementItemMpById;
+      }
+
+      function applySpyMovementPoints() {
+        var movementItemMpBySpyId = buildMovementItemMpLookup("Spy", 5);
 
         angular.forEach($scope.spyRows || [], function (spy) {
           spy.mp = Object.prototype.hasOwnProperty.call(
@@ -169,6 +178,22 @@ austerlitzModule.directive("existingArmy", function () {
             spy.id,
           )
             ? movementItemMpBySpyId[spy.id]
+            : null;
+        });
+      }
+
+      function applyBaggageTrainMovementPoints() {
+        var movementItemMpByBaggageTrainId = buildMovementItemMpLookup(
+          "BaggageTrain",
+          4,
+        );
+
+        angular.forEach($scope.baggageTrainRows || [], function (baggageTrain) {
+          baggageTrain.mp = Object.prototype.hasOwnProperty.call(
+            movementItemMpByBaggageTrainId,
+            baggageTrain.id,
+          )
+            ? movementItemMpByBaggageTrainId[baggageTrain.id]
             : null;
         });
       }
@@ -188,7 +213,9 @@ austerlitzModule.directive("existingArmy", function () {
         $scope.refreshBrigadeRows();
         $scope.refreshCommanderRows();
         $scope.refreshSpyRows();
+        $scope.refreshBaggageTrainRows();
         applySpyMovementPoints();
+        applyBaggageTrainMovementPoints();
         return $scope
           .loadArmyListForHeadcountCosts()
           .then($scope.replayBrigadeTurnOrders)
@@ -206,6 +233,7 @@ austerlitzModule.directive("existingArmy", function () {
           $scope.federationSummaryPairRows = [];
           $scope.commanderRows = [];
           $scope.spyRows = [];
+          $scope.baggageTrainRows = [];
           loadedTurnId = null;
           return $q.when();
         }
@@ -241,6 +269,7 @@ austerlitzModule.directive("existingArmy", function () {
               $scope.federationSummaryPairRows = [];
               $scope.commanderRows = [];
               $scope.spyRows = [];
+              $scope.baggageTrainRows = [];
             },
           )
           .finally(function () {
@@ -286,6 +315,7 @@ austerlitzModule.directive("existingArmy", function () {
             (turnReport.brigades || []).length,
             (turnReport.commanders || []).length,
             (turnReport.spies || []).length,
+            (turnReport.baggageTrains || []).length,
           ].join("|");
         },
         function (newRowCounts, oldRowCounts) {
