@@ -69,12 +69,14 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
         return side === "A" ? "fleetA" : "fleetB";
     }
 
-    function createShipFactoryEntry(side, nation, shipRef, shipIndex) {
+    function createShipFactoryEntry(side, nation, shipRef, shipIndex, overrides) {
         var shipClass = toPositiveInt(shipRef.shipClass) || 1;
         var typeNo = toPositiveInt(shipRef.type);
-        var wood = toPositiveNumber(shipRef.wood);
-        var baseMarines = toPositiveInt(shipRef.citizens);
-        var cannons = parseCannonCount(shipRef.name);
+        var overrideName = ((overrides && overrides.importedName) || "").trim();
+        var displayName = overrideName || shipRef.name;
+        var wood = toPositiveNumber((overrides && overrides.importedTonnage) || shipRef.wood);
+        var baseMarines = toPositiveInt((overrides && overrides.importedMarines) || shipRef.citizens);
+        var cannons = parseCannonCount(displayName);
         var tonnage = roundNearest(wood);
 
         return {
@@ -83,7 +85,7 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
             originalSide: side,
             nation: nation,
             type: typeNo,
-            name: shipRef.name,
+            name: displayName,
             shipClass: shipClass,
             cannons: cannons,
             wood: wood,
@@ -182,19 +184,21 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
     }
 
     function applyTonnageLoss(ship, tonnageLost) {
+        var beforeTonnage = ship.tonnage;
         var loss = roundNearest(tonnageLost);
         ship.tonnage = clamp(ship.tonnage - loss, 0, ship.initialTonnage);
         ship.conditionPct = ship.wood > 0 ? roundNearest((ship.tonnage / ship.wood) * 100) : 0;
         if (ship.tonnage <= 0) {
             ship.status = "sunk";
         }
-        return loss;
+        return beforeTonnage - ship.tonnage;
     }
 
     function applyMarineLoss(ship, marinesLost) {
+        var beforeMarines = ship.marines;
         var loss = roundNearest(marinesLost);
         ship.marines = clamp(ship.marines - loss, 0, ship.initialMarines);
-        return loss;
+        return beforeMarines - ship.marines;
     }
 
     function calculateLongRangeAttack(attacker, target) {
@@ -257,6 +261,8 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
         });
 
         angular.forEach(attackers, function (attacker) {
+            if (!canShipFireInRound(attacker, roundDef.type)) return;
+
             var target = pickLongRangeTarget(attacker, simState, exceptionMap);
             if (!target) return;
 
@@ -352,21 +358,25 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
         var roundReport = createRoundAccumulator(roundDef);
         var sideAAttackers = getActiveShipsBySide(simState, "A");
         var sideBAttackers = getActiveShipsBySide(simState, "B");
-        var engagedTargets = {};
+        var engagedShips = {};
         var engagements = [];
 
         angular.forEach(sideAAttackers, function (attacker) {
-            var target = chooseBoardingTarget(attacker, sideBAttackers, engagedTargets);
+            if (engagedShips[attacker.id]) return;
+            var target = chooseBoardingTarget(attacker, sideBAttackers, engagedShips);
             if (!target) return;
-            engagedTargets[target.id] = true;
+            engagedShips[attacker.id] = true;
+            engagedShips[target.id] = true;
             attacker.wasBoardingShip = true;
             target.wasBoardingShip = true;
             engagements.push({ attacker: attacker, defender: target });
         });
         angular.forEach(sideBAttackers, function (attacker) {
-            var target = chooseBoardingTarget(attacker, sideAAttackers, engagedTargets);
+            if (engagedShips[attacker.id]) return;
+            var target = chooseBoardingTarget(attacker, sideAAttackers, engagedShips);
             if (!target) return;
-            engagedTargets[target.id] = true;
+            engagedShips[attacker.id] = true;
+            engagedShips[target.id] = true;
             attacker.wasBoardingShip = true;
             target.wasBoardingShip = true;
             engagements.push({ attacker: attacker, defender: target });
@@ -383,11 +393,8 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
 
                 var cpA = roundNearest((shipA.marines * 1.5) / 6);
                 var cpB = roundNearest((shipB.marines * 1.5) / 6);
-                var aLoss = cpB;
-                var bLoss = cpA;
-
-                shipA.marines = clamp(shipA.marines - aLoss, 0, shipA.initialMarines);
-                shipB.marines = clamp(shipB.marines - bLoss, 0, shipB.initialMarines);
+                var aLoss = applyMarineLoss(shipA, cpB);
+                var bLoss = applyMarineLoss(shipB, cpA);
 
                 roundReport[getFleetSideKey(shipA.side)].cp += cpA;
                 roundReport[getFleetSideKey(shipB.side)].cp += cpB;
@@ -517,6 +524,7 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
 
     function buildFleetShips(fleetConfig, side, nation, refShipsByType) {
         var ships = [];
+        var nextShipIndexByType = {};
         angular.forEach(fleetConfig || [], function (line) {
             var typeNo = toPositiveInt(line.type);
             var qty = toPositiveInt(line.quantity);
@@ -524,7 +532,8 @@ austerlitzModule.factory("seaBattlesEngineFactory", function () {
             var ref = refShipsByType[typeNo];
             if (!ref) return;
             for (var i = 1; i <= qty; i++) {
-                ships.push(createShipFactoryEntry(side, nation, ref, i));
+                nextShipIndexByType[typeNo] = (nextShipIndexByType[typeNo] || 0) + 1;
+                ships.push(createShipFactoryEntry(side, nation, ref, nextShipIndexByType[typeNo], line));
             }
         });
         return ships;

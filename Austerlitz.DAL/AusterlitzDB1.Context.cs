@@ -77,6 +77,11 @@ namespace Austerlitz.DAL
         public virtual DbSet<REF_Terrain_Factor> REF_Terrain_Factor { get; set; }
         public virtual DbSet<TR_MathBattleBrigades> TR_MathBattleBrigades { get; set; }
         public virtual DbSet<TR_MathBattleResultActual> TR_MathBattleResultActual { get; set; }
+        public virtual DbSet<TR_SeaBattles> TR_SeaBattles { get; set; }
+        public virtual DbSet<TR_SeaBattleShips> TR_SeaBattleShips { get; set; }
+        public virtual DbSet<TR_SeaBattleLongRangeActions> TR_SeaBattleLongRangeActions { get; set; }
+        public virtual DbSet<TR_SeaBattleBoardingActions> TR_SeaBattleBoardingActions { get; set; }
+        public virtual DbSet<TR_SeaBattleMerchantCaptures> TR_SeaBattleMerchantCaptures { get; set; }
         public virtual DbSet<REF_TurnErrorCodes> REF_TurnErrorCodes { get; set; }
         public virtual DbSet<TR_TurnOrderErrors> TR_TurnOrderErrors { get; set; }
     }

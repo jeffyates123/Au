@@ -206,6 +206,7 @@
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Calculator.cs" />
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Recalculation.cs" />
     <Compile Include="Controllers\TurnReportApiController.MathBattles.Support.cs" />
+    <Compile Include="Controllers\TurnReportApiController.SeaBattles.Query.cs" />
     <Compile Include="Controllers\TurnSheetApiController.cs" />
     <Compile Include="Controllers\TurnSheetApiController.Spreadsheet.cs" />
     <Compile Include="Global.asax.cs">
@@ -218,6 +219,7 @@
     <Compile Include="Services\TurnReportImportService.Locations.cs" />
     <Compile Include="Services\TurnReportImportService.Map.cs" />
     <Compile Include="Services\TurnReportImportService.MathBattles.cs" />
+    <Compile Include="Services\TurnReportImportService.SeaBattles.cs" />
     <Compile Include="Services\TurnReportImportService.StateRelationships.cs" />
     <Compile Include="Services\TurnReportImportService.TurnOrderErrors.cs" />
     <Compile Include="Services\TurnReportImportService.Units.cs" />
@@ -279,6 +281,8 @@
     <Content Include="App\landUnitsController.js" />
     <Content Include="App\mathBattlesCombatHelperFactory.js" />
     <Content Include="App\mathBattlesController.js" />
+    <Content Include="App\seaBattlesController.js" />
+    <Content Include="App\seaBattlesEngineFactory.js" />
     <Content Include="App\masterDataFactory.js" />
     <Content Include="App\stateColorFactory.js" />
     <Content Include="App\menuController.js" />
@@ -702,6 +706,7 @@
     <Content Include="Templates\itemSelectTemplate.html" />
     <Content Include="Templates\landUnitsTemplate.html" />
     <Content Include="Templates\mathBattlesTemplate.html" />
+    <Content Include="Templates\seaBattlesTemplate.html" />
     <Content Include="Templates\sectionPlaceholderTemplate.html" />
     <Content Include="Templates\simBattleTemplate.html" />
     <Content Include="Templates\turnMapsTemplate.html" />

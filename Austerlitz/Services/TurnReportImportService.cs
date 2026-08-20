@@ -37,6 +37,7 @@ namespace Austerlitz.Services
                 lineLocation = LoadStateRelationships(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadTradingPortsAndCities(lineList, lineLocation, auDB, turnId);
                 lineLocation = LoadMathBattles(lineList, lineLocation, auDB, turnId);
+                lineLocation = LoadSeaBattles(lineList, lineLocation, auDB, turnId);
 
 
                 lineLocation = LoadTRMap(lineList, lineLocation, auDB, turnId);

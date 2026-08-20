@@ -131,6 +131,21 @@
     <Compile Include="TR_MathBattleResultEstimated.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>
+    <Compile Include="TR_SeaBattles.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_SeaBattleShips.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_SeaBattleLongRangeActions.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_SeaBattleBoardingActions.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="TR_SeaBattleMerchantCaptures.cs">
+      <DependentUpon>AusterlitzDB1.tt</DependentUpon>
+    </Compile>
     <Compile Include="TR_MerchantShips.cs">
       <DependentUpon>AusterlitzDB1.tt</DependentUpon>
     </Compile>

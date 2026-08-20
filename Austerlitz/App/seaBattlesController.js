@@ -2,11 +2,13 @@
 
 austerlitzModule.controller(
     "seaBattlesController",
-    function ($scope, masterData, rulesCatalogFactory, seaBattlesEngineFactory) {
+    function ($scope, $q, masterData, rulesCatalogFactory, turnReportFactory, seaBattlesEngineFactory) {
         $scope.masterData = masterData;
         $scope.seaBattleLoadError = "";
         $scope.seaBattleValidationError = "";
         $scope.seaBattleSimError = "";
+        $scope.importedSeaBattleLoadError = "";
+        $scope.importedSeaBattleLoading = false;
         $scope.seaBattleBusy = false;
         $scope.refWarshipOptions = [];
         $scope.nationOptions = [];
@@ -16,9 +18,17 @@ austerlitzModule.controller(
         $scope.fleetB = [];
         $scope.result = null;
         $scope.expandedRounds = {};
+        $scope.importedSeaBattles = [];
+        $scope.selectedImportedBattleNo = null;
+        $scope.selectedImportedBattle = null;
 
         function toPositiveInt(value) {
             var parsed = parseInt(value, 10);
+            return isNaN(parsed) || parsed <= 0 ? 0 : parsed;
+        }
+
+        function toPositiveNumber(value) {
+            var parsed = parseFloat(value);
             return isNaN(parsed) || parsed <= 0 ? 0 : parsed;
         }
 
@@ -26,10 +36,13 @@ austerlitzModule.controller(
             return ((value || "") + "").trim().toUpperCase();
         }
 
-        function createFleetLine(type, quantity) {
+        function createFleetLine(type, quantity, importedName, importedTonnage, importedMarines) {
             return {
                 type: type || "",
-                quantity: quantity || 1
+                quantity: quantity || 1,
+                importedName: importedName || "",
+                importedTonnage: toPositiveInt(importedTonnage),
+                importedMarines: toPositiveInt(importedMarines)
             };
         }
 
@@ -117,10 +130,26 @@ austerlitzModule.controller(
                     var typeNo = toPositiveInt(row.type);
                     var quantity = toPositiveInt(row.quantity);
                     if (!typeNo || !quantity) return;
-                    normalized.push({
+                    var normalizedLine = {
                         type: typeNo,
                         quantity: quantity
-                    });
+                    };
+                    var importedName = ((row.importedName || "") + "").trim();
+                    if (importedName) {
+                        normalizedLine.importedName = importedName;
+                    }
+
+                    var importedTonnage = toPositiveInt(row.importedTonnage);
+                    if (importedTonnage > 0) {
+                        normalizedLine.importedTonnage = importedTonnage;
+                    }
+
+                    var importedMarines = toPositiveInt(row.importedMarines);
+                    if (importedMarines > 0) {
+                        normalizedLine.importedMarines = importedMarines;
+                    }
+
+                    normalized.push(normalizedLine);
                 });
                 return normalized;
             }
@@ -145,6 +174,148 @@ austerlitzModule.controller(
                 return "Both fleets need at least one valid ship line.";
             }
             return "";
+        };
+
+        $scope.selectImportedBattle = function (battleNo) {
+            $scope.selectedImportedBattleNo = battleNo;
+            $scope.selectedImportedBattle = null;
+            angular.forEach($scope.importedSeaBattles || [], function (battle) {
+                if (battle.seaBattleNo === battleNo) {
+                    $scope.selectedImportedBattle = battle;
+                }
+            });
+        };
+
+        $scope.getImportedShips = function (groupSide, phase, shipKind) {
+            var battle = $scope.selectedImportedBattle;
+            if (!battle || !battle.ships) return [];
+            return battle.ships.filter(function (ship) {
+                var sideOk = !groupSide || (ship.groupSide || "").toUpperCase() === groupSide;
+                var phaseOk = !phase || (ship.phase || "").toUpperCase() === phase;
+                var kindOk = !shipKind || (ship.shipKind || "").toUpperCase() === shipKind;
+                return sideOk && phaseOk && kindOk;
+            });
+        };
+
+        $scope.getImportedLongRange = function (roundNo, groupSide) {
+            var battle = $scope.selectedImportedBattle;
+            if (!battle || !battle.longRangeActions) return [];
+            return battle.longRangeActions.filter(function (action) {
+                return action.roundNo === roundNo && (action.groupSide || "").toUpperCase() === groupSide;
+            });
+        };
+
+        $scope.getImportedBoarding = function (roundNo) {
+            var battle = $scope.selectedImportedBattle;
+            if (!battle || !battle.boardingActions) return [];
+            return battle.boardingActions.filter(function (action) {
+                return action.roundNo === roundNo;
+            });
+        };
+
+        $scope.getImportedMerchantCaptures = function () {
+            var battle = $scope.selectedImportedBattle;
+            return battle && battle.merchantCaptures ? battle.merchantCaptures : [];
+        };
+
+        $scope.getImportedRounds = function () {
+            var battle = $scope.selectedImportedBattle;
+            var seen = {};
+            var rounds = [];
+            angular.forEach((battle && battle.longRangeActions) || [], function (action) {
+                if (!seen[action.roundNo]) {
+                    seen[action.roundNo] = true;
+                    rounds.push(action.roundNo);
+                }
+            });
+            angular.forEach((battle && battle.boardingActions) || [], function (action) {
+                if (!seen[action.roundNo]) {
+                    seen[action.roundNo] = true;
+                    rounds.push(action.roundNo);
+                }
+            });
+            rounds.sort(function (left, right) { return left - right; });
+            return rounds;
+        };
+
+        function mapImportedPreFleetToSimulatorLines(groupSide) {
+            var lines = [];
+            angular.forEach($scope.getImportedShips(groupSide, "PRE", "WARSHIP"), function (ship) {
+                var shipType = toPositiveInt(ship.type);
+                if (!shipType) return;
+                lines.push(createFleetLine(
+                    shipType,
+                    1,
+                    ship.name || "",
+                    toPositiveInt(ship.tonnage),
+                    toPositiveInt(ship.marines)
+                ));
+            });
+
+            return lines;
+        }
+
+        $scope.loadImportedInitialWarshipsIntoSimulator = function () {
+            if (!$scope.selectedImportedBattle) return;
+
+            $scope.nationA = normalizeStateCode($scope.selectedImportedBattle.stateA);
+            $scope.nationB = normalizeStateCode($scope.selectedImportedBattle.stateB);
+            $scope.fleetA = mapImportedPreFleetToSimulatorLines("A");
+            $scope.fleetB = mapImportedPreFleetToSimulatorLines("B");
+
+            if (!$scope.fleetA.length) {
+                $scope.fleetA = [createFleetLine("", 1)];
+            }
+            if (!$scope.fleetB.length) {
+                $scope.fleetB = [createFleetLine("", 1)];
+            }
+
+            $scope.seaBattleValidationError = "";
+            $scope.seaBattleSimError = "";
+            $scope.result = null;
+            $scope.expandedRounds = {};
+        };
+
+        $scope.loadImportedSeaBattles = function (preferredBattleNo) {
+            if (!$scope.masterData.turnId || $scope.masterData.turnId === "Unknown") {
+                $scope.importedSeaBattles = [];
+                $scope.selectedImportedBattleNo = null;
+                $scope.selectedImportedBattle = null;
+                return $q.when([]);
+            }
+
+            $scope.importedSeaBattleLoading = true;
+            $scope.importedSeaBattleLoadError = "";
+            return turnReportFactory.getTRSeaBattles($scope.masterData.turnId).then(function (battles) {
+                $scope.importedSeaBattles = (battles || []).sort(function (left, right) {
+                    return left.seaBattleNo - right.seaBattleNo;
+                });
+
+                if ($scope.importedSeaBattles.length === 0) {
+                    $scope.selectedImportedBattleNo = null;
+                    $scope.selectedImportedBattle = null;
+                    return;
+                }
+
+                var selectedNo = preferredBattleNo;
+                if (selectedNo == null) {
+                    selectedNo = $scope.selectedImportedBattleNo != null
+                        ? $scope.selectedImportedBattleNo
+                        : $scope.importedSeaBattles[0].seaBattleNo;
+                }
+
+                var hasSelected = $scope.importedSeaBattles.some(function (battle) {
+                    return battle.seaBattleNo === selectedNo;
+                });
+                $scope.selectImportedBattle(hasSelected ? selectedNo : $scope.importedSeaBattles[0].seaBattleNo);
+            }, function () {
+                $scope.importedSeaBattleLoadError = "Could not load imported sea battles.";
+                $scope.importedSeaBattles = [];
+                $scope.selectedImportedBattleNo = null;
+                $scope.selectedImportedBattle = null;
+            }).finally(function () {
+                $scope.importedSeaBattleLoading = false;
+            });
         };
 
         $scope.simulateSeaBattle = function () {
@@ -197,17 +368,31 @@ austerlitzModule.controller(
                 $scope.fleetB = [createFleetLine("", 1)];
             }
 
+            function initializeImportedBattles() {
+                $scope.loadImportedSeaBattles();
+            }
+
             if (masterData && masterData.rulesCatalog && (masterData.rulesCatalog.Ships || masterData.rulesCatalog.ships)) {
                 initializeFromCatalog(masterData.rulesCatalog);
+                initializeImportedBattles();
                 return;
             }
 
             rulesCatalogFactory.getRulesCatalog().then(function (rulesCatalog) {
                 masterData.rulesCatalog = rulesCatalog;
                 initializeFromCatalog(rulesCatalog);
+                initializeImportedBattles();
             }, function () {
                 $scope.seaBattleLoadError = "Unable to load ship list and states from rules catalog.";
             });
         };
+
+        $scope.$watch(function () {
+            return $scope.masterData.turnId;
+        }, function (newTurnId, oldTurnId) {
+            if (newTurnId && newTurnId !== oldTurnId) {
+                $scope.loadImportedSeaBattles();
+            }
+        });
     }
 );

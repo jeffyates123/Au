@@ -4,6 +4,146 @@
   <div class="alert alert-danger landUnitsAlert" ng-show="seaBattleLoadError">
     {{seaBattleLoadError}}
   </div>
+  <div class="alert alert-danger landUnitsAlert" ng-show="importedSeaBattleLoadError">
+    {{importedSeaBattleLoadError}}
+  </div>
+
+  <div class="seaBattlesImportedPanel">
+    <h4>Imported turn-report naval battles</h4>
+    <div class="text-muted small" ng-show="importedSeaBattleLoading">Loading imported sea battles...</div>
+    <div class="seaBattlesImportedEmpty" ng-if="!importedSeaBattleLoading && importedSeaBattles.length === 0">
+      No imported sea battles for the selected turn.
+    </div>
+    <div ng-if="importedSeaBattles.length > 0">
+      <label class="small">Battle</label>
+      <select class="form-control input-sm seaBattlesImportedSelect"
+              ng-model="selectedImportedBattleNo"
+              ng-options="battle.seaBattleNo as ('No. ' + battle.seaBattleNo + ' - ' + battle.groupAName + ' vs ' + battle.groupBName + ' @ ' + battle.x + '/' + battle.y) for battle in importedSeaBattles"
+              ng-change="selectImportedBattle(selectedImportedBattleNo)">
+      </select>
+
+      <div ng-if="selectedImportedBattle" class="seaBattlesImportedSummary">
+        <div><strong>Winner:</strong> {{selectedImportedBattle.winnerText || ('Group ' + selectedImportedBattle.winnerGroup)}}</div>
+        <div>
+          <strong>Groups:</strong>
+          A {{selectedImportedBattle.groupAName}} ({{selectedImportedBattle.stateA}})
+          vs B {{selectedImportedBattle.groupBName}} ({{selectedImportedBattle.stateB}})
+          at {{selectedImportedBattle.x}}/{{selectedImportedBattle.y}}
+        </div>
+        <button type="button"
+                class="btn btn-default btn-xs"
+                ng-click="loadImportedInitialWarshipsIntoSimulator()">
+          Load initial warships into simulator
+        </button>
+      </div>
+
+      <div ng-if="selectedImportedBattle" class="landUnitsTableWrap">
+        <table class="table table-condensed seaBattlesSummaryTable">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Tonnage Begin</th>
+              <th>Tonnage End</th>
+              <th>Tonnage Loss %</th>
+              <th>Marines Begin</th>
+              <th>Marines End</th>
+              <th>Marines Loss %</th>
+              <th>Average Loss %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Group A ({{selectedImportedBattle.stateA}})</td>
+              <td>{{selectedImportedBattle.summary.groupA.tonnageBegin}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.tonnageEnd}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.tonnageLossPct}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.marinesBegin}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.marinesEnd}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.marinesLossPct}}</td>
+              <td>{{selectedImportedBattle.summary.groupA.averageLossPct}}</td>
+            </tr>
+            <tr>
+              <td>Group B ({{selectedImportedBattle.stateB}})</td>
+              <td>{{selectedImportedBattle.summary.groupB.tonnageBegin}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.tonnageEnd}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.tonnageLossPct}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.marinesBegin}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.marinesEnd}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.marinesLossPct}}</td>
+              <td>{{selectedImportedBattle.summary.groupB.averageLossPct}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div ng-if="selectedImportedBattle" class="seaBattlesImportedColumns">
+        <div class="seaBattlesImportedColumn">
+          <h5>Initial Fleet A</h5>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('A', 'PRE', 'WARSHIP') track by $index">
+            #{{ship.reportShipNo}} Type {{ship.type}} {{ship.name}} - Tonn {{ship.tonnage}}, Mar {{ship.marines}}, Brig {{ship.brigade}}
+          </div>
+          <h6>Initial Merchants A</h6>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('A', 'PRE', 'MERCHANT') track by $index">
+            #{{ship.reportShipNo}} Type {{ship.type}} Goods {{ship.goods1}} / {{ship.goods2}}
+          </div>
+          <h5>Final Fleet A</h5>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('A', 'POST') track by $index">
+            Item {{ship.finalItemNo}} Type {{ship.type}} Cond {{ship.conditionPct}}% Mar {{ship.marines}}
+          </div>
+        </div>
+        <div class="seaBattlesImportedColumn">
+          <h5>Initial Fleet B</h5>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('B', 'PRE', 'WARSHIP') track by $index">
+            #{{ship.reportShipNo}} Type {{ship.type}} {{ship.name}} - Tonn {{ship.tonnage}}, Mar {{ship.marines}}, Brig {{ship.brigade}}
+          </div>
+          <h6>Initial Merchants B</h6>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('B', 'PRE', 'MERCHANT') track by $index">
+            #{{ship.reportShipNo}} Type {{ship.type}} Goods {{ship.goods1}} / {{ship.goods2}}
+          </div>
+          <h5>Final Fleet B</h5>
+          <div class="seaBattlesImportedRow" ng-repeat="ship in getImportedShips('B', 'POST') track by $index">
+            Item {{ship.finalItemNo}} Type {{ship.type}} Cond {{ship.conditionPct}}% Mar {{ship.marines}}
+          </div>
+        </div>
+      </div>
+
+      <div ng-if="selectedImportedBattle" class="seaBattlesRoundBlock" ng-repeat="roundNo in getImportedRounds() track by roundNo">
+        <div class="seaBattlesRoundHeader">
+          <div><strong>Imported Round {{roundNo}}</strong></div>
+        </div>
+        <div class="seaBattlesRoundDetails">
+          <div class="seaBattlesDetailColumn">
+            <h5>Group A long-range</h5>
+            <div class="seaBattlesDetailItem" ng-repeat="entry in getImportedLongRange(roundNo, 'A') track by $index">
+              #{{entry.reportShipNo}} Type {{entry.shipType}} Tonn {{entry.tonnage}} Mar {{entry.marines}} -> Enemy {{entry.enemyShipNo}}
+            </div>
+          </div>
+          <div class="seaBattlesDetailColumn">
+            <h5>Group B long-range</h5>
+            <div class="seaBattlesDetailItem" ng-repeat="entry in getImportedLongRange(roundNo, 'B') track by $index">
+              #{{entry.reportShipNo}} Type {{entry.shipType}} Tonn {{entry.tonnage}} Mar {{entry.marines}} -> Enemy {{entry.enemyShipNo}}
+            </div>
+          </div>
+        </div>
+        <div class="seaBattlesImportedBoarding" ng-if="getImportedBoarding(roundNo).length > 0">
+          <h5>Boarding</h5>
+          <div class="seaBattlesDetailItem" ng-repeat="entry in getImportedBoarding(roundNo) track by $index">
+            Att #{{entry.attackerShipNo}} ({{entry.attackerGroupSide}}) Mar {{entry.attackerMarines}} {{entry.attackerOutcome}}
+            vs Def #{{entry.defenderShipNo}} ({{entry.defenderGroupSide}}) Mar {{entry.defenderMarines}} {{entry.defenderOutcome}}
+          </div>
+        </div>
+      </div>
+
+      <div ng-if="selectedImportedBattle && getImportedMerchantCaptures().length > 0" class="seaBattlesRoundBlock">
+        <div class="seaBattlesRoundHeader">
+          <div><strong>Merchant captures</strong></div>
+        </div>
+        <div class="seaBattlesDetailItem" ng-repeat="capture in getImportedMerchantCaptures() track by $index">
+          Round {{capture.roundNo}}: Ship {{capture.capturedShipNo}} captured by ship {{capture.capturedByShipNo}}
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="seaBattlesSetupRow">
     <div class="seaBattlesFleetBuilder">
@@ -35,6 +175,9 @@
                       ng-options="ship.type as ship.label for ship in refWarshipOptions">
                 <option value="">-- warship --</option>
               </select>
+              <div class="seaBattlesImportedHint" ng-if="line.importedName">
+                {{line.importedName}} | Tonn {{line.importedTonnage}} | Mar {{line.importedMarines}}
+              </div>
             </td>
             <td>
               <input type="number"
@@ -82,6 +225,9 @@
                       ng-options="ship.type as ship.label for ship in refWarshipOptions">
                 <option value="">-- warship --</option>
               </select>
+              <div class="seaBattlesImportedHint" ng-if="line.importedName">
+                {{line.importedName}} | Tonn {{line.importedTonnage}} | Mar {{line.importedMarines}}
+              </div>
             </td>
             <td>
               <input type="number"

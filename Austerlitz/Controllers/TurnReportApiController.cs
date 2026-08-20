@@ -53,6 +53,7 @@ namespace Austerlitz.Controllers
                 turnReport.MovementItemList = normalizedMovementItems.ToArray();
                 turnReport.MapCoordinates = GetMapCoordinates(turnId, normalizedMovementItems);
                 turnReport.MathBattles = getTRMathBattles(turnId);
+                turnReport.SeaBattles = getTRSeaBattles(turnId);
                 turnReport.Errors = getTRTurnOrderErrors(dataContext, turnId);
 
                 return turnReport;

@@ -2948,6 +2948,58 @@ textarea {
     max-width: 100%;
 }
 
+.seaBattlesImportedPanel {
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    background: #ffffff;
+    padding: 10px;
+    margin-bottom: 14px;
+}
+
+.seaBattlesImportedSelect {
+    max-width: 680px;
+    margin-bottom: 8px;
+}
+
+.seaBattlesImportedSummary {
+    margin-bottom: 10px;
+}
+
+.seaBattlesImportedColumns {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.seaBattlesImportedColumn {
+    flex: 1 1 420px;
+    border: 1px solid #efefef;
+    border-radius: 4px;
+    padding: 8px;
+    background: #fafafa;
+}
+
+.seaBattlesImportedRow {
+    border-bottom: 1px dashed #dddddd;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.seaBattlesImportedRow:last-child {
+    border-bottom: 0;
+}
+
+.seaBattlesImportedBoarding {
+    margin-top: 8px;
+}
+
+.seaBattlesImportedHint {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #666666;
+}
+
 .seaBattlesSetupRow {
     display: flex;
     gap: 16px;

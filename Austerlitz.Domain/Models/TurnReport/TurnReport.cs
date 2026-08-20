@@ -108,6 +108,90 @@ namespace Austerlitz.Models.TurnReport
         public MathBattleBrigade[] Brigades { get; set; }
     }
 
+    public class SeaBattleGroupSummary
+    {
+        public int TonnageBegin { get; set; }
+        public int TonnageEnd { get; set; }
+        public decimal TonnageLossPct { get; set; }
+        public int MarinesBegin { get; set; }
+        public int MarinesEnd { get; set; }
+        public decimal MarinesLossPct { get; set; }
+        public decimal AverageLossPct { get; set; }
+    }
+
+    public class SeaBattleSummary
+    {
+        public SeaBattleGroupSummary GroupA { get; set; }
+        public SeaBattleGroupSummary GroupB { get; set; }
+    }
+
+    public class SeaBattleShip
+    {
+        public string GroupSide { get; set; }
+        public string Phase { get; set; }
+        public string ShipKind { get; set; }
+        public int? ReportShipNo { get; set; }
+        public int? FinalItemNo { get; set; }
+        public int? Type { get; set; }
+        public string Name { get; set; }
+        public int? Tonnage { get; set; }
+        public int? Marines { get; set; }
+        public string Brigade { get; set; }
+        public int? ConditionPct { get; set; }
+        public int? Goods1 { get; set; }
+        public int? Goods2 { get; set; }
+    }
+
+    public class SeaBattleLongRangeAction
+    {
+        public int RoundNo { get; set; }
+        public string GroupSide { get; set; }
+        public int ReportShipNo { get; set; }
+        public int ShipType { get; set; }
+        public int Tonnage { get; set; }
+        public int Marines { get; set; }
+        public int EnemyShipNo { get; set; }
+    }
+
+    public class SeaBattleBoardingAction
+    {
+        public int RoundNo { get; set; }
+        public int ActionNo { get; set; }
+        public int AttackerShipNo { get; set; }
+        public string AttackerGroupSide { get; set; }
+        public int AttackerMarines { get; set; }
+        public string AttackerOutcome { get; set; }
+        public int DefenderShipNo { get; set; }
+        public string DefenderGroupSide { get; set; }
+        public int DefenderMarines { get; set; }
+        public string DefenderOutcome { get; set; }
+    }
+
+    public class SeaBattleMerchantCapture
+    {
+        public int RoundNo { get; set; }
+        public int CapturedShipNo { get; set; }
+        public int CapturedByShipNo { get; set; }
+    }
+
+    public class SeaBattleDetails
+    {
+        public int SeaBattleNo { get; set; }
+        public string GroupAName { get; set; }
+        public string GroupBName { get; set; }
+        public string StateA { get; set; }
+        public string StateB { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string WinnerGroup { get; set; }
+        public string WinnerText { get; set; }
+        public SeaBattleSummary Summary { get; set; }
+        public SeaBattleShip[] Ships { get; set; }
+        public SeaBattleLongRangeAction[] LongRangeActions { get; set; }
+        public SeaBattleBoardingAction[] BoardingActions { get; set; }
+        public SeaBattleMerchantCapture[] MerchantCaptures { get; set; }
+    }
+
     public class TurnOrderError
     {
         public int TurnOrderErrorId { get; set; }
@@ -154,6 +238,7 @@ namespace Austerlitz.Models.TurnReport
         public DisplayCoordinate[][] MapCoordinates;
         public MovementItems[] MovementItemList;
         public MathBattleDetails[] MathBattles;
+        public SeaBattleDetails[] SeaBattles;
         public TurnOrderError[] Errors;
     }
 }
