@@ -297,6 +297,9 @@ austerlitzModule.factory("landUnitsFederationFactory", function (turnAssignmentR
               .postTSRecords(rows, "FormFederations")
               .then(function () {
                 $scope.restoreLandUnitOriginalFederation(unit);
+                if (typeof $scope.onFormFederationSaved === "function") {
+                  $scope.onFormFederationSaved();
+                }
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
       };

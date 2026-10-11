@@ -164,6 +164,7 @@ austerlitzModule.factory(
             currentBrigadeCapacity: 0,
             currentAssignedFleetNo: null,
             hasExistingBoardingOrder: false,
+            coordinateBrigades: [],
           };
         }
       };
@@ -380,6 +381,11 @@ austerlitzModule.factory(
             var rows = results[0] || [];
             var formFederationRows = results[1] || [];
             $scope.setBoardingModalAssignmentState(unit, rows);
+            if (!$scope.isCommanderBoardingUnit(unit)) {
+              $scope.boardingModal.coordinateBrigades =
+                $scope.buildCoordinateBrigades(unit);
+              $scope.markCoordinateBrigadeOrders(rows);
+            }
             $scope.boardingModal.fleets = $scope.buildBoardingFleetOptions(
               unit,
               rows,
@@ -388,7 +394,9 @@ austerlitzModule.factory(
             );
             if (
               closeWhenEmpty !== false &&
-              (!$scope.boardingModal.fleets || !$scope.boardingModal.fleets.length)
+              (!$scope.boardingModal.fleets ||
+                !$scope.boardingModal.fleets.length) &&
+              $scope.isCommanderBoardingUnit(unit)
             ) {
               $scope.boardingModal.isOpen = false;
               alert(
@@ -419,6 +427,11 @@ austerlitzModule.factory(
           brigade.boardingFleetNo != null ? toKey(brigade.boardingFleetNo) : null;
         $scope.boardingModal.currentAssignedFleetNo = null;
         $scope.boardingModal.hasExistingBoardingOrder = false;
+        $scope.boardingModal.coordinateBrigades = $scope.isCommanderBoardingUnit(
+          brigade,
+        )
+          ? []
+          : $scope.buildCoordinateBrigades(brigade);
 
         $scope.refreshBoardingModalOptions(brigade, true)
           .finally(function () {
@@ -452,6 +465,101 @@ austerlitzModule.factory(
         $scope.boardingModal.currentBrigadeCapacity = 0;
         $scope.boardingModal.currentAssignedFleetNo = null;
         $scope.boardingModal.hasExistingBoardingOrder = false;
+        $scope.boardingModal.coordinateBrigades = [];
+      };
+
+      $scope.buildCoordinateBrigades = function (unit) {
+        if (!unit || $scope.isCommanderBoardingUnit(unit)) {
+          return [];
+        }
+
+        var positionKey = $scope.getLandUnitPositionKey(unit);
+        if (!positionKey || positionKey === "-") {
+          return [unit];
+        }
+
+        var matches = ($scope.brigadeRows || []).filter(function (brigade) {
+          return $scope.getLandUnitPositionKey(brigade) === positionKey;
+        });
+        return matches.length ? matches : [unit];
+      };
+
+      $scope.markCoordinateBrigadeOrders = function (rows) {
+        angular.forEach(
+          $scope.boardingModal.coordinateBrigades || [],
+          function (brigade) {
+            var row = $scope.findMatchingBoardingRow(rows, brigade.id);
+            brigade.boardingOrderIsNew = boardingSharedFactory.isBoardingCommandE(
+              row,
+            );
+            brigade.boardingUnloadPending =
+              boardingSharedFactory.isUnloadDirectionCommand(row);
+            if (!brigade.boardingOrderIsNew || !row) {
+              return;
+            }
+
+            var fleetNo = parseInt(row.fleetNo, 10);
+            brigade.boardingSelected = true;
+            brigade.boardingFleetNo = isNaN(fleetNo) ? null : fleetNo;
+          },
+        );
+      };
+
+      $scope.isBoardingCandidateSelected = function (brigade) {
+        return $scope.sameNullableInt(
+          brigade && brigade.id,
+          $scope.boardingModal &&
+            $scope.boardingModal.brigade &&
+            $scope.boardingModal.brigade.id,
+        );
+      };
+
+      $scope.selectBoardingCandidate = function (brigade) {
+        if (
+          !brigade ||
+          !$scope.boardingModal ||
+          $scope.isCommanderBoardingUnit(brigade)
+        ) {
+          return;
+        }
+
+        $scope.boardingModal.unit = brigade;
+        $scope.boardingModal.brigade = brigade;
+        $scope.boardingModal.currentUnitCapacity =
+          $scope.getBoardingUnitRequiredCapacity(brigade);
+        $scope.boardingModal.currentBrigadeCapacity =
+          $scope.boardingModal.currentUnitCapacity;
+        $scope.boardingModal.isLoading = true;
+        $scope.refreshBoardingModalOptions(brigade, false).finally(function () {
+          $scope.boardingModal.isLoading = false;
+        });
+      };
+
+      $scope.unboardCoordinateBrigade = function (brigade, $event) {
+        if ($event) {
+          $event.stopPropagation();
+        }
+        if (!brigade) {
+          return;
+        }
+
+        if (brigade.boardingUnloadPending) {
+          $scope.clearUnloadDirectionOrder(brigade).then(function () {
+            var selected = $scope.boardingModal && $scope.boardingModal.brigade;
+            $scope.selectBoardingCandidate(selected || brigade);
+          });
+          return;
+        }
+
+        if (brigade.boardingOrderIsNew) {
+          $scope.clearBoardingOrder(brigade).then(function () {
+            var selected = $scope.boardingModal && $scope.boardingModal.brigade;
+            $scope.selectBoardingCandidate(selected || brigade);
+          });
+          return;
+        }
+
+        $scope.openUnloadDirectionModal(brigade);
       };
 
       $scope.closeUnloadDirectionModal = function () {
@@ -512,7 +620,7 @@ austerlitzModule.factory(
               alert("Selected transport is no longer available.");
               return null;
             }
-            if (selectedFleet && selectedFleet.wouldExceedForCurrentBrigade) {
+            if ($scope.blocksOverCapacityBoarding(brigade, selectedFleet)) {
               alert("Boarding exceeds fleet loading capacity.");
               return null;
             }
@@ -669,11 +777,23 @@ austerlitzModule.factory(
             return;
           }
           $scope.closeUnloadDirectionModal();
+          if (
+            $scope.boardingModal &&
+            $scope.boardingModal.isOpen &&
+            !$scope.isCommanderBoardingUnit($scope.boardingModal.brigade)
+          ) {
+            $scope.selectBoardingCandidate($scope.boardingModal.brigade);
+          }
         });
       };
 
       $scope.openBoardingModal = function (unit) {
         if (!unit) {
+          return;
+        }
+
+        if (!$scope.isCommanderBoardingUnit(unit)) {
+          $scope.openBoardingSelectionModal(unit);
           return;
         }
 
@@ -704,6 +824,48 @@ austerlitzModule.factory(
         );
       };
 
+      $scope.blocksOverCapacityBoarding = function (unit, fleet) {
+        if (!fleet || !fleet.wouldExceedForCurrentBrigade) {
+          return false;
+        }
+
+        return $scope.isCommanderBoardingUnit(unit);
+      };
+
+      $scope.showBrigadeOverCapacityWarning = function () {
+        var modal = $scope.boardingModal;
+        if (!modal) {
+          return false;
+        }
+        if ($scope.isCommanderBoardingUnit(modal.brigade)) {
+          return false;
+        }
+
+        return (modal.fleets || []).some(function (fleet) {
+          return fleet.wouldExceedForCurrentBrigade && !fleet.isCurrentlyAssigned;
+        });
+      };
+
+      $scope.getBrigadeBoardButtonTitle = function (fleet) {
+        if (!fleet) {
+          return "";
+        }
+        if (fleet.isCurrentlyAssigned) {
+          return "Unboard this unit from selected transport";
+        }
+        if (!fleet.wouldExceedForCurrentBrigade) {
+          return "";
+        }
+        if (
+          !$scope.isCommanderBoardingUnit(
+            $scope.boardingModal && $scope.boardingModal.brigade,
+          )
+        ) {
+          return "Over available capacity. Boarding is still allowed.";
+        }
+        return "Not enough remaining capacity for this brigade";
+      };
+
       $scope.applyBoardingFleet = function (fleetNo) {
         var brigade = $scope.boardingModal && $scope.boardingModal.brigade;
         if (!brigade) {
@@ -716,7 +878,7 @@ austerlitzModule.factory(
           fleetNo,
           $scope.sameNullableInt,
         );
-        if (selectedFleet && selectedFleet.wouldExceedForCurrentBrigade) {
+        if ($scope.blocksOverCapacityBoarding(brigade, selectedFleet)) {
           alert("Boarding exceeds fleet loading capacity.");
           return;
         }
@@ -725,7 +887,11 @@ austerlitzModule.factory(
           if (result == null) {
             return;
           }
-          $scope.closeBoardingModal();
+          if ($scope.isCommanderBoardingUnit(brigade)) {
+            $scope.closeBoardingModal();
+            return;
+          }
+          $scope.selectBoardingCandidate(brigade);
         });
       };
 

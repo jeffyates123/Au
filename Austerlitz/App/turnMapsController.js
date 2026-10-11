@@ -210,51 +210,87 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
+    function findMovementXItemById(itemId) {
+        var movementItem = null;
+        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
+            if (movementItem) {
+                return;
+            }
+
+            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
+            if (itemNo == itemId) {
+                movementItem = item;
+            }
+        });
+        return movementItem;
+    }
+
+    function toMovementXAssignmentNo(value) {
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) || parsed <= 0 ? null : parsed;
+    }
+
+    function withMovementXAssignment(movementItem, assignmentNo) {
+        return angular.extend({}, movementItem, {
+            fed: assignmentNo
+        });
+    }
+
     $scope.selectMovementXNavyShip = function (ship, selectionType) {
         if (!ship || ship.id == null) return;
 
-        var movementItem = null;
-        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
-            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
-            if (!movementItem && itemNo == ship.id) movementItem = item;
-        });
+        var movementItem = findMovementXItemById(ship.id);
         if (!movementItem) {
             $scope.selectedCoordinateDetails = "Movement ship " + ship.id + " is not available.";
             return;
         }
 
+        var effectiveFleetNo = toMovementXAssignmentNo(ship.fleet);
+        var selectedItem = withMovementXAssignment(movementItem, effectiveFleetNo);
+
         if (selectionType === 'fleet') {
-            var fleetNo = parseInt(
-                movementItem.fed != null ? movementItem.fed : ship.fleet,
-                10
-            );
-            if (isNaN(fleetNo) || fleetNo < 11 || fleetNo > 30) return;
-            movementItem = angular.extend({}, movementItem, {
-                itemNo: fleetNo,
-                originalItemNo: fleetNo,
-                itemTypeName: 'Fed',
-                fed: null
-            });
-            $scope.movementXSelectedItemNo = fleetNo;
+            if (effectiveFleetNo == null || effectiveFleetNo < 11 || effectiveFleetNo > 30) return;
+            $scope.movementXSelectedItemNo = effectiveFleetNo;
             $scope.movementXSelectedType = 'Fleet';
-        } else {
-            $scope.movementXSelectedItemNo = ship.id;
-            $scope.movementXSelectedType = 'Item';
+            $scope.movementXPickerShowCurrentSelection = true;
+
+            var federationSummary = $scope.getFederationMovementSummary(effectiveFleetNo);
+            if (federationSummary && federationSummary.itemNo != null) {
+                $scope.selectMovementOrderItem(selectedItem, 'fed');
+                return;
+            }
+
+            selectedItem = angular.extend({}, selectedItem, {
+                itemNo: effectiveFleetNo,
+                originalItemNo: effectiveFleetNo,
+                itemTypeName: 'Fed'
+            });
+            $scope.selectMovementOrderItem(selectedItem, 'item');
+            return;
         }
 
+        $scope.movementXSelectedItemNo = ship.id;
+        $scope.movementXSelectedType = 'Item';
         $scope.movementXPickerShowCurrentSelection = true;
-        $scope.selectMovementOrderItem(movementItem, 'item');
+        $scope.selectMovementOrderItem(selectedItem, 'item');
     };
 
     $scope.isMovementXNavyShipMoved = function (ship) {
-
         if (!ship || ship.id == null) return false;
+
+        var effectiveFleetNo = toMovementXAssignmentNo(ship.fleet);
         return ($scope.tsMovementList || []).some(function (movementRow) {
             if (!$scope.hasMovementItemNo(movementRow)
                 || !$scope.hasAnyMovementDirectionOrDistance(movementRow)) {
                 return false;
             }
-            return movementRow.itemNo == ship.id || movementRow.itemNo == ship.fleet;
+
+            var movementItemNo = parseInt(movementRow.itemNo, 10);
+            var isFleetOrder = movementItemNo >= 11
+                && movementItemNo <= 30
+                && effectiveFleetNo != null
+                && movementRow.itemNo == effectiveFleetNo;
+            return isFleetOrder || movementRow.itemNo == ship.id;
         });
     };
 
@@ -263,23 +299,15 @@ austerlitzModule.controller('turnMapsController', function (
             return;
         }
 
-        var movementItem = null;
-        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
-            if (movementItem) {
-                return;
-            }
-
-            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
-            if (itemNo == unit.id) {
-                movementItem = item;
-            }
-        });
-
+        var movementItem = findMovementXItemById(unit.id);
         if (!movementItem) {
             $scope.selectedCoordinateDetails =
                 "Movement item " + unit.id + " is not available.";
             return;
         }
+
+        var effectiveFederationNo = toMovementXAssignmentNo(unit.fed);
+        var selectedItem = withMovementXAssignment(movementItem, effectiveFederationNo);
 
         if (selectionType === "fed") {
             $scope.movementXPickerPositionFilter = null;
@@ -293,7 +321,7 @@ austerlitzModule.controller('turnMapsController', function (
 
         $scope.movementXPickerShowCurrentSelection = true;
         $scope.selectMovementOrderItem(
-            movementItem,
+            selectedItem,
             selectionType === "fed" ? "fed" : "item",
         );
     };
@@ -303,21 +331,7 @@ austerlitzModule.controller('turnMapsController', function (
             return false;
         }
 
-        var movementItem = null;
-        angular.forEach($scope.filteredMovementItemsForMap || [], function (item) {
-            if (movementItem) {
-                return;
-            }
-
-            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
-            if (itemNo == unit.id) {
-                movementItem = item;
-            }
-        });
-
-        var effectiveFederationNo = movementItem
-            ? $scope.getEffectiveMovementFederationNoForItem(movementItem)
-            : unit.fed;
+        var effectiveFederationNo = toMovementXAssignmentNo(unit.fed);
         var hasMovementOrder = false;
         angular.forEach($scope.tsMovementList || [], function (movementRow) {
             if (hasMovementOrder
@@ -330,7 +344,6 @@ austerlitzModule.controller('turnMapsController', function (
             var isLandFederationOrder = movementItemNo >= 61
                 && movementItemNo <= 90
                 && effectiveFederationNo != null
-                && effectiveFederationNo !== ""
                 && movementRow.itemNo == effectiveFederationNo;
             var isUnitOrder = !isLandFederationOrder
                 && movementRow.itemNo == unit.id;

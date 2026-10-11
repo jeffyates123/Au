@@ -149,6 +149,13 @@ namespace Austerlitz.Services
                     break;
                 }
 
+                // Destroyed overrun brigades replace MP/battalions with text such as
+                // "The brigade was destroyed by overrun. The owner was Great Britain".
+                if (lineToProcess.IndexOf("destroyed by overrun", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
                 brigades.Add(new TR_Brigades
                 {
                     TurnId = turnId,
@@ -235,34 +242,73 @@ namespace Austerlitz.Services
                 }
 
                 // The warship table prints two warships per report line, side by side.
-                warships.Add(ParseWarshipColumn(lineToProcess, 0, turnId));
+                var leftWarship = ParseWarshipColumn(lineToProcess, 0, turnId);
+                if (leftWarship != null)
+                {
+                    warships.Add(leftWarship);
+                }
+
                 if (lineToProcess.Length > 69)
                 {
-                    warships.Add(ParseWarshipColumn(lineToProcess, 69, turnId));
+                    var rightWarship = ParseWarshipColumn(lineToProcess, 69, turnId);
+                    if (rightWarship != null)
+                    {
+                        warships.Add(rightWarship);
+                    }
                 }
             }
 
             return warships;
         }
 
+        private static bool IsOverrunWarshipColumn(string lineToProcess, int offset)
+        {
+            if (lineToProcess.Length <= offset + 32)
+            {
+                return false;
+            }
+
+            return lineToProcess.IndexOf("Overrun", offset + 32, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private static TR_Warships ParseWarshipColumn(string lineToProcess, int offset, string turnId)
         {
-            return new TR_Warships
+            if (lineToProcess.Length <= offset + 4 || string.IsNullOrWhiteSpace(lineToProcess.Substring(offset, 4)))
+            {
+                return null;
+            }
+
+            var warship = new TR_Warships
             {
                 TurnId = turnId,
                 ItemNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 0, 4),
                 Type = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 6, 2),
                 Name = lineToProcess.Substring(offset + 10, 15),
                 X = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 26, 2),
-                Y = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 29, 2),
-                FleetNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 32, 2),
-                MP = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 35, 2),
-                Condition = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 38, 3),
-                Age = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 44, 2),
-                Marines = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 47, 4),
-                Brigade1 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 52, 4),
-                Brigade2 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 57, 4)
+                Y = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 29, 2)
             };
+
+            if (IsOverrunWarshipColumn(lineToProcess, offset))
+            {
+                // Overrun captures replace fleet/stats with text like "Overrun: Captured from -M".
+                warship.FleetNo = 0;
+                warship.MP = 0;
+                warship.Condition = 0;
+                warship.Age = 0;
+                warship.Marines = 0;
+                warship.Brigade1 = 0;
+                warship.Brigade2 = 0;
+                return warship;
+            }
+
+            warship.FleetNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 32, 2);
+            warship.MP = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 35, 2);
+            warship.Condition = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 38, 3);
+            warship.Age = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 44, 2);
+            warship.Marines = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 47, 4);
+            warship.Brigade1 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 52, 4);
+            warship.Brigade2 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 57, 4);
+            return warship;
         }
 
         private int LoadMerchantShips(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)

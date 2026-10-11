@@ -20,7 +20,18 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
       );
     } catch (e) {}
 
-    return stored === "true";
+    return stored !== "false";
+  }
+
+  function getInitialFederationSummaryCollapsed() {
+    var stored = null;
+    try {
+      stored = window.localStorage.getItem(
+        "austerlitz.landUnits.federationSummaryCollapsed",
+      );
+    } catch (e) {}
+
+    return stored !== "false";
   }
 
   function getInitialBrigadesSectionCollapsed() {
@@ -76,6 +87,7 @@ austerlitzModule.factory("landUnitsStateFactory", function () {
       spyRows: [],
       baggageTrainRows: [],
       commanderOverflowCount: 0,
+      federationSummaryCollapsed: getInitialFederationSummaryCollapsed(),
       commandersSectionCollapsed: getInitialCommandersSectionCollapsed(),
       brigadesSectionCollapsed: getInitialBrigadesSectionCollapsed(),
       isLoading: false,

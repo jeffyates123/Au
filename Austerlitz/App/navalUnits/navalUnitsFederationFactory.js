@@ -141,6 +141,12 @@ austerlitzModule.factory(
         });
       }
 
+      function notifyFormFederationSaved() {
+        if (typeof $scope.onFormFederationSaved === "function") {
+          $scope.onFormFederationSaved();
+        }
+      }
+
       function findTs14RowByItemNo(rows, itemNo) {
         for (var i = 0; i < (rows || []).length; i++) {
           if ($scope.sameNullableInt(rows[i].itemNo, itemNo)) return rows[i];
@@ -259,6 +265,7 @@ austerlitzModule.factory(
                 $scope.refreshWarshipPairRows();
                 $scope.refreshMerchantPairRows();
                 $scope.buildFleetSummaryRows();
+                notifyFormFederationSaved();
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
       };
@@ -648,6 +655,7 @@ austerlitzModule.factory(
                   }
                 });
                 $scope.buildFleetSummaryRows();
+                notifyFormFederationSaved();
                 $scope.closeNavyFederationModal();
               });
           });

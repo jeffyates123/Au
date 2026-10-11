@@ -26,12 +26,19 @@
     class="landUnitsSectionHeader"
     ng-show="!isModalMode() && federationSummaryPairRows.length > 0"
   >
+    <button
+      type="button"
+      class="ts-collapse-button"
+      ng-click="toggleFederationSummary()"
+    >
+      {{federationSummaryCollapsed ? '+' : '-'}}
+    </button>
     <span class="landUnitsSectionTitle">Federation Summary</span>
   </div>
 
   <div
     class="landUnitsTableWrap"
-    ng-show="!isModalMode() && federationSummaryPairRows.length > 0"
+    ng-show="!isModalMode() && federationSummaryPairRows.length > 0 && !federationSummaryCollapsed"
   >
     <table class="table landUnitsTable landUnitsFederationSummaryTable" style="font-size:11px">
       <colgroup>
@@ -1158,8 +1165,10 @@
       <div>
         <h3>Board Brigade</h3>
         <div class="landUnitsModalSubtitle">
-          {{boardingModal.brigade.id}} {{boardingModal.brigade.name}} -
           {{boardingModal.brigade.position}}
+          <span ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
+            — select a brigade, then board it on a fleet
+          </span>
         </div>
       </div>
       <button type="button" class="close" ng-click="closeBoardingModal()">
@@ -1176,6 +1185,46 @@
         ng-show="!boardingModal.isLoading && (!boardingModal.fleets || boardingModal.fleets.length === 0)"
       >
         No fleets found in the same sphere.
+      </div>
+      <div class="alert alert-warning" ng-show="showBrigadeOverCapacityWarning()">
+        Load {{boardingModal.fleets[0].currentBrigadeCapacityWholeUp}} is over
+        the available capacity of one or more fleets. You can still board it.
+      </div>
+      <div
+        class="landUnitsBoardingTableWrap"
+        ng-show="!isCommanderBoardingUnit(boardingModal.brigade) && boardingModal.coordinateBrigades.length"
+      >
+        <table class="table table-condensed landUnitsTable">
+          <thead>
+            <tr>
+              <th>Brigade</th>
+              <th>Name</th>
+              <th>Boarded</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              ng-repeat="candidate in boardingModal.coordinateBrigades track by candidate.id"
+              ng-class="{ itemGridRowSelected: isBoardingCandidateSelected(candidate) }"
+              ng-click="selectBoardingCandidate(candidate)"
+            >
+              <td>{{candidate.id}}</td>
+              <td>{{candidate.name}}</td>
+              <td>{{candidate.boardingFleetNo || '-'}}</td>
+              <td>
+                <button
+                  type="button"
+                  class="landUnitsToggleButton"
+                  ng-if="candidate.boardingSelected"
+                  ng-click="unboardCoordinateBrigade(candidate, $event)"
+                >
+                  {{candidate.boardingUnloadPending ? 'Cancel unload' : (candidate.boardingOrderIsNew ? 'Unboard' : 'Unload')}}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div class="landUnitsBoardingTableWrap" ng-show="boardingModal.fleets && boardingModal.fleets.length > 0">
         <table class="table table-condensed landUnitsTable">
@@ -1254,10 +1303,16 @@
                   class="landUnitsToggleButton"
                   ng-click="handleBoardingRowAction(fleet)"
                   ng-style="getBrigadeToggleStyle(fleet.isCurrentlyAssigned)"
-                  title="{{fleet.isCurrentlyAssigned ? 'Unboard this unit from selected transport' : (fleet.wouldExceedForCurrentBrigade ? 'Not enough remaining capacity for this brigade' : '')}}"
+                  title="{{getBrigadeBoardButtonTitle(fleet)}}"
                 >
                   {{fleet.isCurrentlyAssigned ? 'Unboard' : '+Board'}}
                 </button>
+                <span
+                  class="text-warning"
+                  ng-if="showBrigadeOverCapacityWarning() && fleet.wouldExceedForCurrentBrigade && !fleet.isCurrentlyAssigned"
+                >
+                  Over capacity
+                </span>
                 <span class="text-muted">
                   (Load: {{fleet.currentBrigadeCapacityWholeUp}})
                 </span>

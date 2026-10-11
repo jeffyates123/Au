@@ -13,6 +13,7 @@ austerlitzModule.directive("existingNavy", function () {
       pickerSphereFilter: "=?",
       onMovementSelect: "&",
       isMovementUnitMoved: "&",
+      onFormFederationSaved: "&",
     },
     templateUrl: "/Templates/existingNavyTemplate.html",
     controller: function (

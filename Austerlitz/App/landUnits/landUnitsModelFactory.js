@@ -473,6 +473,16 @@ austerlitzModule.factory("landUnitsModelFactory", function () {
         $scope.refreshFederationSummaryPairRows();
       };
 
+      $scope.toggleFederationSummary = function () {
+        $scope.federationSummaryCollapsed = !$scope.federationSummaryCollapsed;
+        try {
+          window.localStorage.setItem(
+            "austerlitz.landUnits.federationSummaryCollapsed",
+            $scope.federationSummaryCollapsed ? "true" : "false",
+          );
+        } catch (e) {}
+      };
+
       $scope.toggleCommandersSection = function () {
         $scope.commandersSectionCollapsed = !$scope.commandersSectionCollapsed;
         try {

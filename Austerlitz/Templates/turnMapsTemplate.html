@@ -234,6 +234,7 @@
                         picker-position-filter="movementXPickerPositionFilter"
                         picker-sphere-filter="movementXPickerSphereFilter"
                         is-movement-unit-moved="isMovementXNavyShipMoved(ship)"
+                        on-form-federation-saved="refreshMovementXFormFederations()"
                         on-movement-select="selectMovementXNavyShip(ship, selectionType)">
                     </existing-navy>
                 </div>
@@ -335,6 +336,7 @@
                 picker-position-filter="movementXPickerPositionFilter"
                 picker-sphere-filter="movementXPickerSphereFilter"
                 is-movement-unit-moved="isMovementXNavyShipMoved(ship)"
+                on-form-federation-saved="refreshMovementXFormFederations()"
                 on-movement-select="selectMovementXNavyShip(ship, selectionType)">
             </existing-navy>
         </div>
