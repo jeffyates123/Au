@@ -1342,9 +1342,6 @@ austerlitzModule.controller(
     $scope.selectEconomyTab = function (tabKey) {
       var nextTab = economyTabs[tabKey] ? tabKey : "europe";
       $scope.activeEconomyTab = nextTab;
-      if (nextTab === "taxRevenue") {
-        return;
-      }
       refreshEconomyViewForTab(nextTab).catch(function (error) {
         $scope.economyLoadError = (error && error.data) || "Unable to load economy data.";
       });
@@ -1381,11 +1378,7 @@ austerlitzModule.controller(
           return ensurePersistedEconomySummary();
         })
         .then(function () {
-          return refreshEconomyViewForTab(
-            $scope.activeEconomyTab === "taxRevenue"
-              ? "europe"
-              : $scope.activeEconomyTab || "europe",
-          );
+          return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
         })
         .then(function () {
           $scope.$emit("economyBuildFundsChanged");
@@ -1483,6 +1476,10 @@ austerlitzModule.controller(
 
     $scope.initEconomy = function () {
       var requestedTab = ($location.search() && $location.search().tab) || "";
+      if (requestedTab === "taxRevenue") {
+        $location.path("/Section/Intelligence").search("tab", "taxRevenue");
+        return;
+      }
       if (economyTabs[requestedTab]) {
         $scope.activeEconomyTab = requestedTab;
         $location.search("tab", null);
@@ -1507,9 +1504,6 @@ austerlitzModule.controller(
           return ensurePersistedEconomySummary();
         })
         .then(function () {
-          if ($scope.activeEconomyTab === "taxRevenue") {
-            return $q.when();
-          }
           return refreshEconomyViewForTab($scope.activeEconomyTab || "europe");
         })
         .then(function () {

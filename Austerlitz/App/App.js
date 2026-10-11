@@ -49,6 +49,10 @@
             controller: 'economyController',
             templateUrl: '/Templates/economyTemplate.html'
         })
+        .when('/Section/Intelligence', {
+            controller: 'intelligencePageController',
+            templateUrl: '/Templates/intelligenceTemplate.html'
+        })
         .when('/Section/Errors', {
             controller: 'errorsController',
             templateUrl: '/Templates/errorsTemplate.html'

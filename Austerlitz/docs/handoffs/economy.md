@@ -2,12 +2,12 @@
 
 ## Scope
 
-Route `/Section/Economy` shows warehouse, production-site, and build/maintain information for Europe, Caribbean, and India, plus a Tax Revenue tab after India. Sphere tabs have Build & Maintain and Production modes.
+Route `/Section/Economy` shows warehouse, production-site, and build/maintain information for Europe, Caribbean, and India. Sphere tabs have Build & Maintain and Production modes. Tax Revenue is the first tab on `/Section/Intelligence`.
 
 ## Main files
 
 - Controller/template: `App/economyController.js`, `Templates/economyTemplate.html`
-- Tax Revenue tab: `App/intelligenceTaxRevenueController.js` (nested controller on the Tax Revenue pane)
+- Tax Revenue tab: `App/intelligencePageController.js`, `Templates/intelligenceTemplate.html`, `App/intelligenceTaxRevenueController.js` (nested controller on the Intelligence Tax Revenue pane)
 - Focused client modules: `App/economy/economyConfigFactory.js`, `economyParseUtilsFactory.js`, `economyResourceFactory.js`, `economySphereFactory.js`, `economyProductionFactory.js`, `economyTradeFactory.js`
 - Report API: `Controllers/TurnReportApiController.EconomySummary.cs`
 - Import parser: `Services/TurnReportImportService.Economy.cs`
@@ -19,13 +19,13 @@ Route `/Section/Economy` shows warehouse, production-site, and build/maintain in
 
 Warehouses 1–3 correspond to the regional spheres. Economy writes the computed report summary, not turnsheet orders. Build-fund changes notify the navigation banner through the `economyBuildFundsChanged` event.
 
-`economyTabs` includes `taxRevenue` for UI navigation. Computed-summary and warehouse refresh loops must use `sphereByTab` only (Europe/Caribbean/India), not Tax Revenue.
+`economyTabs` is Europe, Caribbean, and India only. Computed-summary and warehouse refresh loops must use `sphereByTab` only.
 
-Deep link: `/Section/Economy?tab=taxRevenue`.
+Tax Revenue deep link: `/Section/Intelligence?tab=taxRevenue`. An old `/Section/Economy?tab=taxRevenue` link redirects there.
 
 ## Verify
 
-Switch Europe, Caribbean, India, and Tax Revenue. On sphere tabs, confirm both modes, production-site rows, computed totals, and the banner build-fund values after reloading the selected turn. On Tax Revenue, confirm country columns and production matrices load.
+Switch Europe, Caribbean, and India. Confirm both modes, production-site rows, computed totals, and the banner build-fund values after reloading the selected turn. Open Intelligence and confirm Tax Revenue is the first tab, with country columns and production matrices.
 
 ## Related handoffs
 
