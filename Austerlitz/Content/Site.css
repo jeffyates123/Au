@@ -2188,6 +2188,15 @@ textarea {
     text-overflow: ellipsis;
 }
 
+.navyFleetSummaryTable > thead > tr > th,
+.navyFleetSummaryTable > tbody > tr > td {
+    padding: 4px 2px;
+    text-align: center;
+    white-space: normal;
+    overflow: hidden;
+    line-height: 1.15;
+}
+
 .navyFleetSummaryTable > thead > tr > th:nth-child(9),
 .navyFleetSummaryTable > tbody > tr > td:nth-child(9) {
     border-left: 2px solid #d9d2c6;
@@ -2486,8 +2495,8 @@ textarea {
 }
 
 .landUnitsBoardingModal {
-    width: 900px;
-    margin-left: -450px;
+    width: 1120px;
+    margin-left: -560px;
 }
 
 .existingArmyHostModal {
@@ -2502,7 +2511,44 @@ textarea {
 .existingArmyHostModalBody {
     max-height: calc(100vh - 110px);
     padding: 10px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.existingArmyHostModal .landUnitsTableWrap {
+    overflow-x: hidden;
+}
+
+.existingArmyHostModal .landUnitsTable {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.existingArmyHostModal .landUnitsTable > thead > tr > th,
+.existingArmyHostModal .landUnitsTable > tbody > tr > td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.existingArmyHostModal .landUnitsMovementFederationCol {
+    min-width: 0;
+    width: 112px;
+}
+
+.existingArmyHostModal .landUnitsExistingArmyTable .landUnitsColFed,
+.existingArmyHostModal .landUnitsExistingArmyTable .landUnitsFedCol {
+    width: 112px;
+}
+
+.existingArmyHostModal .landUnitsExistingArmyTable .landUnitsColBattalion,
+.existingArmyHostModal .landUnitsExistingArmyTable .landUnitsBattalionCol {
+    width: 62px;
+}
+
+.existingArmyHostModal .landUnitsExistingArmyTable .landUnitsBattalionChip {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .existingArmyHostModalBody > existing-army > .landUnitsExistingArmyPane {
@@ -2763,6 +2809,23 @@ textarea {
 .landUnitsBoardingTableWrap .landUnitsTable {
     margin-bottom: 0;
     min-width: 760px;
+}
+
+.landUnitsBoardingTableWrap .landUnitsBoardingBrigadeTable {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.landUnitsBoardingBrigadeTable > thead > tr > th,
+.landUnitsBoardingBrigadeTable > tbody > tr > td {
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.landUnitsBoardingBrigadeTable .landUnitsBoardingNameCol {
+    text-align: left;
 }
 
 .landUnitsFormFederationTable {

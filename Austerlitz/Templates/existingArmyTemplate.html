@@ -412,7 +412,6 @@
             <span ng-if="commander.rank">({{commander.rank}})</span>
           </td>
           <td class="landUnitsToggleCol">
-            <span class="landUnitsMovementBoardedBadge" ng-if="isMovementUnitBoardedForMovement(commander)">{{isMovementUnitDisabledForMovement(commander) ? 'Boarded - cannot move' : 'Boarded'}}</span>
             <button
               type="button"
               class="landUnitsToggleButton"
@@ -663,7 +662,6 @@
             </button>
           </td>
           <td class="landUnitsToggleCol">
-            <span class="landUnitsMovementBoardedBadge" ng-if="isMovementUnitBoardedForMovement(brigade)">{{isMovementUnitDisabledForMovement(brigade) ? 'Boarded - cannot move' : 'Boarded'}}</span>
             <button
               type="button"
               class="landUnitsToggleButton"
@@ -737,7 +735,6 @@
           <td>{{spy.report || '-'}}</td>
           <td class="landUnitsMpCol">{{spy.mp != null ? spy.mp : '-'}}</td>
           <td class="landUnitsToggleCol">
-            <span class="landUnitsMovementBoardedBadge" ng-if="isMovementUnitBoardedForMovement(spy)">{{isMovementUnitDisabledForMovement(spy) ? 'Boarded - cannot move' : 'Boarded'}}</span>
             <button
               type="button"
               class="landUnitsToggleButton"
@@ -1186,19 +1183,27 @@
       >
         No fleets found in the same sphere.
       </div>
-      <div class="alert alert-warning" ng-show="showBrigadeOverCapacityWarning()">
-        Load {{boardingModal.fleets[0].currentBrigadeCapacityWholeUp}} is over
-        the available capacity of one or more fleets. You can still board it.
+      <div class="alert alert-warning" ng-show="getBrigadeOverCapacityWarning()">
+        {{getBrigadeOverCapacityWarning()}}
       </div>
       <div
         class="landUnitsBoardingTableWrap"
         ng-show="!isCommanderBoardingUnit(boardingModal.brigade) && boardingModal.coordinateBrigades.length"
       >
-        <table class="table table-condensed landUnitsTable">
+        <table class="table table-condensed landUnitsTable landUnitsBoardingBrigadeTable">
+          <colgroup>
+            <col style="width:6%" />
+            <col style="width:14%" />
+            <col style="width:9%" /><col style="width:9%" /><col style="width:9%" /><col style="width:9%" />
+            <col style="width:9%" /><col style="width:9%" /><col style="width:9%" />
+            <col style="width:8%" />
+            <col style="width:9%" />
+          </colgroup>
           <thead>
             <tr>
-              <th>Brigade</th>
-              <th>Name</th>
+              <th>ID</th>
+              <th class="landUnitsBoardingNameCol">Name</th>
+              <th ng-repeat="index in [1,2,3,4,5,6,7]">Batt {{index}}</th>
               <th>Boarded</th>
               <th></th>
             </tr>
@@ -1210,7 +1215,8 @@
               ng-click="selectBoardingCandidate(candidate)"
             >
               <td>{{candidate.id}}</td>
-              <td>{{candidate.name}}</td>
+              <td class="landUnitsBoardingNameCol">{{candidate.name}}</td>
+              <td ng-repeat="battalion in candidate.battalions track by battalion.slot">{{getBattalionLozengeDisplay(battalion)}}</td>
               <td>{{candidate.boardingFleetNo || '-'}}</td>
               <td>
                 <button
@@ -1290,7 +1296,7 @@
               <td ng-if="isCommanderBoardingUnit(boardingModal.brigade)">
                 {{fleet.conditionLabel}}
               </td>
-              <td>{{fleet.totalCapacity | number}}</td>
+              <td>{{fleet.totalCapacity}}</td>
               <td ng-if="!isCommanderBoardingUnit(boardingModal.brigade)">
                 {{fleet.usedCapacityWhole}}
               </td>
@@ -1312,9 +1318,6 @@
                   ng-if="showBrigadeOverCapacityWarning() && fleet.wouldExceedForCurrentBrigade && !fleet.isCurrentlyAssigned"
                 >
                   Over capacity
-                </span>
-                <span class="text-muted">
-                  (Load: {{fleet.currentBrigadeCapacityWholeUp}})
                 </span>
               </td>
             </tr>

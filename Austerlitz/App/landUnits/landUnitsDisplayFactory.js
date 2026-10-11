@@ -1,10 +1,24 @@
 "use strict";
 
-austerlitzModule.factory("landUnitsDisplayFactory", function () {
+austerlitzModule.factory("landUnitsDisplayFactory", function (boardingSharedFactory) {
   return {
     attach: function ($scope) {
 
       $scope.compareBrigadeRowsForDisplay = function (left, right) {
+        var leftFleet = $scope.getBrigadeBoardingFleetNo(left && left.source);
+        var rightFleet = $scope.getBrigadeBoardingFleetNo(right && right.source);
+        var leftLoaded = leftFleet > 0;
+        var rightLoaded = rightFleet > 0;
+        if (leftLoaded || rightLoaded) {
+          if (leftLoaded !== rightLoaded) {
+            return leftLoaded ? -1 : 1;
+          }
+          if (leftFleet !== rightFleet) {
+            return leftFleet - rightFleet;
+          }
+          return $scope.getUnitSortNo(left) - $scope.getUnitSortNo(right);
+        }
+
         var sphereCompare =
           $scope.getSphereSortOrder(left) - $scope.getSphereSortOrder(right);
         if (sphereCompare !== 0) {
@@ -73,20 +87,7 @@ austerlitzModule.factory("landUnitsDisplayFactory", function () {
       };
 
       $scope.getBrigadeBoardingFleetNo = function (brigadeSource) {
-        var directBoarded = parseInt(brigadeSource && brigadeSource.boarded, 10);
-        if (!isNaN(directBoarded) && directBoarded > 0) {
-          return directBoarded;
-        }
-
-        var xStateText = $scope.trimValue(brigadeSource && brigadeSource.x_OrState);
-        var xStateNumeric = parseInt(xStateText, 10);
-        var fleetNo = parseInt(brigadeSource && brigadeSource.y_OrFleet, 10);
-        var hasNonNumericState = xStateText && (isNaN(xStateNumeric) || xStateNumeric <= 0);
-        if (hasNonNumericState && !isNaN(fleetNo) && fleetNo >= 11 && fleetNo <= 30) {
-          return fleetNo;
-        }
-
-        return 0;
+        return boardingSharedFactory.getReportBoardedFleetNo(brigadeSource) || 0;
       };
 
       $scope.getLandUnitPositionKey = function (unit) {

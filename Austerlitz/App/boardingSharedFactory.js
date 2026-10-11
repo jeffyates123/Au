@@ -278,6 +278,81 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     );
   }
 
+  function getReportBoardedFleetNo(unit) {
+    if (!unit) {
+      return null;
+    }
+
+    var directBoarded = toInt(unit.boarded, null);
+    if (directBoarded != null && directBoarded > 0) {
+      return directBoarded;
+    }
+
+    var stateText = toKey(unit.x_OrState != null ? unit.x_OrState : unit.x);
+    var stateNumeric = parseInt(stateText, 10);
+    var fleetNo = toInt(unit.y_OrFleet != null ? unit.y_OrFleet : unit.y, null);
+    var hasStateLetter = stateText && (isNaN(stateNumeric) || stateNumeric <= 0);
+    if (hasStateLetter && fleetNo != null && fleetNo >= 11 && fleetNo <= 30) {
+      return fleetNo;
+    }
+
+    return null;
+  }
+
+  function addReportLoadedUnitCapacity(
+    lookup,
+    units,
+    boardingRows,
+    excludedItemNo,
+    includeExcludedItem,
+    getItemLoadCapacity,
+    sameNullableInt,
+  ) {
+    var countedItemNos = {};
+    var unloadedItemNos = {};
+    angular.forEach(boardingRows || [], function (row) {
+      var itemNo = toInt(row && row.itemNo, null);
+      if (itemNo == null) {
+        return;
+      }
+      if (isUnloadDirectionCommand(row)) {
+        unloadedItemNos[itemNo] = true;
+        return;
+      }
+      var fleetNo = toInt(row && row.fleetNo, null);
+      if (fleetNo == null || fleetNo <= 0) {
+        return;
+      }
+      countedItemNos[itemNo] = true;
+    });
+
+    angular.forEach(units || [], function (unit) {
+      var itemNo = toInt(unit && (unit.itemNo != null ? unit.itemNo : unit.id), null);
+      var fleetNo = getReportBoardedFleetNo(unit);
+      if (
+        itemNo == null ||
+        fleetNo == null ||
+        countedItemNos[itemNo] ||
+        unloadedItemNos[itemNo]
+      ) {
+        return;
+      }
+      if (
+        excludedItemNo != null &&
+        !includeExcludedItem &&
+        isSameNullableInt(itemNo, excludedItemNo, sameNullableInt)
+      ) {
+        return;
+      }
+
+      lookup[fleetNo] = roundTo2(
+        (lookup[fleetNo] || 0) + ((getItemLoadCapacity && getItemLoadCapacity(itemNo)) || 0),
+      );
+    });
+
+    return lookup;
+  }
+
   function buildFleetUsedCapacityLookup(
     boardingRows,
     excludedItemNo,
@@ -287,6 +362,7 @@ austerlitzModule.factory("boardingSharedFactory", function () {
   ) {
     var lookup = {};
     angular.forEach(boardingRows || [], function (row) {
+      if (isUnloadDirectionCommand(row)) return;
       var fleetNo = parseInt(row && row.fleetNo, 10);
       var itemNo = parseInt(row && row.itemNo, 10);
       if (isNaN(fleetNo) || fleetNo <= 0 || isNaN(itemNo)) return;
@@ -417,14 +493,34 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     alert(detail);
   }
 
+  function getCatalogShipLoadCapacity(ship, shipLookupByType) {
+    if (!ship || !shipLookupByType) {
+      return 0;
+    }
+
+    var typeKey = toKey(ship.type != null ? ship.type : ship.Type).toUpperCase();
+    var shipDef = typeKey ? shipLookupByType[typeKey] : null;
+    if (!shipDef) {
+      var typeNo = parseInt(typeKey, 10);
+      if (!isNaN(typeNo)) {
+        shipDef = shipLookupByType[typeNo];
+      }
+    }
+    if (!shipDef) {
+      return 0;
+    }
+
+    var capacity =
+      shipDef.loadCapacity != null ? shipDef.loadCapacity : shipDef.LoadCapacity;
+    return toInt(capacity, 0);
+  }
+
   function getConditionAdjustedShipCapacity(ship, shipLookupByType) {
     if (!ship) {
       return 0;
     }
 
-    var typeKey = toKey(ship.type).toUpperCase();
-    var shipDef = shipLookupByType[typeKey];
-    var baseCapacity = toInt(shipDef && shipDef.loadCapacity, 0);
+    var baseCapacity = getCatalogShipLoadCapacity(ship, shipLookupByType);
     var condition = parseFloat(ship.condition);
     if (isNaN(condition)) {
       condition = 100;
@@ -531,6 +627,8 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     getBrigadeRawWeight: getBrigadeRawWeight,
     getBaggageTrainRawWeight: getBaggageTrainRawWeight,
     getBoardedItemLoadCapacity: getBoardedItemLoadCapacity,
+    getReportBoardedFleetNo: getReportBoardedFleetNo,
+    addReportLoadedUnitCapacity: addReportLoadedUnitCapacity,
     buildFleetUsedCapacityLookup: buildFleetUsedCapacityLookup,
     collectTurnReportShips: collectTurnReportShips,
     findOptionByFleetNo: findOptionByFleetNo,
@@ -543,6 +641,7 @@ austerlitzModule.factory("boardingSharedFactory", function () {
     clearBoardingRow: clearBoardingRow,
     showTurnSheetOrderError: showTurnSheetOrderError,
     buildShipCapacityLookupByType: buildShipCapacityLookupByType,
+    getCatalogShipLoadCapacity: getCatalogShipLoadCapacity,
     getConditionAdjustedShipCapacity: getConditionAdjustedShipCapacity,
     buildIndividualShipOptions: buildIndividualShipOptions,
   };

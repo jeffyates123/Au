@@ -262,6 +262,15 @@ austerlitzModule.factory(
           brigade && brigade.id,
           includeCurrentUnitInUsage,
         );
+        boardingSharedFactory.addReportLoadedUnitCapacity(
+          usedByFleet,
+          turnReport.brigades,
+          boardingRows,
+          brigade && brigade.id,
+          includeCurrentUnitInUsage,
+          getBoardedItemLoadCapacity,
+          $scope.sameNullableInt,
+        );
         var shipFleetLookup =
           turnAssignmentResolverFactory.buildEffectiveShipFleetLookup(
             (turnReport.warships || []).concat(turnReport.merchantShips || []),
@@ -325,7 +334,7 @@ austerlitzModule.factory(
             fleet.merchantCount += 1;
           }
           fleet.totalShips += 1;
-          fleet.totalCapacity += $scope.getConditionAdjustedShipCapacity(
+          fleet.totalCapacity += boardingSharedFactory.getCatalogShipLoadCapacity(
             ship,
             shipLookupByType,
           );
@@ -638,6 +647,7 @@ austerlitzModule.factory(
                 brigade.boardingSelected = true;
                 brigade.boardingFleetNo = targetRow.fleetNo;
                 brigade.unloadDirection = null;
+                return true;
               }, $scope.showTurnSheetOrderError);
           }, $scope.showTurnSheetOrderError);
       };
@@ -832,18 +842,42 @@ austerlitzModule.factory(
         return $scope.isCommanderBoardingUnit(unit);
       };
 
-      $scope.showBrigadeOverCapacityWarning = function () {
+      function getOverCapacityFleetNos() {
         var modal = $scope.boardingModal;
-        if (!modal) {
-          return false;
-        }
-        if ($scope.isCommanderBoardingUnit(modal.brigade)) {
-          return false;
+        if (!modal || $scope.isCommanderBoardingUnit(modal.brigade)) {
+          return [];
         }
 
-        return (modal.fleets || []).some(function (fleet) {
-          return fleet.wouldExceedForCurrentBrigade && !fleet.isCurrentlyAssigned;
+        var fleetNos = [];
+        angular.forEach(modal.fleets || [], function (fleet) {
+          if (fleet.wouldExceedForCurrentBrigade && !fleet.isCurrentlyAssigned) {
+            fleetNos.push(fleet.fleetNo);
+          }
         });
+        return fleetNos;
+      }
+
+      $scope.showBrigadeOverCapacityWarning = function () {
+        return getOverCapacityFleetNos().length > 0;
+      };
+
+      $scope.getBrigadeOverCapacityWarning = function () {
+        var fleetNos = getOverCapacityFleetNos();
+        if (!fleetNos.length) {
+          return "";
+        }
+        if (fleetNos.length === 1) {
+          return (
+            "Fleet " +
+            fleetNos[0] +
+            " is over capacity. You can still board it."
+          );
+        }
+        return (
+          "Fleets " +
+          fleetNos.join(", ") +
+          " are over capacity. You can still board them."
+        );
       };
 
       $scope.getBrigadeBoardButtonTitle = function (fleet) {

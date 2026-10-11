@@ -157,21 +157,32 @@ austerlitzModule.factory(
           ($scope.masterData && $scope.masterData.turnReport) || {};
         var rulesCatalog =
           ($scope.masterData && $scope.masterData.rulesCatalog) || {};
+        function getLoadedItemCapacity(itemNo) {
+          return boardingSharedFactory.getBoardedItemLoadCapacity(
+            turnReport,
+            rulesCatalog,
+            itemNo,
+            $scope.sameNullableInt,
+          );
+        }
+
         var loadedCapacityByFleet =
           boardingSharedFactory.buildFleetUsedCapacityLookup(
             $scope.tsBoardingList || [],
             null,
             true,
-            function (itemNo) {
-              return boardingSharedFactory.getBoardedItemLoadCapacity(
-                turnReport,
-                rulesCatalog,
-                itemNo,
-                $scope.sameNullableInt,
-              );
-            },
+            getLoadedItemCapacity,
             $scope.sameNullableInt,
           );
+        boardingSharedFactory.addReportLoadedUnitCapacity(
+          loadedCapacityByFleet,
+          turnReport.brigades,
+          $scope.tsBoardingList || [],
+          null,
+          true,
+          getLoadedItemCapacity,
+          $scope.sameNullableInt,
+        );
 
         angular.forEach(allShips, function (ship) {
           var fleetNo =
@@ -213,8 +224,10 @@ austerlitzModule.factory(
               summary.maxMp == null ? shipMp : Math.min(summary.maxMp, shipMp);
           }
 
-          var shipDef = $scope.getRefShipByType(ship.type);
-          summary.loadingCap += toInt(shipDef && shipDef.loadCapacity, 0);
+          summary.loadingCap += boardingSharedFactory.getCatalogShipLoadCapacity(
+            ship,
+            $scope.refShipsByType || {},
+          );
         });
 
         angular.forEach(summariesByFleet, function (summary) {
