@@ -37,46 +37,47 @@ This is separate from Army > Existing Army, which always renders inline (no moda
   - hides Federation Summary / Fleet Summary
   - blocks rename
   - makes battalion lozenges inert (no training colors / menus)
-  - hides H/C, Train, Repair, fleet-assignment management, and trailing `...` menus
+  - hides H/C, Train, Repair, and trailing `...` menus
 - Boarding remains available in Movement X (brigade/commander boarding modal; spy boarding modal).
-- Federation chip still opens Form Federation in Movement X; after save, Turn Maps refreshes via `on-form-federation-saved`.
+- Federation chip still opens Form Federation. Fleet chip still opens fleet assignment. After either save, Turn Maps refreshes via `on-form-federation-saved`.
 
 ### Movement X picker
 
 - Map defaults to Movement X.
-- Picker does not open initially; Item button or a coordinate click opens it.
+- Picker does not open initially. Item button or a coordinate click opens it.
+- Item button clears the position filter, sets the sphere from the current map’s minimum X/Y, and does not show a yellow selection.
 - Coordinate click:
   - sea → Navy view
-  - coastal shipyard → Army/Navy radio toggle (`movementXPickerIsShipyard`)
-  - units at that X/Y → position filter
-  - otherwise → sphere filter
+  - coastal shipyard → Army/Navy radio toggle (`movementXPickerIsShipyard`); if that square has ships and no army units, the picker opens on Navy
+  - units at that X/Y → position filter, and the sphere is still set from the coordinate
+  - otherwise → sphere filter only
   - no unit starts yellow-selected (`movementXPickerShowCurrentSelection` starts false)
 - Display mode (`orderUi.movementPickerDisplayMode`):
   - `panel` when wide-screen setting is on, not Production Site mode, and viewport width ≥ `wideScreenMinViewportWidth` (1500 from `turnMapsConfigFactory`)
   - otherwise `modal` overlay
 - Intelligence mode forces the picker closed and does not show Movement X hosts.
 - Row click selects the individual unit (brigade / commander / spy / baggage train / ship).
-- `Move Fed` beside Fed selects land federation movement (disabled when no fed).
+- `Move Fed` beside Fed selects land federation movement (disabled when no fed). It also clears the position filter and sets the sphere to All.
 - `Move Fleet` beside Fleet selects fleet movement (disabled when no fleet).
+- After a selection, the overlay closes. The wide pane stays open.
 - Current selection: yellow (`itemGridRowSelected`).
 - Routed TS18 covering that unit/fed/fleet: light blue (`landUnitsMovementOrderExists`).
-- Boarded movement items: Boarded badge; non-selectable boarded items use disabled row styling (`landUnitsMovementDisabled`).
+- Non-selectable army rows use grey disabled styling (`landUnitsMovementDisabled`). Navy rows do not get disabled styling.
 
 ### Provisional TS18 selection
 
-- Selecting a unit/federation/fleet alone does not POST TS18.
-- Selecting another unit or switching Unit/Fed/Fleet replaces the provisional choice.
-- A route from map click, or manual direction/distance edits, triggers TS18 autosave.
-- Navigating away clears an unrouted provisional choice.
+- Selecting a unit, federation, or fleet writes the TS18 row and autosaves immediately, before a route exists.
+- That write uses the current row when it is empty or still unrouted. A routed current row uses the next empty row.
+- A route from a map click, or a manual direction/distance edit, autosaves again.
+- Navigating away from an unrouted row clears it and autosaves the clear.
 - Light-blue “moved” status requires direction/distance data, not selection alone.
 
 ### ID ranges used by Movement X highlighting / fleet pick
 
-- Land federation numbers: 61–90 (army moved highlighting treats these as fed orders).
-- Commander numbers: 1–10.
-- Brigade numbers: four digits.
-- Fleet `Move Fleet` validation currently accepts fleet numbers 11–30 in `selectMovementXNavyShip()`.
-- Fleet federation/movement orders must not light up army rows as moved.
+- Land federation numbers: 61–90. Army moved highlighting treats only this range as federation orders.
+- Fleet numbers: 11–30. `Move Fleet` rejects anything outside that range in `selectMovementXNavyShip()`, and navy moved highlighting uses the same range.
+- Commander numbers 1–10 and four-digit brigade numbers are the usual item ids. Highlighting matches the unit id; it does not check those ranges.
+- A fleet order must not light up an army row as moved. Army highlighting only treats 61–90 as a federation order.
 
 ## Main files
 
@@ -90,7 +91,7 @@ This is separate from Army > Existing Army, which always renders inline (no moda
 ### Turn Maps host and movement
 
 - `Templates/turnMapsTemplate.html` — modal + pane hosts for Movement X
-- `App/turnMapsController.js` — `selectMovementXArmyUnit`, `selectMovementXNavyShip`, boarded/disabled helpers, display-mode flags
+- `App/turnMapsController.js` — `selectMovementXArmyUnit`, `selectMovementXNavyShip`, disabled-row helper, display-mode flags
 - `App/turnMaps/turnMapsMapSelectionFactory.js` — coordinate click → picker view / filters / shipyard toggle
 - `App/turnMaps/turnMapsOrderNavigationFactory.js` — `selectMovementOrderItem`, open/close picker
 - `App/turnMaps/turnMapsMovementPickerFactory.js`
@@ -108,12 +109,13 @@ This is separate from Army > Existing Army, which always renders inline (no moda
 - Movement X shares `tsMovementList`; no separate persistence API.
 - `selectMovementXArmyUnit(unit, 'item'|'fed')` adapts Existing Army rows to `selectMovementOrderItem()`.
 - `selectMovementXNavyShip(ship, 'item'|'fleet')` adapts Existing Navy rows to `selectMovementOrderItem()`.
-- Bindings on the map hosts:
+- Bindings on both map hosts:
   - `on-movement-select`
-  - `is-movement-unit-moved` / `is-movement-unit-boarded` / `is-movement-unit-disabled`
+  - `is-movement-unit-moved`
   - `picker-position-filter` / `picker-sphere-filter`
   - `selected-movement-item-no` / `selected-movement-type`
-  - `on-form-federation-saved` (army)
+  - `on-form-federation-saved`
+- Army hosts also bind `is-movement-unit-disabled`. Navy hosts do not.
 
 ## Picker split: Movement X vs standard Movement
 
@@ -140,11 +142,11 @@ This is separate from Army > Existing Army, which always renders inline (no moda
 ```text
 Movement X row / Move Fed / Move Fleet / standard picker chip
   -> selectMovementOrderItem(...)
-  -> current or next empty tsMovementList row
-  -> itemNo, type, MP, X/Y written
-  -> route selection or manual direction/distance
+  -> current unrouted row, or next empty tsMovementList row
+  -> itemNo, type, MP, X/Y written; route segments cleared
   -> queueAutoSaveTsGrid('Movement')
-  -> TS18 persistence
+  -> route selection or manual direction/distance
+  -> queueAutoSaveTsGrid('Movement') again
 ```
 
 Key source:
@@ -158,7 +160,7 @@ Key source:
 - Movement selection uses a separate one-row-per-commander table (duplicated commander markup).
 - Wide right pane uses a 1050px minimum army-table width and may need horizontal scrolling.
 - Existing Army directive and Turn Maps both touch shared `masterData.turnReport`; watchers handle load races.
-- Nested boarding / form-federation modals stack above the Movement X host; z-index and close behavior must stay consistent when changing the shell.
+- Nested boarding, form-federation, and fleet-assignment modals stack above the Movement X host; z-index and close behavior must stay consistent when changing the shell.
 - Full .NET build may be unavailable locally if `Microsoft.WebApplication.targets` is missing from the installed SDK path.
 
 ## Validation

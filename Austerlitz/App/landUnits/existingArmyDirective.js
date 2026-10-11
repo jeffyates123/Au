@@ -9,7 +9,6 @@ austerlitzModule.directive("existingArmy", function () {
       movementSelection: "@",
       onMovementSelect: "&",
       isMovementUnitMoved: "&",
-      isMovementUnitBoarded: "&",
       isMovementUnitDisabled: "&",
       onFormFederationSaved: "&",
       selectedMovementItemNo: "=?",
@@ -111,13 +110,6 @@ austerlitzModule.directive("existingArmy", function () {
         return (
           $scope.isMovementSelectionMode() &&
           !!$scope.isMovementUnitMoved({ unit: unit })
-        );
-      };
-
-      $scope.isMovementUnitBoardedForMovement = function (unit) {
-        return (
-          $scope.isMovementSelectionMode() &&
-          !!$scope.isMovementUnitBoarded({ unit: unit })
         );
       };
 

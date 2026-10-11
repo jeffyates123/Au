@@ -184,15 +184,6 @@ austerlitzModule.controller('turnMapsController', function (
         });
     };
 
-    $scope.isMovementXArmyUnitBoarded = function (unit) {
-        if (!unit || unit.id == null) return false;
-
-        return ($scope.filteredMovementItemsForMap || []).some(function (item) {
-            var itemNo = item.originalItemNo != null ? item.originalItemNo : item.itemNo;
-            return itemNo == unit.id && item.hasBoarding === true;
-        });
-    };
-
     $scope.isMovementXArmyUnitDisabled = function (unit) {
         if (!unit || unit.id == null) return false;
 

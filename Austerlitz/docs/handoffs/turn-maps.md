@@ -12,7 +12,7 @@ Route `/TurnMaps` renders regional maps and overlays for Terrain, State, Product
 
 ## Rules
 
-The map supports Europe, Caribbean, and India with coordinate/sphere-aware data. A movement route consumes movement points and autosaves TS18 only after route details exist. Do not treat an unrouted picker selection as a persisted movement order.
+The map supports Europe, Caribbean, and India with coordinate/sphere-aware data. Selecting a movement item writes the TS18 row and autosaves immediately. Leaving an unrouted row clears it and autosaves the clear. A route consumes movement points and autosaves again.
 
 Movement X embeds reusable Existing Army and Existing Navy views:
 
@@ -20,7 +20,7 @@ Movement X embeds reusable Existing Army and Existing Navy views:
 - Right pane host: `turnMapsMovementXPane` (wide screen)
 - Both pass `modal-mode` and `movement-selection`
 
-Selection, filtering, boarded/disabled highlighting, shipyard Army/Navy toggle, and provisional-selection rules are documented in [Movement X](../../movement-x-handoff.md).
+Selection, filtering, disabled-row highlighting, shipyard Army/Navy toggle, and provisional-selection rules are documented in [Movement X](../../movement-x-handoff.md).
 
 ## Verify
 

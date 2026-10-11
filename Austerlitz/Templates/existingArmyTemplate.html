@@ -381,7 +381,7 @@
         <tr
           class="landUnitsMovementSelectionRow"
           ng-repeat="commander in filteredCommanderRows() track by commander.id"
-          ng-class="{ landUnitsMovementOrderExists: hasMovementOrder(commander), itemGridRowSelected: isMovementUnitSelected(commander), landUnitsMovementBoarded: isMovementUnitBoardedForMovement(commander), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(commander) }"
+          ng-class="{ landUnitsMovementOrderExists: hasMovementOrder(commander), itemGridRowSelected: isMovementUnitSelected(commander), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(commander) }"
           ng-click="selectMovementUnit(commander, 'item')"
         >
           <td class="landUnitsIdCol">{{commander.id}}</td>
@@ -490,7 +490,7 @@
       <tbody>
         <tr
           ng-repeat="brigade in filteredBrigadeRows() track by brigade.id"
-          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(brigade), itemGridRowSelected: isMovementUnitSelected(brigade), landUnitsMovementBoarded: isMovementUnitBoardedForMovement(brigade), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(brigade) }"
+          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(brigade), itemGridRowSelected: isMovementUnitSelected(brigade), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(brigade) }"
           ng-click="isMovementSelectionMode() && selectMovementUnit(brigade, 'item')"
         >
           <td class="landUnitsIdCol">{{brigade.id}}</td>
@@ -726,7 +726,7 @@
       <tbody>
         <tr
           ng-repeat="spy in filteredSpyRows() track by spy.id"
-          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(spy), itemGridRowSelected: isMovementUnitSelected(spy), landUnitsMovementBoarded: isMovementUnitBoardedForMovement(spy), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(spy) }"
+          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(spy), itemGridRowSelected: isMovementUnitSelected(spy), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(spy) }"
           ng-click="isMovementSelectionMode() && selectMovementUnit(spy, 'item')"
         >
           <td class="landUnitsIdCol">{{spy.itemNo}}</td>
@@ -782,7 +782,7 @@
       <tbody>
         <tr
           ng-repeat="baggageTrain in filteredBaggageTrainRows() track by baggageTrain.id"
-          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(baggageTrain), itemGridRowSelected: isMovementUnitSelected(baggageTrain), landUnitsMovementBoarded: isMovementUnitBoardedForMovement(baggageTrain), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(baggageTrain) }"
+          ng-class="{ landUnitsMovementSelectionRow: isMovementSelectionMode(), landUnitsMovementOrderExists: hasMovementOrder(baggageTrain), itemGridRowSelected: isMovementUnitSelected(baggageTrain), landUnitsMovementDisabled: isMovementUnitDisabledForMovement(baggageTrain) }"
           ng-click="isMovementSelectionMode() && selectMovementUnit(baggageTrain, 'item')"
         >
           <td class="landUnitsIdCol">{{baggageTrain.itemNo}}</td>
