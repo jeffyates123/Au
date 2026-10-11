@@ -209,7 +209,9 @@ austerlitzModule.directive("existingNavy", function () {
           $scope.navyPositionFilter = $scope.pickerPositionFilter || null;
           $scope.navySphereFilter = $scope.pickerPositionFilter
             ? null
-            : $scope.pickerSphereFilter || null;
+            : !$scope.pickerSphereFilter || $scope.pickerSphereFilter === "All"
+              ? null
+              : $scope.pickerSphereFilter;
           $scope.buildFleetSummaryRows();
           $scope.refreshWarshipPairRows();
           $scope.refreshMerchantPairRows();

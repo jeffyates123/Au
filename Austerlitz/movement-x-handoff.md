@@ -47,10 +47,11 @@ This is separate from Army > Existing Army, which always renders inline (no moda
 - Picker does not open initially. Item button or a coordinate click opens it.
 - Item button clears the position filter, sets the sphere from the current map’s minimum X/Y, and does not show a yellow selection.
 - Coordinate click:
-  - sea → Navy view
-  - coastal shipyard → Army/Navy radio toggle (`movementXPickerIsShipyard`); if that square has ships and no army units, the picker opens on Navy
-  - units at that X/Y → position filter, and the sphere is still set from the coordinate
-  - otherwise → sphere filter only
+  - any of your land units or ships at that X/Y → position filter only, sphere All, so the modal shows that square and no other
+  - land unit presence includes brigades (`x_OrState` / `y_OrFleet`), not only `x` / `y`
+  - empty land → Army view of all land units
+  - empty sea → Navy view of all ships
+  - sea with ships → Navy view; coastal shipyard still has the Army/Navy toggle, and a shipyard with only ships opens on Navy
   - no unit starts yellow-selected (`movementXPickerShowCurrentSelection` starts false)
 - Display mode (`orderUi.movementPickerDisplayMode`):
   - `panel` when wide-screen setting is on, not Production Site mode, and viewport width ≥ `wideScreenMinViewportWidth` (1500 from `turnMapsConfigFactory`)

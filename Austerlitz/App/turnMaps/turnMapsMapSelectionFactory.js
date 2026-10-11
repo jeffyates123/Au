@@ -178,9 +178,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
                 $scope.hasMovementXArmyUnitAtCoordinate(x, y);
             var hasShipsAtCoordinate =
                 $scope.hasMovementXShipAtCoordinate(x, y);
-            var hasRelevantUnits = isSea
-                ? hasShipsAtCoordinate
-                : hasArmyAtCoordinate || (isShipyard && hasShipsAtCoordinate);
+            var hasUnitsAtCoordinate = hasArmyAtCoordinate || hasShipsAtCoordinate;
 
             $scope.movementXPickerIsShipyard = isShipyard;
             $scope.movementXPickerView = isSea
@@ -188,11 +186,12 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
                 : isShipyard && !hasArmyAtCoordinate && hasShipsAtCoordinate
                     ? 'navy'
                     : 'army';
-            $scope.movementXPickerPositionFilter = hasRelevantUnits
-                ? x + '/' + y
+            $scope.movementXPickerPositionFilter = hasUnitsAtCoordinate
+                ? parseInt(x, 10) + '/' + parseInt(y, 10)
                 : null;
-            $scope.movementXPickerSphereFilter =
-                $scope.getMovementPickerSphereFromCoordinates(x, y);
+            $scope.movementXPickerSphereFilter = hasUnitsAtCoordinate || !isSea
+                ? 'All'
+                : null;
             $scope.movementXPickerShowCurrentSelection = false;
         }
 

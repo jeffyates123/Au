@@ -166,21 +166,60 @@ austerlitzModule.controller('turnMapsController', function (
             && $scope.isMovementPickerPanelMode();
     };
 
+    function readMovementXCoordinate(item, fieldNames) {
+        if (!item) return null;
+
+        for (var i = 0; i < fieldNames.length; i++) {
+            var parsed = parseInt(item[fieldNames[i]], 10);
+            if (!isNaN(parsed)) return parsed;
+        }
+
+        return null;
+    }
+
+    function isMovementXRecordAtCoordinate(item, x, y, xFields, yFields) {
+        var px = parseInt(x, 10);
+        var py = parseInt(y, 10);
+        if (isNaN(px) || isNaN(py)) return false;
+
+        return readMovementXCoordinate(item, xFields) === px
+            && readMovementXCoordinate(item, yFields) === py;
+    }
+
     $scope.hasMovementXArmyUnitAtCoordinate = function (x, y) {
         var report = ($scope.masterData && $scope.masterData.turnReport) || {};
-        return ['brigades', 'commanders', 'spies', 'baggageTrains'].some(function (collectionName) {
-            return (report[collectionName] || []).some(function (item) {
-                return item.x == x && item.y == y;
+        var landCollections = [
+            { name: 'brigades', xFields: ['x_OrState', 'X_OrState', 'x', 'X'], yFields: ['y_OrFleet', 'Y_OrFleet', 'y', 'Y'] },
+            { name: 'commanders', xFields: ['x', 'X'], yFields: ['y', 'Y'] },
+            { name: 'spies', xFields: ['x', 'X'], yFields: ['y', 'Y'] },
+            { name: 'baggageTrains', xFields: ['x', 'X'], yFields: ['y', 'Y'] }
+        ];
+
+        var hasLandUnit = landCollections.some(function (collection) {
+            return (report[collection.name] || []).some(function (item) {
+                return isMovementXRecordAtCoordinate(item, x, y, collection.xFields, collection.yFields);
             });
+        });
+        if (hasLandUnit) return true;
+
+        return (report.movementItemList || []).some(function (item) {
+            return isMovementXRecordAtCoordinate(item, x, y, ['x', 'X'], ['y', 'Y'])
+                && !$scope.isNavalMovementItem(item);
         });
     };
 
     $scope.hasMovementXShipAtCoordinate = function (x, y) {
         var report = ($scope.masterData && $scope.masterData.turnReport) || {};
-        return ['warships', 'merchantShips'].some(function (collectionName) {
+        var hasShip = ['warships', 'merchantShips'].some(function (collectionName) {
             return (report[collectionName] || []).some(function (ship) {
-                return ship.x == x && ship.y == y;
+                return isMovementXRecordAtCoordinate(ship, x, y, ['x', 'X'], ['y', 'Y']);
             });
+        });
+        if (hasShip) return true;
+
+        return (report.movementItemList || []).some(function (item) {
+            return isMovementXRecordAtCoordinate(item, x, y, ['x', 'X'], ['y', 'Y'])
+                && $scope.isNavalMovementItem(item);
         });
     };
 

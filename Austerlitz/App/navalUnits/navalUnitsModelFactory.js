@@ -62,10 +62,30 @@ austerlitzModule.factory(
 
       $scope.matchesNavyPositionOrSphereFilter = function (ship) {
         if (!ship) return false;
-        if ($scope.navyPositionFilter) return ship.position === $scope.navyPositionFilter;
-        if ($scope.navySphereFilter) return $scope.getNavySphereForShip(ship) === $scope.navySphereFilter;
+        if ($scope.navyPositionFilter) {
+          return sameNavyPosition($scope.navyPositionFilter, ship.position);
+        }
+        if ($scope.navySphereFilter && $scope.navySphereFilter !== "All") {
+          return $scope.getNavySphereForShip(ship) === $scope.navySphereFilter;
+        }
         return true;
       };
+
+      function sameNavyPosition(left, right) {
+        var leftText = (left || "").toString().trim();
+        var rightText = (right || "").toString().trim();
+        if (leftText === rightText) return true;
+
+        var leftParts = leftText.split("/");
+        var rightParts = rightText.split("/");
+        if (leftParts.length !== 2 || rightParts.length !== 2) return false;
+
+        var leftX = parseInt(leftParts[0], 10);
+        var leftY = parseInt(leftParts[1], 10);
+        var rightX = parseInt(rightParts[0], 10);
+        var rightY = parseInt(rightParts[1], 10);
+        return !isNaN(leftX) && !isNaN(leftY) && leftX === rightX && leftY === rightY;
+      }
 
       $scope.buildWarshipRows = function () {
         var warships =
