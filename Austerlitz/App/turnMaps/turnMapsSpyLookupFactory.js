@@ -490,6 +490,14 @@ austerlitzModule.factory('turnMapsSpyLookupFactory', function ($q, turnReportFac
             return '';
         }
 
+        if ($scope.isPopulationDensityMode && $scope.isPopulationDensityMode() && $scope.getPopulationDensityProductionSiteTooltip) {
+            var popDensityTooltip = ($scope.getPopulationDensityProductionSiteTooltip(coord) || '').toString().trim();
+            if (popDensityTooltip && jumpOffText) return popDensityTooltip + ' | ' + jumpOffText;
+            if (popDensityTooltip) return popDensityTooltip;
+            if (jumpOffText) return jumpOffText;
+            return '';
+        }
+
         if (spyReport && jumpOffText && intelligenceText) return spyReport + ' | ' + jumpOffText + ' | ' + intelligenceText;
         if (spyReport && jumpOffText) return spyReport + ' | ' + jumpOffText;
         if (spyReport && intelligenceText) return spyReport + ' | ' + intelligenceText;

@@ -35,7 +35,7 @@ Use this index before changing an application feature. Read only the matching sc
 
 ## Existing implementation handoffs
 
-- [Movement X](../../movement-x-handoff.md) describes the reusable Army/Navy movement picker.
+- [Movement](../../movement-x-handoff.md) describes the reusable Army/Navy movement picker.
 - [Existing Navy](../../existing-navy-handoff.md) records the reusable Existing Navy implementation history.
 
 ## Handoff maintenance

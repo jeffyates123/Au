@@ -217,7 +217,6 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
 
                 switch ($scope.selectedDisplayOption.name) {
                     case 'Movement':
-                    case 'Movement X':
                     case 'Boarding':
                         baseClass = (terrain == '.' || terrain == '*' || terrain == '+') ? 'terrain_sea' : 'terrain_' + terrain;
                         if (displayField) {
@@ -243,6 +242,18 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                             bonus: bonusSymbol
                         });
                         break;
+                    case 'Inc. Pop. Density':
+                        baseClass = $scope.getPopulationDensityEligibilityClass({
+                            terrain: terrain,
+                            state: state,
+                            population: population,
+                            productionSite: productionSite,
+                            owner: owner,
+                            bonus: bonusSymbol,
+                            x: x,
+                            y: y
+                        });
+                        break;
                     case 'Intelligence':
                         baseClass = $scope.getIntelligenceClass
                             ? $scope.getIntelligenceClass(intelligenceCoord)
@@ -255,6 +266,7 @@ austerlitzModule.factory('turnMapsSharedFactory', function () {
                 }
 
                 if ($scope.selectedDisplayOption.name !== 'Intelligence'
+                    && $scope.selectedDisplayOption.name !== 'Inc. Pop. Density'
                     && x > 0 && y > 0
                     && units && units.length > 0) {
                     baseClass = (baseClass ? baseClass + ' ' : '') + 'unit_Exists';

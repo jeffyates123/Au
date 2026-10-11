@@ -5,15 +5,11 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         attach: function ($scope) {
     $scope.changeDisplayOption = function () {
         $scope.selectedMapOptions = turnMapsConfigFactory.getSelectedOptions($scope.selectedDisplayOption);
-        $scope.selectedItemGridCoordinate = null;
-        $scope.refreshItemGridRows();
         $scope.refreshMovementPickerDisplayMode();
 
-        if ($scope.isMovementXMode()) {
-            $scope.closeMovementPickerModal();
-        }
+        $scope.closeMovementPickerModal();
 
-        if ($scope.isProductionSiteMode()) {
+        if ($scope.isProductionSiteMode() || ($scope.isPopulationDensityMode && $scope.isPopulationDensityMode())) {
             $scope.pendingRouteSelection = null;
             $scope.selectedMovementRow = null;
             $scope.selectedMovementItemCoordinate = null;
@@ -33,7 +29,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             }
         }
 
-        if (!$scope.isProductionSiteMode()) {
+        if (!$scope.isProductionSiteMode() && !($scope.isPopulationDensityMode && $scope.isPopulationDensityMode())) {
             $scope.tryApplyInitialMovementOrderSelection();
         }
         $scope.focusCurrentOrder();
@@ -49,7 +45,7 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
     };
 
     $scope.isMovementXMode = function () {
-        return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'Movement X');
+        return turnMapsConfigFactory.isMode($scope.selectedDisplayOption, 'Movement');
     };
 
     $scope.toggleSelection = function toggleSelection(mapOption) {
@@ -142,14 +138,12 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         if (!coord) return;
 
         $scope.selectedCoordinateDetails = '(X:' + x + ',Y: ' + y + ') ' + coord.state + coord.population + coord.productionSite + ' - ' + coord.owner + coord.terrain + coord.bonus;
-        $scope.selectedItemGridCoordinate = { x: x, y: y };
-        $scope.refreshItemGridRows();
 
         if ($scope.isIntelligenceMode()) {
             return;
         }
 
-        if ($scope.pendingRouteSelection && !$scope.isProductionSiteMode()) {
+        if ($scope.pendingRouteSelection && !$scope.isProductionSiteMode() && !($scope.isPopulationDensityMode && $scope.isPopulationDensityMode())) {
             var routeKey = x + '_' + y;
             var selectedRoute = $scope.pendingRouteSelection.routesByCoord[routeKey];
             var movementRow = $scope.pendingRouteSelection.row;
@@ -171,6 +165,15 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             $scope.selectProductionSiteRowAtCoordinate(x, y);
         }
 
+        if ($scope.isPopulationDensityMode && $scope.isPopulationDensityMode()) {
+            if (typeof $scope.showPopulationDensityRowAtCoordinate === 'function') {
+                $scope.showPopulationDensityRowAtCoordinate(x, y);
+            } else {
+                $scope.selectPopulationDensityRowAtCoordinate(x, y);
+            }
+            return;
+        }
+
         if ($scope.isMovementXMode()) {
             var isSea = isSeaCoordinate(coord);
             var isShipyard = !isSea && isCoastalBarracks(x, y);
@@ -189,19 +192,17 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             $scope.movementXPickerPositionFilter = hasUnitsAtCoordinate
                 ? parseInt(x, 10) + '/' + parseInt(y, 10)
                 : null;
-            $scope.movementXPickerSphereFilter = hasUnitsAtCoordinate || !isSea
+            $scope.movementXPickerSphereFilter = hasUnitsAtCoordinate
                 ? 'All'
-                : null;
+                : $scope.getMovementPickerSphereFromCoordinates(x, y);
             $scope.movementXPickerShowCurrentSelection = false;
         }
 
-        if (!$scope.isProductionSiteMode()
-            && coord
-            && ($scope.isMovementXMode() || (coord.units && coord.units.length > 0))) {
+        if ($scope.isMovementXMode() && !$scope.isProductionSiteMode()) {
             if ($scope.orderUi.suppressCoordinatePickerOpenUntil > new Date().getTime()) {
                 return;
             }
-            $scope.openMovementPickerModal($scope.isMovementXMode());
+            $scope.openMovementPickerModal(true);
         }
     };
 
@@ -238,6 +239,11 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
             return;
         }
 
+        if ($scope.isPopulationDensityMode && $scope.isPopulationDensityMode()) {
+            $scope.addPopulationDensityOrderAtCoordinate(x, y);
+            return;
+        }
+
         if ($scope.selectedMovementItemCoordinate
             && $scope.selectedMovementRow
             && $scope.selectedMovementItemCoordinate.x == x
@@ -259,8 +265,6 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
 
         var startCoord = $scope.getCoordinateByXY(x, y);
         $scope.selectedCoordinateDetails = '(X:' + x + ',Y: ' + y + ') ' + startCoord.state + startCoord.population + startCoord.productionSite + ' - ' + startCoord.owner + startCoord.terrain + startCoord.bonus;
-        $scope.selectedItemGridCoordinate = { x: x, y: y };
-        $scope.refreshItemGridRows();
 
         var maxDistance = 32;
         for (var dir = 1; dir < 9; dir++) {
@@ -277,41 +281,6 @@ austerlitzModule.factory('turnMapsMapSelectionFactory', function (turnMapsConfig
         if (parsedX <= 40 && parsedY <= 99) return 'Caribbean';
         if (parsedX <= 90 && parsedY <= 99) return 'India';
         return 'Unknown';
-    };
-
-    $scope.toggleMovementPickerCoordinateFilter = function (itemRow, $event) {
-        if ($event && $event.preventDefault) $event.preventDefault();
-        if ($event && $event.stopPropagation) $event.stopPropagation();
-        if (!itemRow) return;
-
-        var x = parseInt(itemRow.x, 10);
-        var y = parseInt(itemRow.y, 10);
-        if (isNaN(x) || isNaN(y)) return;
-
-        var sphere = $scope.getMovementPickerSphereFromCoordinates(x, y);
-        var sphereKey = sphere && sphere !== 'Unknown' ? sphere : null;
-
-        if ($scope.selectedItemGridCoordinate
-            && $scope.selectedItemGridCoordinate.x == x
-            && $scope.selectedItemGridCoordinate.y == y) {
-            $scope.selectedItemGridCoordinate = null;
-            $scope.selectedItemGridSphere = sphereKey;
-            $scope.refreshItemGridRows();
-            return;
-        }
-
-        if (!$scope.selectedItemGridCoordinate
-            && sphereKey
-            && $scope.selectedItemGridSphere === sphereKey) {
-            $scope.selectedItemGridCoordinate = { x: x, y: y };
-            $scope.selectedItemGridSphere = null;
-            $scope.refreshItemGridRows();
-            return;
-        }
-
-        $scope.selectedItemGridCoordinate = { x: x, y: y };
-        $scope.selectedItemGridSphere = null;
-        $scope.refreshItemGridRows();
     };
         }
     };

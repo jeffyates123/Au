@@ -7,7 +7,7 @@ Apply the Existing Army approach to the Existing Navy tab:
 - Extract Navy's current Existing Navy display and actions into a reusable directive.
 - Keep Navy > Existing Navy working as it does now.
 - Add a modal-mode host, matching Existing Army's read-only modal behavior where appropriate.
-- Reuse that view from the next Movement X/Navy movement picker work without adding persistence APIs.
+- Reuse that view from the next Movement/Navy movement picker work without adding persistence APIs.
 
 Treat the current code and `git diff` as source of truth. Do not restructure unrelated Navy behavior.
 
@@ -18,8 +18,8 @@ Treat the current code and `git diff` as source of truth. Do not restructure unr
 - Directive: `App/landUnits/existingArmyDirective.js`
 - Template: `Templates/existingArmyTemplate.html`
 - It owns its own state, loads from `masterData.turnReport`, replays orders, and attaches existing factories to its isolated scope.
-- Its callers pass `master-data`, `modal-mode`, and optional Movement X selection callbacks/bindings.
-- Existing Army can render normally, in the Army modal host, or in the Movement X modal/right pane.
+- Its callers pass `master-data`, `modal-mode`, and optional Movement selection callbacks/bindings.
+- Existing Army can render normally, in the Army modal host, or in the Movement modal/right pane.
 
 Use this as a structural reference only. Keep Navy implementation simple; do not force shared abstractions between Army and Navy unless existing code already supports them.
 
@@ -29,12 +29,12 @@ Use this as a structural reference only. Keep Navy implementation simple; do not
 
 - Army > Existing Army uses `existing-army`.
 - Modal mode hides Federation Summary, rename controls, H/C, Train, trailing action menus, and interactive battalion menus.
-- Boarding remains available in Movement X.
+- Boarding remains available in Movement.
 - Existing Army outer nested tab-pane border was removed; its root class is now `landUnitsExistingArmyPane`.
 
-### Movement X
+### Movement
 
-- Map default is Movement X.
+- Map default is Movement.
 - Narrow screens use an overlay picker; wide screens use a right-side pane.
 - Brigades, commanders, and spies are selectable individually for TS18.
 - Land federation numbers are 61–90.
@@ -87,7 +87,7 @@ Untracked `Turns/Online Austerlitz - Spain 436.xlsx` is user data; do not modify
 
 - Modified JavaScript files pass `node --check`.
 - `git diff --check` passes.
-- Manual browser checks performed for Existing Army layout and Movement X.
+- Manual browser checks performed for Existing Army layout and Movement.
 - No automated UI tests exist for these screens.
 
 ## Known risks
@@ -99,4 +99,4 @@ Untracked `Turns/Online Austerlitz - Spain 436.xlsx` is user data; do not modify
 
 ## Recommended next-chat prompt
 
-> Read `@existing-navy-handoff.md`, inspect the current git diff, and implement a reusable Existing Navy view using Existing Army as a reference. Preserve Existing Navy behavior first, then add a modal host and prepare it for future Movement X reuse. Do not modify unrelated Army work or the untracked Spain Excel file.
+> Read `@existing-navy-handoff.md`, inspect the current git diff, and implement a reusable Existing Navy view using Existing Army as a reference. Preserve Existing Navy behavior first, then add a modal host and prepare it for future Movement reuse. Do not modify unrelated Army work or the untracked Spain Excel file.

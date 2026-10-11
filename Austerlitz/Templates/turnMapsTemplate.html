@@ -1,13 +1,13 @@
 <div class="turn-maps-page">
-    <div class="window" ng-class="{ 'turnMapsWideWindow': shouldUseMovementPickerPanelLayout() }">
+    <div class="window" ng-class="{ 'turnMapsWideWindow': shouldShowMovementXPickerPanel() }">
         <!-- Map and controls -->
         <div class="detail turnMapsMainDetail">
 
             <div class="map-toolbar-row">
                 <span class="map-control-item">
                     <label class="control-label-sm">Mode</label>
-                    <select ng-class="{ 'map-mode-movement-highlight': selectedDisplayOption && (selectedDisplayOption.name === 'Movement' || selectedDisplayOption.name === 'Movement X') }"
-                            ng-options="(do.name === 'ProductionSite' ? 'Prod.Site' : do.name) for do in displayOptions"
+                    <select ng-class="{ 'map-mode-movement-highlight': selectedDisplayOption && selectedDisplayOption.name === 'Movement' }"
+                            ng-options="((do.name === 'ProductionSite') ? 'Prod.Site' : ((do.name === 'Inc. Pop. Density') ? 'Inc. Pop. Density' : do.name)) for do in displayOptions"
                             ng-model="selectedDisplayOption"
                             ng-change="changeDisplayOption()">
                         <option value="">-- select --</option>
@@ -17,7 +17,7 @@
                     <label class="control-label-sm">Map</label>
                     <select ng-options="map.mapName for map in mapChoice" ng-model="selectedMapChoice"></select>
                 </span>
-                <span class="map-control-item">
+                <span class="map-control-item" ng-if="false">
                     <label class="control-label-sm">State</label>
                     <select ng-options="(st.stateName + ' (' + st.state + ')') for st in stateList"
                             ng-model="selectedState"
@@ -42,7 +42,7 @@
                 </span>
             </div>
 
-            <div class="map-orders-row" ng-if="!isProductionSiteMode() && !isIntelligenceMode() && currentMovementOrderRow">
+            <div class="map-orders-row" ng-if="!isProductionSiteMode() && !isIntelligenceMode() && !isPopulationDensityMode() && currentMovementOrderRow">
                 <span class="map-orders-group map-orders-group-order">
                     <button type="button" class="btn btn-default btn-xs map-orders-nav-btn" ng-click="navigateCurrentOrder(-1)">&lt;</button>
                     <button type="button" class="btn btn-default btn-xs map-orders-order-picker-btn" ng-click="openAllOrdersModal()">Order #{{(getCurrentOrderIndexForMode('movement') || 0) + 1}}</button>
@@ -126,6 +126,49 @@
                 <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(1)">&gt;</button>
             </div>
 
+            <div class="map-orders-row" ng-if="isPopulationDensityMode() && currentPopulationDensityOrderRow">
+                <span class="map-orders-label">Inc. Pop. Density</span>
+                <span class="map-orders-index">#{{(getCurrentOrderIndexForMode('populationDensity') || 0) + 1}}</span>
+
+                <label>No</label>
+                <select class="map-order-input map-order-input-md"
+                        ng-model="populationDensityOrderPickerIndex"
+                        ng-change="pickPopulationDensityOrderByIndex()"
+                        ng-options="$index as (row.orderNo || ($index + 1)) for row in tsIncreasePopulationDensityList track by $index">
+                </select>
+
+                <label>X</label>
+                <span class="map-order-value map-order-value-sm">{{currentPopulationDensityOrderRow.x || '-'}}</span>
+
+                <label>Y</label>
+                <span class="map-order-value map-order-value-sm">{{currentPopulationDensityOrderRow.y || '-'}}</span>
+
+                <label>Citizens</label>
+                <span class="map-order-value map-order-value-sm">{{getPopulationDensityOrderCost(currentPopulationDensityOrderRow).citizens | number}}</span>
+
+                <label>Wood</label>
+                <span class="map-order-value map-order-value-sm">{{getPopulationDensityOrderCost(currentPopulationDensityOrderRow).wood | number}}</span>
+
+                <label>Stone</label>
+                <span class="map-order-value map-order-value-sm">{{getPopulationDensityOrderCost(currentPopulationDensityOrderRow).stone | number}}</span>
+
+                <label>Total C/W/S</label>
+                <span class="map-order-value map-order-value-lg">
+                    {{getPopulationDensityTotals().citizens | number}} /
+                    {{getPopulationDensityTotals().wood | number}} /
+                    {{getPopulationDensityTotals().stone | number}}
+                </span>
+
+                <span class="map-order-warning" ng-if="getPopulationDensityWarningSummaryText()">
+                    {{getPopulationDensityWarningSummaryText()}}
+                </span>
+
+                <button type="button" class="btn btn-danger btn-xs" ng-click="clearCurrentPopulationDensityOrder()">Clear</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="openAllOrdersModal()">Show All</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(-1)">&lt;</button>
+                <button type="button" class="btn btn-default btn-xs" ng-click="navigateCurrentOrder(1)">&gt;</button>
+            </div>
+
             <!-- Map sliders and grid -->
             <div class="map-panel-area">
                 <div class="map-grid-row">
@@ -142,7 +185,7 @@
                                         ng-class="defineCoordClass(col.terrain, col.state, col.population, col.productionSite, col.owner, col.bonus, col.displayField, col.units, col.x, col.y, col.routeCandidate, col.jumpOffText)"
                                         ng-style="isIntelligenceMode() ? getIntelligenceCellStyle(col) : {}">
                                         <div ng-show="col.y>0 && col.x>0">
-                                            {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? col.population : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? getMapProductionSiteText(col) : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
+                                            {{selectedMapOptions.indexOf('State') > -1 ? col.state : ''}}{{selectedMapOptions.indexOf('Population') > -1 ? getMapPopulationText(col) : ''}}{{selectedMapOptions.indexOf('ProductionSite') > -1 ? getMapProductionSiteText(col) : ''}}{{selectedMapOptions.indexOf('Owner') > -1 ? col.owner : ''}}{{selectedMapOptions.indexOf('Terrain') > -1 ? col.terrain : ''}}{{selectedMapOptions.indexOf('Bonus') > -1 ? col.bonus : ''}}
                                         </div>
                                         <label class="turnMapBorder" ng-show="col.y==0 && col.x>0">{{col.x}}</label>
                                         <label class="turnMapBorder" ng-show="col.x==0 && col.y>0">{{col.y}}</label>
@@ -174,32 +217,11 @@
 
         </div>
 
-        <aside class="turnMapsPickerPane" ng-if="!isIntelligenceMode() && shouldUseMovementPickerPanelLayout()">
-            <div class="turnMapsPickerPaneEmpty" ng-if="!isMovementXMode() && !shouldShowMovementPickerPanel()">
-                <h4>Movement Picker</h4>
-                <p class="text-muted">Movement picker is closed.</p>
-                <button type="button" class="btn btn-default btn-sm" ng-click="openMovementPickerModal()">Open Picker</button>
-            </div>
-
-            <div ng-if="!isMovementXMode() && shouldShowMovementPickerPanel()">
+        <aside class="turnMapsPickerPane" ng-if="shouldShowMovementXPickerPanel()">
+            <div class="turnMapsMovementXPane">
                 <div class="landUnitsModalHeader turnMapsPaneHeader">
                     <div>
-                        <h3>Movement Picker (Fed/Fleet)</h3>
-                        <div class="landUnitsModalSubtitle">Fed/Fleet pick enabled. Item and Fed/Fleet chips are selectable.</div>
-                    </div>
-                    <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
-                </div>
-                <div class="landUnitsModalBody turnMapsPaneBody">
-                    <div class="table-responsive mapOrdersModalBody">
-                        <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="turnMapsMovementXPane" ng-if="shouldShowMovementXPickerPanel()">
-                <div class="landUnitsModalHeader turnMapsPaneHeader">
-                    <div>
-                        <h3>Movement X</h3>
+                        <h3>Movement</h3>
                         <div class="landUnitsModalSubtitle">Select an army unit, ship, federation, or fleet to move.</div>
                     </div>
                     <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
@@ -245,7 +267,7 @@
     <div class="landUnitsModal mapOrdersModal" ng-show="!isIntelligenceMode() && orderUi.allOrdersModal.isOpen">
         <div class="landUnitsModalHeader">
             <div>
-                <h3>All {{orderUi.allOrdersModal.mode === 'production' ? 'Production' : 'Movement'}} Orders</h3>
+                <h3>All {{orderUi.allOrdersModal.mode === 'production' ? 'Production' : (orderUi.allOrdersModal.mode === 'populationDensity' ? 'Inc. Pop. Density' : 'Movement')}} Orders</h3>
                 <div class="landUnitsModalSubtitle">Select order slot to show in single-order line.</div>
             </div>
             <button type="button" class="close" ng-click="closeAllOrdersModal()"><span>&times;</span></button>
@@ -272,22 +294,6 @@
         </div>
     </div>
 
-    <div class="landUnitsModalBackdrop" ng-show="!isIntelligenceMode() && shouldShowMovementPickerModal() && !isMovementXMode()" ng-click="closeMovementPickerModal()"></div>
-    <div class="landUnitsModal mapOrdersMovementPickerModal" ng-show="!isIntelligenceMode() && shouldShowMovementPickerModal() && !isMovementXMode()">
-        <div class="landUnitsModalHeader">
-            <div>
-                <h3>Movement Picker (Fed/Fleet)</h3>
-                <div class="landUnitsModalSubtitle">Fed/Fleet pick enabled. Item and Fed/Fleet chips are selectable.</div>
-            </div>
-            <button type="button" class="close" ng-click="closeMovementPickerModal()"><span>&times;</span></button>
-        </div>
-        <div class="landUnitsModalBody">
-            <div class="table-responsive mapOrdersModalBody">
-                <div ng-include="'/Templates/turnMapsMovementPickerTableTemplate.html'"></div>
-            </div>
-        </div>
-    </div>
-
     <div
         class="landUnitsModalBackdrop"
         ng-if="!isIntelligenceMode() && shouldShowMovementXPickerModal()"
@@ -298,7 +304,7 @@
         ng-if="!isIntelligenceMode() && shouldShowMovementXPickerModal()">
         <div class="landUnitsModalHeader">
             <div>
-                <h3>Movement X</h3>
+                <h3>Movement</h3>
                 <div class="landUnitsModalSubtitle">Select an army unit, ship, federation, or fleet to move.</div>
             </div>
             <button type="button" class="close" ng-click="closeMovementPickerModal()">

@@ -4,18 +4,24 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
     return {
         attach: function ($scope) {
     $scope.getOrderListForMode = function (mode) {
-        return mode === 'production'
-            ? ($scope.tsBuildProductionSitesList || [])
-            : ($scope.tsMovementList || []);
+        if (mode === 'production') return $scope.tsBuildProductionSitesList || [];
+        if (mode === 'populationDensity') return $scope.tsIncreasePopulationDensityList || [];
+        return $scope.tsMovementList || [];
     };
 
     $scope.getCurrentOrderIndexForMode = function (mode) {
-        return mode === 'production' ? $scope.orderUi.productionIndex : $scope.orderUi.movementIndex;
+        if (mode === 'production') return $scope.orderUi.productionIndex;
+        if (mode === 'populationDensity') return $scope.orderUi.populationDensityIndex;
+        return $scope.orderUi.movementIndex;
     };
 
     $scope.setCurrentOrderIndexForMode = function (mode, index) {
         if (mode === 'production') {
             $scope.orderUi.productionIndex = index;
+            return;
+        }
+        if (mode === 'populationDensity') {
+            $scope.orderUi.populationDensityIndex = index;
             return;
         }
 
@@ -55,14 +61,25 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         return list[index] || null;
     };
 
+    $scope.getCurrentPopulationDensityOrderRow = function () {
+        var list = $scope.getOrderListForMode('populationDensity');
+        if (!list.length) return null;
+
+        var index = $scope.ensureCurrentOrderIndexForMode('populationDensity');
+        return list[index] || null;
+    };
+
     $scope.getCurrentOrderMode = function () {
-        return $scope.isProductionSiteMode() ? 'production' : 'movement';
+        if ($scope.isProductionSiteMode()) return 'production';
+        if ($scope.isPopulationDensityMode && $scope.isPopulationDensityMode()) return 'populationDensity';
+        return 'movement';
     };
 
     $scope.getCurrentOrderRow = function () {
-        return $scope.getCurrentOrderMode() === 'production'
-            ? $scope.getCurrentProductionOrderRow()
-            : $scope.getCurrentMovementOrderRow();
+        var mode = $scope.getCurrentOrderMode();
+        if (mode === 'production') return $scope.getCurrentProductionOrderRow();
+        if (mode === 'populationDensity') return $scope.getCurrentPopulationDensityOrderRow();
+        return $scope.getCurrentMovementOrderRow();
     };
 
     $scope.syncMovementOrderIndexToRow = function (row) {
@@ -80,6 +97,15 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         var rowIndex = $scope.tsBuildProductionSitesList.indexOf(row);
         if (rowIndex >= 0) {
             $scope.orderUi.productionIndex = rowIndex;
+        }
+    };
+
+    $scope.syncPopulationDensityOrderIndexToRow = function (row) {
+        if (!row || !$scope.tsIncreasePopulationDensityList) return;
+
+        var rowIndex = $scope.tsIncreasePopulationDensityList.indexOf(row);
+        if (rowIndex >= 0) {
+            $scope.orderUi.populationDensityIndex = rowIndex;
         }
     };
 
@@ -113,9 +139,21 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         $scope.selectProductionSiteRow(row || null);
     };
 
+    $scope.focusCurrentPopulationDensityOrder = function () {
+        var row = $scope.getCurrentPopulationDensityOrderRow();
+        $scope.currentPopulationDensityOrderRow = row || null;
+        $scope.populationDensityOrderPickerIndex = $scope.getCurrentOrderIndexForMode('populationDensity');
+        $scope.selectPopulationDensityRow(row || null);
+    };
+
     $scope.focusCurrentOrder = function () {
-        if ($scope.getCurrentOrderMode() === 'production') {
+        var mode = $scope.getCurrentOrderMode();
+        if (mode === 'production') {
             $scope.focusCurrentProductionOrder();
+            return;
+        }
+        if (mode === 'populationDensity') {
+            $scope.focusCurrentPopulationDensityOrder();
             return;
         }
 
@@ -144,6 +182,10 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
 
         if (mode === 'production') {
             $scope.focusCurrentProductionOrder();
+            return;
+        }
+        if (mode === 'populationDensity') {
+            $scope.focusCurrentPopulationDensityOrder();
             return;
         }
 
@@ -248,7 +290,7 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
             $scope.orderUi.movementInitialAutoSelectionDone = true;
         }
 
-        if (hasActionableSelection && !$scope.isProductionSiteMode()) {
+        if (hasActionableSelection && !$scope.isProductionSiteMode() && !($scope.isPopulationDensityMode && $scope.isPopulationDensityMode())) {
             $scope.focusCurrentMovementOrder();
         }
     };
@@ -259,6 +301,10 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
 
     $scope.pickProductionOrderByIndex = function () {
         $scope.selectOrderByIndex('production', $scope.productionOrderPickerIndex);
+    };
+
+    $scope.pickPopulationDensityOrderByIndex = function () {
+        $scope.selectOrderByIndex('populationDensity', $scope.populationDensityOrderPickerIndex);
     };
 
     $scope.getOrderSummaryText = function (mode, row) {
@@ -275,6 +321,17 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
             if (desc) parts.push(desc);
 
             return parts.join(' | ');
+        }
+
+        if (mode === 'populationDensity') {
+            var hasPopulationDensityData = row.x != null && row.x !== '' && row.y != null && row.y !== '';
+            if (!hasPopulationDensityData) return '(empty)';
+
+            var cost = $scope.getPopulationDensityOrderCost(row);
+            return 'X/Y ' + row.x + '/' + row.y
+                + ' | C ' + cost.citizens
+                + ' | W ' + cost.wood
+                + ' | S ' + cost.stone;
         }
 
         if (!$scope.hasMovementItemNo(row)) return '(empty)';
@@ -314,7 +371,7 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
     };
 
     $scope.openMovementPickerModal = function (preserveCoordinateFilter) {
-        if ($scope.isProductionSiteMode()) return;
+        if ($scope.isProductionSiteMode() || !$scope.isMovementXMode()) return;
 
         if ($scope.isMovementXMode() && !preserveCoordinateFilter) {
             $scope.movementXPickerPositionFilter = null;
@@ -476,28 +533,6 @@ austerlitzModule.factory('turnMapsOrderNavigationFactory', function () {
         }
         $scope.focusCurrentMovementOrder();
         $scope.queueAutoSaveTsGrid('Movement');
-    };
-
-    $scope.selectMovementOrderItemFromPickerRow = function (itemRow) {
-        if (!itemRow) return;
-        if (itemRow.isSelectable === false) {
-            if (itemRow.disableReasonTooltip) {
-                $scope.selectedCoordinateDetails = itemRow.disableReasonTooltip;
-            }
-            return;
-        }
-
-        if ($scope.isItemRowAlreadyInMovementGrid(itemRow)) {
-            $scope.selectMovementOrderItem(itemRow, 'item');
-            return;
-        }
-
-        if ($scope.isFederationRowAlreadyInMovementGrid(itemRow)) {
-            $scope.selectMovementOrderItem(itemRow, 'fed');
-            return;
-        }
-
-        $scope.selectMovementOrderItem(itemRow, 'item');
     };
 
         }

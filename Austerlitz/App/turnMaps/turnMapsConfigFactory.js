@@ -17,9 +17,9 @@ austerlitzModule.factory('turnMapsConfigFactory', function () {
         { name: 'Terrain', state: false, population: false, productionSite: false, owner: false, terrain: true, bonus: true },
         { name: 'State', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
         { name: 'ProductionSite', state: false, population: false, productionSite: true, owner: false, terrain: true, bonus: true },
+        { name: 'Inc. Pop. Density', state: false, population: true, productionSite: true, owner: false, terrain: true, bonus: false },
         { name: 'Intelligence', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
-        { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false },
-        { name: 'Movement X', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
+        { name: 'Movement', state: true, population: true, productionSite: true, owner: false, terrain: false, bonus: false }
     ];
     var wideScreenMinViewportWidth = 1500;
 

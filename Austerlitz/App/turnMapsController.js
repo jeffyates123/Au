@@ -38,6 +38,7 @@ austerlitzModule.controller('turnMapsController', function (
     turnMapsSharedFactory,
     turnMapsMovementFactory,
     turnMapsProductionSitesFactory,
+    turnMapsPopulationDensityFactory,
     turnMapsSpyLookupFactory,
     turnMapsOrderNavigationFactory,
     turnMapsMapSelectionFactory) {
@@ -48,6 +49,7 @@ austerlitzModule.controller('turnMapsController', function (
     angular.extend($scope, turnMapsConfigFactory.createInitialState());
 
     turnMapsProductionSitesFactory.attach($scope);
+    turnMapsPopulationDensityFactory.attach($scope);
     turnMapsSharedFactory.attach($scope);
     turnMapsMovementFactory.attach($scope);
     turnMapsSpyLookupFactory.attach($scope);
@@ -57,6 +59,7 @@ austerlitzModule.controller('turnMapsController', function (
     $scope.orderUi = {
         movementIndex: 0,
         productionIndex: 0,
+        populationDensityIndex: 0,
         movementInitialAutoSelectionDone: false,
         suppressCoordinatePickerOpenUntil: 0,
         movementPickerDisplayMode: 'modal',
@@ -115,15 +118,13 @@ austerlitzModule.controller('turnMapsController', function (
         }
 
         var shouldUsePanel = $scope.isWideScreenEnabled()
+            && $scope.isMovementXMode()
             && !$scope.isProductionSiteMode()
             && $scope.getViewportWidth() >= $scope.wideScreenMinViewportWidth;
 
         $scope.orderUi.movementPickerDisplayMode = shouldUsePanel ? 'panel' : 'modal';
 
         if ($scope.orderUi.movementPickerDisplayMode === 'panel') {
-            if (!$scope.isMovementXMode()) {
-                $scope.orderUi.movementPickerModal.isOpen = true;
-            }
             return;
         }
 
@@ -134,22 +135,6 @@ austerlitzModule.controller('turnMapsController', function (
 
     $scope.isMovementPickerPanelMode = function () {
         return $scope.orderUi.movementPickerDisplayMode === 'panel';
-    };
-
-    $scope.shouldUseMovementPickerPanelLayout = function () {
-        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
-        return $scope.isMovementPickerPanelMode()
-            && (!$scope.isMovementXMode() || $scope.orderUi.movementPickerModal.isOpen);
-    };
-
-    $scope.shouldShowMovementPickerModal = function () {
-        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
-        return $scope.orderUi.movementPickerModal.isOpen && !$scope.isMovementPickerPanelMode();
-    };
-
-    $scope.shouldShowMovementPickerPanel = function () {
-        if ($scope.isIntelligenceMode && $scope.isIntelligenceMode()) return false;
-        return $scope.orderUi.movementPickerModal.isOpen && $scope.isMovementPickerPanelMode();
     };
 
     $scope.shouldShowMovementXPickerModal = function () {
@@ -393,12 +378,14 @@ austerlitzModule.controller('turnMapsController', function (
             var records = null;
             if (tsType === 'Movement') records = $scope.tsMovementList;
             if (tsType === 'BuildProductionSites') records = $scope.tsBuildProductionSitesList;
+            if (tsType === 'IncreasePopulationDensity') records = $scope.tsIncreasePopulationDensityList;
             if (tsType === 'TransferGoods') records = $scope.tsTransferGoodsList;
 
             if (!records) return;
 
             turnSheetFactory.postTSRecords(records, tsType).then(function (savedRows) {
                 if (tsType === 'BuildProductionSites') $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(savedRows);
+                if (tsType === 'IncreasePopulationDensity') $scope.tsIncreasePopulationDensityList = $scope.normalizeIncreasePopulationDensityRows(savedRows);
                 if (tsType === 'TransferGoods') {
                     $scope.tsTransferGoodsList = $scope.normalizeTransferGoodsRows(savedRows);
                     $scope.refreshTransferGoodsCostRows();
@@ -408,31 +395,6 @@ austerlitzModule.controller('turnMapsController', function (
         }, 100);
     };
 
-
-    $scope.refreshItemGridRows = function () {
-        if (!$scope.filteredMovementItemsForMap) {
-            $scope.itemGridRows = [];
-            return;
-        }
-
-        var sphereList = $scope.filteredMovementItemsForMap;
-        if ($scope.selectedItemGridSphere) {
-            sphereList = sphereList.filter(function (item) {
-                return $scope.getMovementPickerSphereFromCoordinates(item.x, item.y) === $scope.selectedItemGridSphere;
-            });
-        }
-
-        if ($scope.selectedItemGridCoordinate) {
-            var selectedCoordItems = sphereList.filter(function (item) {
-                return item.x == $scope.selectedItemGridCoordinate.x && item.y == $scope.selectedItemGridCoordinate.y;
-            });
-
-            $scope.itemGridRows = selectedCoordItems.length > 0 ? selectedCoordItems : sphereList;
-            return;
-        }
-
-        $scope.itemGridRows = sphereList;
-    };
 
     $scope.handleCurrentMovementFieldChange = function () {
         var currentRow = $scope.currentMovementOrderRow || $scope.getCurrentMovementOrderRow();
@@ -471,39 +433,11 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.removeProductionSiteRow({ entity: currentRow });
     };
 
-    $scope.isItemAlreadyInMovementGrid = function (itemNo) {
-        if (!itemNo || !$scope.tsMovementList) return false;
+    $scope.clearCurrentPopulationDensityOrder = function () {
+        var currentRow = $scope.currentPopulationDensityOrderRow || $scope.getCurrentPopulationDensityOrderRow();
+        if (!currentRow) return;
 
-        return $scope.tsMovementList.some(function (movementRow) {
-            return movementRow.itemNo == itemNo;
-        });
-    };
-
-    $scope.isFederationAlreadyInMovementGrid = function (federationNo) {
-        if (federationNo == null || federationNo === '' || !$scope.tsMovementList) return false;
-
-        return $scope.tsMovementList.some(function (movementRow) {
-            if (!$scope.hasMovementItemNo(movementRow)) return false;
-
-            return movementRow.itemNo == federationNo;
-        });
-    };
-
-    $scope.isItemRowAlreadyInMovementGrid = function (itemRow) {
-        if (!itemRow) return false;
-        var itemNo = itemRow.originalItemNo != null ? itemRow.originalItemNo : itemRow.itemNo;
-        return $scope.isItemAlreadyInMovementGrid(itemNo);
-    };
-
-    $scope.isFederationRowAlreadyInMovementGrid = function (itemRow) {
-        if (!itemRow || itemRow.fed == null || itemRow.fed === '') return false;
-        return $scope.isFederationAlreadyInMovementGrid(itemRow.fed);
-    };
-
-    $scope.isItemOrFederationAlreadyInMovementGrid = function (itemRow) {
-        if (!itemRow) return false;
-
-        return $scope.isItemRowAlreadyInMovementGrid(itemRow) || $scope.isFederationRowAlreadyInMovementGrid(itemRow);
+        $scope.removePopulationDensityRow({ entity: currentRow });
     };
 
     $scope.saveTSMovement = function () {
@@ -529,9 +463,7 @@ austerlitzModule.controller('turnMapsController', function (
     $scope.$watch('selectedMapChoice', function () {
         $scope.refreshFilteredMovementItemsForMap();
         $scope.tryApplyInitialMovementOrderSelection();
-        if (!$scope.isProductionSiteMode()) {
-            $scope.focusCurrentMovementOrder();
-        }
+        $scope.focusCurrentOrder();
     }, true);
 
     $scope.$watch('masterData.turnsList', function () {
@@ -563,7 +495,7 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.ensureCurrentOrderIndexForMode('movement');
         $scope.refreshMovementGridTypeValues();
         $scope.tryApplyInitialMovementOrderSelection();
-        if (!$scope.isProductionSiteMode()) {
+        if (!$scope.isProductionSiteMode() && !($scope.isPopulationDensityMode && $scope.isPopulationDensityMode())) {
             $scope.focusCurrentMovementOrder();
         }
     }, true);
@@ -575,9 +507,21 @@ austerlitzModule.controller('turnMapsController', function (
         }
     }, true);
 
+    $scope.$watch('tsIncreasePopulationDensityList', function () {
+        $scope.ensureCurrentOrderIndexForMode('populationDensity');
+        if ($scope.isPopulationDensityMode()) {
+            $scope.focusCurrentPopulationDensityOrder();
+        }
+    }, true);
+
     $scope.$watch('selectedProductionSiteRow', function (row) {
         if (!row) return;
         $scope.syncProductionOrderIndexToRow(row);
+    });
+
+    $scope.$watch('selectedPopulationDensityRow', function (row) {
+        if (!row) return;
+        $scope.syncPopulationDensityOrderIndexToRow(row);
     });
 
     $scope.$on('userSettings:wideScreenChanged', function (event, payload) {
@@ -631,6 +575,12 @@ austerlitzModule.controller('turnMapsController', function (
         $scope.tsBuildProductionSitesList = $scope.normalizeBuildProductionSiteRows(tsBuildProductionSitesList);
         $scope.ensureCurrentOrderIndexForMode('production');
         $scope.focusCurrentProductionOrder();
+    });
+
+    turnSheetFactory.getTSIncreasePopulationDensity($scope.masterData.turnId).then(function (tsIncreasePopulationDensityList) {
+        $scope.tsIncreasePopulationDensityList = $scope.normalizeIncreasePopulationDensityRows(tsIncreasePopulationDensityList);
+        $scope.ensureCurrentOrderIndexForMode('populationDensity');
+        $scope.focusCurrentPopulationDensityOrder();
     });
 
     turnSheetFactory.getTSFormFederations($scope.masterData.turnId).then(function (rows) {

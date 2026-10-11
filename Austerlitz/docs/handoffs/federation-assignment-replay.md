@@ -16,7 +16,7 @@ Replay derives the display assignment from current report data plus turnsheet or
 
 ## Verify
 
-Create/change a TS14 assignment, reload the turn, confirm the right Army/Navy display, and check that Movement X marks only the matching federation or fleet.
+Create/change a TS14 assignment, reload the turn, confirm the right Army/Navy display, and check that Movement marks only the matching federation or fleet.
 
 ## Related handoffs
 

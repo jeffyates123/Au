@@ -8,4 +8,4 @@ alwaysApply: false
 
 Before changing Army or Intelligence behavior, read `docs/handoffs/army.md`.
 
-Read `docs/handoffs/boarding-ts20.md` for TS20 or boarding changes, `docs/handoffs/managed-ts01-transfers.md` for setup costs, and `docs/handoffs/federation-assignment-replay.md` for TS14 replay. Preserve Existing Army's standalone and Movement X modes.
+Read `docs/handoffs/boarding-ts20.md` for TS20 or boarding changes, `docs/handoffs/managed-ts01-transfers.md` for setup costs, and `docs/handoffs/federation-assignment-replay.md` for TS14 replay. Preserve Existing Army's standalone and Movement modes.

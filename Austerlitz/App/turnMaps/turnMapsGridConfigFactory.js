@@ -52,18 +52,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 rowTemplate: '<div ng-click="movementClickRow(row)" ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
             };
 
-            $scope.itemGridOptions = {
-                data: 'itemGridRows',
-                headerRowHeight: 30,
-                rowHeight: 25,
-                columnDefs: 'itemColumnDefsMap',
-                enableCellSelection: false,
-                enableRowSelection: true,
-                enableCellEdit: false,
-                multiSelect: false,
-                rowTemplate: '<div ng-click="itemGridClickRow(row, col)" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell {{col.cellClass}} {{isItemAlreadyInMovementGrid(row.entity.itemNo) ? \"itemGridRowAlreadyAdded\" : \"\"}}"><div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }">&nbsp;</div><div ng-cell></div></div>'
-            };
-
             $scope.productionSiteGridOptions = {
                 data: 'tsBuildProductionSitesList',
                 headerRowHeight: 30,
@@ -128,15 +116,6 @@ austerlitzModule.factory('turnMapsGridConfigFactory', function () {
                 { field: 'direction3', displayName: 'D3', width: '32px', cellClass: 'grid-center-align' },
                 { field: 'distance3', displayName: 'Ds3', width: '35px', cellClass: 'grid-center-align' },
                 { field: 'removeRow', displayName: '', width: '28px', enableCellEdit: false, sortable: false, deleteAllType: 'Movement', headerCellTemplate: deleteAllHeaderTemplate, cellTemplate: '<div class="ngCellText grid-center-align"><span class="glyphicon glyphicon-minus-sign" style="cursor:pointer;color:red;" ng-show="hasMovementItemNo(row.entity)" ng-click="removeMovementRow(row)"></span></div>' }
-            ];
-
-            $scope.itemColumnDefsMap = [
-                { field: 'itemNo', displayName: 'Item No', width: '60px', cellClass: 'grid-center-align' },
-                { field: 'fed', displayName: 'Fed', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'itemTypeName', displayName: 'Type', width: '40px', cellClass: 'grid-center-align' },
-                { field: 'mp', displayName: 'MP', width: '30px', cellClass: 'grid-center-align' },
-                { field: 'xy', displayName: 'X/Y', width: '50px', cellClass: 'grid-center-align' },
-                { field: 'description', displayName: 'Description', cellClass: 'grid-left-align' }
             ];
 
             $scope.productionSiteColumnDefsMap = [

@@ -247,7 +247,6 @@ austerlitzModule.factory('turnMapsMovementFactory', function (
             $scope.refreshFilteredMovementItemsForMap = function () {
                 if (!$scope.masterData || !$scope.masterData.turnReport || !$scope.masterData.turnReport.movementItemList) {
                     $scope.filteredMovementItemsForMap = [];
-                    $scope.itemGridRows = [];
                     return;
                 }
 
@@ -271,8 +270,6 @@ austerlitzModule.factory('turnMapsMovementFactory', function (
                     resolveMovementPickerDetail: $scope.resolveMovementPickerDetail,
                     hasMovementPickerBoardingStatus: $scope.hasMovementPickerBoardingStatus
                 });
-
-                $scope.refreshItemGridRows();
             };
 
             $scope.hasMovementItemNo = function (movementRow) {

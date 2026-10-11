@@ -19,15 +19,15 @@ Route `/Section/Naval` has Set-Up Navy and Existing Navy tabs. It handles ship b
 - TS14: fleets/federations.
 - TS22: renames.
 
-Fleet numbers are 11–59. Existing Navy is also used by Turn Maps Movement X, so preserve its standalone and modal modes.
+Fleet numbers are 11–59. Existing Navy is also used by Turn Maps Movement, so preserve its standalone and modal modes.
 
 ## Verify
 
-Create or replay a ship build/repair, check its TS01 companion rows, reload Existing Navy, and open the Movement X picker if the directive changed.
+Create or replay a ship build/repair, check its TS01 companion rows, reload Existing Navy, and open the Movement picker if the directive changed.
 
 ## Related handoffs
 
 - [Managed TS01 transfers](managed-ts01-transfers.md)
 - [Federation assignment replay](federation-assignment-replay.md)
 - [Existing Navy](../../existing-navy-handoff.md)
-- [Movement X](../../movement-x-handoff.md)
+- [Movement](../../movement-x-handoff.md)

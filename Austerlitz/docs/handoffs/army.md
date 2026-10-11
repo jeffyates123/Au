@@ -4,7 +4,7 @@
 
 Route `/Military/Brigades` has Set-Up Brigades, Existing Army, and Intelligence tabs. It combines report data with editable brigade, federation, training, and boarding orders.
 
-Existing Army sections, top to bottom: Federation Summary (starts collapsed), Commanders (first 10, starts collapsed), Brigades, Spies, Baggage Trains. Baggage trains are report rows on this tab. They are selectable in Movement X, and they have no boarding or federation actions here.
+Existing Army sections, top to bottom: Federation Summary (starts collapsed), Commanders (first 10, starts collapsed), Brigades, Spies, Baggage Trains. Baggage trains are report rows on this tab. They are selectable in Movement, and they have no boarding or federation actions here.
 
 ## Main files
 
@@ -22,7 +22,7 @@ Existing Army sections, top to bottom: Federation Summary (starts collapsed), Co
 - TS05/TS06: headcount and experience.
 - TS07/TS08: exchange and merge battalions.
 - TS14: federations.
-- TS20: boarding for brigades, commanders, and spies. Spy boarding uses its own modal. On Existing Army and Movement X, Board lists every brigade at the selected coordinate so each can be boarded or unloaded on its own. A brigade may board past available fleet capacity; the modal warns and still saves.
+- TS20: boarding for brigades, commanders, and spies. Spy boarding uses its own modal. On Existing Army and Movement, Board lists every brigade at the selected coordinate so each can be boarded or unloaded on its own. A brigade may board past available fleet capacity; the modal warns and still saves.
 - TS22: renames.
 
 The brigade `...` menu is not the order surface. Only Form Federation in that menu is wired. The other labels alert that they are not implemented. Live actions are the row controls and the battalion lozenge menu.
@@ -30,18 +30,18 @@ The brigade `...` menu is not the order surface. Only Form Federation in that me
 Existing Army is reusable. Preserve these hosts:
 
 - Army tab inline view (`master-data` only)
-- Turn Maps Movement X modal/pane with `modal-mode` and `movement-selection="true"` (the map “army modal”)
+- Turn Maps Movement modal/pane with `modal-mode` and `movement-selection="true"` (the map “army modal”)
 
-Do not add screen-only assumptions to the directive. Map Movement X behavior lives in [Movement X](../../movement-x-handoff.md).
+Do not add screen-only assumptions to the directive. Map Movement behavior lives in [Movement](../../movement-x-handoff.md).
 
 ## Verify
 
-Create an order in each changed action, reload the turn, and confirm replay on Existing Army. For directive changes, also open Turn Maps Movement X in both modal and wide pane layouts. Confirm Federation Summary **Load Cap** is non-zero for federations with brigades once the army list has loaded. Weights come from `armyListByShortName`. A missing troop type still counts as infantry weight.
+Create an order in each changed action, reload the turn, and confirm replay on Existing Army. For directive changes, also open Turn Maps Movement in both modal and wide pane layouts. Confirm Federation Summary **Load Cap** is non-zero for federations with brigades once the army list has loaded. Weights come from `armyListByShortName`. A missing troop type still counts as infantry weight.
 
 ## Related handoffs
 
 - [Boarding](boarding-ts20.md)
 - [Managed TS01 transfers](managed-ts01-transfers.md)
 - [Federation assignment replay](federation-assignment-replay.md)
-- [Movement X](../../movement-x-handoff.md)
+- [Movement](../../movement-x-handoff.md)
 - [Turn maps](turn-maps.md)
