@@ -804,13 +804,13 @@ austerlitzModule.controller(
             return;
           }
 
-          var ownerState = normalizeStateCode(coord.owner != null ? coord.owner : coord.Owner);
-          if (ownerState !== homeState) {
+          var controllerState = normalizeStateCode(coord.state != null ? coord.state : coord.State);
+          if (controllerState !== homeState) {
             return;
           }
 
-          var regionState = normalizeStateCode(coord.state != null ? coord.state : coord.State);
-          var taxRate = regionState === homeState ? homeTaxRate : foreignTaxRate;
+          var homeOwner = normalizeStateCode(coord.owner != null ? coord.owner : coord.Owner);
+          var taxRate = homeOwner === homeState ? homeTaxRate : foreignTaxRate;
           taxes += getCitizensForCoordinate(coord) * taxRate;
         });
       });

@@ -352,17 +352,18 @@ austerlitzModule.controller(
         }
 
         if (inBounds(x, y, sphereByTab.europe)) {
-          var ownerState = normalizeStateCode(coord.owner != null ? coord.owner : coord.Owner);
-          var ownerCountry = countryLookup[ownerState];
-          if (!ownerCountry) {
+          // Turn-map state is who holds the province. Political owner is its home country.
+          var controllerState = normalizeStateCode(coord.state != null ? coord.state : coord.State);
+          var controllerCountry = countryLookup[controllerState];
+          if (!controllerCountry) {
             return;
           }
 
-          var regionState = normalizeStateCode(coord.state != null ? coord.state : coord.State);
-          if (regionState === ownerState) {
-            totals.homeEurope[ownerState] += citizens * ownerCountry.taxRate;
+          var homeOwner = normalizeStateCode(coord.owner != null ? coord.owner : coord.Owner);
+          if (homeOwner === controllerState) {
+            totals.homeEurope[controllerState] += citizens * controllerCountry.taxRate;
           } else {
-            totals.foreignEurope[ownerState] += citizens * foreignEuropeTaxRate;
+            totals.foreignEurope[controllerState] += citizens * foreignEuropeTaxRate;
           }
           return;
         }
