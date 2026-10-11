@@ -10,6 +10,7 @@ austerlitzModule.controller(
     turnSheetFactory,
     tradeBoardingFactory,
     boardingSharedFactory,
+    tradePriceFactory,
   ) {
     var validTradeTabs = {
       baggageTrains: true,
@@ -84,41 +85,6 @@ austerlitzModule.controller(
         totalDirect: null,
         totalSell: null,
         profitLd: null,
-      };
-    }
-
-    function calculateTradeValues(row, rate) {
-      var goodsFactor = Math.max(0, toNumber(row && row.goodsFactor, 0));
-      var qtyC = Math.max(0, toNumber(row && row.stock, 0));
-      var directBuyQty = Math.max(0, Math.round(toNumber(row && row.directBuyQty, 0)));
-      var qty = Math.max(0, Math.round(toNumber(row && row.qty, 0)));
-      var n = Math.max(0, Math.round(toNumber(row && row.n, 0)));
-      var qtyS = qty * n;
-      var netStock = Math.max(0, qtyC - directBuyQty);
-
-      var buyPerUnit = (1600 * goodsFactor * rate) / Math.sqrt(qtyC + 10);
-      var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-      var totalSell = 0;
-
-      if (qty > 0 && n > 0) {
-        for (var i = 0; i < n; i++) {
-          var existingQtyForRound = netStock + i * qty;
-          var sellPerUnit =
-            (1500 * goodsFactor * rate) /
-            (Math.sqrt(existingQtyForRound + 10) + Math.sqrt(qty));
-          totalSell += Math.floor(sellPerUnit * qty);
-        }
-      }
-
-      return {
-        directBuyQty: directBuyQty,
-        qty: qty,
-        n: n,
-        qtyS: qtyS,
-        netStock: netStock,
-        totalDirect: totalDirect,
-        totalSell: totalSell,
-        profitLd: totalSell - totalDirect,
       };
     }
 
@@ -420,7 +386,14 @@ austerlitzModule.controller(
             cityName: city.name,
           };
 
-          var values = calculateTradeValues(replayRow, rate);
+          var values = tradePriceFactory.calculate({
+            goodsFactor: replayRow.goodsFactor,
+            stock: replayRow.stock,
+            directBuyQty: replayRow.directBuyQty,
+            qty: replayRow.qty,
+            n: replayRow.n,
+            rate: rate,
+          });
           replayRow.qtyS = values.qtyS;
           replayRow.netStock = values.netStock;
           replayRow.totalDirect = values.totalDirect;
@@ -867,7 +840,14 @@ austerlitzModule.controller(
 
       var rate = Math.max(0, toNumber($scope.selectedTradingCity.rate, 0));
       ($scope.tradingCalcRows || []).forEach(function (row) {
-        var values = calculateTradeValues(row, rate);
+        var values = tradePriceFactory.calculate({
+          goodsFactor: row.goodsFactor,
+          stock: row.stock,
+          directBuyQty: row.directBuyQty,
+          qty: row.qty,
+          n: row.n,
+          rate: rate,
+        });
         row.qtyS = values.qtyS;
         row.directBuyQty = values.directBuyQty;
         row.qty = values.qty;

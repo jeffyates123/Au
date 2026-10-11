@@ -528,7 +528,9 @@ namespace Austerlitz.Services
                     ItemNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 1, 2),
                     X = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 4, 2),
                     Y = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 7, 2),
-                    Report = lineToProcess.Substring(16, 107)
+                    // Column 15 is the start of the fixed report. Column 16 drops the
+                    // hundreds digit of counts such as 144 Battalions.
+                    Report = lineToProcess.Substring(15, 108)
                 };
 
                 if (lineToProcess.Substring(10, 4) != "----")

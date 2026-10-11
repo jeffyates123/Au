@@ -2,7 +2,7 @@
 
 austerlitzModule.factory(
   "economyTradeFactory",
-  function (economyConfigFactory, economyParseUtilsFactory, economyResourceFactory, economySphereFactory) {
+  function (economyConfigFactory, economyParseUtilsFactory, economyResourceFactory, economySphereFactory, tradePriceFactory) {
     var tradeEstimateGoodsConfig = economyConfigFactory.tradeEstimateGoodsConfig;
     var tradeGoodsIdToKey = economyConfigFactory.tradeGoodsIdToKey;
     var goodsFactorByKey = economyConfigFactory.goodsFactorByKey;
@@ -226,26 +226,18 @@ austerlitzModule.factory(
             0,
           ),
         );
-        var directBuyQty = Math.max(0, item.directBuyQty);
-        var qty = Math.max(0, item.sellQty);
-        var n = Math.max(0, item.sellN);
-        var qtyS = qty * n;
-        var netStock = Math.max(0, cityStock - directBuyQty);
+        var priced = tradePriceFactory.calculate({
+          goodsFactor: goodsFactor,
+          stock: cityStock,
+          directBuyQty: item.directBuyQty,
+          qty: item.sellQty,
+          n: item.sellN,
+          rate: cityRate,
+        });
 
-        var buyPerUnit = (1600 * goodsFactor * cityRate) / Math.sqrt(cityStock + 10);
-        var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-        var totalSell = 0;
-        if (qty > 0 && n > 0) {
-          for (var i = 0; i < n; i++) {
-            var existingQtyForRound = netStock + i * qty;
-            var sellPerUnit = (1500 * goodsFactor * cityRate) / (Math.sqrt(existingQtyForRound + 10) + Math.sqrt(qty));
-            totalSell += Math.floor(sellPerUnit * qty);
-          }
-        }
-
-        if (qtyS > 0 || directBuyQty > 0) {
-          totalDirectSelling += totalSell;
-          totalDirectBuying += totalDirect;
+        if (priced.qtyS > 0 || priced.directBuyQty > 0) {
+          totalDirectSelling += priced.totalSell;
+          totalDirectBuying += priced.totalDirect;
         }
       });
 
@@ -285,18 +277,17 @@ austerlitzModule.factory(
             return;
           }
 
-          var qtyC = Math.max(0, stock);
-          var tradeQty = Math.max(1, Math.round(qtyC * tradeFraction));
-          var directBuyQty = tradeQty;
-          var netStock = Math.max(0, qtyC - directBuyQty);
-          var goodsFactor = Math.max(0, toInt(good.goodsFactor, 0));
-
-          var buyPerUnit = (1600 * goodsFactor * rate) / Math.sqrt(qtyC + 10);
-          var totalDirect = Math.floor(buyPerUnit * directBuyQty);
-          var sellPerUnit = (1500 * goodsFactor * rate) / (Math.sqrt(netStock + 10) + Math.sqrt(tradeQty));
-          var totalSell = Math.floor(sellPerUnit * tradeQty);
-          totalDirectSelling += totalSell;
-          totalDirectBuying += totalDirect;
+          var tradeQty = Math.max(1, Math.round(Math.max(0, stock) * tradeFraction));
+          var priced = tradePriceFactory.calculate({
+            goodsFactor: good.goodsFactor,
+            stock: stock,
+            directBuyQty: tradeQty,
+            qty: tradeQty,
+            n: 1,
+            rate: rate,
+          });
+          totalDirectSelling += priced.totalSell;
+          totalDirectBuying += priced.totalDirect;
         });
       });
 

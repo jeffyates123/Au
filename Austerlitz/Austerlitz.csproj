@@ -290,6 +290,7 @@
     <Content Include="App\intelligenceController.js" />
     <Content Include="App\intelligenceTaxRevenueController.js" />
     <Content Include="App\intelligencePageController.js" />
+    <Content Include="App\trade\tradePriceFactory.js" />
     <Content Include="App\trade\tradeBoardingFactory.js" />
     <Content Include="App\tradeController.js" />
     <Content Include="App\economy\economyConfigFactory.js" />
