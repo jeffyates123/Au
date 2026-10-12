@@ -19,7 +19,7 @@ Route `/Section/Economy` shows warehouse, production-site, and build/maintain in
 
 Warehouses 1–3 correspond to the regional spheres. Economy writes the computed report summary, not turnsheet orders. Build-fund changes notify the navigation banner through the `economyBuildFundsChanged` event.
 
-Trade money estimates call `App/trade/tradePriceFactory.js`. Do not copy that price formula into Economy.
+Trade money estimates call `App/trade/tradePriceFactory.js`. Trade goods ids and fallback factors come from `App/trade/tradeGoodsFactory.js`. Do not copy this trade catalog or price formula into Economy.
 
 `economyTabs` is Europe, Caribbean, and India only. Computed-summary and warehouse refresh loops must use `sphereByTab` only.
 

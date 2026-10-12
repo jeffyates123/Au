@@ -2,10 +2,10 @@
 
 austerlitzModule.factory(
   "economyTradeFactory",
-  function (economyConfigFactory, economyParseUtilsFactory, economyResourceFactory, economySphereFactory, tradePriceFactory) {
-    var tradeEstimateGoodsConfig = economyConfigFactory.tradeEstimateGoodsConfig;
-    var tradeGoodsIdToKey = economyConfigFactory.tradeGoodsIdToKey;
-    var goodsFactorByKey = economyConfigFactory.goodsFactorByKey;
+  function (economyParseUtilsFactory, economyResourceFactory, economySphereFactory, tradePriceFactory, tradeGoodsFactory) {
+    var tradingGoodsConfig = tradeGoodsFactory.tradingGoodsConfig || [];
+    var tradeGoodsKeyById = tradeGoodsFactory.tradeGoodsKeyById || {};
+    var tradeGoodsFactorByKey = tradeGoodsFactory.tradeGoodsFactorByKey || {};
     var toInt = economyParseUtilsFactory.toInt;
     var toText = economyParseUtilsFactory.toText;
     var createEmptyResourceBag = economyResourceFactory.createEmptyResourceBag;
@@ -34,6 +34,16 @@ austerlitzModule.factory(
 
     function getBounds(context) {
       return context.sphereByTab && context.sphereByTab[context.tabKey];
+    }
+
+    function getCityTradeStock(city, cityKey) {
+      if (!city || !cityKey) {
+        return 0;
+      }
+      return toInt(
+        city[cityKey] != null ? city[cityKey] : city[cityKey.charAt(0).toUpperCase() + cityKey.slice(1)],
+        0,
+      );
     }
 
     function buildTradeDirectByGoodForSphere(context) {
@@ -93,7 +103,7 @@ austerlitzModule.factory(
 
       Object.keys(grouped).forEach(function (groupKey) {
         var item = grouped[groupKey];
-        var cityKey = tradeGoodsIdToKey[item.goodsId];
+        var cityKey = tradeGoodsKeyById[item.goodsId];
         if (!cityKey) {
           return;
         }
@@ -211,21 +221,13 @@ austerlitzModule.factory(
           return;
         }
 
-        var cityKey = tradeGoodsIdToKey[item.goodsId];
+        var cityKey = tradeGoodsKeyById[item.goodsId];
         if (!cityKey) {
           return;
         }
 
-        var goodsFactor = Math.max(0, toInt(goodsFactorByKey[cityKey], 0));
-        var cityStock = Math.max(
-          0,
-          toInt(
-            city[cityKey] != null
-              ? city[cityKey]
-              : city[cityKey.charAt(0).toUpperCase() + cityKey.slice(1)],
-            0,
-          ),
-        );
+        var goodsFactor = Math.max(0, toInt(tradeGoodsFactorByKey[cityKey], 0));
+        var cityStock = Math.max(0, getCityTradeStock(city, cityKey));
         var priced = tradePriceFactory.calculate({
           goodsFactor: goodsFactor,
           stock: cityStock,
@@ -271,15 +273,19 @@ austerlitzModule.factory(
           return;
         }
 
-        (tradeEstimateGoodsConfig || []).forEach(function (good) {
-          var stock = toInt(city[good.cityKey] != null ? city[good.cityKey] : city[good.cityKey.charAt(0).toUpperCase() + good.cityKey.slice(1)], 0);
+        (tradingGoodsConfig || []).forEach(function (good) {
+          var cityKey = good && good.key;
+          if (!cityKey) {
+            return;
+          }
+          var stock = getCityTradeStock(city, cityKey);
           if (stock <= 0) {
             return;
           }
 
           var tradeQty = Math.max(1, Math.round(Math.max(0, stock) * tradeFraction));
           var priced = tradePriceFactory.calculate({
-            goodsFactor: good.goodsFactor,
+            goodsFactor: good.fallbackGoodsFactor,
             stock: stock,
             directBuyQty: tradeQty,
             qty: tradeQty,

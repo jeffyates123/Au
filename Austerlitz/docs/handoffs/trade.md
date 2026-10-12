@@ -8,14 +8,15 @@ Route `/Section/Trade` opens on the Trading tab. Baggage Trains and Trading Citi
 
 - Controller/template: `App/tradeController.js`, `Templates/tradeTemplate.html`
 - Boarding integration: `App/trade/tradeBoardingFactory.js`
+- Goods catalog: `App/trade/tradeGoodsFactory.js`
 - Price formula: `App/trade/tradePriceFactory.js`
-- Economy reader of the same orders: `App/economy/economyTradeFactory.js`, with goods ids and fallback factors in `App/economy/economyConfigFactory.js`
+- Economy reader of the same orders: `App/economy/economyTradeFactory.js`
 
 ## Trading tab
 
 An owned trade city is a trading port whose X,Y matches a barracks. The calculator uses that city's stock and rate. Warehouse stock is warehouse 1 Europe, 2 Caribbean, or 3 India, from the city coordinates. Goods factors come from rules-catalog `unitWeightsRates`, then the hardcoded fallbacks.
 
-Goods ids, shared with Economy: EcPts 13, Food 16, Stone 18, Wood 19, Ore 20, Zinc 21, Horses 22, Textiles 23, Wool 24, Gold 29, Wine 30.
+Goods ids and fallback factors are owned by `tradeGoodsFactory` and shared with Economy.
 
 Calculate is display-only. Buy and sell prices are computed only in `tradePriceFactory`. `n` is the number of sell rounds. Economy estimates call that same factory.
 

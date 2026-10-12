@@ -1,23 +1,6 @@
 "use strict";
 
 austerlitzModule.factory("economyConfigFactory", function () {
-  var tradeEstimateGoodsConfig = [
-    { cityKey: "ectPts", goodsFactor: 6 },
-    { cityKey: "food", goodsFactor: 4 },
-    { cityKey: "stone", goodsFactor: 1 },
-    { cityKey: "wood", goodsFactor: 3 },
-    { cityKey: "ore", goodsFactor: 30 },
-    { cityKey: "zinc", goodsFactor: 45 },
-    { cityKey: "horses", goodsFactor: 2 },
-    { cityKey: "textiles", goodsFactor: 5 },
-    { cityKey: "wool", goodsFactor: 2 },
-    { cityKey: "gold", goodsFactor: 35 },
-    { cityKey: "wine", goodsFactor: 8 },
-  ];
-  var goodsFactorByKey = {};
-  tradeEstimateGoodsConfig.forEach(function (item) {
-    goodsFactorByKey[item.cityKey] = item.goodsFactor;
-  });
 
   return {
     sphereByTab: {
@@ -78,21 +61,6 @@ austerlitzModule.factory("economyConfigFactory", function () {
       zincMine: { zinc: true },
       vineyards: { wine: true },
     },
-    tradeEstimateGoodsConfig: tradeEstimateGoodsConfig,
-    tradeGoodsIdToKey: {
-      13: "ectPts",
-      16: "food",
-      18: "stone",
-      19: "wood",
-      20: "ore",
-      21: "zinc",
-      22: "horses",
-      23: "textiles",
-      24: "wool",
-      29: "gold",
-      30: "wine",
-    },
-    goodsFactorByKey: goodsFactorByKey,
     populationCitizensByDensity: {
       1: 4000,
       2: 10000,

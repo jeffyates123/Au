@@ -11,42 +11,16 @@ austerlitzModule.controller(
     tradeBoardingFactory,
     boardingSharedFactory,
     tradePriceFactory,
+    tradeGoodsFactory,
   ) {
     var validTradeTabs = {
       baggageTrains: true,
       tradingCities: true,
       trading: true,
     };
-    var tradingGoodsConfig = [
-      { key: "ectPts", itemType: "ecpts", label: "EcPts", fallbackGoodsFactor: 6, fallbackPerTon: 25 },
-      { key: "zinc", itemType: "zinc", label: "Zinc", fallbackGoodsFactor: 45, fallbackPerTon: 1 },
-      { key: "gold", itemType: "gold", label: "Gold", fallbackGoodsFactor: 35, fallbackPerTon: 1 },
-      { key: "ore", itemType: "ore", label: "Ore", fallbackGoodsFactor: 30, fallbackPerTon: 1 },
-      { key: "horses", itemType: "horses", label: "Horses", fallbackGoodsFactor: 2, fallbackPerTon: 5 },
-      { key: "wood", itemType: "wood", label: "Wood", fallbackGoodsFactor: 3, fallbackPerTon: 3 },
-      { key: "wine", itemType: "wine", label: "Wine", fallbackGoodsFactor: 8, fallbackPerTon: 1 },
-      { key: "textiles", itemType: "textiles", label: "Textiles", fallbackGoodsFactor: 5, fallbackPerTon: 1 },
-      { key: "food", itemType: "food", label: "Food", fallbackGoodsFactor: 4, fallbackPerTon: 1 },
-      { key: "wool", itemType: "wool", label: "Wool", fallbackGoodsFactor: 2, fallbackPerTon: 1 },
-      { key: "stone", itemType: "stone", label: "Stone", fallbackGoodsFactor: 1, fallbackPerTon: 3 },
-    ];
-    var tradeGoodsIdByKey = {
-      ectPts: 13,
-      food: 16,
-      stone: 18,
-      wood: 19,
-      ore: 20,
-      zinc: 21,
-      horses: 22,
-      textiles: 23,
-      wool: 24,
-      gold: 29,
-      wine: 30,
-    };
-    var tradeGoodsKeyById = {};
-    Object.keys(tradeGoodsIdByKey).forEach(function (key) {
-      tradeGoodsKeyById[tradeGoodsIdByKey[key]] = key;
-    });
+    var tradingGoodsConfig = tradeGoodsFactory.tradingGoodsConfig || [];
+    var tradeGoodsIdByKey = tradeGoodsFactory.tradeGoodsIdByKey || {};
+    var tradeGoodsKeyById = tradeGoodsFactory.tradeGoodsKeyById || {};
     var tradeRowMarker = "TRADE";
     var tradeTurnSheetMaxRows = 18;
     var sphereWarehouseNos = { 1: true, 2: true, 3: true };
