@@ -372,25 +372,75 @@ namespace Austerlitz.Services
 
         private static TR_MerchantShips ParseMerchantShipColumn(string lineToProcess, int offset, string turnId)
         {
-            // NOTE: Quantity1 is read from the position after Goods2 and Quantity2 is
-            // never populated. This mirrors the original import logic exactly; if the
-            // Quantity2 column is ever needed it will need a deliberate fix here.
-            return new TR_MerchantShips
+            var segmentLength = Math.Min(70, Math.Max(0, lineToProcess.Length - offset));
+            var segment = segmentLength > 0 ? lineToProcess.Substring(offset, segmentLength) : string.Empty;
+            var parts = Regex.Split(segment.Trim(), @"\s+")
+                .Where(token => !string.IsNullOrWhiteSpace(token))
+                .ToArray();
+
+            var ship = new TR_MerchantShips
             {
                 TurnId = turnId,
-                ItemNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 0, 4),
-                Type = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 6, 2),
-                X = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 9, 2),
-                Y = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 12, 2),
-                FleetNo = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 15, 2),
-                MP = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 18, 2),
-                Condition = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 21, 3),
-                Age = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 27, 2),
-                Goods1 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 32, 2),
-                Quantity1 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 46, 5),
-                Goods2 = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 43, 2),
-                Money = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, offset + 52, 9)
+                ItemNo = ParseMerchantTokenInt(parts, 0),
+                Type = ParseMerchantTokenInt(parts, 1),
+                FleetNo = ParseMerchantTokenInt(parts, 3),
+                MP = ParseMerchantTokenInt(parts, 4),
+                Condition = ParseMerchantTokenInt(parts, 5),
+                Age = ParseMerchantTokenInt(parts, 6),
+                Goods1 = ParseMerchantTokenInt(parts, 7),
+                Quantity1 = ParseMerchantTokenInt(parts, 8),
+                Goods2 = ParseMerchantTokenInt(parts, 9),
+                Quantity2 = ParseMerchantTokenInt(parts, 10),
+                Money = ParseMerchantTokenInt(parts, 11),
             };
+
+            int parsedX;
+            int parsedY;
+            ParseMerchantXY(parts, 2, out parsedX, out parsedY);
+            ship.X = parsedX;
+            ship.Y = parsedY;
+
+            return ship;
+        }
+
+        private static int ParseMerchantTokenInt(string[] parts, int index)
+        {
+            if (parts == null || index < 0 || index >= parts.Length)
+            {
+                return 0;
+            }
+
+            var cleaned = Regex.Replace(parts[index] ?? string.Empty, @"[^0-9\-]", string.Empty);
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                return 0;
+            }
+
+            int parsed;
+            return int.TryParse(cleaned, out parsed) ? parsed : 0;
+        }
+
+        private static void ParseMerchantXY(string[] parts, int index, out int x, out int y)
+        {
+            x = 0;
+            y = 0;
+            if (parts == null || index < 0 || index >= parts.Length)
+            {
+                return;
+            }
+
+            var xy = (parts[index] ?? string.Empty).Split('/');
+            if (xy.Length != 2)
+            {
+                return;
+            }
+
+            int parsedX;
+            int parsedY;
+            var hasX = int.TryParse(Regex.Replace(xy[0] ?? string.Empty, @"[^0-9\-]", string.Empty), out parsedX);
+            var hasY = int.TryParse(Regex.Replace(xy[1] ?? string.Empty, @"[^0-9\-]", string.Empty), out parsedY);
+            x = hasX ? parsedX : 0;
+            y = hasY ? parsedY : 0;
         }
 
         private int LoadBaggageTrains(ArrayList lineList, int lineLocation, AusterlitzDbContext auDB, string turnId)

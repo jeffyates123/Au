@@ -21,6 +21,13 @@ austerlitzModule.controller(
     var tradingGoodsConfig = tradeGoodsFactory.tradingGoodsConfig || [];
     var tradeGoodsIdByKey = tradeGoodsFactory.tradeGoodsIdByKey || {};
     var tradeGoodsKeyById = tradeGoodsFactory.tradeGoodsKeyById || {};
+    var tradeGoodsLabelById = {};
+    (tradingGoodsConfig || []).forEach(function (good) {
+      if (!good || good.goodsId == null) {
+        return;
+      }
+      tradeGoodsLabelById[good.goodsId] = toText(good.label, "");
+    });
     var tradeRowMarker = "TRADE";
     var tradeTurnSheetMaxRows = 18;
     var sphereWarehouseNos = { 1: true, 2: true, 3: true };
@@ -96,22 +103,20 @@ austerlitzModule.controller(
 
     function refreshTradingCalcStocks() {
       var selectedCity = $scope.selectedTradingCity;
-      var warehouseNo = getWarehouseNoForCity(selectedCity);
-      var selectedWarehouse = null;
-      ($scope.sphereWarehouseRows || []).forEach(function (warehouseRow) {
-        if (toInt(warehouseRow && warehouseRow.itemNo, null) === warehouseNo) {
-          selectedWarehouse = warehouseRow;
-        }
-      });
       ($scope.tradingCalcRows || []).forEach(function (row) {
         row.stock = toInt(selectedCity && selectedCity[row.key], 0);
-        row.warehouse = toInt(selectedWarehouse && selectedWarehouse[row.key], 0);
+        row.warehouse = getSelectedCounterpartyStockByKey(row.key);
       });
     }
 
     function getTradeReportRows() {
       var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
       return turnReport.baggageTrains || [];
+    }
+
+    function getMerchantShipReportRows() {
+      var turnReport = ($scope.masterData && $scope.masterData.turnReport) || {};
+      return turnReport.merchantShips || turnReport.MerchantShips || [];
     }
 
     function getTradingCitiesReportRows() {
@@ -143,10 +148,178 @@ austerlitzModule.controller(
       if (!$scope.selectedTradingCity) {
         return;
       }
-      var selectedMatch = ($scope.ownedTradeCityRows || []).find(function (city) {
+      var selectedMatch = ($scope.tradeCityRows || []).find(function (city) {
         return city.id === $scope.selectedTradingCity.id;
       });
       $scope.selectedTradingCity = selectedMatch || null;
+      if (!$scope.selectedTradingCity) {
+        $scope.selectedTradeCounterparty = null;
+      }
+    }
+
+    function clearTradingInputValues() {
+      ($scope.tradingCalcRows || []).forEach(function (row) {
+        row.directBuyQty = null;
+        row.qty = null;
+        row.n = null;
+      });
+    }
+
+    function getSphereForCoordinates(x, y) {
+      return boardingSharedFactory.getSphereFromCoordinates(x, y);
+    }
+
+    function getSphereForCity(city) {
+      return getSphereForCoordinates(city && city.x, city && city.y);
+    }
+
+    function getSphereForTradeTrain(train) {
+      return getSphereForCoordinates(train && train.x, train && train.y);
+    }
+
+    function getTradeTrainStockByGoodsId(train, goodsId) {
+      if (!train || goodsId == null) {
+        return 0;
+      }
+      var total = 0;
+      if (toInt(train.goods1, null) === goodsId) {
+        total += Math.max(0, toInt(train.quantity1, 0));
+      }
+      if (toInt(train.goods2, null) === goodsId) {
+        total += Math.max(0, toInt(train.quantity2, 0));
+      }
+      return total;
+    }
+
+    function getWarehouseRowByItemNo(itemNo) {
+      var match = null;
+      ($scope.sphereWarehouseRows || []).forEach(function (warehouseRow) {
+        if (match) {
+          return;
+        }
+        if (toInt(warehouseRow && warehouseRow.itemNo, null) === toInt(itemNo, null)) {
+          match = warehouseRow;
+        }
+      });
+      return match;
+    }
+
+    function getTradeTrainByItemNo(itemNo) {
+      var match = null;
+      ($scope.playerBaggageTrainRows || []).forEach(function (train) {
+        if (match) {
+          return;
+        }
+        if (toInt(train && train.itemNo, null) === toInt(itemNo, null)) {
+          match = train;
+        }
+      });
+      return match;
+    }
+
+    function getMerchantShipByItemNo(itemNo) {
+      var match = null;
+      ($scope.playerMerchantShipRows || []).forEach(function (ship) {
+        if (match) {
+          return;
+        }
+        if (toInt(ship && ship.itemNo, null) === toInt(itemNo, null)) {
+          match = ship;
+        }
+      });
+      return match;
+    }
+
+    function getSelectedCounterpartyStockByKey(goodsKey) {
+      var counterparty = $scope.selectedTradeCounterparty;
+      if (!counterparty || !goodsKey) {
+        return 0;
+      }
+      if (counterparty.kind === "warehouse") {
+        var warehouseRow = getWarehouseRowByItemNo(counterparty.itemNo);
+        return Math.max(0, toInt(warehouseRow && warehouseRow[goodsKey], 0));
+      }
+      if (counterparty.kind === "train") {
+        var goodsId = tradeGoodsIdByKey[goodsKey];
+        var trainRow = getTradeTrainByItemNo(counterparty.itemNo);
+        return getTradeTrainStockByGoodsId(trainRow, goodsId);
+      }
+      if (counterparty.kind === "merchant") {
+        var merchantGoodsId = tradeGoodsIdByKey[goodsKey];
+        var merchantRow = getMerchantShipByItemNo(counterparty.itemNo);
+        return getTradeTrainStockByGoodsId(merchantRow, merchantGoodsId);
+      }
+      return 0;
+    }
+
+    function getCounterpartyStockByItemNoAndGood(sourceItemNo, goodsId, goodsKey) {
+      var sourceNo = toInt(sourceItemNo, null);
+      if (sourceNo == null) {
+        return 0;
+      }
+      if (sphereWarehouseNos[sourceNo]) {
+        var warehouseRow = getWarehouseRowByItemNo(sourceNo);
+        return Math.max(0, toInt(warehouseRow && goodsKey ? warehouseRow[goodsKey] : 0, 0));
+      }
+      var trainRow = getTradeTrainByItemNo(sourceNo);
+      if (trainRow) {
+        return getTradeTrainStockByGoodsId(trainRow, goodsId);
+      }
+      return getTradeTrainStockByGoodsId(getMerchantShipByItemNo(sourceNo), goodsId);
+    }
+
+    function isOwnedTradeCity(city) {
+      return !!(city && city.isOwned);
+    }
+
+    function refreshTradingSelectionLists() {
+      if (!$scope.selectedTradingCity) {
+        $scope.visibleTradeCityRows = ($scope.tradeCityRows || []).slice();
+        $scope.availableTradeWarehouseRows = [];
+        $scope.availableTradeBaggageTrainRows = [];
+        $scope.availableTradeMerchantShipRows = [];
+        $scope.selectedTradeCounterparty = null;
+        return;
+      }
+
+      var sphere = getSphereForCity($scope.selectedTradingCity);
+      $scope.visibleTradeCityRows = [$scope.selectedTradingCity];
+      $scope.availableTradeWarehouseRows = [];
+      if (isOwnedTradeCity($scope.selectedTradingCity)) {
+        var warehouseNo = getWarehouseNoForCity($scope.selectedTradingCity);
+        var warehouseRow = getWarehouseRowByItemNo(warehouseNo);
+        if (warehouseRow) {
+          $scope.availableTradeWarehouseRows = [warehouseRow];
+        }
+      }
+
+      $scope.availableTradeBaggageTrainRows = ($scope.playerBaggageTrainRows || []).filter(function (train) {
+        return getSphereForTradeTrain(train) === sphere;
+      });
+      $scope.availableTradeMerchantShipRows = ($scope.playerMerchantShipRows || []).filter(function (ship) {
+        return getSphereForTradeTrain(ship) === sphere;
+      });
+
+      if ($scope.selectedTradeCounterparty) {
+        var selectedNo = toInt($scope.selectedTradeCounterparty.itemNo, null);
+        var stillAvailable = false;
+        if ($scope.selectedTradeCounterparty.kind === "warehouse") {
+          stillAvailable = ($scope.availableTradeWarehouseRows || []).some(function (row) {
+            return toInt(row && row.itemNo, null) === selectedNo;
+          });
+        } else if ($scope.selectedTradeCounterparty.kind === "train") {
+          stillAvailable = ($scope.availableTradeBaggageTrainRows || []).some(function (train) {
+            return toInt(train && train.itemNo, null) === selectedNo;
+          });
+        } else if ($scope.selectedTradeCounterparty.kind === "merchant") {
+          stillAvailable = ($scope.availableTradeMerchantShipRows || []).some(function (ship) {
+            return toInt(ship && ship.itemNo, null) === selectedNo;
+          });
+        }
+        if (!stillAvailable) {
+          $scope.selectedTradeCounterparty = null;
+        }
+      }
     }
 
     function refreshSphereWarehouseRows() {
@@ -225,18 +398,6 @@ austerlitzModule.controller(
       return lookup;
     }
 
-    function getWarehouseLookupByItemNo() {
-      var lookup = {};
-      ($scope.sphereWarehouseRows || []).forEach(function (warehouse) {
-        var warehouseNo = toInt(warehouse && warehouse.itemNo, null);
-        if (warehouseNo == null) {
-          return;
-        }
-        lookup[warehouseNo] = warehouse;
-      });
-      return lookup;
-    }
-
     function parseTradeReplayEntry(sectionKey, row) {
       var marker = toText(row && row.rowMarker, "").toUpperCase();
       if (marker && marker !== tradeRowMarker) {
@@ -284,7 +445,6 @@ austerlitzModule.controller(
 
     function rebuildSavedTradingRows() {
       var cityLookup = getCityLookupByItemNo();
-      var warehouseLookup = getWarehouseLookupByItemNo();
       var grouped = {};
 
       function absorbRow(sectionKey, row) {
@@ -338,12 +498,13 @@ austerlitzModule.controller(
             goodsFactor: 0,
           };
 
-          var warehouseNo =
+          var sourceItemNo =
             source.warehouseNo != null ? source.warehouseNo : getWarehouseNoForCity(city);
-          var warehouse = warehouseLookup[warehouseNo] || {};
           var rate = Math.max(0, toNumber(city && city.rate, 0));
           var stock = goodsKey ? Math.max(0, toNumber(city && city[goodsKey], 0)) : 0;
-          var warehouseStock = goodsKey ? Math.max(0, toNumber(warehouse && warehouse[goodsKey], 0)) : 0;
+          var warehouseStock = goodsKey
+            ? Math.max(0, toNumber(getCounterpartyStockByItemNoAndGood(sourceItemNo, source.goodsId, goodsKey), 0))
+            : 0;
 
           var replayRow = {
             key: "saved-" + source.cityItemNo + "-" + source.goodsId,
@@ -475,13 +636,16 @@ austerlitzModule.controller(
 
     function buildTradeRecordPlan(targetRow) {
       if (!$scope.selectedTradingCity) {
-        return { error: "Select an owned trade city first.", records: [] };
+        return { error: "Select a trade city first.", records: [] };
       }
 
       var cityItemNo = toInt($scope.selectedTradingCity.itemNo, null);
-      var warehouseNo = getWarehouseNoForCity($scope.selectedTradingCity);
-      if (cityItemNo == null || warehouseNo == null) {
-        return { error: "Selected trade city has invalid location mapping.", records: [] };
+      var sourceItemNo = toInt($scope.selectedTradeCounterparty && $scope.selectedTradeCounterparty.itemNo, null);
+      if (cityItemNo == null) {
+        return { error: "Selected trade city is invalid.", records: [] };
+      }
+      if (sourceItemNo == null) {
+        return { error: "Select a warehouse, baggage train, or merchant ship first.", records: [] };
       }
 
       var records = [];
@@ -491,6 +655,9 @@ austerlitzModule.controller(
         var buyQty = Math.max(0, Math.round(toNumber(row.directBuyQty, 0)));
         var sellQty = Math.max(0, Math.round(toNumber(row.qty, 0)));
         var n = Math.max(0, Math.round(toNumber(row.n, 0)));
+        if (sellQty > 0 && n === 0 && (row.n == null || row.n === "")) {
+          n = 1;
+        }
         if (goodsId == null) {
           return;
         }
@@ -500,7 +667,7 @@ austerlitzModule.controller(
             goods: goodsId,
             quantity: buyQty,
             fromNo: cityItemNo,
-            toNo: warehouseNo,
+            toNo: sourceItemNo,
             rowMarker: tradeRowMarker,
           });
         }
@@ -510,7 +677,7 @@ austerlitzModule.controller(
             records.push({
               goods: goodsId,
               quantity: sellQty,
-              fromNo: warehouseNo,
+              fromNo: sourceItemNo,
               toNo: cityItemNo,
               rowMarker: tradeRowMarker,
             });
@@ -722,10 +889,17 @@ austerlitzModule.controller(
     $scope.masterData = masterData;
     $scope.activeTradeTab = "trading";
     $scope.tradeRows = [];
+    $scope.playerBaggageTrainRows = [];
+    $scope.playerMerchantShipRows = [];
     $scope.tradeCityRows = [];
     $scope.ownedTradeCityRows = [];
+    $scope.visibleTradeCityRows = [];
     $scope.sphereWarehouseRows = [];
+    $scope.availableTradeWarehouseRows = [];
+    $scope.availableTradeBaggageTrainRows = [];
+    $scope.availableTradeMerchantShipRows = [];
     $scope.selectedTradingCity = null;
+    $scope.selectedTradeCounterparty = null;
     $scope.tradingCalcRows = tradingGoodsConfig.map(createTradingCalcRow);
     $scope.savedTradingRows = [];
     $scope.ts17Rows = [];
@@ -758,7 +932,7 @@ austerlitzModule.controller(
 
     $scope.getSelectedTradingCityTitle = function () {
       if (!$scope.selectedTradingCity) {
-        return "No owned trade city selected.";
+        return "No trade city selected.";
       }
       return (
         $scope.selectedTradingCity.itemNo +
@@ -773,12 +947,88 @@ austerlitzModule.controller(
       );
     };
 
-    $scope.isOwnedTradingCitySelected = function (city) {
+    $scope.getSelectedTradeCounterpartyTitle = function () {
+      if (!$scope.selectedTradeCounterparty) {
+        return "No warehouse or baggage train selected.";
+      }
+      if ($scope.selectedTradeCounterparty.kind === "warehouse") {
+        return "Warehouse " + $scope.selectedTradeCounterparty.itemNo;
+      }
+      if ($scope.selectedTradeCounterparty.kind === "merchant") {
+        return "Merchant Ship " + $scope.selectedTradeCounterparty.itemNo;
+      }
+      return "Baggage Train " + $scope.selectedTradeCounterparty.itemNo;
+    };
+
+    $scope.isTradeCitySelected = function (city) {
       return !!(
         city &&
         $scope.selectedTradingCity &&
         $scope.selectedTradingCity.id === city.id
       );
+    };
+
+    $scope.isTradeCounterpartySelected = function (kind, itemNo) {
+      return !!(
+        $scope.selectedTradeCounterparty &&
+        $scope.selectedTradeCounterparty.kind === kind &&
+        toInt($scope.selectedTradeCounterparty.itemNo, null) === toInt(itemNo, null)
+      );
+    };
+
+    $scope.isTradeCounterpartyKindVisible = function (kind) {
+      if (!$scope.selectedTradingCity) {
+        return false;
+      }
+      if (!$scope.selectedTradeCounterparty) {
+        return true;
+      }
+      return $scope.selectedTradeCounterparty.kind === kind;
+    };
+
+    $scope.getVisibleTradeWarehouseRows = function () {
+      if (!$scope.selectedTradingCity || !$scope.selectedTradingCity.isOwned) {
+        return [];
+      }
+      if (!$scope.selectedTradeCounterparty) {
+        return $scope.availableTradeWarehouseRows || [];
+      }
+      if ($scope.selectedTradeCounterparty.kind !== "warehouse") {
+        return [];
+      }
+      return ($scope.availableTradeWarehouseRows || []).filter(function (warehouse) {
+        return $scope.isTradeCounterpartySelected("warehouse", warehouse && warehouse.itemNo);
+      });
+    };
+
+    $scope.getVisibleTradeBaggageTrainRows = function () {
+      if (!$scope.selectedTradingCity) {
+        return [];
+      }
+      if (!$scope.selectedTradeCounterparty) {
+        return $scope.availableTradeBaggageTrainRows || [];
+      }
+      if ($scope.selectedTradeCounterparty.kind !== "train") {
+        return [];
+      }
+      return ($scope.availableTradeBaggageTrainRows || []).filter(function (train) {
+        return $scope.isTradeCounterpartySelected("train", train && train.itemNo);
+      });
+    };
+
+    $scope.getVisibleTradeMerchantShipRows = function () {
+      if (!$scope.selectedTradingCity) {
+        return [];
+      }
+      if (!$scope.selectedTradeCounterparty) {
+        return $scope.availableTradeMerchantShipRows || [];
+      }
+      if ($scope.selectedTradeCounterparty.kind !== "merchant") {
+        return [];
+      }
+      return ($scope.availableTradeMerchantShipRows || []).filter(function (ship) {
+        return $scope.isTradeCounterpartySelected("merchant", ship && ship.itemNo);
+      });
     };
 
     $scope.clearTradingCalculatedValues = function () {
@@ -791,35 +1041,90 @@ austerlitzModule.controller(
     };
 
     $scope.clearTradingGridInputs = function () {
-      ($scope.tradingCalcRows || []).forEach(function (row) {
-        row.directBuyQty = null;
-        row.qty = null;
-        row.n = null;
-      });
-      $scope.selectedTradingCity = null;
-      refreshTradingCalcStocks();
+      clearTradingInputValues();
       $scope.clearTradingCalculatedValues();
     };
 
-    $scope.selectOwnedTradingCity = function (city) {
-      $scope.selectedTradingCity = city || null;
-      refreshTradingCalcStocks();
+    $scope.startNewTrade = function () {
+      $scope.selectedTradingCity = null;
+      $scope.selectedTradeCounterparty = null;
+      clearTradingInputValues();
       $scope.clearTradingCalculatedValues();
+      clearTradeSyncMessage();
+      refreshTradingSelectionLists();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.selectTradeCity = function (city) {
+      $scope.selectedTradingCity = city || null;
+      $scope.selectedTradeCounterparty = null;
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingSelectionLists();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.selectTradeWarehouseCounterparty = function (warehouseRow) {
+      if (!$scope.selectedTradingCity || !warehouseRow) {
+        return;
+      }
+      $scope.selectedTradeCounterparty = {
+        kind: "warehouse",
+        itemNo: toInt(warehouseRow.itemNo, null),
+      };
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.selectTradeBaggageTrainCounterparty = function (train) {
+      if (!$scope.selectedTradingCity || !train) {
+        return;
+      }
+      $scope.selectedTradeCounterparty = {
+        kind: "train",
+        itemNo: toInt(train.itemNo, null),
+      };
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.selectTradeMerchantShipCounterparty = function (ship) {
+      if (!$scope.selectedTradingCity || !ship) {
+        return;
+      }
+      $scope.selectedTradeCounterparty = {
+        kind: "merchant",
+        itemNo: toInt(ship.itemNo, null),
+      };
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.isTradeReadyForInput = function () {
+      return !!($scope.selectedTradingCity && $scope.selectedTradeCounterparty);
     };
 
     $scope.calculateTrade = function () {
-      if (!$scope.selectedTradingCity) {
+      if (!$scope.selectedTradingCity || !$scope.selectedTradeCounterparty) {
         return;
       }
 
       var rate = Math.max(0, toNumber($scope.selectedTradingCity.rate, 0));
       ($scope.tradingCalcRows || []).forEach(function (row) {
+        var qtyInput = Math.max(0, Math.round(toNumber(row && row.qty, 0)));
+        var nInput = row && row.n;
+        if (qtyInput > 0 && (nInput == null || nInput === "")) {
+          nInput = 1;
+        }
         var values = tradePriceFactory.calculate({
           goodsFactor: row.goodsFactor,
           stock: row.stock,
           directBuyQty: row.directBuyQty,
           qty: row.qty,
-          n: row.n,
+          n: nInput,
           rate: rate,
         });
         row.qtyS = values.qtyS;
@@ -897,7 +1202,7 @@ austerlitzModule.controller(
       var baggageTrains = getTradeReportRows();
       var hasNewFederation = false;
 
-      $scope.tradeRows = (baggageTrains || [])
+      var mappedRows = (baggageTrains || [])
         .map(function (train) {
           var itemNo = toInt(train && train.itemNo, null);
           var newFederation =
@@ -922,6 +1227,7 @@ austerlitzModule.controller(
             goods2: toInt(train && train.goods2, null),
             quantity2: toInt(train && train.quantity2, 0),
             money: toInt(train && train.money, 0),
+            sphere: getSphereForCoordinates(train && train.x, train && train.y),
             boardingSelected: false,
             boardingFleetNo: null,
           };
@@ -930,7 +1236,48 @@ austerlitzModule.controller(
           return toInt(left && left.itemNo, 0) - toInt(right && right.itemNo, 0);
         });
 
+      $scope.tradeRows = mappedRows;
+      $scope.playerBaggageTrainRows = mappedRows;
       $scope.hasNewFederationColumn = hasNewFederation;
+      refreshTradingSelectionLists();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.refreshMerchantShipRows = function () {
+      var merchantShips = getMerchantShipReportRows();
+      $scope.playerMerchantShipRows = (merchantShips || [])
+        .map(function (ship) {
+          var itemNo = toInt(ship && (ship.itemNo != null ? ship.itemNo : ship.ItemNo), null);
+          return {
+            id: itemNo,
+            itemNo: itemNo,
+            x: toInt(ship && (ship.x != null ? ship.x : ship.X), null),
+            y: toInt(ship && (ship.y != null ? ship.y : ship.Y), null),
+            goods1: toInt(ship && (ship.goods1 != null ? ship.goods1 : ship.Goods1), null),
+            quantity1: toInt(ship && (ship.quantity1 != null ? ship.quantity1 : ship.Quantity1), 0),
+            goods2: toInt(ship && (ship.goods2 != null ? ship.goods2 : ship.Goods2), null),
+            quantity2: toInt(ship && (ship.quantity2 != null ? ship.quantity2 : ship.Quantity2), 0),
+            money: toInt(ship && (ship.money != null ? ship.money : ship.Money), 0),
+            sphere: getSphereForCoordinates(
+              ship && (ship.x != null ? ship.x : ship.X),
+              ship && (ship.y != null ? ship.y : ship.Y),
+            ),
+          };
+        })
+        .sort(function (left, right) {
+          return toInt(left && left.itemNo, 0) - toInt(right && right.itemNo, 0);
+        });
+      refreshTradingSelectionLists();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.formatTradeGoodsWithName = function (goodsId) {
+      var id = toInt(goodsId, null);
+      if (id == null) {
+        return "----";
+      }
+      var label = toText(tradeGoodsLabelById[id], "");
+      return label ? id + " (" + label + ")" : id.toString();
     };
 
     $scope.refreshTradeCityRows = function () {
@@ -939,11 +1286,13 @@ austerlitzModule.controller(
       var mappedRows = (tradingCities || [])
         .map(function (city) {
           var itemNo = toInt(city && (city.itemNo != null ? city.itemNo : city.ItemNo), null);
+          var x = toInt(city && (city.x != null ? city.x : city.X), null);
+          var y = toInt(city && (city.y != null ? city.y : city.Y), null);
           return {
             id: itemNo,
             itemNo: itemNo,
-            x: toInt(city && (city.x != null ? city.x : city.X), null),
-            y: toInt(city && (city.y != null ? city.y : city.Y), null),
+            x: x,
+            y: y,
             name: toText(city && (city.name != null ? city.name : city.Name), ""),
             rate: toInt(city && (city.rate != null ? city.rate : city.Rate), 0),
             ectPts: toInt(city && (city.ectPts != null ? city.ectPts : city.EctPts), 0),
@@ -957,6 +1306,8 @@ austerlitzModule.controller(
             wool: toInt(city && (city.wool != null ? city.wool : city.Wool), 0),
             gold: toInt(city && (city.gold != null ? city.gold : city.Gold), 0),
             wine: toInt(city && (city.wine != null ? city.wine : city.Wine), 0),
+            isOwned: !!barracksLookup[x + "," + y],
+            sphere: getSphereForCoordinates(x, y),
           };
         })
         .sort(function (left, right) {
@@ -967,10 +1318,11 @@ austerlitzModule.controller(
       $scope.ownedTradeCityRows = mappedRows.filter(function (city) {
         return !!barracksLookup[city.x + "," + city.y];
       });
+      refreshSphereWarehouseRows();
       syncSelectedTradingCityAfterRefresh();
+      refreshTradingSelectionLists();
       refreshTradingCalcStocks();
       $scope.clearTradingCalculatedValues();
-      refreshSphereWarehouseRows();
       rebuildSavedTradingRows();
     };
 
@@ -1020,6 +1372,7 @@ austerlitzModule.controller(
 
     function afterTurnReportLoaded() {
       $scope.refreshTradeRows();
+      $scope.refreshMerchantShipRows();
       $scope.refreshTradeCityRows();
       refreshTradingCalcGoodsMeta();
       return $q.all([loadBoardingReplay(), loadTradeTurnSheetRows()]);
@@ -1032,14 +1385,21 @@ austerlitzModule.controller(
         $scope.masterData.turnId === "Unknown"
       ) {
         $scope.tradeRows = [];
+        $scope.playerBaggageTrainRows = [];
+        $scope.playerMerchantShipRows = [];
         $scope.tradeCityRows = [];
         $scope.ownedTradeCityRows = [];
+        $scope.visibleTradeCityRows = [];
         $scope.sphereWarehouseRows = [];
+        $scope.availableTradeWarehouseRows = [];
+        $scope.availableTradeBaggageTrainRows = [];
+        $scope.availableTradeMerchantShipRows = [];
         $scope.ts17Rows = [];
         $scope.ts19Rows = [];
         refreshTurnSheetTriplets();
         $scope.savedTradingRows = [];
         $scope.selectedTradingCity = null;
+        $scope.selectedTradeCounterparty = null;
         clearTradeSyncMessage();
         refreshTradingCalcStocks();
         $scope.clearTradingCalculatedValues();
@@ -1053,6 +1413,8 @@ austerlitzModule.controller(
       var hasTurnReport =
         $scope.masterData.turnReport &&
         ($scope.masterData.turnReport.baggageTrains ||
+          $scope.masterData.turnReport.merchantShips ||
+          $scope.masterData.turnReport.MerchantShips ||
           $scope.masterData.turnReport.tradingPortsAndCities);
       var loadPromise = hasTurnReport
         ? $q.when($scope.masterData.turnReport)
@@ -1063,14 +1425,21 @@ austerlitzModule.controller(
           $scope.loadError =
             error && error.data ? error.data : "Unable to load trade data.";
           $scope.tradeRows = [];
+          $scope.playerBaggageTrainRows = [];
+          $scope.playerMerchantShipRows = [];
           $scope.tradeCityRows = [];
           $scope.ownedTradeCityRows = [];
+          $scope.visibleTradeCityRows = [];
           $scope.sphereWarehouseRows = [];
+          $scope.availableTradeWarehouseRows = [];
+          $scope.availableTradeBaggageTrainRows = [];
+          $scope.availableTradeMerchantShipRows = [];
           $scope.ts17Rows = [];
           $scope.ts19Rows = [];
           refreshTurnSheetTriplets();
           $scope.savedTradingRows = [];
           $scope.selectedTradingCity = null;
+          $scope.selectedTradeCounterparty = null;
           clearTradeSyncMessage();
           refreshTradingCalcStocks();
           $scope.clearTradingCalculatedValues();

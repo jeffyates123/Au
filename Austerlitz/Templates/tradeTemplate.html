@@ -204,6 +204,7 @@
         </tbody>
       </table>
     </div>
+
   </div>
 
   <div class="landUnitsTabPane" ng-show="activeTradeTab === 'trading'">
@@ -219,9 +220,16 @@
         </button>
         <button
           type="button"
+          class="btn btn-default btn-sm"
+          ng-click="startNewTrade()"
+        >
+          New Trade
+        </button>
+        <button
+          type="button"
           class="btn btn-primary btn-sm"
           ng-click="calculateTrade()"
-          ng-disabled="!selectedTradingCity"
+          ng-disabled="!isTradeReadyForInput()"
         >
           Calculate Trade
         </button>
@@ -247,10 +255,13 @@
     </div>
 
     <div class="alert alert-info" ng-show="!selectedTradingCity">
-      Click an owned trade city to start trading.
+      Select a trade city to start.
+    </div>
+    <div class="alert alert-info" ng-show="selectedTradingCity && !selectedTradeCounterparty">
+      Select a warehouse or baggage train in the same sphere.
     </div>
 
-    <div class="landUnitsTableWrap" ng-show="selectedTradingCity">
+    <div class="landUnitsTableWrap" ng-show="isTradeReadyForInput()">
       <table class="table landUnitsTable tradeCalculatorTable">
         <thead>
           <tr>
@@ -259,7 +270,7 @@
             <th>GF</th>
             <th>Rate</th>
             <th>Stock</th>
-            <th>Warehouse</th>
+            <th>WH/BagT</th>
             <th>Stock+W/H</th>
             <th>D. Buy Qty</th>
             <th>Total Direct</th>
@@ -314,7 +325,7 @@
                 type="button"
                 class="btn btn-default btn-xs"
                 ng-click="addTrade1ForRow(row)"
-                ng-disabled="!selectedTradingCity"
+                ng-disabled="!isTradeReadyForInput()"
               >
                 +Trade1
               </button>
@@ -324,7 +335,7 @@
                 type="button"
                 class="btn btn-default btn-xs"
                 ng-click="addTrade2ForRow(row)"
-                ng-disabled="!selectedTradingCity"
+                ng-disabled="!isTradeReadyForInput()"
               >
                 +Trade2
               </button>
@@ -347,7 +358,7 @@
             <th>GF</th>
             <th>Rate</th>
             <th>Stock</th>
-            <th>Warehouse</th>
+            <th>WH/BagT</th>
             <th>Stock+W/H</th>
             <th>D. Buy Qty</th>
             <th>Total Direct</th>
@@ -499,8 +510,8 @@
     </div>
 
     <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
-      <span class="landUnitsSectionTitle">Owned Trade Cities</span>
-      <span class="landUnitsSectionMeta">{{ownedTradeCityRows.length}}</span>
+      <span class="landUnitsSectionTitle">Trade Cities</span>
+      <span class="landUnitsSectionMeta">{{visibleTradeCityRows.length}}</span>
     </div>
     <div class="landUnitsTableWrap" ng-show="!isLoading">
       <table class="table landUnitsTable landUnitsTradingCitiesTable tradeOwnedCitiesPickerTable">
@@ -510,6 +521,7 @@
             <th class="landUnitsPositionCol">X</th>
             <th class="landUnitsPositionCol">Y</th>
             <th class="landUnitsNameCol">Name</th>
+            <th>Owned</th>
             <th>Rate</th>
             <th>EctPts</th>
             <th>Food</th>
@@ -526,14 +538,15 @@
         </thead>
         <tbody>
           <tr
-            ng-repeat="city in ownedTradeCityRows track by city.id"
-            ng-click="selectOwnedTradingCity(city)"
-            ng-class="{ active: isOwnedTradingCitySelected(city) }"
+            ng-repeat="city in visibleTradeCityRows track by city.id"
+            ng-click="selectTradeCity(city)"
+            ng-class="{ active: isTradeCitySelected(city) }"
           >
             <td>{{city.itemNo}}</td>
             <td class="landUnitsPositionCol">{{city.x}}</td>
             <td class="landUnitsPositionCol">{{city.y}}</td>
             <td class="landUnitsNameCol">{{city.name}}</td>
+            <td>{{city.isOwned ? 'Yes' : 'No'}}</td>
             <td>{{city.rate}}</td>
             <td>{{city.ectPts}}</td>
             <td>{{city.food}}</td>
@@ -547,21 +560,21 @@
             <td>{{city.gold}}</td>
             <td>{{city.wine}}</td>
           </tr>
-          <tr ng-if="!ownedTradeCityRows || ownedTradeCityRows.length === 0">
-            <td colspan="16" class="text-muted">
-              No owned trade cities found for this turn.
+          <tr ng-if="!visibleTradeCityRows || visibleTradeCityRows.length === 0">
+            <td colspan="17" class="text-muted">
+              No trade cities found for this turn.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary">
-      <span class="landUnitsSectionTitle">Sphere Warehouses</span>
-      <span class="landUnitsSectionMeta">{{sphereWarehouseRows.length}}</span>
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary" ng-show="isTradeCounterpartyKindVisible('warehouse') && selectedTradingCity && selectedTradingCity.isOwned">
+      <span class="landUnitsSectionTitle">Sphere Warehouse</span>
+      <span class="landUnitsSectionMeta">{{getVisibleTradeWarehouseRows().length}}</span>
     </div>
-    <div class="landUnitsTableWrap" ng-show="!isLoading">
-      <table class="table landUnitsTable landUnitsTradingCitiesTable">
+    <div class="landUnitsTableWrap" ng-show="isTradeCounterpartyKindVisible('warehouse') && selectedTradingCity && selectedTradingCity.isOwned && !isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable tradeOwnedCitiesPickerTable">
         <thead>
           <tr>
             <th></th>
@@ -583,7 +596,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="warehouse in sphereWarehouseRows track by warehouse.itemNo">
+          <tr
+            ng-repeat="warehouse in getVisibleTradeWarehouseRows() track by warehouse.itemNo"
+            ng-click="selectTradeWarehouseCounterparty(warehouse)"
+            ng-class="{ active: isTradeCounterpartySelected('warehouse', warehouse.itemNo) }"
+          >
             <td>{{warehouse.warehouseLabel}}</td>
             <td class="landUnitsPositionCol">{{warehouse.inhabitants}}</td>
             <td class="landUnitsPositionCol">{{warehouse.foreign}}</td>
@@ -601,9 +618,93 @@
             <td>{{warehouse.gold}}</td>
             <td>{{warehouse.wine}}</td>
           </tr>
-          <tr ng-if="!sphereWarehouseRows || sphereWarehouseRows.length === 0">
+          <tr ng-if="getVisibleTradeWarehouseRows().length === 0">
             <td colspan="16" class="text-muted">
-              No sphere warehouses found for this turn.
+              No sphere warehouse found for this city.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary" ng-show="isTradeCounterpartyKindVisible('train') && selectedTradingCity">
+      <span class="landUnitsSectionTitle">Baggage Trains</span>
+      <span class="landUnitsSectionMeta">{{getVisibleTradeBaggageTrainRows().length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="isTradeCounterpartyKindVisible('train') && selectedTradingCity && !isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable tradeOwnedCitiesPickerTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th>Goods 1</th>
+            <th>Quantity 1</th>
+            <th>Goods 2</th>
+            <th>Quantity 2</th>
+            <th>Money</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="train in getVisibleTradeBaggageTrainRows() track by train.id"
+            ng-click="selectTradeBaggageTrainCounterparty(train)"
+            ng-class="{ active: isTradeCounterpartySelected('train', train.itemNo) }"
+          >
+            <td>{{train.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{train.x}}</td>
+            <td class="landUnitsPositionCol">{{train.y}}</td>
+            <td>{{formatTradeGoodsWithName(train.goods1)}}</td>
+            <td>{{train.quantity1}}</td>
+            <td>{{formatTradeGoodsWithName(train.goods2)}}</td>
+            <td>{{train.quantity2}}</td>
+            <td>{{train.money}}</td>
+          </tr>
+          <tr ng-if="getVisibleTradeBaggageTrainRows().length === 0">
+            <td colspan="8" class="text-muted">
+              No baggage trains found in this sphere.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="landUnitsSectionHeader tradeCitiesSectionHeader tradeCitiesSectionHeaderSecondary" ng-show="isTradeCounterpartyKindVisible('merchant') && selectedTradingCity">
+      <span class="landUnitsSectionTitle">Merchant Ships</span>
+      <span class="landUnitsSectionMeta">{{getVisibleTradeMerchantShipRows().length}}</span>
+    </div>
+    <div class="landUnitsTableWrap" ng-show="isTradeCounterpartyKindVisible('merchant') && selectedTradingCity && !isLoading">
+      <table class="table landUnitsTable landUnitsTradingCitiesTable tradeOwnedCitiesPickerTable">
+        <thead>
+          <tr>
+            <th>ItemNo</th>
+            <th class="landUnitsPositionCol">X</th>
+            <th class="landUnitsPositionCol">Y</th>
+            <th>Goods 1</th>
+            <th>Quantity 1</th>
+            <th>Goods 2</th>
+            <th>Quantity 2</th>
+            <th>Money</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            ng-repeat="ship in getVisibleTradeMerchantShipRows() track by ship.id"
+            ng-click="selectTradeMerchantShipCounterparty(ship)"
+            ng-class="{ active: isTradeCounterpartySelected('merchant', ship.itemNo) }"
+          >
+            <td>{{ship.itemNo}}</td>
+            <td class="landUnitsPositionCol">{{ship.x}}</td>
+            <td class="landUnitsPositionCol">{{ship.y}}</td>
+            <td>{{formatTradeGoodsWithName(ship.goods1)}}</td>
+            <td>{{ship.quantity1}}</td>
+            <td>{{formatTradeGoodsWithName(ship.goods2)}}</td>
+            <td>{{ship.quantity2}}</td>
+            <td>{{ship.money}}</td>
+          </tr>
+          <tr ng-if="getVisibleTradeMerchantShipRows().length === 0">
+            <td colspan="8" class="text-muted">
+              No merchant ships found in this sphere.
             </td>
           </tr>
         </tbody>

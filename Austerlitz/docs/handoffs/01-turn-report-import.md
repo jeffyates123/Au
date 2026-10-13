@@ -20,6 +20,9 @@ The Load/Import screen uploads a text turn report, parses it, and stores a repor
 4. Parsed rows are stored in `TR_*` tables for the selected turn ID.
 5. The client reloads shared turn data and exposes import errors/status.
 
+Merchant Ships parsing reads each left/right ship block by tokens so variable-width
+goods numbers and quantities import correctly.
+
 Sea battle import writes normalized report snapshots into
 `TR_SeaBattles`, `TR_SeaBattleShips`, `TR_SeaBattleLongRangeActions`,
 `TR_SeaBattleBoardingActions`, and `TR_SeaBattleMerchantCaptures`.
