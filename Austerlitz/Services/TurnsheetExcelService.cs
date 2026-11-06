@@ -69,7 +69,7 @@ namespace Austerlitz.Services
             { "TS_23", typeof(TS_23ChangeStateRelationships) }
         };
 
-        public void SaveTurnsheet(string turnId, IEnumerable<SectionRows> sections)
+        public void SaveTurnsheet(string turnId, IEnumerable<SectionRows> sections, TS_00TurnDetails turnDetails = null)
         {
             if (string.IsNullOrWhiteSpace(turnId))
             {
@@ -91,6 +91,7 @@ namespace Austerlitz.Services
                     WriteSection(sheet, layout, rows);
                 }
 
+                WriteHeaderCells(sheet, turnDetails);
                 workbook.Save();
             }
         }
@@ -291,6 +292,56 @@ namespace Austerlitz.Services
             }
 
             cell.Value = value.ToString();
+        }
+
+        private static void WriteHeaderCells(IXLWorksheet sheet, TS_00TurnDetails turnDetails)
+        {
+            if (sheet == null || turnDetails == null)
+            {
+                return;
+            }
+
+            WriteCell(sheet.Cell("C5"), turnDetails.State);
+
+            int accountNo;
+            WriteCell(sheet.Cell("C6"), int.TryParse(turnDetails.AccountNo, out accountNo) ? (object)accountNo : turnDetails.AccountNo);
+
+            int gameNo;
+            WriteCell(sheet.Cell("G5"), int.TryParse(turnDetails.GameNo, out gameNo) ? (object)gameNo : turnDetails.GameNo);
+
+            WriteCell(sheet.Cell("G6"), turnDetails.PlayerName);
+            WriteCell(sheet.Cell("G7"), FormatProcessDate(turnDetails.ProcessDate));
+        }
+
+        private static string FormatProcessDate(DateTime? processDate)
+        {
+            if (!processDate.HasValue)
+            {
+                return null;
+            }
+
+            var day = processDate.Value.Day;
+            return day + GetDaySuffix(day) + " " + processDate.Value.ToString("MMM", CultureInfo.InvariantCulture);
+        }
+
+        private static string GetDaySuffix(int day)
+        {
+            if (day % 100 >= 11 && day % 100 <= 13)
+            {
+                return "th";
+            }
+
+            switch (day % 10)
+            {
+                case 1:
+                    return "st";
+                case 2:
+                    return "nd";
+                case 3:
+                    return "rd";
+                default:
+                    return "th";
+            }
         }
 
         private static string GetOrCreateTurnsheetPath(string turnId)

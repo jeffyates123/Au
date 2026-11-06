@@ -22,6 +22,7 @@ namespace Austerlitz.Services
                 var lineLocation = 0;
 
                 var turnId = GetTurnId(lineList, lineLocation, auDB);
+                SaveTurnHeaderDetails(lineList, auDB, turnId);
                 CleanUpTurnReport(lineList);
 
                 lineLocation = LoadWarehouses(lineList, lineLocation, auDB, turnId);
@@ -100,7 +101,15 @@ namespace Austerlitz.Services
 
                     var gameNo = gameMatch.Groups["gameNo"].Value;
                     var stateName = gameMatch.Groups["state"].Value.Trim();
-                    var state = TurnReportImportParsingUtils.GetStateLetter(stateName);
+                    string state;
+                    if (!TurnReportImportParsingUtils.TryGetStateLetter(stateName, out state))
+                    {
+                        state = GetStateLetterFromCompactHeader(lineList, lineLocation, gameNo);
+                    }
+                    if (string.IsNullOrWhiteSpace(state))
+                    {
+                        continue;
+                    }
 
                     var monthLine = lineList[nextContentLine].ToString();
                     var monthMatch = Regex.Match(monthLine, @"Month:\s*(?<month>[A-Za-z]{3})[A-Za-z]*\s+(?<year>\d{4})");
@@ -113,8 +122,8 @@ namespace Austerlitz.Services
                     var year = monthMatch.Groups["year"].Value;
                     var turnId = gameNo + state + month + year;
 
-                    var existingTurn = auDB.TS_00TurnDetails.Where(x => x.TurnId == turnId);
-                    if (existingTurn.Count() == 0)
+                    var existingTurn = auDB.TS_00TurnDetails.FirstOrDefault(x => x.TurnId == turnId);
+                    if (existingTurn == null)
                     {
                         var newTurn = new TS_00TurnDetails { TurnId = turnId };
                         auDB.TS_00TurnDetails.Add(newTurn);
@@ -133,6 +142,193 @@ namespace Austerlitz.Services
             {
                 throw new Exception("getTurnId: " + ex.Message, ex);
             }
+        }
+
+        private static void SaveTurnHeaderDetails(ArrayList lineList, AusterlitzDbContext auDB, string turnId)
+        {
+            if (lineList == null || auDB == null || string.IsNullOrWhiteSpace(turnId))
+            {
+                return;
+            }
+
+            var turnHeader = ExtractTurnHeaderValues(lineList);
+            var turnDetails = auDB.TS_00TurnDetails.FirstOrDefault(x => x.TurnId == turnId);
+            if (turnDetails == null)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(turnHeader.GameNo))
+            {
+                turnDetails.GameNo = turnHeader.GameNo;
+            }
+            else if (string.IsNullOrWhiteSpace(turnDetails.GameNo) && turnId.Length >= 3)
+            {
+                turnDetails.GameNo = turnId.Substring(0, 3);
+            }
+
+            if (!string.IsNullOrWhiteSpace(turnHeader.State))
+            {
+                turnDetails.State = turnHeader.State;
+            }
+            else if (string.IsNullOrWhiteSpace(turnDetails.State) && turnId.Length >= 4)
+            {
+                turnDetails.State = turnId.Substring(3, 1);
+            }
+
+            if (!string.IsNullOrWhiteSpace(turnHeader.AccountNo))
+            {
+                turnDetails.AccountNo = turnHeader.AccountNo;
+            }
+
+            if (!string.IsNullOrWhiteSpace(turnHeader.PlayerName))
+            {
+                turnDetails.PlayerName = turnHeader.PlayerName;
+            }
+
+            if (turnHeader.ProcessDate.HasValue)
+            {
+                turnDetails.ProcessDate = turnHeader.ProcessDate.Value;
+            }
+
+            auDB.SaveChanges();
+        }
+
+        private static TurnHeaderValues ExtractTurnHeaderValues(ArrayList lineList)
+        {
+            var result = new TurnHeaderValues();
+            if (lineList == null || lineList.Count == 0)
+            {
+                return result;
+            }
+
+            var gameHeaderLineIndex = -1;
+            for (var i = 0; i < lineList.Count; i++)
+            {
+                var line = (lineList[i] ?? string.Empty).ToString();
+                if (line.IndexOf("AUSTERLITZ   Game:", StringComparison.Ordinal) != -1)
+                {
+                    gameHeaderLineIndex = i;
+                    var gameMatch = Regex.Match(line, @"Game:\s*AU-(?<gameNo>\d{3})(?<state>.*)$");
+                    if (gameMatch.Success)
+                    {
+                        result.GameNo = gameMatch.Groups["gameNo"].Value;
+                        string stateLetter;
+                        if (TurnReportImportParsingUtils.TryGetStateLetter(gameMatch.Groups["state"].Value.Trim(), out stateLetter))
+                        {
+                            result.State = stateLetter;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(result.State))
+            {
+                result.State = GetStateLetterFromCompactHeader(lineList, gameHeaderLineIndex >= 0 ? gameHeaderLineIndex : 0, result.GameNo);
+            }
+
+            var accountRegex = new Regex(@"ACCOUNT:\s*(?<account>\d+)", RegexOptions.IgnoreCase);
+            var playerRegex = new Regex(@"^\s*(?:Mr|Mrs|Miss|Ms|Dr)\.?\s+(?<name>[^@]+?)\.?\s*$", RegexOptions.IgnoreCase);
+            var processDateRegex = new Regex(@"Next turn due:\s*[A-Za-z]+\s+(?<day>\d{1,2})(?:ST|ND|RD|TH)\s+(?<month>[A-Za-z]+)", RegexOptions.IgnoreCase);
+
+            for (var i = 0; i < lineList.Count; i++)
+            {
+                var line = (lineList[i] ?? string.Empty).ToString();
+
+                if (string.IsNullOrWhiteSpace(result.AccountNo))
+                {
+                    var accountMatch = accountRegex.Match(line);
+                    if (accountMatch.Success)
+                    {
+                        result.AccountNo = accountMatch.Groups["account"].Value;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(result.PlayerName))
+                {
+                    var playerMatch = playerRegex.Match(line);
+                    if (playerMatch.Success)
+                    {
+                        result.PlayerName = playerMatch.Groups["name"].Value.Trim();
+                    }
+                }
+
+                if (!result.ProcessDate.HasValue)
+                {
+                    var processDateMatch = processDateRegex.Match(line);
+                    if (processDateMatch.Success)
+                    {
+                        result.ProcessDate = BuildProcessDate(processDateMatch.Groups["day"].Value, processDateMatch.Groups["month"].Value);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static DateTime? BuildProcessDate(string dayText, string monthText)
+        {
+            int day;
+            if (!int.TryParse(dayText, out day))
+            {
+                return null;
+            }
+
+            if (day < 1 || day > 31)
+            {
+                return null;
+            }
+
+            DateTime monthDate;
+            var monthFormats = new[] { "MMMM", "MMM" };
+            if (!DateTime.TryParseExact(monthText, monthFormats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AllowWhiteSpaces, out monthDate))
+            {
+                return null;
+            }
+
+            try
+            {
+                return new DateTime(2000, monthDate.Month, day);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string GetStateLetterFromCompactHeader(ArrayList lineList, int startIndex, string gameNo)
+        {
+            if (lineList == null || lineList.Count == 0)
+            {
+                return null;
+            }
+
+            var endIndex = Math.Min(lineList.Count - 1, Math.Max(startIndex + 40, 40));
+            var compactHeaderRegex = string.IsNullOrWhiteSpace(gameNo)
+                ? new Regex(@"\bAU\s*\d{3}\s*(?<state>[A-Z])\b", RegexOptions.IgnoreCase)
+                : new Regex(@"\bAU\s*" + Regex.Escape(gameNo) + @"\s*(?<state>[A-Z])\b", RegexOptions.IgnoreCase);
+
+            for (var i = Math.Max(startIndex, 0); i <= endIndex; i++)
+            {
+                var line = (lineList[i] ?? string.Empty).ToString();
+                var compactMatch = compactHeaderRegex.Match(line);
+                if (compactMatch.Success)
+                {
+                    return compactMatch.Groups["state"].Value.Trim().ToUpperInvariant();
+                }
+            }
+
+            return null;
+        }
+
+        private sealed class TurnHeaderValues
+        {
+            public string State { get; set; }
+            public string GameNo { get; set; }
+            public string PlayerName { get; set; }
+            public string AccountNo { get; set; }
+            public DateTime? ProcessDate { get; set; }
         }
 
         private static int MoveToNextLine(ArrayList lineList, int start, Func<string, bool> predicate)

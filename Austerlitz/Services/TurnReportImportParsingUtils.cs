@@ -79,5 +79,74 @@ namespace Austerlitz.Services
                     return "E";
             }
         }
+
+        public static bool TryGetStateLetter(string stateName, out string stateLetter)
+        {
+            if (string.IsNullOrWhiteSpace(stateName))
+            {
+                stateLetter = null;
+                return false;
+            }
+
+            switch (stateName.Trim())
+            {
+                case "Austria":
+                case "Austria-Hungary":
+                    stateLetter = "A";
+                    return true;
+                case "Conf. of the Rhine":
+                case "Confederation of Rhine":
+                case "Confederation of the Rhine":
+                    stateLetter = "B";
+                    return true;
+                case "Denmark":
+                    stateLetter = "D";
+                    return true;
+                case "Spain":
+                    stateLetter = "E";
+                    return true;
+                case "France":
+                    stateLetter = "F";
+                    return true;
+                case "Great Britain":
+                    stateLetter = "G";
+                    return true;
+                case "Holland":
+                    stateLetter = "H";
+                    return true;
+                case "Italy":
+                    stateLetter = "I";
+                    return true;
+                case "Portugal":
+                case "Kingdom of Portugal":
+                    stateLetter = "K";
+                    return true;
+                case "Morocco":
+                    stateLetter = "M";
+                    return true;
+                case "Naples":
+                    stateLetter = "N";
+                    return true;
+                case "Prussia":
+                    stateLetter = "P";
+                    return true;
+                case "Russia":
+                    stateLetter = "R";
+                    return true;
+                case "Sweden":
+                    stateLetter = "S";
+                    return true;
+                case "Ottoman Empire":
+                    stateLetter = "T";
+                    return true;
+                case "Warsaw":
+                case "Duchy of Warsaw":
+                    stateLetter = "W";
+                    return true;
+                default:
+                    stateLetter = null;
+                    return false;
+            }
+        }
     }
 }

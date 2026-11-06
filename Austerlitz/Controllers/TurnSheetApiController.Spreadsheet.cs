@@ -173,6 +173,11 @@ namespace Austerlitz.Controllers
             {
                 var turnSheetManager = new Austerlitz.Domain.TurnSheetManager();
                 var turnsheetExcelService = new Austerlitz.Services.TurnsheetExcelService();
+                TS_00TurnDetails turnDetails;
+                using (var dataContext = new AusterlitzDbContext())
+                {
+                    turnDetails = dataContext.TS_00TurnDetails.FirstOrDefault(x => x.TurnId == turnId);
+                }
 
                 turnsheetExcelService.SaveTurnsheet(turnId, new[]
                 {
@@ -199,7 +204,7 @@ namespace Austerlitz.Controllers
                     new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_21", turnSheetManager.GetTSHandOverTerritory(turnId)),
                     new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_22", turnSheetManager.GetTSChangeNames(turnId)),
                     new Austerlitz.Services.TurnsheetExcelService.SectionRows("TS_23", turnSheetManager.GetTSChangeStateRelationships(turnId))
-                });
+                }, turnDetails);
 
                 return Ok(true);
             }
