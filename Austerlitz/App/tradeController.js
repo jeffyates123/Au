@@ -31,10 +31,16 @@ austerlitzModule.controller(
     var tradeRowMarker = "TRADE";
     var tradeTurnSheetMaxRows = 18;
     var sphereWarehouseNos = { 1: true, 2: true, 3: true };
+    var moneyGoodsId = 10;
 
     function toInt(value, fallback) {
       var parsed = parseInt(value, 10);
       return isNaN(parsed) ? fallback : parsed;
+    }
+
+    function toOccupiedInt(value, fallback) {
+      var parsed = toInt(value, fallback);
+      return parsed != null && parsed !== 0 ? parsed : null;
     }
 
     function toNumber(value, fallback) {
@@ -53,6 +59,7 @@ austerlitzModule.controller(
     function createTradingCalcRow(config) {
       return {
         key: config.key,
+        goodsId: config.goodsId,
         itemType: config.itemType,
         label: config.label,
         goodsFactor: config.fallbackGoodsFactor,
@@ -102,10 +109,15 @@ austerlitzModule.controller(
     }
 
     function refreshTradingCalcStocks() {
-      var selectedCity = $scope.selectedTradingCity;
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      var cityEndpoint = tradeCityEndpoint(fromEndpoint, toEndpoint);
       ($scope.tradingCalcRows || []).forEach(function (row) {
-        row.stock = toInt(selectedCity && selectedCity[row.key], 0);
-        row.warehouse = getSelectedCounterpartyStockByKey(row.key);
+        var goodsId = tradeGoodsIdByKey[row.key];
+        row.fromStock = fromEndpoint ? projectGoodsQty(fromEndpoint, goodsId) : 0;
+        row.toStock = toEndpoint ? projectGoodsQty(toEndpoint, goodsId) : 0;
+        row.stock = cityEndpoint ? projectGoodsQty(cityEndpoint, goodsId) : 0;
+        row.rate = cityEndpoint ? Math.max(0, toNumber(cityEndpoint.rate, 0)) : 0;
       });
     }
 
@@ -144,22 +156,21 @@ austerlitzModule.controller(
       return lookup;
     }
 
-    function syncSelectedTradingCityAfterRefresh() {
-      if (!$scope.selectedTradingCity) {
+    function syncTradeSelection() {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      if ($scope.selectedTradeFrom && !fromEndpoint) {
+        $scope.selectedTradeFrom = null;
+        $scope.selectedTradeTo = null;
         return;
       }
-      var selectedMatch = ($scope.tradeCityRows || []).find(function (city) {
-        return city.id === $scope.selectedTradingCity.id;
-      });
-      $scope.selectedTradingCity = selectedMatch || null;
-      if (!$scope.selectedTradingCity) {
-        $scope.selectedTradeCounterparty = null;
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if ($scope.selectedTradeTo && (!fromEndpoint || !toEndpoint || !isTradeCandidate(fromEndpoint, toEndpoint))) {
+        $scope.selectedTradeTo = null;
       }
     }
 
     function clearTradingInputValues() {
       ($scope.tradingCalcRows || []).forEach(function (row) {
-        row.directBuyQty = null;
         row.qty = null;
         row.n = null;
       });
@@ -230,28 +241,6 @@ austerlitzModule.controller(
       return match;
     }
 
-    function getSelectedCounterpartyStockByKey(goodsKey) {
-      var counterparty = $scope.selectedTradeCounterparty;
-      if (!counterparty || !goodsKey) {
-        return 0;
-      }
-      if (counterparty.kind === "warehouse") {
-        var warehouseRow = getWarehouseRowByItemNo(counterparty.itemNo);
-        return Math.max(0, toInt(warehouseRow && warehouseRow[goodsKey], 0));
-      }
-      if (counterparty.kind === "train") {
-        var goodsId = tradeGoodsIdByKey[goodsKey];
-        var trainRow = getTradeTrainByItemNo(counterparty.itemNo);
-        return getTradeTrainStockByGoodsId(trainRow, goodsId);
-      }
-      if (counterparty.kind === "merchant") {
-        var merchantGoodsId = tradeGoodsIdByKey[goodsKey];
-        var merchantRow = getMerchantShipByItemNo(counterparty.itemNo);
-        return getTradeTrainStockByGoodsId(merchantRow, merchantGoodsId);
-      }
-      return 0;
-    }
-
     function getCounterpartyStockByItemNoAndGood(sourceItemNo, goodsId, goodsKey) {
       var sourceNo = toInt(sourceItemNo, null);
       if (sourceNo == null) {
@@ -273,53 +262,7 @@ austerlitzModule.controller(
     }
 
     function refreshTradingSelectionLists() {
-      if (!$scope.selectedTradingCity) {
-        $scope.visibleTradeCityRows = ($scope.tradeCityRows || []).slice();
-        $scope.availableTradeWarehouseRows = [];
-        $scope.availableTradeBaggageTrainRows = [];
-        $scope.availableTradeMerchantShipRows = [];
-        $scope.selectedTradeCounterparty = null;
-        return;
-      }
-
-      var sphere = getSphereForCity($scope.selectedTradingCity);
-      $scope.visibleTradeCityRows = [$scope.selectedTradingCity];
-      $scope.availableTradeWarehouseRows = [];
-      if (isOwnedTradeCity($scope.selectedTradingCity)) {
-        var warehouseNo = getWarehouseNoForCity($scope.selectedTradingCity);
-        var warehouseRow = getWarehouseRowByItemNo(warehouseNo);
-        if (warehouseRow) {
-          $scope.availableTradeWarehouseRows = [warehouseRow];
-        }
-      }
-
-      $scope.availableTradeBaggageTrainRows = ($scope.playerBaggageTrainRows || []).filter(function (train) {
-        return getSphereForTradeTrain(train) === sphere;
-      });
-      $scope.availableTradeMerchantShipRows = ($scope.playerMerchantShipRows || []).filter(function (ship) {
-        return getSphereForTradeTrain(ship) === sphere;
-      });
-
-      if ($scope.selectedTradeCounterparty) {
-        var selectedNo = toInt($scope.selectedTradeCounterparty.itemNo, null);
-        var stillAvailable = false;
-        if ($scope.selectedTradeCounterparty.kind === "warehouse") {
-          stillAvailable = ($scope.availableTradeWarehouseRows || []).some(function (row) {
-            return toInt(row && row.itemNo, null) === selectedNo;
-          });
-        } else if ($scope.selectedTradeCounterparty.kind === "train") {
-          stillAvailable = ($scope.availableTradeBaggageTrainRows || []).some(function (train) {
-            return toInt(train && train.itemNo, null) === selectedNo;
-          });
-        } else if ($scope.selectedTradeCounterparty.kind === "merchant") {
-          stillAvailable = ($scope.availableTradeMerchantShipRows || []).some(function (ship) {
-            return toInt(ship && ship.itemNo, null) === selectedNo;
-          });
-        }
-        if (!stillAvailable) {
-          $scope.selectedTradeCounterparty = null;
-        }
-      }
+      syncTradeSelection();
     }
 
     function refreshSphereWarehouseRows() {
@@ -396,6 +339,655 @@ austerlitzModule.controller(
         };
       });
       return lookup;
+    }
+
+    var baggageTrainLoadTons = 1500;
+
+    function sphereForWarehouseNo(itemNo) {
+      if (toInt(itemNo, null) === 1) {
+        return "Europe";
+      }
+      if (toInt(itemNo, null) === 2) {
+        return "Caribbean";
+      }
+      if (toInt(itemNo, null) === 3) {
+        return "India";
+      }
+      return "Unknown";
+    }
+
+    function findTradeRow(kind, itemNo) {
+      if (kind === "warehouse") {
+        return getWarehouseRowByItemNo(itemNo);
+      }
+      if (kind === "train") {
+        return getTradeTrainByItemNo(itemNo);
+      }
+      if (kind === "merchant") {
+        return getMerchantShipByItemNo(itemNo);
+      }
+      if (kind === "city") {
+        var match = null;
+        ($scope.tradeCityRows || []).forEach(function (city) {
+          if (!match && toInt(city && city.itemNo, null) === toInt(itemNo, null)) {
+            match = city;
+          }
+        });
+        return match;
+      }
+      return null;
+    }
+
+    function resolveTradeKind(itemNo) {
+      var parsed = toInt(itemNo, null);
+      if (parsed == null) {
+        return null;
+      }
+      if (sphereWarehouseNos[parsed]) {
+        return "warehouse";
+      }
+      if (getCityLookupByItemNo()[parsed]) {
+        return "city";
+      }
+      if (getTradeTrainByItemNo(parsed)) {
+        return "train";
+      }
+      if (getMerchantShipByItemNo(parsed)) {
+        return "merchant";
+      }
+      return null;
+    }
+
+    function rowToTradeEndpoint(kind, row) {
+      if (!row) {
+        return null;
+      }
+      var itemNo = toInt(row.itemNo, null);
+      if (kind === "warehouse") {
+        return {
+          kind: "warehouse",
+          itemNo: itemNo,
+          sphere: sphereForWarehouseNo(itemNo),
+          x: null,
+          y: null,
+          name: row.warehouseLabel,
+          source: row,
+        };
+      }
+      return {
+        kind: kind,
+        itemNo: itemNo,
+        sphere: row.sphere || getSphereForCoordinates(row.x, row.y),
+        x: toInt(row.x, null),
+        y: toInt(row.y, null),
+        name: row.name || "",
+        rate: toNumber(row.rate, 0),
+        isOwned: !!row.isOwned,
+        type: row.type,
+        source: row,
+      };
+    }
+
+    function currentTradeEndpoint(selection) {
+      if (!selection) {
+        return null;
+      }
+      return rowToTradeEndpoint(selection.kind, findTradeRow(selection.kind, selection.itemNo));
+    }
+
+    function canPairTradeKinds(fromKind, toKind) {
+      if (!fromKind || !toKind || fromKind === toKind) {
+        return false;
+      }
+      if (
+        (fromKind === "train" && toKind === "merchant") ||
+        (fromKind === "merchant" && toKind === "train")
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    function warehouseOwnsCity(warehouseEndpoint, cityEndpoint) {
+      return !!(
+        warehouseEndpoint &&
+        cityEndpoint &&
+        cityEndpoint.kind === "city" &&
+        cityEndpoint.isOwned &&
+        getWarehouseNoForCity(cityEndpoint) === warehouseEndpoint.itemNo
+      );
+    }
+
+    function isTradeCandidate(fromEndpoint, toEndpoint) {
+      if (!fromEndpoint || !toEndpoint) {
+        return false;
+      }
+      if (!canPairTradeKinds(fromEndpoint.kind, toEndpoint.kind)) {
+        return false;
+      }
+      if (fromEndpoint.sphere !== toEndpoint.sphere) {
+        return false;
+      }
+      if (fromEndpoint.kind === "warehouse" && toEndpoint.kind === "city") {
+        return warehouseOwnsCity(fromEndpoint, toEndpoint);
+      }
+      if (toEndpoint.kind === "warehouse" && fromEndpoint.kind === "city") {
+        return warehouseOwnsCity(toEndpoint, fromEndpoint);
+      }
+      return true;
+    }
+
+    function visibleTradeRows(kind) {
+      if (!$scope.selectedTradeSection || !$scope.selectedTradeSphere) {
+        return [];
+      }
+      var sourceRows =
+        kind === "warehouse"
+          ? $scope.sphereWarehouseRows || []
+          : kind === "train"
+            ? $scope.playerBaggageTrainRows || []
+            : kind === "merchant"
+              ? $scope.playerMerchantShipRows || []
+              : $scope.tradeCityRows || [];
+      var rows = sourceRows.filter(function (row) {
+        return rowMatchesSelectedSphere(kind, row);
+      });
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      if (!fromEndpoint) {
+        return rows.map(function (row) {
+          return withTs17Cargo(kind, row);
+        });
+      }
+      if (fromEndpoint.kind === kind) {
+        return rows
+          .filter(function (row) {
+            return toInt(row && row.itemNo, null) === fromEndpoint.itemNo;
+          })
+          .map(function (row) {
+            return withTs17Cargo(kind, row);
+          });
+      }
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if (toEndpoint) {
+        if (toEndpoint.kind !== kind) {
+          return [];
+        }
+        return rows
+          .filter(function (row) {
+            return toInt(row && row.itemNo, null) === toEndpoint.itemNo;
+          })
+          .map(function (row) {
+            return withTs17Cargo(kind, row);
+          });
+      }
+      return rows
+        .filter(function (row) {
+          var candidate = rowToTradeEndpoint(kind, row);
+          if (!isTradeCandidate(fromEndpoint, candidate)) {
+            return false;
+          }
+          if ($scope.selectedTradeSection !== "ts17") {
+            return true;
+          }
+          return !getTs17BlockReason(fromEndpoint, candidate);
+        })
+        .map(function (row) {
+          return withTs17Cargo(kind, row);
+        });
+    }
+
+    function tradeEndpointLabel(endpoint) {
+      if (!endpoint) {
+        return "Item";
+      }
+      if (endpoint.kind === "warehouse") {
+        return "Warehouse " + endpoint.itemNo;
+      }
+      if (endpoint.kind === "train") {
+        return "Baggage train " + endpoint.itemNo;
+      }
+      if (endpoint.kind === "merchant") {
+        return "Merchant ship " + endpoint.itemNo;
+      }
+      return "Trade city " + endpoint.itemNo + (endpoint.name ? " " + endpoint.name : "");
+    }
+
+    function tradeGoodsName(goodsId) {
+      var label = toText(tradeGoodsLabelById[goodsId], "");
+      return label || "goods " + goodsId;
+    }
+
+    function tradeCityEndpoint(fromEndpoint, toEndpoint) {
+      if (fromEndpoint && fromEndpoint.kind === "city") {
+        return fromEndpoint;
+      }
+      if (toEndpoint && toEndpoint.kind === "city") {
+        return toEndpoint;
+      }
+      return null;
+    }
+
+    function isSellTrade(fromEndpoint, toEndpoint) {
+      return !!(fromEndpoint && toEndpoint && fromEndpoint.kind !== "city" && toEndpoint.kind === "city");
+    }
+
+    function isMoveTrade(fromEndpoint, toEndpoint) {
+      return !!(fromEndpoint && toEndpoint && !tradeCityEndpoint(fromEndpoint, toEndpoint));
+    }
+
+    function perTonForGoodsId(goodsId) {
+      if (toInt(goodsId, null) === moneyGoodsId) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+      var key = tradeGoodsKeyById[goodsId];
+      var match = null;
+      ($scope.tradingCalcRows || []).forEach(function (row) {
+        if (!match && row.key === key) {
+          match = row;
+        }
+      });
+      var perTon = match ? toNumber(match.perTon, 0) : 0;
+      return perTon > 0 ? perTon : 1;
+    }
+
+    function addSlotQty(slots, goodsId, qty) {
+      goodsId = toInt(goodsId, null);
+      qty = Math.max(0, toInt(qty, 0));
+      if (goodsId === moneyGoodsId) {
+        return;
+      }
+      if (goodsId == null || goodsId <= 0 || qty <= 0) {
+        return;
+      }
+      var i;
+      for (i = 0; i < slots.length; i++) {
+        if (slots[i].goodsId === goodsId) {
+          slots[i].qty += qty;
+          return;
+        }
+      }
+      for (i = 0; i < slots.length; i++) {
+        if (slots[i].qty <= 0) {
+          slots[i].goodsId = goodsId;
+          slots[i].qty = qty;
+          return;
+        }
+      }
+      slots.push({ goodsId: goodsId, qty: qty });
+    }
+
+    function removeSlotQty(slots, goodsId, qty) {
+      goodsId = toInt(goodsId, null);
+      qty = Math.max(0, toInt(qty, 0));
+      if (goodsId === moneyGoodsId) {
+        return;
+      }
+      if (goodsId == null || qty <= 0) {
+        return;
+      }
+      for (var i = 0; i < slots.length; i++) {
+        if (slots[i].goodsId !== goodsId) {
+          continue;
+        }
+        slots[i].qty -= qty;
+        if (slots[i].qty <= 0) {
+          slots[i].goodsId = null;
+          slots[i].qty = 0;
+        }
+        return;
+      }
+    }
+
+    function reportCarrierSlots(source) {
+      var slots = [
+        { goodsId: null, qty: 0 },
+        { goodsId: null, qty: 0 },
+      ];
+      addSlotQty(slots, source && source.goods1, source && source.quantity1);
+      addSlotQty(slots, source && source.goods2, source && source.quantity2);
+      return slots;
+    }
+
+    function readReportGoodsQty(endpoint, goodsId) {
+      if (!endpoint || !endpoint.source) {
+        return 0;
+      }
+      if (toInt(goodsId, null) === moneyGoodsId) {
+        return Math.max(0, toInt(endpoint.source.money, 0));
+      }
+      if (endpoint.kind === "train" || endpoint.kind === "merchant") {
+        return getTradeTrainStockByGoodsId(endpoint.source, goodsId);
+      }
+      var key = tradeGoodsKeyById[goodsId];
+      return Math.max(0, toInt(key ? endpoint.source[key] : 0, 0));
+    }
+
+    function projectMoneyQty(endpoint, throughSection) {
+      if (!endpoint) {
+        return 0;
+      }
+      var qty = readReportGoodsQty(endpoint, moneyGoodsId);
+      eachSavedCargoOrder(function (order) {
+        if (order.goodsId !== moneyGoodsId) {
+          return;
+        }
+        if (orderMatchesEndpoint(endpoint, order.toNo)) {
+          qty += order.quantity;
+        } else if (orderMatchesEndpoint(endpoint, order.fromNo)) {
+          qty = Math.max(0, qty - order.quantity);
+        }
+      }, throughSection);
+      return qty;
+    }
+
+    function eachSavedCargoOrder(visitor, throughSection) {
+      function visit(sectionKey, rows) {
+        (rows || []).forEach(function (row) {
+          var marker = toText(row && row.rowMarker, "").toUpperCase();
+          if (marker && marker !== tradeRowMarker) {
+            return;
+          }
+          var goodsId = toInt(row && row.goods, null);
+          var quantity = Math.max(0, toInt(row && row.quantity, 0));
+          var fromNo = toInt(
+            sectionKey === "ts17" ? row && row.from : row && (row.source != null ? row.source : row.from),
+            null,
+          );
+          var toNo = toInt(
+            sectionKey === "ts17" ? row && row.to : row && (row.destination != null ? row.destination : row.to),
+            null,
+          );
+          if (goodsId == null || quantity <= 0 || fromNo == null || toNo == null) {
+            return;
+          }
+          visitor({ goodsId: goodsId, quantity: quantity, fromNo: fromNo, toNo: toNo });
+        });
+      }
+
+      visit("ts17", $scope.ts17Rows);
+      if (throughSection !== "ts17") {
+        visit("ts19", $scope.ts19Rows);
+      }
+    }
+
+    function orderMatchesEndpoint(endpoint, itemNo) {
+      return !!(
+        endpoint &&
+        toInt(itemNo, null) === endpoint.itemNo &&
+        resolveTradeKind(itemNo) === endpoint.kind
+      );
+    }
+
+    function projectCarrierSlots(endpoint, throughSection) {
+      var slots = reportCarrierSlots(endpoint && endpoint.source);
+      eachSavedCargoOrder(function (order) {
+        if (orderMatchesEndpoint(endpoint, order.toNo)) {
+          addSlotQty(slots, order.goodsId, order.quantity);
+        } else if (orderMatchesEndpoint(endpoint, order.fromNo)) {
+          removeSlotQty(slots, order.goodsId, order.quantity);
+        }
+      }, throughSection);
+      return slots;
+    }
+
+    function projectGoodsQty(endpoint, goodsId, throughSection) {
+      if (!endpoint || goodsId == null) {
+        return 0;
+      }
+      if (toInt(goodsId, null) === moneyGoodsId) {
+        return projectMoneyQty(endpoint, throughSection);
+      }
+      if (endpoint.kind === "train" || endpoint.kind === "merchant") {
+        var total = 0;
+        projectCarrierSlots(endpoint, throughSection).forEach(function (slot) {
+          if (slot.goodsId === goodsId) {
+            total += Math.max(0, slot.qty);
+          }
+        });
+        return total;
+      }
+      var qty = readReportGoodsQty(endpoint, goodsId);
+      eachSavedCargoOrder(function (order) {
+        if (order.goodsId !== goodsId) {
+          return;
+        }
+        if (orderMatchesEndpoint(endpoint, order.toNo)) {
+          qty += order.quantity;
+        } else if (orderMatchesEndpoint(endpoint, order.fromNo)) {
+          qty = Math.max(0, qty - order.quantity);
+        }
+      }, throughSection);
+      return qty;
+    }
+
+    function copyTradeRow(row) {
+      var copy = {};
+      var key;
+      for (key in row) {
+        if (Object.prototype.hasOwnProperty.call(row, key)) {
+          copy[key] = row[key];
+        }
+      }
+      return copy;
+    }
+
+    function rowMatchesSelectedSphere(kind, row) {
+      if (!$scope.selectedTradeSphere || !row) {
+        return false;
+      }
+      if (kind === "warehouse") {
+        return sphereForWarehouseNo(row.itemNo) === $scope.selectedTradeSphere;
+      }
+      return (row.sphere || getSphereForCoordinates(row.x, row.y)) === $scope.selectedTradeSphere;
+    }
+
+    function withTs17Cargo(kind, row) {
+      if ($scope.selectedTradeSection !== "ts19" || !row) {
+        return row;
+      }
+      var endpoint = rowToTradeEndpoint(kind, row);
+      if (!endpoint) {
+        return row;
+      }
+      var shown = copyTradeRow(row);
+      if (kind === "train" || kind === "merchant") {
+        var slots = projectCarrierSlots(endpoint, "ts17");
+        shown.goods1 = slots[0] ? slots[0].goodsId : null;
+        shown.quantity1 = slots[0] ? slots[0].qty : 0;
+        shown.goods2 = slots[1] ? slots[1].goodsId : null;
+        shown.quantity2 = slots[1] ? slots[1].qty : 0;
+        return shown;
+      }
+      tradingGoodsConfig.forEach(function (good) {
+        shown[good.key] = projectGoodsQty(endpoint, good.goodsId, "ts17");
+      });
+      return shown;
+    }
+
+    function measureCarrierSlots(slots) {
+      var tons = 0;
+      var names = [];
+      (slots || []).forEach(function (slot) {
+        if (!slot || !slot.goodsId || slot.qty <= 0) {
+          return;
+        }
+        tons += slot.qty / perTonForGoodsId(slot.goodsId);
+        names.push(tradeGoodsName(slot.goodsId));
+      });
+      return { tons: tons, names: names };
+    }
+
+    function carrierLoadLimit(endpoint) {
+      if (!endpoint) {
+        return 0;
+      }
+      if (endpoint.kind === "train") {
+        return baggageTrainLoadTons;
+      }
+      if (endpoint.kind === "merchant") {
+        var catalog = ($scope.masterData && ($scope.masterData.rulesCatalog || $scope.masterData.RulesCatalog)) || {};
+        var lookup = boardingSharedFactory.buildShipCapacityLookupByType({
+          ships: catalog.ships || catalog.Ships || [],
+        });
+        return boardingSharedFactory.getCatalogShipLoadCapacity({ type: endpoint.type }, lookup);
+      }
+      return 0;
+    }
+
+    function formatTons(value) {
+      var rounded = Math.round((toNumber(value, 0) || 0) * 10) / 10;
+      if (Math.abs(rounded - Math.round(rounded)) < 0.05) {
+        return String(Math.round(rounded));
+      }
+      return rounded.toFixed(1);
+    }
+
+    function isInBarracksOrShipyard(endpoint) {
+      if (!endpoint || endpoint.x == null || endpoint.y == null) {
+        return false;
+      }
+      return !!buildBarracksCoordinateLookup()[endpoint.x + "," + endpoint.y];
+    }
+
+    function getTs17BlockReason(fromEndpoint, toEndpoint) {
+      if (!fromEndpoint || !toEndpoint) {
+        return "Select a From item and a To item first.";
+      }
+      if (fromEndpoint.sphere !== toEndpoint.sphere) {
+        return "TS17 needs both items in the same sphere.";
+      }
+      var warehouseEndpoint =
+        fromEndpoint.kind === "warehouse" ? fromEndpoint : toEndpoint.kind === "warehouse" ? toEndpoint : null;
+      var otherEndpoint =
+        warehouseEndpoint === fromEndpoint ? toEndpoint : warehouseEndpoint === toEndpoint ? fromEndpoint : null;
+      if (warehouseEndpoint) {
+        if (otherEndpoint.kind === "city") {
+          if (!warehouseOwnsCity(warehouseEndpoint, otherEndpoint)) {
+            return "A warehouse cannot trade with a trade city you do not own.";
+          }
+          return null;
+        }
+        if (!isInBarracksOrShipyard(otherEndpoint)) {
+          return (
+            "TS17 needs " +
+            tradeEndpointLabel(otherEndpoint) +
+            " in a barracks or shipyard."
+          );
+        }
+        return null;
+      }
+        if (
+          fromEndpoint.x == null ||
+          fromEndpoint.y == null ||
+          toEndpoint.x == null ||
+          toEndpoint.y == null
+        ) {
+          return "TS17 needs both items on the same coordinate.";
+        }
+        if (fromEndpoint.x !== toEndpoint.x || fromEndpoint.y !== toEndpoint.y) {
+          return (
+            "TS17 needs the same coordinate. " +
+            tradeEndpointLabel(fromEndpoint) +
+            " is at " +
+            fromEndpoint.x +
+            "/" +
+            fromEndpoint.y +
+            " and " +
+            tradeEndpointLabel(toEndpoint) +
+            " is at " +
+            toEndpoint.x +
+            "/" +
+            toEndpoint.y +
+            "."
+          );
+        }
+        return null;
+    }
+
+    function getTransferBlockReason(sectionKey, fromEndpoint, toEndpoint, goodsId, quantity, repeatCount) {
+      var repeats = Math.max(1, toInt(repeatCount, 1));
+      var requiredQty = quantity * repeats;
+      if (sectionKey === "ts17") {
+        var positionReason = getTs17BlockReason(fromEndpoint, toEndpoint);
+        if (positionReason) {
+          return positionReason;
+        }
+      } else if (!fromEndpoint || !toEndpoint || fromEndpoint.sphere !== toEndpoint.sphere) {
+        return "TS19 needs both items in the same sphere.";
+      }
+
+      var available = projectGoodsQty(fromEndpoint, goodsId);
+      if (requiredQty > available) {
+        return (
+          tradeEndpointLabel(fromEndpoint) +
+          " has " +
+          available +
+          " " +
+          tradeGoodsName(goodsId) +
+          ". The quantity is " +
+          requiredQty +
+          (repeats > 1 ? " (" + quantity + " x " + repeats + ")." : ".")
+        );
+      }
+
+      if (toInt(goodsId, null) === moneyGoodsId) {
+        return null;
+      }
+
+      if (toEndpoint.kind === "train" || toEndpoint.kind === "merchant") {
+        var slots = projectCarrierSlots(toEndpoint);
+        addSlotQty(slots, goodsId, requiredQty);
+        var measured = measureCarrierSlots(slots);
+        if (measured.names.length > 2) {
+          return (
+            tradeEndpointLabel(toEndpoint) +
+            " would carry " +
+            measured.names.join(" and ") +
+            ". It can hold two goods types."
+          );
+        }
+        var limit = carrierLoadLimit(toEndpoint);
+        if (!(limit > 0)) {
+          return tradeEndpointLabel(toEndpoint) + " has no loading capacity for its ship type.";
+        }
+        if (measured.tons > limit + 0.0001) {
+          return (
+            tradeEndpointLabel(toEndpoint) +
+            " would hold " +
+            formatTons(measured.tons) +
+            " tons of " +
+            measured.names.join(" and ") +
+            ". Its loading capacity is " +
+            limit +
+            " tons."
+          );
+        }
+      }
+
+      return null;
+    }
+
+    function getTradeRepeatCount(fromEndpoint, toEndpoint, row) {
+      if (!isSellTrade(fromEndpoint, toEndpoint)) {
+        return 1;
+      }
+      var parsed = Math.round(toNumber(row && row.n, 1));
+      return parsed > 0 ? parsed : 1;
+    }
+
+    function buildTradeRecords(goodsId, quantity, fromNo, toNo, repeatCount) {
+      var repeats = Math.max(1, toInt(repeatCount, 1));
+      var records = [];
+      for (var i = 0; i < repeats; i++) {
+        records.push({
+          goods: goodsId,
+          quantity: quantity,
+          fromNo: fromNo,
+          toNo: toNo,
+          rowMarker: tradeRowMarker,
+        });
+      }
+      return records;
     }
 
     function parseTradeReplayEntry(sectionKey, row) {
@@ -548,26 +1140,87 @@ austerlitzModule.controller(
         });
 
       $scope.savedTradingRows = rows;
+      $scope.savedTransferRows = buildSavedTransferRows();
     }
 
-    function hasAnyTurnSheetValue(row, fields) {
+    function readCargoOrder(sectionKey, row) {
+      var marker = toText(row && row.rowMarker, "").toUpperCase();
+      if (marker && marker !== tradeRowMarker) {
+        return null;
+      }
+      var goodsId = toInt(row && row.goods, null);
+      var quantity = Math.max(0, toInt(row && row.quantity, 0));
+      var fromNo = toInt(
+        sectionKey === "ts17" ? row && row.from : row && (row.source != null ? row.source : row.from),
+        null,
+      );
+      var toNo = toInt(
+        sectionKey === "ts17" ? row && row.to : row && (row.destination != null ? row.destination : row.to),
+        null,
+      );
+      if (goodsId == null || quantity <= 0 || fromNo == null || toNo == null) {
+        return null;
+      }
+      return { goodsId: goodsId, quantity: quantity, fromNo: fromNo, toNo: toNo };
+    }
+
+    function savedItemLabel(itemNo) {
+      var kind = resolveTradeKind(itemNo);
+      var row = kind ? findTradeRow(kind, itemNo) : null;
       if (!row) {
-        return false;
+        return String(itemNo);
       }
-      for (var i = 0; i < fields.length; i++) {
-        var value = row[fields[i]];
-        if (value != null && value !== "") {
-          return true;
-        }
-      }
-      return false;
+      return tradeEndpointLabel(rowToTradeEndpoint(kind, row));
     }
 
-    function getTurnSheetFieldSet(sectionKey) {
-      if (sectionKey === "ts17") {
-        return ["goods", "quantity", "from", "to", "rowMarker"];
+    function buildSavedTransferRows() {
+      var grouped = {};
+      function absorb(sectionKey, row) {
+        var order = readCargoOrder(sectionKey, row);
+        if (!order) {
+          return;
+        }
+        var fromKind = resolveTradeKind(order.fromNo);
+        var toKind = resolveTradeKind(order.toNo);
+        if (fromKind === "city" || toKind === "city" || !fromKind || !toKind) {
+          return;
+        }
+        var key = order.fromNo + "|" + order.toNo + "|" + order.goodsId;
+        if (!grouped[key]) {
+          grouped[key] = {
+            key: "transfer-" + key,
+            goodsId: order.goodsId,
+            label: tradeGoodsName(order.goodsId),
+            quantity: 0,
+            fromItemNo: order.fromNo,
+            toItemNo: order.toNo,
+            fromLabel: savedItemLabel(order.fromNo),
+            toLabel: savedItemLabel(order.toNo),
+          };
+        }
+        grouped[key].quantity += order.quantity;
       }
-      return ["goods", "quantity", "source", "destination", "rowMarker"];
+
+      ($scope.ts17Rows || []).forEach(function (row) {
+        absorb("ts17", row);
+      });
+      ($scope.ts19Rows || []).forEach(function (row) {
+        absorb("ts19", row);
+      });
+
+      return Object.keys(grouped)
+        .map(function (key) {
+          return grouped[key];
+        })
+        .sort(function (left, right) {
+          if (left.fromItemNo !== right.fromItemNo) {
+            return left.fromItemNo - right.fromItemNo;
+          }
+          if (left.toItemNo !== right.toItemNo) {
+            return left.toItemNo - right.toItemNo;
+          }
+          return toText(left.label, "").localeCompare(toText(right.label, ""));
+        });
     }
 
     function getTurnSheetRows(sectionKey) {
@@ -634,62 +1287,48 @@ austerlitzModule.controller(
       return null;
     }
 
-    function buildTradeRecordPlan(targetRow) {
-      if (!$scope.selectedTradingCity) {
-        return { error: "Select a trade city first.", records: [] };
+    function buildTradeRecordPlan(sectionKey, targetRow) {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if (!fromEndpoint || !toEndpoint) {
+        return { error: "Select a From item and a To item first.", records: [] };
+      }
+      if (!targetRow) {
+        return { error: "Select a goods row first.", records: [] };
       }
 
-      var cityItemNo = toInt($scope.selectedTradingCity.itemNo, null);
-      var sourceItemNo = toInt($scope.selectedTradeCounterparty && $scope.selectedTradeCounterparty.itemNo, null);
-      if (cityItemNo == null) {
-        return { error: "Selected trade city is invalid.", records: [] };
+      var goodsId = toInt(targetRow.goodsId, null);
+      if (goodsId == null) {
+        goodsId = tradeGoodsIdByKey[targetRow.key];
       }
-      if (sourceItemNo == null) {
-        return { error: "Select a warehouse, baggage train, or merchant ship first.", records: [] };
+      var quantity = Math.max(0, Math.round(toNumber(targetRow.qty, 0)));
+      if (goodsId == null) {
+        return { error: "That goods row cannot be written.", records: [] };
+      }
+      if (quantity <= 0) {
+        return { error: "Enter a quantity.", records: [] };
+      }
+      var repeatCount = getTradeRepeatCount(fromEndpoint, toEndpoint, targetRow);
+
+      var blockReason = getTransferBlockReason(
+        sectionKey,
+        fromEndpoint,
+        toEndpoint,
+        goodsId,
+        quantity,
+        repeatCount,
+      );
+      if (blockReason) {
+        return { error: blockReason, records: [] };
       }
 
-      var records = [];
-      var rowsToProcess = targetRow ? [targetRow] : ($scope.tradingCalcRows || []);
-      (rowsToProcess || []).forEach(function (row) {
-        var goodsId = tradeGoodsIdByKey[row.key];
-        var buyQty = Math.max(0, Math.round(toNumber(row.directBuyQty, 0)));
-        var sellQty = Math.max(0, Math.round(toNumber(row.qty, 0)));
-        var n = Math.max(0, Math.round(toNumber(row.n, 0)));
-        if (sellQty > 0 && n === 0 && (row.n == null || row.n === "")) {
-          n = 1;
-        }
-        if (goodsId == null) {
-          return;
-        }
-
-        if (buyQty > 0) {
-          records.push({
-            goods: goodsId,
-            quantity: buyQty,
-            fromNo: cityItemNo,
-            toNo: sourceItemNo,
-            rowMarker: tradeRowMarker,
-          });
-        }
-
-        if (sellQty > 0 && n > 0) {
-          for (var i = 0; i < n; i++) {
-            records.push({
-              goods: goodsId,
-              quantity: sellQty,
-              fromNo: sourceItemNo,
-              toNo: cityItemNo,
-              rowMarker: tradeRowMarker,
-            });
-          }
-        }
-      });
-
-      return { error: null, records: records };
+      return {
+        error: null,
+        records: buildTradeRecords(goodsId, quantity, fromEndpoint.itemNo, toEndpoint.itemNo, repeatCount),
+      };
     }
 
     function getWritableRowsWithCapacityCheck(sectionKey, recordsToWrite) {
-      var fields = getTurnSheetFieldSet(sectionKey);
       var existingRows = angular.copy(getTurnSheetRows(sectionKey) || []);
       var byOrderNo = {};
       (existingRows || []).forEach(function (row) {
@@ -704,7 +1343,7 @@ austerlitzModule.controller(
           existingRows.push(row);
           byOrderNo[orderNo] = row;
         }
-        if (!hasAnyTurnSheetValue(row, fields)) {
+        if (!toOccupiedInt(row.goods, null) || !toOccupiedInt(row.quantity, null)) {
           availableRows.push(row);
         }
       }
@@ -750,8 +1389,8 @@ austerlitzModule.controller(
       var normalized = {
         turnId: row.turnId != null ? row.turnId : row.TurnId,
         orderNo: toInt(row.orderNo != null ? row.orderNo : row.OrderNo, null),
-        goods: toInt(row.goods != null ? row.goods : row.Goods, null),
-        quantity: toInt(row.quantity != null ? row.quantity : row.Quantity, null),
+        goods: toOccupiedInt(row.goods != null ? row.goods : row.Goods, null),
+        quantity: toOccupiedInt(row.quantity != null ? row.quantity : row.Quantity, null),
         rowMarker: toText(row.rowMarker != null ? row.rowMarker : row.RowMarker, ""),
       };
 
@@ -760,11 +1399,11 @@ austerlitzModule.controller(
       }
 
       if (sectionKey === "ts17") {
-        normalized.from = toInt(row.from != null ? row.from : row.From, null);
-        normalized.to = toInt(row.to != null ? row.to : row.To, null);
+        normalized.from = toOccupiedInt(row.from != null ? row.from : row.From, null);
+        normalized.to = toOccupiedInt(row.to != null ? row.to : row.To, null);
       } else {
-        normalized.source = toInt(row.source != null ? row.source : row.Source, null);
-        normalized.destination = toInt(
+        normalized.source = toOccupiedInt(row.source != null ? row.source : row.Source, null);
+        normalized.destination = toOccupiedInt(
           row.destination != null ? row.destination : row.Destination,
           null,
         );
@@ -805,20 +1444,21 @@ austerlitzModule.controller(
           $scope.ts19Rows = ts19Rows;
           refreshTurnSheetTriplets();
           rebuildSavedTradingRows();
+          refreshTradingCalcStocks();
           return result || [];
         });
     }
 
     function applyTradeRowsToSection(sectionKey, targetRow) {
       clearTradeSyncMessage();
-      var tradePlan = buildTradeRecordPlan(targetRow);
+      var tradePlan = buildTradeRecordPlan(sectionKey, targetRow);
       if (tradePlan.error) {
         setTradeSyncMessage(tradePlan.error, "warning");
         return $q.when(false);
       }
 
       if (!tradePlan.records.length) {
-        setTradeSyncMessage("No trade rows to write. Enter Direct Buy Qty and/or Qty + n.", "warning");
+        setTradeSyncMessage("Enter a quantity.", "warning");
         return $q.when(false);
       }
 
@@ -898,10 +1538,18 @@ austerlitzModule.controller(
     $scope.availableTradeWarehouseRows = [];
     $scope.availableTradeBaggageTrainRows = [];
     $scope.availableTradeMerchantShipRows = [];
-    $scope.selectedTradingCity = null;
-    $scope.selectedTradeCounterparty = null;
+    $scope.selectedTradeSection = null;
+    $scope.selectedTradeSphere = null;
+    $scope.tradeSphereChoices = [
+      { key: "Europe", label: "Europe" },
+      { key: "Caribbean", label: "Caribbean" },
+      { key: "India", label: "India" },
+    ];
+    $scope.selectedTradeFrom = null;
+    $scope.selectedTradeTo = null;
     $scope.tradingCalcRows = tradingGoodsConfig.map(createTradingCalcRow);
     $scope.savedTradingRows = [];
+    $scope.savedTransferRows = [];
     $scope.ts17Rows = [];
     $scope.ts19Rows = [];
     $scope.ts17Triplets = [];
@@ -930,105 +1578,158 @@ austerlitzModule.controller(
       $scope.tradeTurnSheetsCollapsed = !$scope.tradeTurnSheetsCollapsed;
     };
 
-    $scope.getSelectedTradingCityTitle = function () {
-      if (!$scope.selectedTradingCity) {
-        return "No trade city selected.";
+    $scope.selectTradeSection = function (sectionKey) {
+      if (sectionKey !== "ts17" && sectionKey !== "ts19") {
+        return;
       }
+      if ($scope.selectedTradeSection === sectionKey) {
+        return;
+      }
+      $scope.selectedTradeSection = sectionKey;
+      $scope.selectedTradeFrom = null;
+      $scope.selectedTradeTo = null;
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.selectTradeSphere = function (sphere) {
+      var allowed = { Europe: true, Caribbean: true, India: true };
+      if (!allowed[sphere] || $scope.selectedTradeSphere === sphere) {
+        return;
+      }
+      $scope.selectedTradeSphere = sphere;
+      $scope.selectedTradeFrom = null;
+      $scope.selectedTradeTo = null;
+      clearTradingInputValues();
+      $scope.clearTradingCalculatedValues();
+      refreshTradingCalcStocks();
+    };
+
+    $scope.getTradeSelectionTitle = function () {
+      if (!$scope.selectedTradeSection) {
+        return "Select Trade 17 or Trade 19.";
+      }
+      var sectionLabel = $scope.selectedTradeSection === "ts19" ? "Trade 19" : "Trade 17";
+      if (!$scope.selectedTradeSphere) {
+        return sectionLabel + ". Select a sphere.";
+      }
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if (!fromEndpoint) {
+        return sectionLabel + " in " + $scope.selectedTradeSphere + ". Select the From item.";
+      }
+      if (!toEndpoint) {
+        return "From " + tradeEndpointLabel(fromEndpoint) + ". Select the To item.";
+      }
+      var cityEndpoint = tradeCityEndpoint(fromEndpoint, toEndpoint);
+      if (!cityEndpoint) {
+        return "From " + tradeEndpointLabel(fromEndpoint) + " to " + tradeEndpointLabel(toEndpoint);
+      }
+      var direction = fromEndpoint.kind === "city" ? "Buy" : "Sell";
       return (
-        $scope.selectedTradingCity.itemNo +
-        " - " +
-        $scope.selectedTradingCity.name +
-        " (" +
-        $scope.selectedTradingCity.x +
-        "/" +
-        $scope.selectedTradingCity.y +
-        ") - Rate " +
-        $scope.selectedTradingCity.rate
+        direction +
+        ": from " +
+        tradeEndpointLabel(fromEndpoint) +
+        " to " +
+        tradeEndpointLabel(toEndpoint)
       );
     };
 
-    $scope.getSelectedTradeCounterpartyTitle = function () {
-      if (!$scope.selectedTradeCounterparty) {
-        return "No warehouse or baggage train selected.";
+    $scope.getTradeToPrompt = function () {
+      if ($scope.selectedTradeSection !== "ts17") {
+        return "Select the To item in the same sphere.";
       }
-      if ($scope.selectedTradeCounterparty.kind === "warehouse") {
-        return "Warehouse " + $scope.selectedTradeCounterparty.itemNo;
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      if (fromEndpoint && fromEndpoint.kind === "warehouse") {
+        return "Select a train or ship in a barracks or shipyard, or an owned trade city.";
       }
-      if ($scope.selectedTradeCounterparty.kind === "merchant") {
-        return "Merchant Ship " + $scope.selectedTradeCounterparty.itemNo;
-      }
-      return "Baggage Train " + $scope.selectedTradeCounterparty.itemNo;
+      return "Select the To item on the same coordinate.";
     };
 
-    $scope.isTradeCitySelected = function (city) {
-      return !!(
-        city &&
-        $scope.selectedTradingCity &&
-        $scope.selectedTradingCity.id === city.id
-      );
+    $scope.getTradePositionHint = function () {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if (!fromEndpoint || !toEndpoint) {
+        return "";
+      }
+      var reason = getTs17BlockReason(fromEndpoint, toEndpoint);
+      if (!reason) {
+        return "TS17 and TS19 can both take this transfer.";
+      }
+      return reason + " TS19 can still write it.";
     };
 
-    $scope.isTradeCounterpartySelected = function (kind, itemNo) {
-      return !!(
-        $scope.selectedTradeCounterparty &&
-        $scope.selectedTradeCounterparty.kind === kind &&
-        toInt($scope.selectedTradeCounterparty.itemNo, null) === toInt(itemNo, null)
-      );
+    $scope.tradePositionHintIsWarning = function () {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      return !!(fromEndpoint && toEndpoint && getTs17BlockReason(fromEndpoint, toEndpoint));
     };
 
-    $scope.isTradeCounterpartyKindVisible = function (kind) {
-      if (!$scope.selectedTradingCity) {
-        return false;
+    $scope.tradeInvolvesCity = function () {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      return !!tradeCityEndpoint(fromEndpoint, toEndpoint);
+    };
+
+    $scope.isSellTrade = function () {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      return isSellTrade(fromEndpoint, toEndpoint);
+    };
+
+    $scope.isMoveTrade = function () {
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      return isMoveTrade(fromEndpoint, toEndpoint);
+    };
+
+    $scope.getTradingEntryRows = function () {
+      var rows = ($scope.tradingCalcRows || []).slice();
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      if (!fromEndpoint || !toEndpoint) {
+        return rows;
       }
-      if (!$scope.selectedTradeCounterparty) {
-        return true;
+      if (isMoveTrade(fromEndpoint, toEndpoint)) {
+        return rows.filter(function (row) {
+          var goodsId = toInt(row && row.goodsId, null);
+          if (goodsId === moneyGoodsId) {
+            return true;
+          }
+          return Math.max(0, toInt(row && row.fromStock, 0)) > 0;
+        });
       }
-      return $scope.selectedTradeCounterparty.kind === kind;
+      return rows.filter(function (row) {
+        return toInt(row && row.goodsId, null) !== moneyGoodsId;
+      });
+    };
+
+    $scope.isTradeEndpointSelected = function (kind, itemNo) {
+      function matches(selection) {
+        return !!(
+          selection &&
+          selection.kind === kind &&
+          toInt(selection.itemNo, null) === toInt(itemNo, null)
+        );
+      }
+      return matches($scope.selectedTradeFrom) || matches($scope.selectedTradeTo);
     };
 
     $scope.getVisibleTradeWarehouseRows = function () {
-      if (!$scope.selectedTradingCity || !$scope.selectedTradingCity.isOwned) {
-        return [];
-      }
-      if (!$scope.selectedTradeCounterparty) {
-        return $scope.availableTradeWarehouseRows || [];
-      }
-      if ($scope.selectedTradeCounterparty.kind !== "warehouse") {
-        return [];
-      }
-      return ($scope.availableTradeWarehouseRows || []).filter(function (warehouse) {
-        return $scope.isTradeCounterpartySelected("warehouse", warehouse && warehouse.itemNo);
-      });
+      return visibleTradeRows("warehouse");
     };
 
     $scope.getVisibleTradeBaggageTrainRows = function () {
-      if (!$scope.selectedTradingCity) {
-        return [];
-      }
-      if (!$scope.selectedTradeCounterparty) {
-        return $scope.availableTradeBaggageTrainRows || [];
-      }
-      if ($scope.selectedTradeCounterparty.kind !== "train") {
-        return [];
-      }
-      return ($scope.availableTradeBaggageTrainRows || []).filter(function (train) {
-        return $scope.isTradeCounterpartySelected("train", train && train.itemNo);
-      });
+      return visibleTradeRows("train");
     };
 
     $scope.getVisibleTradeMerchantShipRows = function () {
-      if (!$scope.selectedTradingCity) {
-        return [];
-      }
-      if (!$scope.selectedTradeCounterparty) {
-        return $scope.availableTradeMerchantShipRows || [];
-      }
-      if ($scope.selectedTradeCounterparty.kind !== "merchant") {
-        return [];
-      }
-      return ($scope.availableTradeMerchantShipRows || []).filter(function (ship) {
-        return $scope.isTradeCounterpartySelected("merchant", ship && ship.itemNo);
-      });
+      return visibleTradeRows("merchant");
+    };
+
+    $scope.getVisibleTradeCityRows = function () {
+      return visibleTradeRows("city");
     };
 
     $scope.clearTradingCalculatedValues = function () {
@@ -1046,8 +1747,8 @@ austerlitzModule.controller(
     };
 
     $scope.startNewTrade = function () {
-      $scope.selectedTradingCity = null;
-      $scope.selectedTradeCounterparty = null;
+      $scope.selectedTradeFrom = null;
+      $scope.selectedTradeTo = null;
       clearTradingInputValues();
       $scope.clearTradingCalculatedValues();
       clearTradeSyncMessage();
@@ -1055,82 +1756,71 @@ austerlitzModule.controller(
       refreshTradingCalcStocks();
     };
 
-    $scope.selectTradeCity = function (city) {
-      $scope.selectedTradingCity = city || null;
-      $scope.selectedTradeCounterparty = null;
-      clearTradingInputValues();
-      $scope.clearTradingCalculatedValues();
-      refreshTradingSelectionLists();
-      refreshTradingCalcStocks();
-    };
-
-    $scope.selectTradeWarehouseCounterparty = function (warehouseRow) {
-      if (!$scope.selectedTradingCity || !warehouseRow) {
+    $scope.selectTradeEndpoint = function (kind, row) {
+      if (!row) {
         return;
       }
-      $scope.selectedTradeCounterparty = {
-        kind: "warehouse",
-        itemNo: toInt(warehouseRow.itemNo, null),
-      };
-      clearTradingInputValues();
-      $scope.clearTradingCalculatedValues();
-      refreshTradingCalcStocks();
-    };
-
-    $scope.selectTradeBaggageTrainCounterparty = function (train) {
-      if (!$scope.selectedTradingCity || !train) {
+      var itemNo = toInt(row.itemNo, null);
+      var fromSelection = $scope.selectedTradeFrom;
+      if (
+        fromSelection &&
+        fromSelection.kind === kind &&
+        toInt(fromSelection.itemNo, null) === itemNo
+      ) {
+        $scope.selectedTradeTo = null;
+        clearTradingInputValues();
+        $scope.clearTradingCalculatedValues();
+        refreshTradingCalcStocks();
         return;
       }
-      $scope.selectedTradeCounterparty = {
-        kind: "train",
-        itemNo: toInt(train.itemNo, null),
-      };
-      clearTradingInputValues();
-      $scope.clearTradingCalculatedValues();
-      refreshTradingCalcStocks();
-    };
-
-    $scope.selectTradeMerchantShipCounterparty = function (ship) {
-      if (!$scope.selectedTradingCity || !ship) {
+      if (!fromSelection) {
+        $scope.selectedTradeFrom = { kind: kind, itemNo: itemNo };
+        $scope.selectedTradeTo = null;
+        clearTradingInputValues();
+        $scope.clearTradingCalculatedValues();
+        refreshTradingCalcStocks();
         return;
       }
-      $scope.selectedTradeCounterparty = {
-        kind: "merchant",
-        itemNo: toInt(ship.itemNo, null),
-      };
+      var fromEndpoint = currentTradeEndpoint(fromSelection);
+      var candidate = rowToTradeEndpoint(kind, row);
+      if (!fromEndpoint || !candidate || !isTradeCandidate(fromEndpoint, candidate)) {
+        return;
+      }
+      $scope.selectedTradeTo = { kind: kind, itemNo: itemNo };
       clearTradingInputValues();
       $scope.clearTradingCalculatedValues();
       refreshTradingCalcStocks();
     };
 
     $scope.isTradeReadyForInput = function () {
-      return !!($scope.selectedTradingCity && $scope.selectedTradeCounterparty);
+      return !!(currentTradeEndpoint($scope.selectedTradeFrom) && currentTradeEndpoint($scope.selectedTradeTo));
     };
 
     $scope.calculateTrade = function () {
-      if (!$scope.selectedTradingCity || !$scope.selectedTradeCounterparty) {
+      if (!$scope.isTradeReadyForInput()) {
         return;
       }
-
-      var rate = Math.max(0, toNumber($scope.selectedTradingCity.rate, 0));
+      var fromEndpoint = currentTradeEndpoint($scope.selectedTradeFrom);
+      var toEndpoint = currentTradeEndpoint($scope.selectedTradeTo);
+      var cityEndpoint = tradeCityEndpoint(fromEndpoint, toEndpoint);
+      var isBuy = !!(cityEndpoint && fromEndpoint.kind === "city");
       ($scope.tradingCalcRows || []).forEach(function (row) {
-        var qtyInput = Math.max(0, Math.round(toNumber(row && row.qty, 0)));
-        var nInput = row && row.n;
-        if (qtyInput > 0 && (nInput == null || nInput === "")) {
-          nInput = 1;
+        var quantity = Math.max(0, Math.round(toNumber(row && row.qty, 0)));
+        var repeats = getTradeRepeatCount(fromEndpoint, toEndpoint, row);
+        if (!cityEndpoint) {
+          row.totalDirect = null;
+          row.totalSell = null;
+          row.profitLd = null;
+          return;
         }
         var values = tradePriceFactory.calculate({
           goodsFactor: row.goodsFactor,
           stock: row.stock,
-          directBuyQty: row.directBuyQty,
-          qty: row.qty,
-          n: nInput,
-          rate: rate,
+          directBuyQty: isBuy ? quantity : 0,
+          qty: isBuy ? 0 : quantity,
+          n: !isBuy && quantity > 0 ? repeats : 0,
+          rate: cityEndpoint.rate,
         });
-        row.qtyS = values.qtyS;
-        row.directBuyQty = values.directBuyQty;
-        row.qty = values.qty;
-        row.n = values.n;
         row.totalDirect = values.totalDirect;
         row.totalSell = values.totalSell;
         row.profitLd = values.profitLd;
@@ -1258,6 +1948,7 @@ austerlitzModule.controller(
             goods2: toInt(ship && (ship.goods2 != null ? ship.goods2 : ship.Goods2), null),
             quantity2: toInt(ship && (ship.quantity2 != null ? ship.quantity2 : ship.Quantity2), 0),
             money: toInt(ship && (ship.money != null ? ship.money : ship.Money), 0),
+            type: toInt(ship && (ship.type != null ? ship.type : ship.Type), null),
             sphere: getSphereForCoordinates(
               ship && (ship.x != null ? ship.x : ship.X),
               ship && (ship.y != null ? ship.y : ship.Y),
@@ -1319,7 +2010,7 @@ austerlitzModule.controller(
         return !!barracksLookup[city.x + "," + city.y];
       });
       refreshSphereWarehouseRows();
-      syncSelectedTradingCityAfterRefresh();
+      syncTradeSelection();
       refreshTradingSelectionLists();
       refreshTradingCalcStocks();
       $scope.clearTradingCalculatedValues();
@@ -1398,8 +2089,9 @@ austerlitzModule.controller(
         $scope.ts19Rows = [];
         refreshTurnSheetTriplets();
         $scope.savedTradingRows = [];
-        $scope.selectedTradingCity = null;
-        $scope.selectedTradeCounterparty = null;
+        $scope.savedTransferRows = [];
+        $scope.selectedTradeFrom = null;
+        $scope.selectedTradeTo = null;
         clearTradeSyncMessage();
         refreshTradingCalcStocks();
         $scope.clearTradingCalculatedValues();
@@ -1438,8 +2130,9 @@ austerlitzModule.controller(
           $scope.ts19Rows = [];
           refreshTurnSheetTriplets();
           $scope.savedTradingRows = [];
-          $scope.selectedTradingCity = null;
-          $scope.selectedTradeCounterparty = null;
+          $scope.savedTransferRows = [];
+          $scope.selectedTradeFrom = null;
+          $scope.selectedTradeTo = null;
           clearTradeSyncMessage();
           refreshTradingCalcStocks();
           $scope.clearTradingCalculatedValues();

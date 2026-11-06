@@ -2,6 +2,7 @@
 
 austerlitzModule.factory("tradeGoodsFactory", function () {
   var tradingGoodsConfig = [
+    { key: "money", itemType: "money", label: "Money", goodsId: 10, fallbackGoodsFactor: 0, fallbackPerTon: 0 },
     { key: "ectPts", itemType: "ecpts", label: "EcPts", goodsId: 13, fallbackGoodsFactor: 6, fallbackPerTon: 25 },
     { key: "zinc", itemType: "zinc", label: "Zinc", goodsId: 21, fallbackGoodsFactor: 45, fallbackPerTon: 1 },
     { key: "gold", itemType: "gold", label: "Gold", goodsId: 29, fallbackGoodsFactor: 35, fallbackPerTon: 1 },

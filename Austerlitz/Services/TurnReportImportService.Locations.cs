@@ -77,7 +77,9 @@ namespace Austerlitz.Services
                     Inhabitants = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 14, 8),
                     Foreign = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 23, 8),
                     Money = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 33, 9),
-                    Citizens = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 43, 6),
+                    // Citizen column is right-aligned in six columns starting at 42.
+                    // Starting at 43 drops the leading digit once the total reaches 100,000.
+                    Citizens = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 42, 6),
                     EcPts = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 50, 6),
                     Food = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 57, 6),
                     Stone = TurnReportImportParsingUtils.ParseTurnInt(lineToProcess, 64, 6),
