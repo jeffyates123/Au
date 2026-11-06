@@ -91,7 +91,7 @@ namespace Austerlitz.Services
                     WriteSection(sheet, layout, rows);
                 }
 
-                WriteHeaderCells(sheet, turnDetails);
+                WriteHeaderCells(sheet, turnId, turnDetails);
                 workbook.Save();
             }
         }
@@ -294,23 +294,47 @@ namespace Austerlitz.Services
             cell.Value = value.ToString();
         }
 
-        private static void WriteHeaderCells(IXLWorksheet sheet, TS_00TurnDetails turnDetails)
+        private static void WriteHeaderCells(IXLWorksheet sheet, string turnId, TS_00TurnDetails turnDetails)
         {
-            if (sheet == null || turnDetails == null)
+            if (sheet == null)
             {
                 return;
             }
 
-            WriteCell(sheet.Cell("C5"), turnDetails.State);
+            var state = turnDetails != null ? turnDetails.State : null;
+            if (string.IsNullOrWhiteSpace(state) && !string.IsNullOrWhiteSpace(turnId) && turnId.Length >= 4)
+            {
+                state = turnId.Substring(3, 1);
+            }
+            WriteCellIfHasValue(sheet.Cell("C5"), state);
 
+            var accountText = turnDetails != null ? turnDetails.AccountNo : null;
             int accountNo;
-            WriteCell(sheet.Cell("C6"), int.TryParse(turnDetails.AccountNo, out accountNo) ? (object)accountNo : turnDetails.AccountNo);
+            WriteCellIfHasValue(sheet.Cell("C6"), int.TryParse(accountText, out accountNo) ? (object)accountNo : accountText);
 
+            var gameText = turnDetails != null ? turnDetails.GameNo : null;
+            if (string.IsNullOrWhiteSpace(gameText) && !string.IsNullOrWhiteSpace(turnId) && turnId.Length >= 3)
+            {
+                gameText = turnId.Substring(0, 3);
+            }
             int gameNo;
-            WriteCell(sheet.Cell("G5"), int.TryParse(turnDetails.GameNo, out gameNo) ? (object)gameNo : turnDetails.GameNo);
+            WriteCellIfHasValue(sheet.Cell("G5"), int.TryParse(gameText, out gameNo) ? (object)gameNo : gameText);
 
-            WriteCell(sheet.Cell("G6"), turnDetails.PlayerName);
-            WriteCell(sheet.Cell("G7"), FormatProcessDate(turnDetails.ProcessDate));
+            var playerName = turnDetails != null ? turnDetails.PlayerName : null;
+            WriteCellIfHasValue(sheet.Cell("G6"), playerName);
+
+            var processDate = turnDetails != null ? turnDetails.ProcessDate : (DateTime?)null;
+            WriteCellIfHasValue(sheet.Cell("G7"), FormatProcessDate(processDate));
+        }
+
+        private static void WriteCellIfHasValue(IXLCell cell, object value)
+        {
+            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                return;
+            }
+
+            WriteCell(cell, value);
         }
 
         private static string FormatProcessDate(DateTime? processDate)
